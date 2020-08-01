@@ -1,0 +1,68 @@
+import cheerio from 'cheerio';
+import { inject, injectable } from 'tsyringe';
+
+import { ScrapePostsQueue } from '../../posts/infra/jobs';
+
+import Merit from '../infra/schemas/Merit';
+
+import IMeritsRepository from '../repositories/IMeritsRepository';
+import IPostsRepository from '../../posts/repositories/IPostsRepository';
+
+@injectable()
+export default class ScrapeRecentPostElementService {
+  constructor(
+    @inject('MeritsRepository')
+    private meritsRepository: IMeritsRepository,
+
+    @inject('PostsRepository')
+    private postsRepository: IPostsRepository,
+  ) {}
+
+  public async execute(element: CheerioElement): Promise<Merit> {
+    const $ = cheerio.load(element);
+
+    const amount = Number($.html().match(/: (\d*) from/)[1]);
+
+    const sender = $.html().match(/">(.*)<\/a> for/)[1];
+
+    const sender_uid = Number($.html().match(/u=(\d*)"/)[1]);
+
+    const d = new Date();
+    const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+
+    const withFixedDate = $.html().replace('<b>Today</b> at', today);
+    const date = new Date(withFixedDate.match(/>(.*): \d/)[1]);
+
+    const post_id = Number($.html().match(/#msg(\d*)/)[1]);
+    const topic_id = Number($.html().match(/topic=(\d*)/)[1]);
+
+    const postExists = await this.postsRepository.findByPostId(post_id);
+
+    let receiver: string;
+    let receiver_uid: number;
+
+    if (postExists) {
+      receiver = postExists.author;
+      receiver_uid = postExists.author_uid;
+    } else {
+      const scrapePostsQueue = new ScrapePostsQueue();
+      const post = await scrapePostsQueue.run({ topic_id, post_id });
+
+      receiver = post.author;
+      receiver_uid = post.author_uid;
+    }
+
+    const merit = this.meritsRepository.create({
+      amount,
+      sender,
+      sender_uid,
+      receiver,
+      receiver_uid,
+      date,
+      post_id,
+      topic_id,
+    });
+
+    return merit;
+  }
+}

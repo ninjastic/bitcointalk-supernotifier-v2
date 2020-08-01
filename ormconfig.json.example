@@ -1,0 +1,12 @@
+{
+   "name": "default",
+   "type": "mongodb",
+   "host": "localhost",
+   "port": 27017,
+   "database": "supernotifier",
+   "entities": [
+      "src/modules/**/infra/schemas/*.ts"
+   ],
+   "synchronize": true,
+   "useUnifiedTopology": true
+}

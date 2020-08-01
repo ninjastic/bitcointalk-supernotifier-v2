@@ -1,0 +1,45 @@
+{
+   "name": "supernotifier2",
+   "version": "1.0.0",
+   "main": "index.js",
+   "license": "MIT",
+   "scripts": {
+      "dev:scrapper": "ts-node-dev --transpile-only src/scrapper.ts",
+      "start": "ts-node src/index.ts",
+      "postinstall": "typesync"
+   },
+   "devDependencies": {
+      "@types/bull": "^3.14.0",
+      "@types/cheerio": "^0.22.21",
+      "@types/eslint": "^7.2.0",
+      "@types/eslint-plugin-prettier": "^3.1.0",
+      "@types/ioredis": "^4.17.2",
+      "@types/mongodb": "^3.5.25",
+      "@types/node": "^8.0.29",
+      "@types/prettier": "^2.0.2",
+      "@typescript-eslint/eslint-plugin": "^3.7.1",
+      "@typescript-eslint/parser": "^3.7.1",
+      "eslint": "^7.5.0",
+      "eslint-config-airbnb-base": "^14.2.0",
+      "eslint-config-prettier": "^6.11.0",
+      "eslint-import-resolver-typescript": "^2.0.0",
+      "eslint-plugin-import": "^2.22.0",
+      "eslint-plugin-prettier": "^3.1.4",
+      "prettier": "^2.0.5",
+      "ts-node": "3.3.0",
+      "ts-node-dev": "^1.0.0-pre.56",
+      "typescript": "3.3.3333",
+      "typesync": "^0.7.0"
+   },
+   "dependencies": {
+      "axios": "^0.19.2",
+      "bull": "^3.16.0",
+      "cheerio": "^1.0.0-rc.3",
+      "dotenv": "^8.2.0",
+      "ioredis": "^4.17.3",
+      "mongodb": "^3.5.9",
+      "reflect-metadata": "^0.1.10",
+      "tsyringe": "^4.3.0",
+      "typeorm": "0.2.25"
+   }
+}
