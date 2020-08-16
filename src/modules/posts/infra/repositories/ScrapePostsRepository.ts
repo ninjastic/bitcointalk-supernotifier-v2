@@ -1,16 +1,26 @@
 import { container } from 'tsyringe';
 
 import IScrapePostsRepository from '../../repositories/IScrapePostsRepository';
+import ScrapePostDTO from '../../dtos/ScrapePostDTO';
 
 import Post from '../schemas/Post';
 
-import ScrapeRecentPostService from '../../services/ScrapeRecentPostService';
-import ScrapeRecentPostElementService from '../../services/ScrapeRecentPostElementService';
+import ScrapePostService from '../../services/ScrapePostService';
+import ScrapeRecentPostsService from '../../services/ScrapeRecentPostsService';
+import ParseRecentPostElementService from '../../services/ParseRecentPostElementService';
 import SavePostService from '../../services/SavePostService';
 
-export default class ScrapePostRepository implements IScrapePostsRepository {
+export default class ScrapePostsRepository implements IScrapePostsRepository {
+  public async scrapePost({ topic_id, post_id }: ScrapePostDTO): Promise<Post> {
+    const scrapePostService = container.resolve(ScrapePostService);
+
+    const post = await scrapePostService.execute({ topic_id, post_id });
+
+    return post;
+  }
+
   public async scrapeRecent(): Promise<void> {
-    const scrapeRecent = container.resolve(ScrapeRecentPostService);
+    const scrapeRecent = container.resolve(ScrapeRecentPostsService);
     const savePost = container.resolve(SavePostService);
 
     const posts = await scrapeRecent.execute();
@@ -20,12 +30,12 @@ export default class ScrapePostRepository implements IScrapePostsRepository {
     });
   }
 
-  public scrapeRecentPostElement(element: CheerioElement): Post {
-    const scrapeRecentPostElement = container.resolve(
-      ScrapeRecentPostElementService,
+  public parseRecentPostElement(element: CheerioElement): Post {
+    const parseRecentPostElement = container.resolve(
+      ParseRecentPostElementService,
     );
 
-    const post = scrapeRecentPostElement.execute(element);
+    const post = parseRecentPostElement.execute(element);
 
     return post;
   }

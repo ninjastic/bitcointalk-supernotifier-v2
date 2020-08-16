@@ -1,7 +1,7 @@
 import cheerio from 'cheerio';
 import { inject, injectable } from 'tsyringe';
 
-import { ScrapePostsQueue } from '../../posts/infra/jobs';
+import { ScrapePostJob } from '../../posts/infra/jobs';
 
 import Merit from '../infra/schemas/Merit';
 
@@ -9,7 +9,7 @@ import IMeritsRepository from '../repositories/IMeritsRepository';
 import IPostsRepository from '../../posts/repositories/IPostsRepository';
 
 @injectable()
-export default class ScrapeRecentPostElementService {
+export default class ParseRecentPostElementService {
   constructor(
     @inject('MeritsRepository')
     private meritsRepository: IMeritsRepository,
@@ -19,7 +19,7 @@ export default class ScrapeRecentPostElementService {
   ) {}
 
   public async execute(element: CheerioElement): Promise<Merit> {
-    const $ = cheerio.load(element);
+    const $ = cheerio.load(element, { decodeEntities: false });
 
     const amount = Number($.html().match(/: (\d*) from/)[1]);
 
@@ -45,8 +45,8 @@ export default class ScrapeRecentPostElementService {
       receiver = postExists.author;
       receiver_uid = postExists.author_uid;
     } else {
-      const scrapePostsQueue = new ScrapePostsQueue();
-      const post = await scrapePostsQueue.run({ topic_id, post_id });
+      const scrapePostJob = new ScrapePostJob();
+      const post = await scrapePostJob.start({ topic_id, post_id });
 
       receiver = post.author;
       receiver_uid = post.author_uid;
@@ -61,6 +61,9 @@ export default class ScrapeRecentPostElementService {
       date,
       post_id,
       topic_id,
+      notified: false,
+      notified_to: [],
+      checked: false,
     });
 
     return merit;

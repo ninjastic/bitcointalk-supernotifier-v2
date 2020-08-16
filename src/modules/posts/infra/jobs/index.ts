@@ -1,4 +1,5 @@
-import ScrapeRecentPostsQueue from './ScrapeRecentPostsQueue';
-import ScrapePostsQueue from './ScrapePostsQueue';
+import ScrapeRecentPostsJob from './ScrapeRecentPostsJob';
+import ScrapePostJob from './ScrapePostJob';
+import CheckMentionsJob from './CheckMentionsJob';
 
-export { ScrapeRecentPostsQueue, ScrapePostsQueue };
+export { ScrapeRecentPostsJob, ScrapePostJob, CheckMentionsJob };

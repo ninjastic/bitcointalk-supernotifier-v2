@@ -26,7 +26,7 @@ class Merit {
 
   @Column()
   @Index()
-  receiver: number;
+  receiver: string;
 
   @Column()
   @Index()

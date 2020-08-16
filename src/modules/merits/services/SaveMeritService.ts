@@ -6,7 +6,7 @@ import ICacheProvider from '../../../shared/container/providers/models/ICachePro
 import IMeritsRepository from '../repositories/IMeritsRepository';
 
 @injectable()
-export default class SavePostService {
+export default class SaveMeritService {
   constructor(
     @inject('MeritsRepository')
     private meritsRepository: IMeritsRepository,
@@ -24,13 +24,18 @@ export default class SavePostService {
       return cachedMerit;
     }
 
-    const foundMerit = await this.meritsRepository.findOne(merit);
+    const foundMerit = await this.meritsRepository.findOne({
+      amount: merit.amount,
+      date: merit.date,
+      post_id: merit.post_id,
+    });
 
     if (foundMerit) {
       return foundMerit;
     }
 
-    const savedMerit = await this.meritsRepository.save(merit);
+    const createdMerit = this.meritsRepository.create(merit);
+    const savedMerit = await this.meritsRepository.save(createdMerit);
 
     await this.cacheRepository.save(
       `merit:${merit.date}-${merit.amount}-${merit.post_id}`,

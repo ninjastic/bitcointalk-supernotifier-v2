@@ -1,0 +1,13 @@
+module.exports = {
+  name: 'default',
+  type: 'mongodb',
+  host: 'localhost',
+  port: 27017,
+  database: 'supernotifier',
+  entities:
+    process.env.NODE_ENV === 'development'
+      ? ['src/modules/**/infra/schemas/*.ts']
+      : ['dist/modules/**/infra/schemas/*.js'],
+  synchronize: true,
+  useUnifiedTopology: true,
+};

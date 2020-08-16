@@ -1,6 +1,9 @@
 import Post from '../infra/schemas/Post';
 
+import ScrapePostDTO from '../dtos/ScrapePostDTO';
+
 export default interface IScrapePostsRepository {
+  scrapePost(data: ScrapePostDTO): Promise<Post>;
   scrapeRecent(): Promise<void>;
-  scrapeRecentPostElement(element: CheerioElement): Post;
+  parseRecentPostElement(element: CheerioElement): Post;
 }

@@ -2,9 +2,11 @@
 .vscode/
 node_modules/
 build/
+dist
 tmp/
 temp/
 .env
-ormconfig.json
+ormconfig.js
 *.log
 *.lock
+telegram_sessions.json

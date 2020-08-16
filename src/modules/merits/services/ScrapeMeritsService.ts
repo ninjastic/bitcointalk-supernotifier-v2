@@ -4,33 +4,36 @@ import cheerio from 'cheerio';
 import api from '../../../shared/services/api';
 import Merit from '../infra/schemas/Merit';
 
-import ScrapeMeritElementService from './ScrapeMeritElementService';
+import ParseMeritElementService from './ParseMeritElementService';
 
 export default class ScrapeMeritsService {
-  private scrapeMeritElement: ScrapeMeritElementService;
+  private parseMeritElement: ParseMeritElementService;
 
   constructor() {
-    this.scrapeMeritElement = container.resolve(ScrapeMeritElementService);
+    this.parseMeritElement = container.resolve(ParseMeritElementService);
   }
 
   public async execute(): Promise<Merit[]> {
     const response = await api.get('index.php?action=merit;stats=recent');
-    const $ = cheerio.load(response.data);
+    const $ = cheerio.load(response.data, { decodeEntities: false });
 
     const merits = $('ul > li');
-    const scrappedMerits = [];
 
-    merits.each(async (index, element) => {
-      if (index >= 1) {
-        return;
-      }
+    const scrapingPromises = merits
+      .toArray()
+      .filter((_, index) => {
+        if (index >= 1) {
+          return false;
+        }
 
-      const merit = await this.scrapeMeritElement.execute(element);
-      scrappedMerits.push(merit);
+        return true;
+      })
+      .map(element => this.parseMeritElement.execute(element));
+
+    const scrapeResults = await Promise.all(scrapingPromises).then(results => {
+      return results;
     });
 
-    // console.log(scrappedMerits);
-
-    return scrappedMerits;
+    return scrapeResults;
   }
 }

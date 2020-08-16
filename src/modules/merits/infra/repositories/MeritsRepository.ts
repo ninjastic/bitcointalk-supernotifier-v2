@@ -1,6 +1,8 @@
 import { getMongoRepository, MongoRepository } from 'typeorm';
+import { sub } from 'date-fns';
 
 import CreateMeritDTO from '../../dtos/CreateMeritDTO';
+import FindMeritDTO from '../../dtos/FindMeritDTO';
 
 import Merit from '../schemas/Merit';
 import IMeritsRepository from '../../repositories/IMeritsRepository';
@@ -24,13 +26,26 @@ export default class MeritsRepository implements IMeritsRepository {
     return meritSaved;
   }
 
-  public async findOne(merit: Merit): Promise<Merit> {
-    const meritFound = await this.ormRepository.findOne({
-      date: merit.date,
-      amount: merit.amount,
-      post_id: merit.post_id,
+  public async findOne(data: FindMeritDTO): Promise<Merit> {
+    const merit = await this.ormRepository.findOne({
+      date: new Date(data.date),
+      amount: data.amount,
+      post_id: data.post_id,
     });
 
-    return meritFound;
+    return merit;
+  }
+
+  public async getLatestUncheckedMerits(limit: number): Promise<Merit[]> {
+    const merits = await this.ormRepository.find({
+      where: {
+        checked: false,
+        date: { $gte: new Date(sub(new Date(), { minutes: 30 })) },
+      },
+      order: { created_at: -1 },
+      take: limit,
+    });
+
+    return merits;
   }
 }

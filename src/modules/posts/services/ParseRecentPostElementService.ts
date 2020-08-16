@@ -1,19 +1,19 @@
 import cheerio from 'cheerio';
 import { inject, injectable } from 'tsyringe';
 
-import Post from '../infra/schemas/Post';
-
 import IPostsRepository from '../repositories/IPostsRepository';
 
+import Post from '../infra/schemas/Post';
+
 @injectable()
-export default class ScrapeRecentPostElementService {
+export default class ParseRecentPostElementService {
   constructor(
     @inject('PostsRepository')
     private postsRepository: IPostsRepository,
   ) {}
 
   public execute(element: CheerioElement): Post {
-    const $ = cheerio.load(element);
+    const $ = cheerio.load(element, { decodeEntities: false });
 
     const fullTitleWithBoards = $(
       'tbody > tr.titlebg2 > td > div:nth-child(2)',
@@ -77,6 +77,9 @@ export default class ScrapeRecentPostElementService {
       content,
       date,
       boards: boardsArray,
+      checked: false,
+      notified: false,
+      notified_to: [],
     });
 
     return post;

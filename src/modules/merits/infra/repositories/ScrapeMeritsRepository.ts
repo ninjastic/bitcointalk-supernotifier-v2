@@ -5,7 +5,7 @@ import IScrapeMeritsRepository from '../../repositories/IScrapeMeritsRepository'
 import Merit from '../schemas/Merit';
 
 import ScrapeMeritsService from '../../services/ScrapeMeritsService';
-import ScrapeMeritElementService from '../../services/ScrapeMeritElementService';
+import ParseMeritElementService from '../../services/ParseMeritElementService';
 import SaveMeritService from '../../services/SaveMeritService';
 
 export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
@@ -15,16 +15,14 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
 
     const merits = await scrapeMerits.execute();
 
-    console.log(merits);
-
     merits.forEach(async merit => {
       await saveMerit.execute(merit);
     });
   }
 
-  public async scrapeMeritElement(element: CheerioElement): Promise<Merit> {
-    const scrapeMeritElement = container.resolve(ScrapeMeritElementService);
-    const merit = await scrapeMeritElement.execute(element);
+  public async parseMeritElement(element: CheerioElement): Promise<Merit> {
+    const parseMeritElement = container.resolve(ParseMeritElementService);
+    const merit = await parseMeritElement.execute(element);
 
     return merit;
   }

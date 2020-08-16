@@ -4,7 +4,10 @@ export default interface CreateMeritDTO {
   sender_uid: number;
   receiver: string;
   receiver_uid: number;
+  date: Date;
   post_id: number;
   topic_id: number;
-  date: Date;
+  notified: boolean;
+  notified_to: Array<number>;
+  checked: boolean;
 }

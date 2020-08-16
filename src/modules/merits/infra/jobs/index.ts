@@ -1,3 +1,4 @@
-import ScrapeMeritsQueue from './ScrapeMeritsQueue';
+import ScrapeMeritsJob from './ScrapeMeritsJob';
+import CheckMeritsJob from './CheckMeritsJob';
 
-export { ScrapeMeritsQueue };
+export { ScrapeMeritsJob, CheckMeritsJob };
