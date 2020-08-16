@@ -8,6 +8,7 @@
       "start:scrapper": "cross-env NODE_ENV=production node dist/shared/infra/bull/workers/scrapper.js",
       "start:server": "cross-env NODE_ENV=production node dist/shared/infra/http/server.js",
       "start:telegram": "cross-env NODE_ENV=production node dist/shared/infra/telegram/index.js",
+      "start:checker": "cross-env NODE_ENV=production node dist/shared/infra/bull/workers/checker.js",
       "dev:scrapper": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/bull/workers/scrapper.ts",
       "dev:server": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/http/server.ts",
       "dev:telegram": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/telegram/index.ts",
