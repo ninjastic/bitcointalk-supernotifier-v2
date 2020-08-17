@@ -5,6 +5,7 @@
    "license": "MIT",
    "scripts": {
       "build": "tsc",
+      "release": "standard-version",
       "start:scrapper": "cross-env NODE_ENV=production node dist/shared/infra/bull/workers/scrapper.js",
       "start:server": "cross-env NODE_ENV=production node dist/shared/infra/http/server.js",
       "start:telegram": "cross-env NODE_ENV=production node dist/shared/infra/telegram/index.js",
@@ -15,7 +16,14 @@
       "dev:checker": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/bull/workers/checker.ts | pino-pretty",
       "postinstall": "typesync"
    },
+   "husky": {
+      "hooks": {
+         "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+      }
+   },
    "devDependencies": {
+      "@commitlint/cli": "^9.1.2",
+      "@commitlint/config-conventional": "^9.1.2",
       "@types/bull": "^3.14.0",
       "@types/cheerio": "^0.22.21",
       "@types/eslint": "^7.2.0",
@@ -28,6 +36,7 @@
       "@types/pluralize": "^0.0.29",
       "@types/prettier": "^2.0.2",
       "@types/socket.io": "^2.1.11",
+      "@types/standard-version": "^7.0.0",
       "@typescript-eslint/eslint-plugin": "^3.7.1",
       "@typescript-eslint/parser": "^3.7.1",
       "eslint": "^7.5.0",
@@ -36,8 +45,10 @@
       "eslint-import-resolver-typescript": "^2.0.0",
       "eslint-plugin-import": "^2.22.0",
       "eslint-plugin-prettier": "^3.1.4",
+      "husky": "^4.2.5",
       "pino-pretty": "^4.1.0",
       "prettier": "^2.0.5",
+      "standard-version": "^9.0.0",
       "ts-node": "3.3.0",
       "ts-node-dev": "^1.0.0-pre.56",
       "typescript": "^3.9.5",
