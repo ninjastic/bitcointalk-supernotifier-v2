@@ -9,3 +9,4 @@ temp/
 ormconfig.js
 *.log
 telegram_sessions.json
+docker/
