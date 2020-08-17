@@ -52,7 +52,7 @@ export default class SendMeritNotificationService {
           'Forbidden: bot was blocked by the user'
         ) {
           logger.info(
-            { error: error.response, telegram_id, merit },
+            { error: error.response, telegram_id, merit: merit.id },
             'Telegram user marked as blocked',
           );
           await setUserBlocked.execute(telegram_id);

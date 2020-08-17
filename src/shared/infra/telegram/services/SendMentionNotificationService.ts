@@ -17,6 +17,7 @@ export default class SendMentionNotificationService {
     const $ = cheerio.load(post.content);
     const data = $('body');
     data.children('div.quote').remove();
+    data.children('div.quoteheader').remove();
     data.find('br').replaceWith('&nbsp;');
     const contentFiltered = data.text().replace(/\s\s+/g, ' ').trim();
 
@@ -47,7 +48,7 @@ export default class SendMentionNotificationService {
           'Forbidden: bot was blocked by the user'
         ) {
           logger.info(
-            { error: error.response, telegram_id, post },
+            { error: error.response, telegram_id, post: post.id },
             'Telegram user marked as blocked',
           );
           await setUserBlocked.execute(telegram_id);
