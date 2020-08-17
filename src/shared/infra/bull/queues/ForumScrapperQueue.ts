@@ -42,10 +42,12 @@ class ForumScrapperQueue {
     const savePostService = container.resolve(SavePostService);
 
     this.queue.process('scrapeRecentPosts', async () => {
+      console.log('scrape recent');
       await this.scrapePostsRepository.scrapeRecent();
     });
 
     this.queue.process('scrapeMerits', async () => {
+      console.log('scrape merits');
       await this.scrapeMeritsRepository.scrapeMerits();
     });
 

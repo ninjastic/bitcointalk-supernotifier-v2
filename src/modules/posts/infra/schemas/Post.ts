@@ -6,6 +6,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  createConnection,
+  getMongoManager,
 } from 'typeorm';
 
 @Entity('posts')
@@ -25,7 +27,7 @@ class Post {
   title: string;
 
   @Column()
-  @Index({ fulltext: true })
+  @Index()
   author: string;
 
   @Column()
@@ -57,5 +59,12 @@ class Post {
   @UpdateDateColumn()
   updated_at: Date;
 }
+
+createConnection().then(() => {
+  getMongoManager().createCollectionIndex(Post, {
+    title: 'text',
+    summary: 'text',
+  });
+});
 
 export default Post;

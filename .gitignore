@@ -8,5 +8,4 @@ temp/
 .env
 ormconfig.js
 *.log
-*.lock
 telegram_sessions.json

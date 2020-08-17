@@ -1,10 +1,18 @@
-import forumScrapperQueue from '../../../../shared/infra/bull/queues/ForumScrapperQueue';
+import Queue from 'bull';
+
+import cacheConfig from '../../../../config/cache';
 
 class ScrapeMeritsJob {
-  public start(): void {
-    const { queue } = forumScrapperQueue;
+  public async start(): Promise<void> {
+    const queue = new Queue('forumScrapper', {
+      redis: cacheConfig.config.redis,
+      limiter: {
+        max: 1,
+        duration: 1000,
+      },
+    });
 
-    queue.add('scrapeMerits', null, {
+    await queue.add('scrapeMerits', null, {
       repeat: { every: 15000 },
       removeOnComplete: true,
       removeOnFail: true,

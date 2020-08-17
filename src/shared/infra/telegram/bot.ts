@@ -27,10 +27,6 @@ import callbackHandler from './commands/callbackHandler';
 
 import telegramNotificationsQueue from '../bull/queues/TelegramNotificationsQueue';
 
-interface Context extends TelegrafContext {
-  session: ISession;
-}
-
 class TelegramBot {
   public bot: TelegrafTypes<TelegrafContext>;
 
