@@ -1,6 +1,8 @@
 import { injectable, inject } from 'tsyringe';
 import User from '../../../../modules/users/infra/schemas/User';
 
+import logger from '../../../services/logger';
+
 import IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
 
 import CreateUserDTO from '../../../../modules/users/dtos/CreateUserDTO';
@@ -17,6 +19,8 @@ export default class UpdateUserByTelegramIdService {
     data: CreateUserDTO,
   ): Promise<User> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
+
+    logger.info({ user, data }, 'Updating user');
 
     user.user_id = data.user_id;
     user.username = data.username;

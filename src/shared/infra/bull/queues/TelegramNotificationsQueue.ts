@@ -1,6 +1,7 @@
 import Queue from 'bull';
 
 import cacheConfig from '../../../../config/cache';
+import logger from '../../../services/logger';
 
 import SendMentionNotificationService from '../../telegram/services/SendMentionNotificationService';
 import SendMeritNotificationService from '../../telegram/services/SendMeritNotificationService';
@@ -34,12 +35,16 @@ class TelegramNotificationsQueue {
       await sendMeritNotification.execute(user.telegram_id, merit);
     });
 
+    this.queue.on('active', job => {
+      logger.info({ data: job.data }, 'Starting job %s', job.name);
+    });
+
     this.queue.on('error', err => {
-      console.log(err.message);
+      logger.error(err.message);
     });
 
     this.queue.on('failed', err => {
-      console.log(err.failedReason);
+      logger.error(err.failedReason);
     });
   }
 }

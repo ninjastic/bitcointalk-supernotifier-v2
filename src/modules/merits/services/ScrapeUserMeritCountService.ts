@@ -1,0 +1,21 @@
+import cheerio from 'cheerio';
+
+import api from '../../../shared/services/api';
+
+export default class ScrapeUserMeritCountService {
+  public async execute(uid: number): Promise<number> {
+    const response = await api.get(`index.php?action=profile;u=${uid}`);
+    const $ = cheerio.load(response.data, { decodeEntities: false });
+
+    const meritsCount = Number(
+      $("b > a[href*='/index.php?action=merit;u=']")
+        .parent()
+        .parent()
+        .parent()
+        .find('td:nth-child(2)')
+        .text(),
+    );
+
+    return meritsCount;
+  }
+}

@@ -35,10 +35,10 @@ export default class ParseRecentPostElementService {
 
     const title = fullTitleWithBoards.find('b > a').text();
 
-    const author = $('tr:nth-child(2) > td > span > a:nth-child(1)').text();
+    const author = $('tr:nth-child(2) > td > span > a:nth-child(2)').text();
 
     const author_uid = Number(
-      $('tr:nth-child(2) > td > span > a:nth-child(1)')
+      $('tr:nth-child(2) > td > span > a:nth-child(2)')
         .attr('href')
         .match(/u=(\d*)/)[1],
     );

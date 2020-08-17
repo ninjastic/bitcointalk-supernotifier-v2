@@ -2,6 +2,7 @@ import Queue from 'bull';
 import { container } from 'tsyringe';
 
 import cacheConfig from '../../../../config/cache';
+import logger from '../../../services/logger';
 
 import CheckMentionsService from '../../../../modules/posts/services/CheckMentionsService';
 
@@ -25,12 +26,16 @@ class MentionCheckerQueue {
       await checkMentions.execute();
     });
 
+    this.queue.on('active', job => {
+      logger.info({ data: job.data }, 'Starting job %s', job.name);
+    });
+
     this.queue.on('error', err => {
-      console.log(err.message);
+      logger.error(err.message);
     });
 
     this.queue.on('failed', err => {
-      console.log(err.failedReason);
+      logger.error(err.failedReason);
     });
   }
 }

@@ -2,6 +2,7 @@ import Queue, { Job } from 'bull';
 import { container } from 'tsyringe';
 
 import cacheConfig from '../../../../config/cache';
+import logger from '../../../services/logger';
 
 import ScrapePostDTO from '../../../../modules/posts/dtos/ScrapePostDTO';
 
@@ -42,12 +43,10 @@ class ForumScrapperQueue {
     const savePostService = container.resolve(SavePostService);
 
     this.queue.process('scrapeRecentPosts', async () => {
-      console.log('scrape recent');
       await this.scrapePostsRepository.scrapeRecent();
     });
 
     this.queue.process('scrapeMerits', async () => {
-      console.log('scrape merits');
       await this.scrapeMeritsRepository.scrapeMerits();
     });
 
@@ -62,12 +61,16 @@ class ForumScrapperQueue {
       return post;
     });
 
+    this.queue.on('active', job => {
+      logger.info({ data: job.data }, 'Starting job %s', job.name);
+    });
+
     this.queue.on('error', err => {
-      console.log(err.message);
+      logger.error(err.message);
     });
 
     this.queue.on('failed', err => {
-      console.log(err.failedReason);
+      logger.error(err.failedReason);
     });
   }
 }

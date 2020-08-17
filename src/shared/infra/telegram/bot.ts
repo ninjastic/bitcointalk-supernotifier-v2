@@ -8,6 +8,7 @@ import {
 } from 'telegraf';
 import LocalSession from 'telegraf-session-local';
 import { createConnection } from 'typeorm';
+import logger from '../../services/logger';
 
 import '../../container';
 
@@ -83,7 +84,7 @@ class TelegramBot {
 
   errorHandler(): void {
     this.bot.catch(error => {
-      console.log('Error: ', error);
+      logger.error(error);
     });
   }
 }
