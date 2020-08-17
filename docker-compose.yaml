@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo
+    container_name: supernotifier_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    networks:
+      - supernotifier
+  redis:
+    image: redis:alpine
+    container_name: supernotifier_redis
+    restart: always
+    environment:
+      REDIS_REPLICATION_MODE: master
+    volumes:
+      - $PWD/redis-data:/var/lib/redis
+      - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    networks:
+      - supernotifier
+networks:
+  supernotifier:
+    driver: bridge
