@@ -1,4 +1,4 @@
-import Merit from '../infra/schemas/Merit';
+import Merit from '../infra/typeorm/entities/Merit';
 
 export default interface IScrapeMeritsRepository {
   scrapeMerits(): Promise<void>;

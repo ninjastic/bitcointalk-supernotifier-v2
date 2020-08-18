@@ -3,7 +3,7 @@ import { container } from 'tsyringe';
 import IScrapePostsRepository from '../../repositories/IScrapePostsRepository';
 import ScrapePostDTO from '../../dtos/ScrapePostDTO';
 
-import Post from '../schemas/Post';
+import Post from '../typeorm/entities/Post';
 
 import ScrapePostService from '../../services/ScrapePostService';
 import ScrapeRecentPostsService from '../../services/ScrapeRecentPostsService';

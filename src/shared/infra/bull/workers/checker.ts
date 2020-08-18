@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import 'dotenv/config.js';
-import { createConnection } from 'typeorm';
 import Queue from 'bull';
 
+import '../../typeorm';
 import '../../../container';
 
 import cacheConfig from '../../../../config/cache';
@@ -13,7 +13,7 @@ import { CheckMeritsJob } from '../../../../modules/merits/infra/jobs';
 import MentionCheckerQueue from '../queues/MentionCheckerQueue';
 import MeritsCheckerQueue from '../queues/MeritsCheckerQueue';
 
-createConnection().then(async () => {
+(async () => {
   const queue = new Queue('mentionsChecker', {
     redis: cacheConfig.config.redis,
   });
@@ -26,4 +26,4 @@ createConnection().then(async () => {
 
   MentionCheckerQueue.run();
   MeritsCheckerQueue.run();
-});
+})();

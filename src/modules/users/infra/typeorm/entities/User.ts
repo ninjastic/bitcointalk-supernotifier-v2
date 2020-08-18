@@ -1,17 +1,16 @@
 import {
-  ObjectID,
-  ObjectIdColumn,
   Entity,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('users')
 class User {
-  @ObjectIdColumn()
-  id: ObjectID;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   @Index({ unique: false })
@@ -21,8 +20,8 @@ class User {
   @Index({ unique: false })
   username: string;
 
-  @Column({ default: [] })
-  alternative_usernames: Array<string>;
+  @Column({ type: 'varchar', array: true, default: [] })
+  alternative_usernames: string[];
 
   @Column({ default: 'en' })
   language: string;

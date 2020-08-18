@@ -6,8 +6,9 @@ export default interface CreatePostDTO {
   author_uid: number;
   content: string;
   date: Date;
-  boards: Array<string>;
+  boards: string[];
   checked: boolean;
   notified: boolean;
-  notified_to: Array<number>;
+  notified_to: number[];
+  archive?: boolean;
 }

@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import pluralize from 'pluralize';
 import logger from '../../../services/logger';
 
-import Merit from '../../../../modules/merits/infra/schemas/Merit';
+import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
 
 import telegramBot from '../index';
 

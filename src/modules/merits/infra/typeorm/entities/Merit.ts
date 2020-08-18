@@ -1,17 +1,16 @@
 import {
-  ObjectID,
-  ObjectIdColumn,
   Entity,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('merits')
 class Merit {
-  @ObjectIdColumn()
-  id: ObjectID;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   amount: number;
@@ -44,8 +43,8 @@ class Merit {
   @Column({ default: false })
   notified: boolean;
 
-  @Column({ default: [] })
-  notified_to: Array<number>;
+  @Column({ type: 'int', array: true, default: [] })
+  notified_to: number[];
 
   @Column({ default: false })
   checked: boolean;

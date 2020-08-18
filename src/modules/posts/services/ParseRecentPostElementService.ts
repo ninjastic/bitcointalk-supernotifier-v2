@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 
-import Post from '../infra/schemas/Post';
+import Post from '../infra/typeorm/entities/Post';
 
 @injectable()
 export default class ParseRecentPostElementService {

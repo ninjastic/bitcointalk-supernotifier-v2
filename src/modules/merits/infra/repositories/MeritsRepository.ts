@@ -1,17 +1,17 @@
-import { getMongoRepository, MongoRepository } from 'typeorm';
+import { getRepository, Repository, MoreThanOrEqual } from 'typeorm';
 import { sub } from 'date-fns';
 
 import CreateMeritDTO from '../../dtos/CreateMeritDTO';
 import FindMeritDTO from '../../dtos/FindMeritDTO';
 
-import Merit from '../schemas/Merit';
+import Merit from '../typeorm/entities/Merit';
 import IMeritsRepository from '../../repositories/IMeritsRepository';
 
 export default class MeritsRepository implements IMeritsRepository {
-  private ormRepository: MongoRepository<Merit>;
+  private ormRepository: Repository<Merit>;
 
   constructor() {
-    this.ormRepository = getMongoRepository(Merit);
+    this.ormRepository = getRepository(Merit);
   }
 
   public create(data: CreateMeritDTO): Merit {
@@ -40,11 +40,13 @@ export default class MeritsRepository implements IMeritsRepository {
     const merits = await this.ormRepository.find({
       where: {
         checked: false,
-        date: { $gte: new Date(sub(new Date(), { minutes: 30 })) },
+        date: MoreThanOrEqual(sub(new Date(), { minutes: 30 })),
       },
       order: { created_at: -1 },
       take: limit,
     });
+
+    console.log(merits);
 
     return merits;
   }

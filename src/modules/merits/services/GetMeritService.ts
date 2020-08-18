@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
-import Merit from '../infra/schemas/Merit';
+import Merit from '../infra/typeorm/entities/Merit';
 
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import FindMeritDTO from '../dtos/FindMeritDTO';

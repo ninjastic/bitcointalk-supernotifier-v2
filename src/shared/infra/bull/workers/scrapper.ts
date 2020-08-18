@@ -1,8 +1,8 @@
 import 'reflect-metadata';
 import 'dotenv/config.js';
-import { createConnection } from 'typeorm';
 import Queue from 'bull';
 
+import '../../typeorm';
 import '../../../container';
 
 import cacheConfig from '../../../../config/cache';
@@ -12,7 +12,7 @@ import { ScrapeMeritsJob } from '../../../../modules/merits/infra/jobs';
 
 import ForumScrapperQueue from '../queues/ForumScrapperQueue';
 
-createConnection().then(async () => {
+(async () => {
   const queue = new Queue('forumScrapper', {
     redis: cacheConfig.config.redis,
     limiter: {
@@ -28,4 +28,4 @@ createConnection().then(async () => {
   await ScrapeMeritsJob.start();
 
   ForumScrapperQueue.run();
-});
+})();

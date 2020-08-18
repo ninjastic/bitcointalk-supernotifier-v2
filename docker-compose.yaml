@@ -1,13 +1,17 @@
 version: "3.8"
 services:
-  mongo:
-    image: mongo
-    container_name: supernotifier_mongo
+  postgres:
+    image: postgres
+    container_name: supernotifier_postgres
     restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ${PWD}/docker/mongo/volume:/data/db
+      - ${PWD}/docker/postgres:/var/lib/postgresql/data
     ports:
-      - "27017:27017"
+      - "5432:5432"
     networks:
       - supernotifier
   redis:
@@ -17,7 +21,7 @@ services:
     environment:
       REDIS_REPLICATION_MODE: master
     volumes:
-      - ${PWD}/docker/redis/redis-data:/data
+      - ${PWD}/docker/redis:/data
     ports:
       - "6379:6379"
     networks:

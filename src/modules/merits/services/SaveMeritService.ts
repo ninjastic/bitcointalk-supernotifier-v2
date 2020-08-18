@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
-import Merit from '../infra/schemas/Merit';
+import Merit from '../infra/typeorm/entities/Merit';
 
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import IMeritsRepository from '../repositories/IMeritsRepository';

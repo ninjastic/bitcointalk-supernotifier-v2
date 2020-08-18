@@ -1,4 +1,4 @@
-import Post from '../infra/schemas/Post';
+import Post from '../infra/typeorm/entities/Post';
 
 import ScrapePostDTO from '../dtos/ScrapePostDTO';
 

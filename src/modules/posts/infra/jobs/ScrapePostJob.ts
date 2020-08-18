@@ -1,6 +1,6 @@
 import Queue from 'bull';
 
-import Post from '../schemas/Post';
+import Post from '../typeorm/entities/Post';
 
 import cacheConfig from '../../../../config/cache';
 

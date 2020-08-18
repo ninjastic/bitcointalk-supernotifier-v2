@@ -1,16 +1,16 @@
-import { getMongoRepository, MongoRepository } from 'typeorm';
+import { getRepository, Repository, MoreThanOrEqual } from 'typeorm';
 import { sub } from 'date-fns';
 
 import CreatePostDTO from '../../dtos/CreatePostDTO';
 
-import Post from '../schemas/Post';
+import Post from '../typeorm/entities/Post';
 import IPostsRepository from '../../repositories/IPostsRepository';
 
 export default class PostsRepository implements IPostsRepository {
-  private ormRepository: MongoRepository<Post>;
+  private ormRepository: Repository<Post>;
 
   constructor() {
-    this.ormRepository = getMongoRepository(Post);
+    this.ormRepository = getRepository(Post);
   }
 
   public create(data: CreatePostDTO): Post {
@@ -35,7 +35,8 @@ export default class PostsRepository implements IPostsRepository {
     const posts = await this.ormRepository.find({
       where: {
         checked: false,
-        date: { $gte: new Date(sub(new Date(), { minutes: 30 })) },
+        archive: false,
+        date: MoreThanOrEqual(sub(new Date(), { minutes: 30 })),
       },
       order: { created_at: -1 },
       take: limit,

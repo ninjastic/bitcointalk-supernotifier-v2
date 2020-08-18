@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import cheerio from 'cheerio';
 import logger from '../../../services/logger';
 
-import Post from '../../../../modules/posts/infra/schemas/Post';
+import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 import telegramBot from '../index';
 

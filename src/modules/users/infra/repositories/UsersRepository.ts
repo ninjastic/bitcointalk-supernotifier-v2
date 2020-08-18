@@ -1,15 +1,15 @@
-import { getMongoRepository, MongoRepository } from 'typeorm';
+import { Repository, getRepository } from 'typeorm';
 
 import CreateUserDTO from '../../dtos/CreateUserDTO';
 
-import User from '../schemas/User';
+import User from '../typeorm/entities/User';
 import IUsersRepository from '../../repositories/IUsersRepository';
 
 export default class UsersRepository implements IUsersRepository {
-  private ormRepository: MongoRepository<User>;
+  private ormRepository: Repository<User>;
 
   constructor() {
-    this.ormRepository = getMongoRepository(User);
+    this.ormRepository = getRepository(User);
   }
 
   public create(data: CreateUserDTO): User {

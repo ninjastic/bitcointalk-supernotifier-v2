@@ -1,5 +1,5 @@
 import { injectable, inject } from 'tsyringe';
-import User from '../../../../modules/users/infra/schemas/User';
+import User from '../../../../modules/users/infra/typeorm/entities/User';
 
 import IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
 

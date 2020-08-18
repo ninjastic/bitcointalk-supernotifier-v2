@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 
 import IScrapeMeritsRepository from '../../repositories/IScrapeMeritsRepository';
 
-import Merit from '../schemas/Merit';
+import Merit from '../typeorm/entities/Merit';
 
 import ScrapeMeritsService from '../../services/ScrapeMeritsService';
 import ParseMeritElementService from '../../services/ParseMeritElementService';

@@ -8,6 +8,6 @@ export default interface CreateMeritDTO {
   post_id: number;
   topic_id: number;
   notified: boolean;
-  notified_to: Array<number>;
+  notified_to: number[];
   checked: boolean;
 }

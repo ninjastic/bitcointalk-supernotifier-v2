@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import cheerio from 'cheerio';
 
 import api from '../../../shared/services/api';
-import Merit from '../infra/schemas/Merit';
+import Merit from '../infra/typeorm/entities/Merit';
 
 import ParseMeritElementService from './ParseMeritElementService';
 

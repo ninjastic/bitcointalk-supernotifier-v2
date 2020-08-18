@@ -1,19 +1,16 @@
 import {
-  ObjectID,
-  ObjectIdColumn,
   Entity,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
   Index,
-  createConnection,
-  getMongoManager,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 @Entity('posts')
 class Post {
-  @ObjectIdColumn()
-  id: ObjectID;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   @Index({ unique: true })
@@ -41,17 +38,20 @@ class Post {
   @Column()
   date: Date;
 
-  @Column({ default: [] })
-  boards: Array<string>;
+  @Column({ type: 'varchar', array: true, default: [] })
+  boards: string[];
 
   @Column({ default: false })
   notified: boolean;
 
-  @Column({ default: [] })
-  notified_to: Array<number>;
+  @Column({ type: 'varchar', array: true, default: [] })
+  notified_to: number[];
 
   @Column({ default: false })
   checked: boolean;
+
+  @Column({ default: false })
+  archive?: boolean;
 
   @CreateDateColumn()
   created_at: Date;
@@ -59,12 +59,5 @@ class Post {
   @UpdateDateColumn()
   updated_at: Date;
 }
-
-createConnection().then(() => {
-  getMongoManager().createCollectionIndex(Post, {
-    title: 'text',
-    summary: 'text',
-  });
-});
 
 export default Post;

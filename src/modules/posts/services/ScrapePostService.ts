@@ -1,7 +1,7 @@
 import { injectable, container } from 'tsyringe';
 
 import api from '../../../shared/services/api';
-import Post from '../infra/schemas/Post';
+import Post from '../infra/typeorm/entities/Post';
 
 import ScrapePostDTO from '../dtos/ScrapePostDTO';
 

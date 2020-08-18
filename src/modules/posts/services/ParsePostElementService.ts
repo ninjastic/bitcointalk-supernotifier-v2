@@ -1,9 +1,9 @@
 import cheerio from 'cheerio';
-import { injectable, inject } from 'tsyringe';
+import { container } from 'tsyringe';
 
-import IPostsRepository from '../repositories/IPostsRepository';
+import Post from '../infra/typeorm/entities/Post';
 
-import Post from '../infra/schemas/Post';
+import CreatePostService from './CreatePostService';
 
 interface Data {
   html: string;
@@ -11,14 +11,10 @@ interface Data {
   post_id: number;
 }
 
-@injectable()
 export default class ParsePostElementService {
-  constructor(
-    @inject('PostsRepository')
-    private postsRepository: IPostsRepository,
-  ) {}
-
   public execute({ html, topic_id, post_id }: Data): Post {
+    const createPost = container.resolve(CreatePostService);
+
     const $ = cheerio.load(html, { decodeEntities: false });
     const posts = $('#quickModForm > table.bordercolor');
 
@@ -79,7 +75,7 @@ export default class ParsePostElementService {
                 .replace(/Last edit:.*/, ''),
             );
 
-            post = this.postsRepository.create({
+            post = createPost.execute({
               post_id,
               topic_id,
               title,

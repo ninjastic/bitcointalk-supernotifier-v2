@@ -3,7 +3,7 @@ import { inject, injectable } from 'tsyringe';
 
 import { ScrapePostJob } from '../../posts/infra/jobs';
 
-import Merit from '../infra/schemas/Merit';
+import Merit from '../infra/typeorm/entities/Merit';
 
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import IPostsRepository from '../../posts/repositories/IPostsRepository';

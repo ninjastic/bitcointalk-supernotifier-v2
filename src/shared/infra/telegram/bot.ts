@@ -7,9 +7,9 @@ import {
   Context as TelegrafContext,
 } from 'telegraf';
 import LocalSession from 'telegraf-session-local';
-import { createConnection } from 'typeorm';
 import logger from '../../services/logger';
 
+import '../typeorm';
 import '../../container';
 
 import ISession from './@types/ISession';
@@ -34,29 +34,27 @@ class TelegramBot {
   public session: LocalSession<ISession>;
 
   constructor() {
-    createConnection().then(() => {
-      this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+    this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
-      this.session = new LocalSession<ISession>({
-        database: path.resolve(
-          __dirname,
-          '..',
-          '..',
-          '..',
-          '..',
-          'telegram_sessions.json',
-        ),
-        storage: LocalSession.storageFileAsync,
-      });
-
-      this.middlewares();
-      this.menus();
-      this.commands();
-      this.errorHandler();
-
-      this.bot.launch();
-      this.queues();
+    this.session = new LocalSession<ISession>({
+      database: path.resolve(
+        __dirname,
+        '..',
+        '..',
+        '..',
+        '..',
+        'telegram_sessions.json',
+      ),
+      storage: LocalSession.storageFileAsync,
     });
+
+    this.middlewares();
+    this.menus();
+    this.commands();
+    this.errorHandler();
+
+    this.bot.launch();
+    this.queues();
   }
 
   middlewares(): void {
