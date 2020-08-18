@@ -1,13 +1,22 @@
+require('dotenv').config();
+
 module.exports = {
   name: 'default',
-  type: 'mongodb',
+  type: 'postgres',
   host: 'localhost',
-  port: 27017,
-  database: 'supernotifier',
+  port: 5432,
+  username: process.env.POSTGRES_USER,
+  password: process.env.POSTGRES_PASSWORD,
+  database: process.env.POSTGRES_DB,
   entities:
     process.env.NODE_ENV === 'development'
-      ? ['src/modules/**/infra/schemas/*.ts']
-      : ['dist/modules/**/infra/schemas/*.js'],
-  synchronize: true,
-  useUnifiedTopology: true,
+      ? ['src/modules/**/infra/typeorm/entities/*.ts']
+      : ['dist/modules/**/infra/typeorm/entities/*.js'],
+  migrations:
+    process.env.NODE_ENV === 'development'
+      ? ['src/shared/infra/typeorm/migrations/*.ts']
+      : ['dirst/shared/infra/typeorm/migrations/*.js'],
+  cli: {
+    migrationsDir: 'src/shared/infra/typeorm/migrations',
+  },
 };
