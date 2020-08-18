@@ -71,7 +71,10 @@ const scrapePostFromBuffer = buffer => {
   const content = $('div.post').html();
   const title = '(Unknown Title)';
 
-  if (!author_uid || !content.trim() || !post_id) return null;
+  if (!author_uid || !content || (content && !content.trim()) || !post_id)
+    return null;
+
+  if (author_uid && author_uid >= 999999999) return null;
 
   const boards = [];
   const checked = false;
