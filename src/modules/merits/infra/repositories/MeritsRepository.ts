@@ -46,8 +46,6 @@ export default class MeritsRepository implements IMeritsRepository {
       take: limit,
     });
 
-    console.log(merits);
-
     return merits;
   }
 }
