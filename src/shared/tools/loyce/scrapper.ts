@@ -8,7 +8,9 @@ import decompressTarbz from 'decompress-tarbz2';
 import { container } from 'tsyringe';
 import { createConnection, getManager } from 'typeorm';
 import del from 'del';
+import iconv from 'iconv-lite';
 
+import '../../infra/typeorm';
 import '../../container';
 
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';
@@ -17,6 +19,9 @@ import CreatePostService from '../../../modules/posts/services/CreatePostService
 
 const filesBasePath = process.argv[2];
 const extractedBasePath = process.argv[3];
+
+console.log(filesBasePath);
+console.log(extractedBasePath);
 
 const wait = ms => {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -43,7 +48,9 @@ const decompressFile = async (file, dir) => {
 };
 
 const scrapePostFromBuffer = buffer => {
-  const $ = cheerio.load(buffer);
+  const utf8String = iconv.decode(buffer, 'ISO-8859-1');
+
+  const $ = cheerio.load(utf8String, { decodeEntities: false });
 
   const post_id = Number($('body > b:nth-child(1) > a').text());
   const post_url = $('body > b:nth-child(1) > a').attr('href');
@@ -89,25 +96,31 @@ const scrapePostFromBuffer = buffer => {
 
   return post;
 };
+console.log('lendo 1');
 
 createConnection().then(async () => {
+  console.log('lendo 2');
   const manager = getManager();
   const createPost = container.resolve(CreatePostService);
+
+  console.log('lendo pasta');
 
   const folders = await readDir(path.resolve(filesBasePath));
   const foldersFiltered = folders.filter(folder => {
     return !folder.includes('.ts') && !folder.includes('extracted');
   });
 
+  console.log(foldersFiltered);
+
   for await (const folder of foldersFiltered) {
     const folderFullDir = path.resolve(filesBasePath, folder);
-
     const files = await readDir(folderFullDir);
     const filesToDecompress = files.filter(file => {
       return file.includes('.tar.bz2');
     });
 
     for await (const file of filesToDecompress) {
+      console.log(`decompressing ${folder} ${file}`);
       await decompressFile(
         path.resolve(filesBasePath, folder, file),
         path.resolve(extractedBasePath, folder),
@@ -118,9 +131,11 @@ createConnection().then(async () => {
 
     const filesExtracted = await readDir(extractedFullPath);
 
-    const operations = [];
+    let operations = [];
+    let sinceLastBatch = 0;
 
     for await (const file of filesExtracted) {
+      console.log(`file ${folder} ${file}`);
       const fileContent = await fs.readFile(
         path.resolve(extractedBasePath, folder, file),
       );
@@ -130,18 +145,26 @@ createConnection().then(async () => {
 
       if (postCreated.post_id) {
         operations.push(postCreated);
+        sinceLastBatch += 1;
+
+        if (sinceLastBatch >= 5000) {
+          console.log('executing batch');
+          await manager
+            .createQueryBuilder()
+            .insert()
+            .into(Post)
+            .values(operations)
+            .onConflict(`("post_id") DO NOTHING`)
+            .execute();
+
+          operations = [];
+          sinceLastBatch = 0;
+        }
       }
     }
 
-    await manager
-      .createQueryBuilder()
-      .insert()
-      .into(Post)
-      .values(operations)
-      .onConflict(`("post_id") DO NOTHING`)
-      .execute();
-
-    // await del(folderFullDir);
+    console.log(`deleting folder ${folder} and ${folderFullDir}`);
+    await del(folderFullDir);
     await del(extractedFullPath);
   }
 });
