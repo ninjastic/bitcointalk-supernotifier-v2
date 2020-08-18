@@ -32,12 +32,7 @@ export default class SavePostService {
 
     const savedPost = await this.postsRepository.save(post);
 
-    await this.cacheRepository.save(
-      `post:${post.post_id}`,
-      JSON.stringify(post),
-      'EX',
-      180,
-    );
+    await this.cacheRepository.save(`post:${post.post_id}`, post, 'EX', 180);
 
     return savedPost;
   }
