@@ -164,7 +164,7 @@ createConnection().then(async () => {
     }
 
     console.log(`deleting folder ${folder} and ${folderFullDir}`);
-    await del(folderFullDir);
-    await del(extractedFullPath);
+    await del(folderFullDir, { force: true });
+    await del(extractedFullPath, { force: true });
   }
 });
