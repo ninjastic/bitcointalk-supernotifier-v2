@@ -163,6 +163,15 @@ createConnection().then(async () => {
       }
     }
 
+    console.log('executing final batch');
+    await manager
+      .createQueryBuilder()
+      .insert()
+      .into(Post)
+      .values(operations)
+      .onConflict(`("post_id") DO NOTHING`)
+      .execute();
+
     console.log(`deleting folder ${folder} and ${folderFullDir}`);
     await del(folderFullDir, { force: true });
     await del(extractedFullPath, { force: true });
