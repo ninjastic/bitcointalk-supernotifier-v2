@@ -15,7 +15,7 @@ module.exports = {
   migrations:
     process.env.NODE_ENV === 'development'
       ? ['src/shared/infra/typeorm/migrations/*.ts']
-      : ['dirst/shared/infra/typeorm/migrations/*.js'],
+      : ['dist/shared/infra/typeorm/migrations/*.js'],
   cli: {
     migrationsDir: 'src/shared/infra/typeorm/migrations',
   },

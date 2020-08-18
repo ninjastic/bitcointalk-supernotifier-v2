@@ -15,7 +15,8 @@
       "dev:telegram": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/telegram/index.ts | pino-pretty",
       "dev:checker": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/bull/workers/checker.ts | pino-pretty",
       "postinstall": "typesync",
-      "typeorm": "ts-node-dev ./node_modules/typeorm/cli.js"
+      "typeorm": "ts-node-dev ./node_modules/typeorm/cli.js",
+      "migrate": "typeorm migration:run"
    },
    "husky": {
       "hooks": {
