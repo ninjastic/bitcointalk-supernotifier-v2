@@ -4488,6 +4488,13 @@ telegraf-session-local@^2.0.0:
     "@types/lowdb" "^1.0.9"
     lowdb "^1.0.0"
 
+telegraf-stateless-question@^0.1.1:
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/telegraf-stateless-question/-/telegraf-stateless-question-0.1.1.tgz#3a40d0e72081efdd050ab01ee11b9ead8f8c93cf"
+  integrity sha512-M38jt/Ax/g3j7Gsue/8mSeCK1BRPGYn+7nUh/3mbcYQDhuKC0n5NHYkRWikkU7j8dySxLk2VCw3x6h52/483LA==
+  dependencies:
+    telegram-format "^2.0.0"
+
 telegraf@^3.38.0:
   version "3.38.0"
   resolved "https://registry.yarnpkg.com/telegraf/-/telegraf-3.38.0.tgz#745b447547a8e6cdb626055e4d616058aaae0759"
@@ -4499,6 +4506,11 @@ telegraf@^3.38.0:
     node-fetch "^2.2.0"
     sandwich-stream "^2.0.1"
     telegram-typings "^3.6.0"
+
+telegram-format@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/telegram-format/-/telegram-format-2.0.1.tgz#0f29ebdbf98a63da03487efae1b4cb4b79195252"
+  integrity sha512-U0pJ7mV+6Nq0EcvrUU/dtluM0BX0bhUOIG4+vaIcyy4w1e2/+0424SEfsMx0ecn8IwKHbGN/Gj4LDU+CbsFovg==
 
 telegram-typings@^3.6.0:
   version "3.6.1"

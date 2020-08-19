@@ -1,31 +1,36 @@
 import { container } from 'tsyringe';
 import pluralize from 'pluralize';
+import Bull from 'bull';
+
 import logger from '../../../services/logger';
+import cacheConfig from '../../../../config/cache';
+
+import bot from '../index';
 
 import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
 
-import telegramBot from '../index';
-
 import SetMeritNotifiedService from '../../../../modules/merits/services/SetMeritNotifiedService';
-import ScrapeUserMeritCountService from '../../../../modules/merits/services/ScrapeUserMeritCountService';
 import GetPostService from '../../../../modules/posts/services/GetPostService';
 import SetUserBlockedService from './SetUserBlockedService';
 
 export default class SendMeritNotificationService {
   public async execute(telegram_id: number, merit: Merit): Promise<void> {
-    const scrapeUserMeritCountService = new ScrapeUserMeritCountService();
     const setMeritNotified = container.resolve(SetMeritNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
     const getPost = container.resolve(GetPostService);
 
-    const post = await getPost.execute(merit.post_id);
+    const post = await getPost.execute(merit.post_id, merit.topic_id);
 
     const { title } = post;
     const { amount, sender, topic_id, post_id, receiver_uid } = merit;
 
-    const totalMeritCount = await scrapeUserMeritCountService.execute(
-      receiver_uid,
-    );
+    const queue = new Bull('ForumScrapperSideQueue', {
+      redis: cacheConfig.config.redis,
+    });
+
+    const job = await queue.add('scrapeUserMeritCount', { uid: receiver_uid });
+
+    const totalMeritCount = await job.finished();
 
     let message = '';
     message += `Merits: <b>${totalMeritCount}</b>. `;
@@ -33,7 +38,7 @@ export default class SendMeritNotificationService {
     message += `from <b>${sender}</b> `;
     message += `for <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">${title}</a>`;
 
-    await telegramBot.bot.telegram
+    await bot.instance.telegram
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
         await setMeritNotified.execute(merit, telegram_id);

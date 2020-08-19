@@ -56,7 +56,7 @@ export const handleUsernameConfirmAnswer = async (
     await bot.session.saveSession(bot.session.getSessionKey(ctx), ctx.session);
 
     await ctx.deleteMessage();
-    await ctx.reply(`What's your Bitcointalk UID?`);
+    await ctx.reply('What is your Bitcointalk UID?');
   }
 };
 

@@ -1,31 +1,105 @@
 import 'reflect-metadata';
 import 'dotenv/config.js';
-import Queue from 'bull';
+import Queue, { Job } from 'bull';
+import { container } from 'tsyringe';
 
 import '../../typeorm';
 import '../../../container';
 
 import cacheConfig from '../../../../config/cache';
+import loggerHandler from '../handlers/loggerHandler';
 
-import { ScrapeRecentPostsJob } from '../../../../modules/posts/infra/jobs';
-import { ScrapeMeritsJob } from '../../../../modules/merits/infra/jobs';
+import ScrapeMeritsRepository from '../../../../modules/merits/infra/repositories/ScrapeMeritsRepository';
+import ScrapePostsRepository from '../../../../modules/posts/infra/repositories/ScrapePostsRepository';
 
-import ForumScrapperQueue from '../queues/ForumScrapperQueue';
+import SavePostService from '../../../../modules/posts/services/SavePostService';
+import ScrapeUserMeritCountService from '../../../../modules/merits/services/ScrapeUserMeritCountService';
+import ScrapeTopicService from '../../../../modules/posts/services/ScrapeTopicService';
+
+import ScrapePostDTO from '../../../../modules/posts/dtos/ScrapePostDTO';
+
+interface ScrapePostJob extends Job {
+  data: ScrapePostDTO;
+}
+
+interface ScrapeUserMeritCountData {
+  uid: number;
+}
+
+interface ScrapeTopicJobData {
+  topic_id: number;
+}
+
+interface ScrapeUserMeritCountJob extends Job {
+  data: ScrapeUserMeritCountData;
+}
+
+interface ScrapeTopicJob extends Job {
+  data: ScrapeTopicJobData;
+}
 
 (async () => {
-  const queue = new Queue('forumScrapper', {
+  const mainQueue = new Queue('ForumScrapperQueue', {
     redis: cacheConfig.config.redis,
-    limiter: {
-      max: 1,
-      duration: 1000,
-    },
   });
 
-  await queue.removeRepeatable('scrapeRecentPosts', { every: 5000 });
-  await queue.removeRepeatable('scrapeMerits', { every: 15000 });
+  const sideQueue = new Queue('ForumScrapperSideQueue', {
+    redis: cacheConfig.config.redis,
+  });
 
-  await ScrapeRecentPostsJob.start();
-  await ScrapeMeritsJob.start();
+  await mainQueue.removeRepeatable('scrapeRecentPosts', { every: 5000 });
+  await mainQueue.removeRepeatable('scrapeMerits', { every: 15000 });
 
-  ForumScrapperQueue.run();
+  await mainQueue.add('scrapeRecentPosts', null, {
+    repeat: { every: 5000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  });
+
+  await mainQueue.add('scrapeMerits', null, {
+    repeat: { every: 15000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  });
+
+  mainQueue.process('scrapeRecentPosts', async () => {
+    const scrapePostsRepository = new ScrapePostsRepository();
+    return scrapePostsRepository.scrapeRecent();
+  });
+
+  mainQueue.process('scrapeMerits', async () => {
+    const scrapeMeritsRepository = new ScrapeMeritsRepository();
+    return scrapeMeritsRepository.scrapeMerits();
+  });
+
+  sideQueue.process('scrapePost', async (job: ScrapePostJob) => {
+    const scrapePostsRepository = new ScrapePostsRepository();
+    const savePostService = container.resolve(SavePostService);
+    const post = await scrapePostsRepository.scrapePost({
+      topic_id: job.data.topic_id,
+      post_id: job.data.post_id,
+    });
+
+    await savePostService.execute(post);
+
+    return post;
+  });
+
+  sideQueue.process(
+    'scrapeUserMeritCount',
+    async (job: ScrapeUserMeritCountJob) => {
+      const scrapeUserMeritCount = new ScrapeUserMeritCountService();
+
+      return scrapeUserMeritCount.execute(job.data.uid);
+    },
+  );
+
+  sideQueue.process('scrapeTopic', async (job: ScrapeTopicJob) => {
+    const scrapeTopic = new ScrapeTopicService();
+
+    return scrapeTopic.execute(job.data.topic_id);
+  });
+
+  loggerHandler(mainQueue);
+  loggerHandler(sideQueue);
 })();

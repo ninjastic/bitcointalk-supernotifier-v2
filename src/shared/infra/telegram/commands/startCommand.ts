@@ -10,7 +10,7 @@ interface StartContext extends Context {
 
 const startCommand = async (ctx: StartContext): Promise<void> => {
   await ctx.reply(`Hello! Welcome to the BitcoinTalk SuperNotifier V2!`);
-  await ctx.reply("What's your BitcoinTalk username?");
+  await ctx.reply('What is your BitcoinTalk username?');
 
   ctx.session.waitingForUsername = true;
   ctx.session.waitingForUserId = false;

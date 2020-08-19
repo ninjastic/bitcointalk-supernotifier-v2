@@ -5,7 +5,11 @@ import {
   UpdateDateColumn,
   Index,
   PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
+
+import Post from '../../../../posts/infra/typeorm/entities/Post';
 
 @Entity('merits')
 class Merit {
@@ -36,6 +40,10 @@ class Merit {
 
   @Column()
   post_id: number;
+
+  @OneToOne(() => Post)
+  @JoinColumn({ name: 'post_id', referencedColumnName: 'post_id' })
+  post: Post;
 
   @Column()
   topic_id: number;

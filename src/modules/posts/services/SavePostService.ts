@@ -16,14 +16,6 @@ export default class SavePostService {
   ) {}
 
   public async execute(post: Post): Promise<Post> {
-    const cachedPost = await this.cacheRepository.recover<Post>(
-      `post:${post.post_id}`,
-    );
-
-    if (cachedPost) {
-      return cachedPost;
-    }
-
     const foundPost = await this.postsRepository.findByPostId(post.post_id);
 
     if (foundPost) {

@@ -4,7 +4,9 @@ import usernameConfirmMenu from './usernameConfirmMenu';
 import userIdConfirmMenu from './userIdConfirmMenu';
 import configureMentionsMenu from './configureMentionsMenu';
 import configureMeritsMenu from './configureMeritsMenu';
+
 import mainMenu from './mainMenu';
+import trackedTopicsMenu, { addTopicLinkQuestion } from './trackedTopicsMenu';
 
 const usernameConfirmMenuMiddleware = new MenuMiddleware(
   '/prompt/username/',
@@ -28,10 +30,17 @@ const configureMeritsMenuMiddleware = new MenuMiddleware(
 
 const mainMenuMiddleware = new MenuMiddleware('/main/', mainMenu);
 
+const trackedTopicsMenuMiddleware = new MenuMiddleware(
+  '/main/trackedTopics/',
+  trackedTopicsMenu,
+);
+
 export {
   usernameConfirmMenuMiddleware,
   userIdConfirmMenuMiddleware,
   configureMentionsMenuMiddleware,
   configureMeritsMenuMiddleware,
   mainMenuMiddleware,
+  trackedTopicsMenuMiddleware,
+  addTopicLinkQuestion,
 };

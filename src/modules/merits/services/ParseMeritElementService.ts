@@ -1,7 +1,7 @@
 import cheerio from 'cheerio';
 import { inject, injectable } from 'tsyringe';
 
-import { ScrapePostJob } from '../../posts/infra/jobs';
+import ScrapePostJob from '../../posts/infra/jobs/ScrapePostJob';
 
 import Merit from '../infra/typeorm/entities/Merit';
 
@@ -31,7 +31,7 @@ export default class ParseRecentPostElementService {
     const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 
     const withFixedDate = $.html().replace('<b>Today</b> at', today);
-    const date = new Date(withFixedDate.match(/>(.*): \d/)[1]);
+    const date = new Date(withFixedDate.match(/>(.*): \d* from <a/i)[1]);
 
     const post_id = Number($.html().match(/#msg(\d*)/)[1]);
     const topic_id = Number($.html().match(/topic=(\d*)/)[1]);

@@ -15,9 +15,11 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
 
     const merits = await scrapeMerits.execute();
 
-    merits.forEach(async merit => {
-      await saveMerit.execute(merit);
-    });
+    await Promise.all(
+      merits.map(async merit => {
+        await saveMerit.execute(merit);
+      }),
+    );
   }
 
   public async parseMeritElement(element: CheerioElement): Promise<Merit> {

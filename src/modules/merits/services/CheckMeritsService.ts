@@ -24,11 +24,11 @@ export default class CheckMeritsService {
 
     const setMeritChecked = container.resolve(SetMeritCheckedService);
 
-    const queue = new Queue('telegramNotifications', {
+    const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
     });
 
-    Promise.all(
+    await Promise.all(
       merits.map(async merit => {
         Promise.all(
           users.map(async user => {
@@ -54,5 +54,7 @@ export default class CheckMeritsService {
         });
       }),
     );
+
+    await queue.close();
   }
 }

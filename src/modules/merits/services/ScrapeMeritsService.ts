@@ -22,7 +22,7 @@ export default class ScrapeMeritsService {
     const scrapingPromises = merits
       .toArray()
       .filter((_, index) => {
-        if (index >= 10) {
+        if (index >= 20) {
           return false;
         }
 

@@ -6,15 +6,27 @@ import ScrapePostDTO from '../../dtos/ScrapePostDTO';
 import Post from '../typeorm/entities/Post';
 
 import ScrapePostService from '../../services/ScrapePostService';
+import ScrapeTopicService from '../../services/ScrapeTopicService';
 import ScrapeRecentPostsService from '../../services/ScrapeRecentPostsService';
 import ParseRecentPostElementService from '../../services/ParseRecentPostElementService';
 import SavePostService from '../../services/SavePostService';
 
 export default class ScrapePostsRepository implements IScrapePostsRepository {
-  public async scrapePost({ topic_id, post_id }: ScrapePostDTO): Promise<Post> {
+  public async scrapePost({
+    topic_id,
+    post_id,
+  }: ScrapePostDTO): Promise<Post | undefined> {
     const scrapePostService = container.resolve(ScrapePostService);
 
     const post = await scrapePostService.execute({ topic_id, post_id });
+
+    return post;
+  }
+
+  public async scrapeTopic(topic_id: number): Promise<Post | undefined> {
+    const scrapeTopic = container.resolve(ScrapeTopicService);
+
+    const post = await scrapeTopic.execute(topic_id);
 
     return post;
   }
@@ -25,9 +37,11 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
 
     const posts = await scrapeRecent.execute();
 
-    posts.forEach(async post => {
-      await savePost.execute(post);
-    });
+    await Promise.all(
+      posts.map(async post => {
+        await savePost.execute(post);
+      }),
+    );
   }
 
   public parseRecentPostElement(element: CheerioElement): Post {

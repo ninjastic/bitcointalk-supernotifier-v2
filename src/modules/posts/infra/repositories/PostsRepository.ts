@@ -1,4 +1,4 @@
-import { getRepository, Repository, MoreThanOrEqual } from 'typeorm';
+import { Repository, MoreThanOrEqual, getRepository } from 'typeorm';
 import { sub } from 'date-fns';
 
 import CreatePostDTO from '../../dtos/CreatePostDTO';

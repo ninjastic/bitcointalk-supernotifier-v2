@@ -25,9 +25,10 @@ const messageHandler = async (ctx: MessageHandlerContext): Promise<void> => {
   }
 
   if (ctx.session.waitingForUserId) {
-    const userId = Number(ctx.update.message.text.trim());
+    const input = ctx.update.message.text.trim();
+    const validRegex = new RegExp(/^(\d+)$/);
 
-    if (Number.isNaN(userId)) {
+    if (!validRegex.test(input)) {
       await ctx.reply("This doesn't seem right. Please enter your UID.");
 
       return;

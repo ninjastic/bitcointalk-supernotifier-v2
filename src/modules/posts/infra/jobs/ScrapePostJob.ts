@@ -1,19 +1,14 @@
 import Queue from 'bull';
 
-import Post from '../typeorm/entities/Post';
-
 import cacheConfig from '../../../../config/cache';
 
+import Post from '../typeorm/entities/Post';
 import ScrapePostDTO from '../../dtos/ScrapePostDTO';
 
 export default class ScrapePostJob {
   public async start({ topic_id, post_id }: ScrapePostDTO): Promise<Post> {
-    const queue = new Queue('forumScrapper', {
+    const queue = new Queue('ForumScrapperSideQueue', {
       redis: cacheConfig.config.redis,
-      limiter: {
-        max: 1,
-        duration: 1000,
-      },
     });
 
     const job = await queue.add(
@@ -25,6 +20,10 @@ export default class ScrapePostJob {
       },
     );
 
-    return job.finished();
+    const jobResults = await job.finished();
+
+    await queue.close();
+
+    return jobResults;
   }
 }

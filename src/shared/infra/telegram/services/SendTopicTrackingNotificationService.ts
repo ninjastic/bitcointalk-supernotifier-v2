@@ -9,7 +9,7 @@ import bot from '../index';
 import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
 import SetUserBlockedService from './SetUserBlockedService';
 
-export default class SendMentionNotificationService {
+export default class SendTopicTrackingNotificationService {
   public async execute(telegram_id: number, post: Post): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
@@ -22,8 +22,8 @@ export default class SendMentionNotificationService {
     const contentFiltered = data.text().replace(/\s\s+/g, ' ').trim();
 
     let message = '';
-    message += `You have been mentioned by <b>${post.author}</b> `;
-    message += `in <a href="https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}">${post.title}</a>\n`;
+    message += `There is a new reply by <b>${post.author}</b> `;
+    message += `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}">${post.title}</a>\n`;
     message += `<pre>`;
     message += `${contentFiltered.substring(0, 150)}`;
     message += `${contentFiltered.length > 150 ? '...' : ''}`;
@@ -38,7 +38,7 @@ export default class SendMentionNotificationService {
         if (!error.response) {
           logger.error(
             { error: error.response },
-            'Error while sending Mention Notification telegram message',
+            'Error while sending Topic Tracking Notification telegram message',
           );
 
           return;

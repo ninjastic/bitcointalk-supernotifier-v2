@@ -7,11 +7,11 @@ import {
   Context as TelegrafContext,
 } from 'telegraf';
 import LocalSession from 'telegraf-session-local';
-import logger from '../../services/logger';
 
 import '../typeorm';
 import '../../container';
 
+import logger from '../../services/logger';
 import ISession from './@types/ISession';
 
 import {
@@ -19,6 +19,7 @@ import {
   userIdConfirmMenuMiddleware,
   configureMentionsMenuMiddleware,
   mainMenuMiddleware,
+  addTopicLinkQuestion,
 } from './menus';
 
 import startCommand from './commands/startCommand';
@@ -26,16 +27,18 @@ import menuCommand from './commands/menuCommand';
 import messageHandler from './commands/messageHandler';
 import callbackHandler from './commands/callbackHandler';
 
-import telegramNotificationsQueue from '../bull/queues/TelegramNotificationsQueue';
+import TelegramQueue from '../bull/queues/TelegramQueue';
 
 class TelegramBot {
-  public bot: TelegrafTypes<TelegrafContext>;
+  public instance: TelegrafTypes<TelegrafContext>;
+
+  public queue: TelegramQueue;
 
   public session: LocalSession<ISession>;
 
   constructor() {
-    this.bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
-
+    this.instance = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+    this.queue = new TelegramQueue();
     this.session = new LocalSession<ISession>({
       database: path.resolve(
         __dirname,
@@ -50,38 +53,38 @@ class TelegramBot {
 
     this.middlewares();
     this.menus();
+    this.questions();
     this.commands();
     this.errorHandler();
 
-    this.bot.launch();
-    this.queues();
+    this.instance.launch();
+    this.queue.run();
   }
 
   middlewares(): void {
-    this.bot.use(this.session.middleware());
-    this.bot.use(callbackHandler);
+    this.instance.use(this.session.middleware());
+    this.instance.use(callbackHandler);
   }
 
   menus(): void {
-    this.bot.use(usernameConfirmMenuMiddleware);
-    this.bot.use(userIdConfirmMenuMiddleware);
-    this.bot.use(configureMentionsMenuMiddleware);
-    this.bot.use(mainMenuMiddleware);
+    this.instance.use(usernameConfirmMenuMiddleware);
+    this.instance.use(userIdConfirmMenuMiddleware);
+    this.instance.use(configureMentionsMenuMiddleware);
+    this.instance.use(mainMenuMiddleware);
+  }
+
+  questions(): void {
+    this.instance.use(addTopicLinkQuestion.middleware());
   }
 
   commands(): void {
-    this.bot.start(startCommand);
-    this.bot.command('menu', menuCommand);
-
-    this.bot.on('message', messageHandler);
-  }
-
-  queues(): void {
-    telegramNotificationsQueue.run();
+    this.instance.start(startCommand);
+    this.instance.command('menu', menuCommand);
+    this.instance.on('message', messageHandler);
   }
 
   errorHandler(): void {
-    this.bot.catch(error => {
+    this.instance.catch(error => {
       logger.error(error);
     });
   }

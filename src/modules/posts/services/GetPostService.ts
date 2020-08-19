@@ -1,4 +1,7 @@
 import { inject, injectable } from 'tsyringe';
+import Queue from 'bull';
+
+import cacheConfig from '../../../config/cache';
 
 import Post from '../infra/typeorm/entities/Post';
 
@@ -15,17 +18,57 @@ export default class GetPostService {
     private cacheRepository: ICacheProvider,
   ) {}
 
-  public async execute(post_id: number): Promise<Post> {
-    const cachedPost = await this.cacheRepository.recover<Post>(
-      `post:${post_id}`,
-    );
+  public async execute(
+    post_id: number,
+    topic_id?: number,
+    skipCache?: boolean,
+  ): Promise<Post> {
+    if (!skipCache) {
+      const cachedPost = await this.cacheRepository.recover<Post>(
+        `post:${post_id}`,
+      );
 
-    if (cachedPost) {
-      return cachedPost;
+      if (cachedPost) {
+        await this.cacheRepository.save(
+          `post:${cachedPost.post_id}`,
+          cachedPost,
+          'EX',
+          180,
+        );
+
+        return cachedPost;
+      }
     }
 
     const foundPost = await this.postsRepository.findByPostId(post_id);
 
-    return foundPost;
+    if (foundPost) {
+      return foundPost;
+    }
+
+    if (!topic_id) {
+      throw new Error(
+        'The post does not exist in the DB and a topic_id has not been provided',
+      );
+    }
+
+    const queue = new Queue('ForumScrapperSideQueue', {
+      redis: cacheConfig.config.redis,
+    });
+
+    const job = await queue.add(
+      'scrapePost',
+      { topic_id, post_id },
+      {
+        removeOnComplete: true,
+        removeOnFail: true,
+      },
+    );
+
+    const jobResults = await job.finished();
+
+    await queue.close();
+
+    return jobResults;
   }
 }
