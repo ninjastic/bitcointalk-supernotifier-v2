@@ -75,6 +75,7 @@ interface ScrapeTopicJob extends Job {
   sideQueue.process('scrapePost', async (job: ScrapePostJob) => {
     const scrapePostsRepository = new ScrapePostsRepository();
     const savePostService = container.resolve(SavePostService);
+
     const post = await scrapePostsRepository.scrapePost({
       topic_id: job.data.topic_id,
       post_id: job.data.post_id,

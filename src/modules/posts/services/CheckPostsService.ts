@@ -13,11 +13,6 @@ import SetPostCheckedService from './SetPostCheckedService';
 import GetTrackedTopicsService from './GetTrackedTopicsService';
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
 
-interface AlreadyMentionedData {
-  post: string;
-  user: string;
-}
-
 @injectable()
 export default class CheckPostsService {
   constructor(
@@ -52,8 +47,6 @@ export default class CheckPostsService {
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
     });
-
-    const alreadyNotified = [] as AlreadyMentionedData[];
 
     await Promise.all(
       posts.map(async post => {
@@ -93,7 +86,20 @@ export default class CheckPostsService {
                   return Promise.resolve();
                 }
 
-                alreadyNotified.push({ post: post.id, user: user.id });
+                const postNotified = await this.cacheProvider.recover<boolean>(
+                  `notified:${post.post_id}:${user.telegram_id}`,
+                );
+
+                if (postNotified) {
+                  return Promise.resolve();
+                }
+
+                await this.cacheProvider.save(
+                  `notified:${post.post_id}:${user.telegram_id}`,
+                  true,
+                  'EX',
+                  180,
+                );
 
                 return queue.add('sendTopicTrackingNotification', {
                   post,
@@ -135,14 +141,20 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            const postAlreadyNotified = alreadyNotified.find(
-              notified =>
-                notified.post === post.id && notified.user === user.id,
+            const postNotified = await this.cacheProvider.recover<boolean>(
+              `notified:${post.post_id}:${user.telegram_id}`,
             );
 
-            if (postAlreadyNotified) {
+            if (postNotified) {
               return Promise.resolve();
             }
+
+            await this.cacheProvider.save(
+              `notified:${post.post_id}:${user.telegram_id}`,
+              true,
+              'EX',
+              180,
+            );
 
             return queue.add('sendMentionNotification', { post, user });
           }),
