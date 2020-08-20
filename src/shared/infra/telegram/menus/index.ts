@@ -6,7 +6,10 @@ import configureMentionsMenu from './configureMentionsMenu';
 import configureMeritsMenu from './configureMeritsMenu';
 
 import mainMenu from './mainMenu';
-import trackedTopicsMenu, { addTopicLinkQuestion } from './trackedTopicsMenu';
+import trackedTopicsMenu, {
+  addTrackedTopicLinkQuestion,
+} from './trackedTopicsMenu';
+import ignoredUsersMenu, { addIgnoredUserQuestion } from './ignoredUsersMenu';
 
 const usernameConfirmMenuMiddleware = new MenuMiddleware(
   '/prompt/username/',
@@ -35,6 +38,11 @@ const trackedTopicsMenuMiddleware = new MenuMiddleware(
   trackedTopicsMenu,
 );
 
+const ignoredUsersMenuMiddleware = new MenuMiddleware(
+  '/main/ignoredUsers/',
+  ignoredUsersMenu,
+);
+
 export {
   usernameConfirmMenuMiddleware,
   userIdConfirmMenuMiddleware,
@@ -42,5 +50,7 @@ export {
   configureMeritsMenuMiddleware,
   mainMenuMiddleware,
   trackedTopicsMenuMiddleware,
-  addTopicLinkQuestion,
+  addTrackedTopicLinkQuestion,
+  ignoredUsersMenuMiddleware,
+  addIgnoredUserQuestion,
 };

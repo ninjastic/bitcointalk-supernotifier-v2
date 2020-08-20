@@ -4,8 +4,8 @@ import { container } from 'tsyringe';
 import TelegrafStatelessQuestion from 'telegraf-stateless-question';
 import { format } from 'date-fns';
 
-import bot from '../index';
 import ISession from '../@types/ISession';
+import bot from '../index';
 
 import AddTrackedTopicService from '../../../../modules/posts/services/AddTrackedTopicService';
 import RemoveTrackedTopicService from '../../../../modules/posts/services/RemoveTrackedTopicService';
@@ -49,7 +49,7 @@ const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
   };
 });
 
-const getTopicUrl = async (ctx: MenuContext): Promise<string> => {
+const getTrackedTopicUrl = async (ctx: MenuContext): Promise<string> => {
   const post_id = Number(ctx.match[1]);
 
   const getPost = container.resolve(GetPostService);
@@ -58,7 +58,7 @@ const getTopicUrl = async (ctx: MenuContext): Promise<string> => {
   return `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
 };
 
-trackedTopicInfoMenu.url('🔗 Visit Topic', getTopicUrl);
+trackedTopicInfoMenu.url('🔗 Visit Topic', getTrackedTopicUrl);
 
 const confirmRemoveTrackedTopicMenu = new MenuTemplate<MenuContext>(
   async ctx => {
@@ -98,7 +98,7 @@ trackedTopicInfoMenu.interact('↩ Go Back', 'back', {
   },
 });
 
-const addTopicLinkQuestion = new TelegrafStatelessQuestion(
+const addTrackedTopicLinkQuestion = new TelegrafStatelessQuestion(
   'addTopic',
   async (ctx: MenuContext) => {
     const text = ctx.message.text.trim();
@@ -166,12 +166,12 @@ const addTopicLinkQuestion = new TelegrafStatelessQuestion(
       }
     } else {
       const message = `Invalid URL. What is the URL of the topic you want to track?`;
-      await addTopicLinkQuestion.replyWithHTML(ctx, message);
+      await addTrackedTopicLinkQuestion.replyWithHTML(ctx, message);
     }
   },
 );
 
-const getTopicsList = async (ctx: MenuContext) => {
+const getTrackedTopicsList = async (ctx: MenuContext) => {
   const findTrackedTopicsByTelegramId = container.resolve(
     FindTrackedTopicsByTelegramIdService,
   );
@@ -192,11 +192,11 @@ const getTopicsList = async (ctx: MenuContext) => {
 };
 
 trackedTopicsMenu.chooseIntoSubmenu(
-  'Topics',
-  getTopicsList,
+  'trackedTopics',
+  getTrackedTopicsList,
   trackedTopicInfoMenu,
   {
-    maxRows: 5,
+    maxRows: 4,
     columns: 1,
     getCurrentPage: ctx => ctx.session.page,
     setPage: (ctx, page) => {
@@ -208,12 +208,9 @@ trackedTopicsMenu.chooseIntoSubmenu(
 
 trackedTopicsMenu.interact('✨ Add new', 'add', {
   do: async ctx => {
-    ctx.session.waitingForAddTopic = true;
-    await bot.session.saveSession(bot.session.getSessionKey(ctx), ctx.session);
-
     const message = 'What is the URL of the topic you want to track?';
 
-    await addTopicLinkQuestion.replyWithHTML(ctx, message);
+    await addTrackedTopicLinkQuestion.replyWithHTML(ctx, message);
     return true;
   },
 });
@@ -225,5 +222,5 @@ trackedTopicsMenu.interact('↩ Go Back', 'back', {
   joinLastRow: true,
 });
 
-export { addTopicLinkQuestion };
+export { addTrackedTopicLinkQuestion };
 export default trackedTopicsMenu;

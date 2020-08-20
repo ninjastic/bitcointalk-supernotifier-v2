@@ -18,7 +18,7 @@ export default class FindUserByTelegramIdService {
   public async execute(telegram_id: number): Promise<TrackedTopic[]> {
     const cachedTrackedTopics = await this.cacheRepository.recover<
       TrackedTopic[]
-    >(`trackedtopics:${telegram_id}`);
+    >(`trackedTopics:${telegram_id}`);
 
     if (cachedTrackedTopics) {
       return cachedTrackedTopics;
@@ -29,7 +29,7 @@ export default class FindUserByTelegramIdService {
     );
 
     await this.cacheRepository.save(
-      `trackedtopics:${telegram_id}`,
+      `trackedTopics:${telegram_id}`,
       trackedTopics,
     );
 

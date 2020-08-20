@@ -1,4 +1,4 @@
-import { getRepository, Repository, In } from 'typeorm';
+import { getRepository, Repository } from 'typeorm';
 
 import CreateTrackedTopicDTO from '../../dtos/CreateTrackedTopicDTO';
 

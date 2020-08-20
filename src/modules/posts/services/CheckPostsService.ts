@@ -5,9 +5,18 @@ import cacheConfig from '../../../config/cache';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
-import ITrackedsTopicsRepository from '../repositories/ITrackedTopicsRepository';
+import ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
+import IIgnoredUserRepository from '../../users/repositories/IIgnoredUserRepository';
+import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import SetPostCheckedService from './SetPostCheckedService';
+import GetTrackedTopicsService from './GetTrackedTopicsService';
+import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
+
+interface AlreadyMentionedData {
+  post: string;
+  user: string;
+}
 
 @injectable()
 export default class CheckPostsService {
@@ -19,19 +28,32 @@ export default class CheckPostsService {
     private usersRepository: IUsersRepository,
 
     @inject('TrackedTopicsRepository')
-    private trackedTopicsRepository: ITrackedsTopicsRepository,
+    private trackedTopicsRepository: ITrackedTopicsRepository,
+
+    @inject('IgnoredUserRepository')
+    private ignoredUserRepository: IIgnoredUserRepository,
+
+    @inject('CacheRepository')
+    private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute(): Promise<void> {
     const posts = await this.postsRepository.getLatestUncheckedPosts(20);
     const users = await this.usersRepository.getUsersWithMentions();
-    const trackedTopics = await this.trackedTopicsRepository.findAllWithUsers();
+
+    const getTrackedTopics = container.resolve(GetTrackedTopicsService);
+    const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
+
+    const trackedTopics = await getTrackedTopics.execute();
+    const ignoredUsers = await getIgnoredUsers.execute();
 
     const setPostChecked = container.resolve(SetPostCheckedService);
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
     });
+
+    const alreadyNotified = [] as AlreadyMentionedData[];
 
     await Promise.all(
       posts.map(async post => {
@@ -59,6 +81,20 @@ export default class CheckPostsService {
                   return Promise.resolve();
                 }
 
+                const foundIgnoredUser = ignoredUsers.find(
+                  ignoredUser =>
+                    ignoredUser.username === post.author.toLowerCase(),
+                );
+
+                if (
+                  foundIgnoredUser &&
+                  foundIgnoredUser.ignoring.includes(user.telegram_id)
+                ) {
+                  return Promise.resolve();
+                }
+
+                alreadyNotified.push({ post: post.id, user: user.id });
+
                 return queue.add('sendTopicTrackingNotification', {
                   post,
                   user,
@@ -85,6 +121,26 @@ export default class CheckPostsService {
             }
 
             if (post.notified_to.includes(user.telegram_id)) {
+              return Promise.resolve();
+            }
+
+            const foundIgnoredUser = ignoredUsers.find(
+              ignoredUser => ignoredUser.username === post.author.toLowerCase(),
+            );
+
+            if (
+              foundIgnoredUser &&
+              foundIgnoredUser.ignoring.includes(user.telegram_id)
+            ) {
+              return Promise.resolve();
+            }
+
+            const postAlreadyNotified = alreadyNotified.find(
+              notified =>
+                notified.post === post.id && notified.user === user.id,
+            );
+
+            if (postAlreadyNotified) {
               return Promise.resolve();
             }
 

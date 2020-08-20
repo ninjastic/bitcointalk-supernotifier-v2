@@ -3,6 +3,9 @@ import { container } from 'tsyringe';
 import IUsersRepository from '../../modules/users/repositories/IUsersRepository';
 import UsersRepository from '../../modules/users/infra/repositories/UsersRepository';
 
+import IIgnoredUserRepository from '../../modules/users/repositories/IIgnoredUserRepository';
+import IgnoredUserRepository from '../../modules/users/infra/repositories/IgnoredUserRepository';
+
 import IPostsRepository from '../../modules/posts/repositories/IPostsRepository';
 import PostsRepository from '../../modules/posts/infra/repositories/PostsRepository';
 
@@ -18,6 +21,11 @@ import RedisProvider from './providers/implementations/RedisProvider';
 container.registerSingleton<IUsersRepository>(
   'UsersRepository',
   UsersRepository,
+);
+
+container.registerSingleton<IIgnoredUserRepository>(
+  'IgnoredUserRepository',
+  IgnoredUserRepository,
 );
 
 container.registerSingleton<IPostsRepository>(

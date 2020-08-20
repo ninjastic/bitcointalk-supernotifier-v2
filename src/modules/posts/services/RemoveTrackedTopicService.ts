@@ -1,12 +1,7 @@
 import { injectable, inject } from 'tsyringe';
-import Queue from 'bull';
-
-import cacheConfig from '../../../config/cache';
-
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
 
-import Post from '../infra/typeorm/entities/Post';
 import TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
 
 @injectable()
@@ -27,12 +22,17 @@ export default class RemoveTrackedTopicService {
       post_id,
     );
 
+    if (!topicExists) {
+      throw new Error('Ignored user does not exist.');
+    }
+
     const index = topicExists.tracking.indexOf(telegram_id);
 
     if (index !== -1) {
       topicExists.tracking.splice(index, 1);
       await this.trackedTopicsRepository.save(topicExists);
-      this.cacheRepository.invalidate(`trackedtopics:${telegram_id}`);
+      this.cacheRepository.invalidate(`trackedTopics:${telegram_id}`);
+      this.cacheRepository.invalidate('trackedTopics');
     }
 
     return topicExists;

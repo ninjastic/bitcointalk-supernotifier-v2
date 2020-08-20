@@ -19,7 +19,8 @@ import {
   userIdConfirmMenuMiddleware,
   configureMentionsMenuMiddleware,
   mainMenuMiddleware,
-  addTopicLinkQuestion,
+  addTrackedTopicLinkQuestion,
+  addIgnoredUserQuestion,
 } from './menus';
 
 import startCommand from './commands/startCommand';
@@ -74,7 +75,8 @@ class TelegramBot {
   }
 
   questions(): void {
-    this.instance.use(addTopicLinkQuestion.middleware());
+    this.instance.use(addTrackedTopicLinkQuestion.middleware());
+    this.instance.use(addIgnoredUserQuestion.middleware());
   }
 
   commands(): void {

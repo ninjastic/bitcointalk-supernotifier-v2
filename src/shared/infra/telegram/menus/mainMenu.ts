@@ -3,8 +3,9 @@ import { MenuTemplate } from 'telegraf-inline-menu';
 
 import ISession from '../@types/ISession';
 
-import notificationsMenu from './notificationsMenu';
 import trackedTopicsMenu from './trackedTopicsMenu';
+import ignoredUsersMenu from './ignoredUsersMenu';
+import notificationsMenu from './notificationsMenu';
 import aboutMenu from './aboutMenu';
 
 interface MenuContext extends Context {
@@ -19,6 +20,7 @@ const mainMenu = new MenuTemplate<MenuContext>(async (ctx: MenuContext) => {
 });
 
 mainMenu.submenu('📗 Tracked Topics', 'trackedTopics', trackedTopicsMenu);
+mainMenu.submenu('🚫 Ignored Users', 'ignoredUsers', ignoredUsersMenu);
 mainMenu.submenu('🔔 Notifications', 'notifications', notificationsMenu);
 mainMenu.submenu('👋 About', 'about', aboutMenu);
 

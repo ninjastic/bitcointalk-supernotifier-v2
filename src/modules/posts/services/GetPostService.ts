@@ -29,13 +29,6 @@ export default class GetPostService {
       );
 
       if (cachedPost) {
-        await this.cacheRepository.save(
-          `post:${cachedPost.post_id}`,
-          cachedPost,
-          'EX',
-          180,
-        );
-
         return cachedPost;
       }
     }
@@ -43,6 +36,13 @@ export default class GetPostService {
     const foundPost = await this.postsRepository.findByPostId(post_id);
 
     if (foundPost) {
+      await this.cacheRepository.save(
+        `post:${foundPost.post_id}`,
+        foundPost,
+        'EX',
+        180,
+      );
+
       return foundPost;
     }
 
