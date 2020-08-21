@@ -6,6 +6,7 @@ import loggerHandler from '../handlers/loggerHandler';
 import SendMentionNotificationService from '../../telegram/services/SendMentionNotificationService';
 import SendMeritNotificationService from '../../telegram/services/SendMeritNotificationService';
 import SendTopicTrackingNotificationService from '../../telegram/services/SendTopicTrackingNotificationService';
+import SendRemovedTopicNotificationService from '../../telegram/services/SendRemovedTopicNotificationService';
 
 class TelegramQueue {
   public instance: Queue.Queue;
@@ -36,6 +37,17 @@ class TelegramQueue {
 
       const { post, user } = job.data;
       await sendTopicTrackingNotification.execute(user.telegram_id, post);
+    });
+
+    this.instance.process('sendRemovedTopicNotification', async job => {
+      const sendRemovedTopicNotification = new SendRemovedTopicNotificationService();
+
+      const { postsDeleted, user, modLog } = job.data;
+      await sendRemovedTopicNotification.execute(
+        user.telegram_id,
+        postsDeleted,
+        modLog,
+      );
     });
 
     loggerHandler(this.instance);

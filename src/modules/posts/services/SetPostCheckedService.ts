@@ -10,7 +10,7 @@ export default class SetPostCheckedService {
   ) {}
 
   public async execute(post_id: number): Promise<void> {
-    const post = await this.postsRepository.findByPostId(post_id);
+    const post = await this.postsRepository.findOneByPostId(post_id);
 
     post.checked = true;
 

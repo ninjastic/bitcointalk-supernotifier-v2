@@ -15,6 +15,9 @@ import TrackedTopicsRepository from '../../modules/posts/infra/repositories/Trac
 import IMeritsRepository from '../../modules/merits/repositories/IMeritsRepository';
 import MeritsRepository from '../../modules/merits/infra/repositories/MeritsRepository';
 
+import IModLogRepository from '../../modules/modlog/repositories/IModLogRepository';
+import ModLogRepository from '../../modules/modlog/infra/repositories/ModLogRepository';
+
 import ICacheRepository from './providers/models/ICacheProvider';
 import RedisProvider from './providers/implementations/RedisProvider';
 
@@ -41,6 +44,11 @@ container.registerSingleton<ITrackedTopicsRepository>(
 container.registerSingleton<IMeritsRepository>(
   'MeritsRepository',
   MeritsRepository,
+);
+
+container.registerSingleton<IModLogRepository>(
+  'ModLogRepository',
+  ModLogRepository,
 );
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);

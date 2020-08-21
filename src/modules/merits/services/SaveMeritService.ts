@@ -39,7 +39,7 @@ export default class SaveMeritService {
 
     await this.cacheRepository.save(
       `merit:${merit.date}-${merit.amount}-${merit.post_id}`,
-      merit,
+      savedMerit,
       'EX',
       180,
     );

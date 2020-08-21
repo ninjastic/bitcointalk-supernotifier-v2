@@ -44,7 +44,7 @@ class Post {
   @Column({ default: false })
   notified: boolean;
 
-  @Column({ type: 'varchar', array: true, default: [] })
+  @Column({ type: 'integer', array: true, default: [] })
   notified_to: number[];
 
   @Column({ default: false })

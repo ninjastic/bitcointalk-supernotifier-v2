@@ -16,7 +16,7 @@ export default class UpdatePostService {
   ) {}
 
   public async execute(post: Post): Promise<Post> {
-    const foundPost = await this.postsRepository.findByPostId(post.post_id);
+    const foundPost = await this.postsRepository.findOneByPostId(post.post_id);
 
     await this.postsRepository.save(post);
     await this.cacheRepository.save(`post:${post.post_id}`, post, 'EX', 180);

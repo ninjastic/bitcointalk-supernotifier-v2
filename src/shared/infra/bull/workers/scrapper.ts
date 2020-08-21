@@ -15,6 +15,7 @@ import ScrapePostsRepository from '../../../../modules/posts/infra/repositories/
 import SavePostService from '../../../../modules/posts/services/SavePostService';
 import ScrapeUserMeritCountService from '../../../../modules/merits/services/ScrapeUserMeritCountService';
 import ScrapeTopicService from '../../../../modules/posts/services/ScrapeTopicService';
+import ScrapeModLogService from '../../../../modules/modlog/services/ScrapeModLogService';
 
 import ScrapePostDTO from '../../../../modules/posts/dtos/ScrapePostDTO';
 
@@ -49,6 +50,7 @@ interface ScrapeTopicJob extends Job {
 
   await mainQueue.removeRepeatable('scrapeRecentPosts', { every: 5000 });
   await mainQueue.removeRepeatable('scrapeMerits', { every: 15000 });
+  await mainQueue.removeRepeatable('scrapeModLog', { every: 300000 });
 
   await mainQueue.add('scrapeRecentPosts', null, {
     repeat: { every: 5000 },
@@ -62,6 +64,12 @@ interface ScrapeTopicJob extends Job {
     removeOnFail: true,
   });
 
+  await mainQueue.add('scrapeModLog', null, {
+    repeat: { every: 300000 },
+    removeOnComplete: true,
+    removeOnFail: true,
+  });
+
   mainQueue.process('scrapeRecentPosts', async () => {
     const scrapePostsRepository = new ScrapePostsRepository();
     return scrapePostsRepository.scrapeRecent();
@@ -70,6 +78,12 @@ interface ScrapeTopicJob extends Job {
   mainQueue.process('scrapeMerits', async () => {
     const scrapeMeritsRepository = new ScrapeMeritsRepository();
     return scrapeMeritsRepository.scrapeMerits();
+  });
+
+  mainQueue.process('scrapeModLog', async () => {
+    const scrapeModLog = new ScrapeModLogService();
+
+    return scrapeModLog.execute();
   });
 
   sideQueue.process('scrapePost', async (job: ScrapePostJob) => {
@@ -96,7 +110,7 @@ interface ScrapeTopicJob extends Job {
   );
 
   sideQueue.process('scrapeTopic', async (job: ScrapeTopicJob) => {
-    const scrapeTopic = new ScrapeTopicService();
+    const scrapeTopic = container.resolve(ScrapeTopicService);
 
     return scrapeTopic.execute(job.data.topic_id);
   });

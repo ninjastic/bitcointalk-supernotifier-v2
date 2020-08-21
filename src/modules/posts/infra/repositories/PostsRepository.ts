@@ -25,14 +25,14 @@ export default class PostsRepository implements IPostsRepository {
     return postSaved;
   }
 
-  public async findByPostId(id: number): Promise<Post> {
-    const post = await this.ormRepository.findOne({ post_id: id });
+  public async findOneByPostId(post_id: number): Promise<Post> {
+    const post = await this.ormRepository.findOne({ post_id });
 
     return post;
   }
 
-  public async getLatestUncheckedPosts(limit: number): Promise<Post[]> {
-    const posts = await this.ormRepository.find({
+  public async findLatestUncheckedPosts(limit: number): Promise<Post[]> {
+    return this.ormRepository.find({
       where: {
         checked: false,
         archive: false,
@@ -41,7 +41,13 @@ export default class PostsRepository implements IPostsRepository {
       order: { created_at: -1 },
       take: limit,
     });
+  }
 
-    return posts;
+  public async findPostsFromTopicId(topic_id: number): Promise<Post[]> {
+    return this.ormRepository.find({
+      where: {
+        topic_id,
+      },
+    });
   }
 }

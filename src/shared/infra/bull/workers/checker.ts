@@ -11,6 +11,7 @@ import loggerHandler from '../handlers/loggerHandler';
 
 import CheckPostsService from '../../../../modules/posts/services/CheckPostsService';
 import CheckMeritsService from '../../../../modules/merits/services/CheckMeritsService';
+import CheckModLogsService from '../../../../modules/modlog/services/CheckModLogsService';
 
 (async () => {
   const queue = new Queue('CheckerQueue', {
@@ -19,6 +20,7 @@ import CheckMeritsService from '../../../../modules/merits/services/CheckMeritsS
 
   await queue.removeRepeatable('checkPosts', { every: 5000 });
   await queue.removeRepeatable('checkMerits', { every: 5000 });
+  await queue.removeRepeatable('checkModLogs', { every: 300000 });
 
   await queue.add('checkPosts', null, {
     removeOnComplete: true,
@@ -32,6 +34,12 @@ import CheckMeritsService from '../../../../modules/merits/services/CheckMeritsS
     repeat: { every: 5000 },
   });
 
+  await queue.add('checkModLogs', null, {
+    removeOnComplete: true,
+    removeOnFail: true,
+    repeat: { every: 300000 },
+  });
+
   queue.process('checkPosts', async () => {
     const checkPosts = container.resolve(CheckPostsService);
     await checkPosts.execute();
@@ -40,6 +48,11 @@ import CheckMeritsService from '../../../../modules/merits/services/CheckMeritsS
   queue.process('checkMerits', async () => {
     const checkMerits = container.resolve(CheckMeritsService);
     await checkMerits.execute();
+  });
+
+  queue.process('checkModLogs', async () => {
+    const checkModLogs = container.resolve(CheckModLogsService);
+    await checkModLogs.execute();
   });
 
   loggerHandler(queue);

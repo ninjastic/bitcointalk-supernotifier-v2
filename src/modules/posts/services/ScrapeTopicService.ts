@@ -1,42 +1,37 @@
-import { injectable, container } from 'tsyringe';
+import { injectable, container, inject } from 'tsyringe';
 
 import api from '../../../shared/services/api';
 import Post from '../infra/typeorm/entities/Post';
 
-import ParseTopicElementService from './ParseTopicElementService';
+import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+
+import ParseTopicService from './ParseTopicService';
 import GetPostService from './GetPostService';
 import SavePostService from './SavePostService';
 
 @injectable()
 export default class ScrapeTopicService {
-  private parseTopicElement: ParseTopicElementService;
-
-  private getPost: GetPostService;
-
-  private savePost: SavePostService;
-
-  constructor() {
-    this.parseTopicElement = container.resolve(ParseTopicElementService);
-    this.getPost = container.resolve(GetPostService);
-    this.savePost = container.resolve(SavePostService);
-  }
+  constructor(
+    @inject('CacheProvider')
+    private cacheProvider: ICacheProvider,
+  ) {}
 
   public async execute(topic_id: number): Promise<Post | null> {
+    const parseTopic = container.resolve(ParseTopicService);
+    const getPost = container.resolve(GetPostService);
+    const savePost = container.resolve(SavePostService);
+
     const response = await api.get(`index.php?topic=${topic_id}`);
 
-    const post = this.parseTopicElement.execute({
+    const post = parseTopic.execute({
       html: response.data,
       topic_id,
     });
 
-    const postExists = await this.getPost.execute(
-      post.post_id,
-      post.topic_id,
-      true,
-    );
+    const postExists = await getPost.execute(post.post_id, post.topic_id, true);
 
     if (!postExists) {
-      return this.savePost.execute(post);
+      return savePost.execute(post);
     }
 
     return post;

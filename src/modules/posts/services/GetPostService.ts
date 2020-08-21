@@ -33,7 +33,7 @@ export default class GetPostService {
       }
     }
 
-    const foundPost = await this.postsRepository.findByPostId(post_id);
+    const foundPost = await this.postsRepository.findOneByPostId(post_id);
 
     if (foundPost) {
       await this.cacheRepository.save(

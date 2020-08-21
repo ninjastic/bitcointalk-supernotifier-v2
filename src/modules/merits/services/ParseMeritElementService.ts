@@ -36,7 +36,7 @@ export default class ParseRecentPostElementService {
     const post_id = Number($.html().match(/#msg(\d*)/)[1]);
     const topic_id = Number($.html().match(/topic=(\d*)/)[1]);
 
-    const postExists = await this.postsRepository.findByPostId(post_id);
+    const postExists = await this.postsRepository.findOneByPostId(post_id);
 
     let receiver: string;
     let receiver_uid: number;
