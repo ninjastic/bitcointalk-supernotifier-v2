@@ -3,6 +3,7 @@ import { injectable, container, inject } from 'tsyringe';
 import api from '../../../shared/services/api';
 import Post from '../infra/typeorm/entities/Post';
 
+import IPostsRepository from '../repositories/IPostsRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import ParseTopicService from './ParseTopicService';
@@ -12,7 +13,10 @@ import SavePostService from './SavePostService';
 @injectable()
 export default class ScrapeTopicService {
   constructor(
-    @inject('CacheProvider')
+    @inject('PostsRepository')
+    private postsRepository: IPostsRepository,
+
+    @inject('CacheRepository')
     private cacheProvider: ICacheProvider,
   ) {}
 
@@ -28,7 +32,7 @@ export default class ScrapeTopicService {
       topic_id,
     });
 
-    const postExists = await getPost.execute(post.post_id, post.topic_id, true);
+    const postExists = await this.postsRepository.findOneByPostId(post.post_id);
 
     if (!postExists) {
       return savePost.execute(post);
