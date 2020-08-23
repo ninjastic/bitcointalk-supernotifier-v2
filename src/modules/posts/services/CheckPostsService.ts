@@ -5,8 +5,6 @@ import cacheConfig from '../../../config/cache';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
-import ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
-import IIgnoredUserRepository from '../../users/repositories/IIgnoredUserRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import SetPostCheckedService from './SetPostCheckedService';
@@ -21,12 +19,6 @@ export default class CheckPostsService {
 
     @inject('UsersRepository')
     private usersRepository: IUsersRepository,
-
-    @inject('TrackedTopicsRepository')
-    private trackedTopicsRepository: ITrackedTopicsRepository,
-
-    @inject('IgnoredUserRepository')
-    private ignoredUserRepository: IIgnoredUserRepository,
 
     @inject('CacheRepository')
     private cacheProvider: ICacheProvider,

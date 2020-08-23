@@ -5,7 +5,6 @@ import cacheConfig from '../../../config/cache';
 
 import IPostsRepository from '../../posts/repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import IModLogRepository from '../repositories/IModLogRepository';
 
 import Post from '../../posts/infra/typeorm/entities/Post';
@@ -23,9 +22,6 @@ export default class CheckModLogsService {
 
     @inject('UsersRepository')
     private usersRepository: IUsersRepository,
-
-    @inject('CacheRepository')
-    private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute(): Promise<void> {

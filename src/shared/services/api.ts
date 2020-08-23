@@ -18,7 +18,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(config => {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const interval = setInterval(() => {
       const NEXT_ALLOWED_REQUEST = add(LAST_REQUEST, {
         seconds: INTERVAL_MS / 1000,
