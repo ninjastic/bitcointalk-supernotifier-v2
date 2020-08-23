@@ -60,7 +60,7 @@ export default class PostsRepository implements IPostsRepository {
     return this.ormRepository.query(
       `SELECT post_id, topic_id, title, author, author_uid, content, date,
         boards, archive FROM posts WHERE to_tsvector_forum_content(content) @@
-        phraseto_tsquery('simple', $1) ORDER BY post_id, date LIMIT $2;`,
+        plainto_tsquery('simple', $1) ORDER BY post_id, date LIMIT $2;`,
       [search, actual_limit],
     );
   }
