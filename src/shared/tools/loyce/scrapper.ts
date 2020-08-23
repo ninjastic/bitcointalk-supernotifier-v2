@@ -23,10 +23,6 @@ const extractedBasePath = process.argv[3];
 console.log(filesBasePath);
 console.log(extractedBasePath);
 
-const wait = ms => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
-
 if (!fs.pathExists(extractedBasePath)) {
   fs.mkdirSync(extractedBasePath);
 }
@@ -99,23 +95,26 @@ const scrapePostFromBuffer = buffer => {
 
   return post;
 };
-console.log('lendo 1');
 
 createConnection().then(async () => {
-  console.log('lendo 2');
   const manager = getManager();
   const createPost = container.resolve(CreatePostService);
 
-  console.log('lendo pasta');
-
   const folders = await readDir(path.resolve(filesBasePath));
-  const foldersFiltered = folders.filter(folder => {
-    return !folder.includes('.ts') && !folder.includes('extracted');
-  });
+  const foldersFiltered = folders
+    .filter(folder => {
+      return !folder.includes('.ts') && !folder.includes('extracted');
+    })
+    .sort((a, b) => Number(a) - Number(b));
 
+  console.log('Folders:');
   console.log(foldersFiltered);
+  console.log(`Total: ${foldersFiltered.length}`);
+  console.log(`Starting at ${new Date()}`);
+  console.log('------------------------------');
 
   for await (const folder of foldersFiltered) {
+    console.time(folder);
     const folderFullDir = path.resolve(filesBasePath, folder);
     const files = await readDir(folderFullDir);
     const filesToDecompress = files.filter(file => {
@@ -123,7 +122,6 @@ createConnection().then(async () => {
     });
 
     for await (const file of filesToDecompress) {
-      console.log(`decompressing ${folder} ${file}`);
       await decompressFile(
         path.resolve(filesBasePath, folder, file),
         path.resolve(extractedBasePath, folder),
@@ -138,7 +136,6 @@ createConnection().then(async () => {
     let sinceLastBatch = 0;
 
     for await (const file of filesExtracted) {
-      console.log(`file ${folder} ${file}`);
       const fileContent = await fs.readFile(
         path.resolve(extractedBasePath, folder, file),
       );
@@ -151,13 +148,12 @@ createConnection().then(async () => {
         sinceLastBatch += 1;
 
         if (sinceLastBatch >= 5000) {
-          console.log('executing batch');
           await manager
             .createQueryBuilder()
             .insert()
             .into(Post)
             .values(operations)
-            .onConflict(`("post_id") DO NOTHING`)
+            .onConflict('("post_id") DO NOTHING')
             .execute();
 
           operations = [];
@@ -166,17 +162,33 @@ createConnection().then(async () => {
       }
     }
 
-    console.log('executing final batch');
     await manager
       .createQueryBuilder()
       .insert()
       .into(Post)
       .values(operations)
-      .onConflict(`("post_id") DO NOTHING`)
+      .onConflict('("post_id") DO NOTHING')
       .execute();
 
-    console.log(`deleting folder ${folder} and ${folderFullDir}`);
+    fs.appendFile(
+      path.resolve(extractedBasePath, 'done.txt'),
+      `${folder},`,
+      err => {
+        if (err) throw err;
+      },
+    );
+
     await del(folderFullDir, { force: true });
     await del(extractedFullPath, { force: true });
+    console.log(`${new Date()}`);
+    console.timeEnd(folder);
+    console.log(
+      `${Number(folder)} / ${foldersFiltered.length} (${
+        (Number(folder) * 100) / foldersFiltered.length
+      }%)`,
+    );
+    console.log('------------------------------');
   }
+
+  console.log('-- Finished -- ');
 });

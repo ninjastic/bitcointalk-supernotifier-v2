@@ -10,7 +10,7 @@ interface Data {
   topic_id: number;
 }
 
-export default class ParseTopicElementService {
+export default class ParseTopicService {
   public execute({ html, topic_id }: Data): Post {
     const createPost = container.resolve(CreatePostService);
 
