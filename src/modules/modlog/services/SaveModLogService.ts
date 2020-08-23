@@ -37,7 +37,7 @@ export default class SaveModLogService {
       `modLog:${modLog.type}-${modLog.user_id}-${modLog.topic_id}`,
       savedModLog,
       'EX',
-      180,
+      300,
     );
 
     return savedModLog;

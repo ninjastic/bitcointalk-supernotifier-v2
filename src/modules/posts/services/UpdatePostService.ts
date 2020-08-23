@@ -19,7 +19,7 @@ export default class UpdatePostService {
     const foundPost = await this.postsRepository.findOneByPostId(post.post_id);
 
     await this.postsRepository.save(post);
-    await this.cacheRepository.save(`post:${post.post_id}`, post, 'EX', 180);
+    await this.cacheRepository.save(`post:${post.post_id}`, post, 'EX', 300);
 
     return foundPost;
   }

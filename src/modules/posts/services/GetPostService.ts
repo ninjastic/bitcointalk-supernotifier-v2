@@ -40,7 +40,7 @@ export default class GetPostService {
         `post:${foundPost.post_id}`,
         foundPost,
         'EX',
-        180,
+        300,
       );
 
       return foundPost;

@@ -41,7 +41,7 @@ export default class SaveMeritService {
       `merit:${merit.date}-${merit.amount}-${merit.post_id}`,
       savedMerit,
       'EX',
-      180,
+      300,
     );
 
     return savedMerit;

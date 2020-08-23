@@ -13,8 +13,6 @@ export default class SetModLogCheckedService {
   public async execute(data: FindModLogDTO): Promise<void> {
     const modLog = await this.modLogRepository.findOne(data);
 
-    console.log('marcando', modLog);
-
     modLog.checked = true;
 
     await this.modLogRepository.save(modLog);

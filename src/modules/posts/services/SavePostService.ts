@@ -36,7 +36,7 @@ export default class SavePostService {
       `post:${post.post_id}`,
       savedPost,
       'EX',
-      180,
+      300,
     );
 
     return savedPost;

@@ -50,4 +50,18 @@ export default class PostsRepository implements IPostsRepository {
       },
     });
   }
+
+  public async findPostsByContent(
+    search: string,
+    limit: number,
+  ): Promise<Post[]> {
+    const actual_limit = Math.min(limit || 20, 200);
+
+    return this.ormRepository.query(
+      `SELECT post_id, topic_id, title, author, author_uid, content, date,
+        boards, archive FROM posts WHERE to_tsvector_forum_content(content) @@
+        phraseto_tsquery('simple', $1) ORDER BY post_id, date LIMIT $2;`,
+      [search, actual_limit],
+    );
+  }
 }

@@ -39,8 +39,10 @@ export default class ParseModLogService {
       return false;
     } else if (message.startsWith('Nuke user:')) {
       type = 'nuke_user';
+      return false;
     } else if (message.startsWith('Autoban user:')) {
       type = 'autoban_user';
+      return false;
     }
 
     const log = {

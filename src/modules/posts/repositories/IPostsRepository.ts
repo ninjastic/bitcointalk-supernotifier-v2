@@ -7,4 +7,5 @@ export default interface IPostsRepository {
   findOneByPostId(post_id: number): Promise<Post>;
   findLatestUncheckedPosts(limit: number): Promise<Post[]>;
   findPostsFromTopicId(topic_id: number): Promise<Post[]>;
+  findPostsByContent(search: string, limit: number): Promise<Post[]>;
 }
