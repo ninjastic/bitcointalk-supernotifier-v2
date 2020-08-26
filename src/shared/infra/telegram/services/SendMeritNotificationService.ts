@@ -1,4 +1,4 @@
-import { container } from 'tsyringe';
+import { container, injectable, inject } from 'tsyringe';
 import pluralize from 'pluralize';
 import Bull from 'bull';
 
@@ -7,13 +7,20 @@ import cacheConfig from '../../../../config/cache';
 
 import bot from '../index';
 
+import ICacheProvider from '../../../container/providers/models/ICacheProvider';
 import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
 
 import SetMeritNotifiedService from '../../../../modules/merits/services/SetMeritNotifiedService';
 import GetPostService from '../../../../modules/posts/services/GetPostService';
 import SetUserBlockedService from './SetUserBlockedService';
 
+@injectable()
 export default class SendMeritNotificationService {
+  constructor(
+    @inject('CacheRepository')
+    private cacheRepository: ICacheProvider,
+  ) {}
+
   public async execute(telegram_id: number, merit: Merit): Promise<void> {
     const setMeritNotified = container.resolve(SetMeritNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
@@ -24,13 +31,37 @@ export default class SendMeritNotificationService {
     const { title } = post;
     const { amount, sender, topic_id, post_id, receiver_uid } = merit;
 
-    const queue = new Bull('ForumScrapperSideQueue', {
-      redis: cacheConfig.config.redis,
-    });
+    let totalMeritCount = await this.cacheRepository.recover<number | null>(
+      `meritCount:${telegram_id}`,
+    );
 
-    const job = await queue.add('scrapeUserMeritCount', { uid: receiver_uid });
+    if (totalMeritCount) {
+      totalMeritCount += amount;
 
-    const totalMeritCount = await job.finished();
+      await this.cacheRepository.save(
+        `meritCount:${telegram_id}`,
+        totalMeritCount,
+        'EX',
+        300,
+      );
+    } else {
+      const queue = new Bull('ForumScrapperSideQueue', {
+        redis: cacheConfig.config.redis,
+      });
+
+      const job = await queue.add('scrapeUserMeritCount', {
+        uid: receiver_uid,
+      });
+
+      totalMeritCount = await job.finished();
+
+      await this.cacheRepository.save(
+        `meritCount:${telegram_id}`,
+        totalMeritCount,
+        'EX',
+        300,
+      );
+    }
 
     let message = '';
     message += `(Merits: <b>${totalMeritCount}</b>) `;

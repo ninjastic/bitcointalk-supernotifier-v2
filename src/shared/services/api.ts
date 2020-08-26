@@ -13,6 +13,7 @@ const api = axios.create({
   timeout: 5000,
   headers: {
     Cookie: process.env.BITCOINTALK_COOKIE,
+    'Cache-Control': 'no-cache',
   },
   responseType: 'arraybuffer',
 });

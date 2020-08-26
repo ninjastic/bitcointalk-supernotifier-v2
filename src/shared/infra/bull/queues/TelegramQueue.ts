@@ -1,3 +1,4 @@
+import { container } from 'tsyringe';
 import Queue from 'bull';
 
 import cacheConfig from '../../../../config/cache';
@@ -26,7 +27,9 @@ class TelegramQueue {
     });
 
     this.instance.process('sendMeritNotification', async job => {
-      const sendMeritNotification = new SendMeritNotificationService();
+      const sendMeritNotification = container.resolve(
+        SendMeritNotificationService,
+      );
 
       const { merit, user } = job.data;
       await sendMeritNotification.execute(user.telegram_id, merit);
