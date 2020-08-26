@@ -32,6 +32,10 @@ export default class SendTopicTrackingNotificationService {
     await bot.instance.telegram
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
+        logger.info(
+          { telegram_id, message },
+          'Topic Tracking notification was sent',
+        );
         await setPostNotified.execute(post.post_id, telegram_id);
       })
       .catch(async error => {

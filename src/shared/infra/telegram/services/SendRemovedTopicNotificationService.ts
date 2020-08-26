@@ -31,6 +31,10 @@ export default class SendRemovedTopicNotificationService {
     await bot.instance.telegram
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
+        logger.info(
+          { telegram_id, message },
+          'Removed Topic notification was sent',
+        );
         await setModLogNotified.execute(modLog, telegram_id);
       })
       .catch(async error => {

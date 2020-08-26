@@ -32,6 +32,7 @@ export default class SendMentionNotificationService {
     await bot.instance.telegram
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
+        logger.info({ telegram_id, message }, 'Mention notification was sent');
         await setPostNotified.execute(post.post_id, telegram_id);
       })
       .catch(async error => {

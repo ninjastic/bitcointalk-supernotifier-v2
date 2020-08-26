@@ -41,6 +41,7 @@ export default class SendMeritNotificationService {
     await bot.instance.telegram
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
+        logger.info({ telegram_id, message }, 'Merit notification was sent');
         await setMeritNotified.execute(merit, telegram_id);
       })
       .catch(async error => {
