@@ -1,9 +1,9 @@
 import { Repository, getRepository } from 'typeorm';
 
-import CreateUserDTO from '../../dtos/CreateUserDTO';
+import CreateUserDTO from '../../../dtos/CreateUserDTO';
 
-import User from '../typeorm/entities/User';
-import IUsersRepository from '../../repositories/IUsersRepository';
+import User from '../entities/User';
+import IUsersRepository from '../../../repositories/IUsersRepository';
 
 export default class UsersRepository implements IUsersRepository {
   private ormRepository: Repository<User>;
@@ -49,6 +49,14 @@ export default class UsersRepository implements IUsersRepository {
   public async getUsersWithMerits(): Promise<User[]> {
     const users = await this.ormRepository.find({
       where: { enable_merits: true, blocked: false },
+    });
+
+    return users;
+  }
+
+  public async getUsersWithModlogs(): Promise<User[]> {
+    const users = await this.ormRepository.find({
+      where: { enable_modlogs: true, blocked: false },
     });
 
     return users;

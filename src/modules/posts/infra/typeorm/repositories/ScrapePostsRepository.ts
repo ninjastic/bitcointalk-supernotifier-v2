@@ -1,15 +1,15 @@
 import { container } from 'tsyringe';
 
-import IScrapePostsRepository from '../../repositories/IScrapePostsRepository';
-import ScrapePostDTO from '../../dtos/ScrapePostDTO';
+import IScrapePostsRepository from '../../../repositories/IScrapePostsRepository';
+import ScrapePostDTO from '../../../dtos/ScrapePostDTO';
 
-import Post from '../typeorm/entities/Post';
+import Post from '../entities/Post';
 
-import ScrapePostService from '../../services/ScrapePostService';
-import ScrapeTopicService from '../../services/ScrapeTopicService';
-import ScrapeRecentPostsService from '../../services/ScrapeRecentPostsService';
-import ParseRecentPostElementService from '../../services/ParseRecentPostElementService';
-import SavePostService from '../../services/SavePostService';
+import ScrapePostService from '../../../services/ScrapePostService';
+import ScrapeTopicService from '../../../services/ScrapeTopicService';
+import ScrapeRecentPostsService from '../../../services/ScrapeRecentPostsService';
+import ParseRecentPostElementService from '../../../services/ParseRecentPostElementService';
+import SavePostService from '../../../services/SavePostService';
 
 export default class ScrapePostsRepository implements IScrapePostsRepository {
   public async scrapePost({

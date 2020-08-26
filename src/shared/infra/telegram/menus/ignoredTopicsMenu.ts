@@ -9,20 +9,20 @@ import bot from '../index';
 
 import ISession from '../@types/ISession';
 
-import AddTrackedTopicService from '../../../../modules/posts/services/AddTrackedTopicService';
-import RemoveTrackedTopicService from '../../../../modules/posts/services/RemoveTrackedTopicService';
-import FindTrackedTopicsByTelegramIdService from '../services/FindTrackedTopicsByTelegramIdService';
+import FindIgnoredTopicsByTelegramIdService from '../services/FindIgnoredTopicsByTelegramIdService';
+import AddIgnoredTopicService from '../../../../modules/posts/services/AddIgnoredTopicService';
+import RemoveIgnoredTopicService from '../../../../modules/posts/services/RemoveIgnoredTopicService';
 import GetPostService from '../../../../modules/posts/services/GetPostService';
 
-import { trackedTopicsMenuMiddleware } from './index';
+import { ignoredTopicsMenuMiddleware } from './index';
 
 interface MenuContext extends Context {
   session: ISession;
 }
 
-const trackedTopicsMenu = new MenuTemplate<MenuContext>(() => {
+const ignoredTopicsMenu = new MenuTemplate<MenuContext>(() => {
   return {
-    text: `<b>Tracked Topics</b>\n\nAdd or remove topics so you get notified of new replies.`,
+    text: `<b>Ignored Topics</b>\n\nAdd or remove ignored topics so you don't get notifications from them.`,
     parse_mode: 'HTML',
   };
 });
@@ -34,13 +34,13 @@ const getPostInfo = async (post_id: number) => {
   return post;
 };
 
-const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
+const ignoredTopicsMenuInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
   const post = await getPostInfo(Number(ctx.match[1]));
 
   const formattedDate = format(new Date(post.date), 'Pp');
 
   let message = '';
-  message += `<b>Selected Topic:</b>\n\n`;
+  message += `<b>Ignored Topic:</b>\n\n`;
   message += `🏷️ <b>Title:</b> ${post.title}\n`;
   message += `✍️ <b>Author:</b> ${post.author}\n`;
   message += `🕗 <b>Date:</b> ${formattedDate}\n`;
@@ -51,59 +51,49 @@ const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
   };
 });
 
-const getTrackedTopicUrl = async (ctx: MenuContext): Promise<string> => {
-  const post_id = Number(ctx.match[1]);
-
-  const getPost = container.resolve(GetPostService);
-  const post = await getPost.execute(post_id);
-
-  return `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
-};
-
-trackedTopicInfoMenu.url('🔗 Visit Topic', getTrackedTopicUrl);
-
-const confirmRemoveTrackedTopicMenu = new MenuTemplate<MenuContext>(
+const confirmRemoveIgnoredTopicMenu = new MenuTemplate<MenuContext>(
   async ctx => {
     const post = await getPostInfo(Number(ctx.match[1]));
+
     return {
-      text: `Are you sure you want to remove the tracked topic: <b>${post.title}</b>?`,
+      text: `Are you sure you want to stop ignoring the topic: <b>${post.title}</b>?`,
       parse_mode: 'HTML',
     };
   },
 );
 
-confirmRemoveTrackedTopicMenu.interact('Yes, do it!', 'yes', {
+confirmRemoveIgnoredTopicMenu.interact('Yes, do it!', 'yes', {
   do: async ctx => {
-    const removeTrackedTopic = container.resolve(RemoveTrackedTopicService);
+    const removeIgnoredTopic = container.resolve(RemoveIgnoredTopicService);
 
-    await removeTrackedTopic.execute(Number(ctx.match[1]), ctx.chat.id);
+    await removeIgnoredTopic.execute(Number(ctx.match[1]), ctx.chat.id);
 
-    return '/main/trackedTopics/';
+    return '/main/ignoredTopics/';
   },
 });
 
-confirmRemoveTrackedTopicMenu.interact('No, go back!', 'no', {
+confirmRemoveIgnoredTopicMenu.interact('No, go back!', 'no', {
   do: async () => {
     return `..`;
   },
 });
 
-trackedTopicInfoMenu.submenu(
-  '❌ Remove Topic',
+ignoredTopicsMenuInfoMenu.submenu(
+  '❌ Stop Ignoring',
   'remove',
-  confirmRemoveTrackedTopicMenu,
+  confirmRemoveIgnoredTopicMenu,
 );
 
-trackedTopicInfoMenu.interact('↩ Go Back', 'back', {
+ignoredTopicsMenuInfoMenu.interact('↩ Go Back', 'back', {
   do: () => {
     return '..';
   },
 });
 
-const addTrackedTopicLinkQuestion = new TelegrafStatelessQuestion(
-  'addTopic',
+const addIgnoredTopicLinkQuestion = new TelegrafStatelessQuestion(
+  'addIgnoredTopic',
   async (ctx: MenuContext) => {
-    const text = ctx.message.text.trim();
+    const text = ctx.message.text.toLowerCase().trim();
 
     if (text.match(/bitcointalk.org\/index\.php\?topic=\d+/gi)) {
       const statusMessage = await ctx.reply(
@@ -124,7 +114,7 @@ const addTrackedTopicLinkQuestion = new TelegrafStatelessQuestion(
         return;
       }
 
-      const addTrackedTopic = container.resolve(AddTrackedTopicService);
+      const addIgnoredTopic = container.resolve(AddIgnoredTopicService);
 
       try {
         await bot.instance.telegram.editMessageText(
@@ -134,14 +124,14 @@ const addTrackedTopicLinkQuestion = new TelegrafStatelessQuestion(
           'We have added your request to the queue.\n\nThis will take a few seconds...',
         );
 
-        const trackedTopic = await addTrackedTopic.execute(
+        const ignoredTopic = await addIgnoredTopic.execute(
           Number(topic_id[1]),
           ctx.message.chat.id,
         );
 
         let message = '';
-        message += 'You are now tracking the topic: ';
-        message += `<b><a href="https://bitcointalk.org/index.php?topic=${trackedTopic.post.topic_id}">${trackedTopic.post.title}</a></b>`;
+        message += 'You are now ignoring the topic: ';
+        message += `<b><a href="https://bitcointalk.org/index.php?topic=${ignoredTopic.post.topic_id}">${ignoredTopic.post.title}</a></b>`;
 
         await bot.instance.telegram.editMessageText(
           statusMessage.chat.id,
@@ -151,39 +141,39 @@ const addTrackedTopicLinkQuestion = new TelegrafStatelessQuestion(
           { parse_mode: 'HTML' },
         );
 
-        await trackedTopicsMenuMiddleware.replyToContext(ctx);
+        await ignoredTopicsMenuMiddleware.replyToContext(ctx);
       } catch (error) {
         await bot.instance.telegram.deleteMessage(
           statusMessage.chat.id,
           statusMessage.message_id,
         );
 
-        if (error.message === 'Topic already being tracked.') {
-          await ctx.reply('You are already tracking this topic.');
+        if (error.message === 'Topic already being ignored.') {
+          await ctx.reply('You are already ignoring this topic.');
 
           return;
         }
 
         logger.error(
           { telegram_id: ctx.chat.id, error },
-          'Error while adding Tracked Topic.',
+          'Error while adding Ignored Topic.',
         );
 
         await ctx.reply('Something went wrong...');
       }
     } else {
       const message = `Invalid URL. What is the URL of the topic you want to track?`;
-      await addTrackedTopicLinkQuestion.replyWithHTML(ctx, message);
+      await addIgnoredTopicLinkQuestion.replyWithHTML(ctx, message);
     }
   },
 );
 
-const getTrackedTopicsList = async (ctx: MenuContext) => {
-  const findTrackedTopicsByTelegramId = container.resolve(
-    FindTrackedTopicsByTelegramIdService,
+const getIgnoredTopics = async (ctx: MenuContext) => {
+  const findIgnoredTopicsByTelegramId = container.resolve(
+    FindIgnoredTopicsByTelegramIdService,
   );
 
-  const choices = await findTrackedTopicsByTelegramId.execute(ctx.chat.id);
+  const choices = await findIgnoredTopicsByTelegramId.execute(ctx.chat.id);
 
   const formatted = {};
 
@@ -198,10 +188,10 @@ const getTrackedTopicsList = async (ctx: MenuContext) => {
   return formatted;
 };
 
-trackedTopicsMenu.chooseIntoSubmenu(
-  'trackedTopics',
-  getTrackedTopicsList,
-  trackedTopicInfoMenu,
+ignoredTopicsMenu.chooseIntoSubmenu(
+  'ignoredTopics',
+  getIgnoredTopics,
+  ignoredTopicsMenuInfoMenu,
   {
     maxRows: 4,
     columns: 1,
@@ -213,21 +203,21 @@ trackedTopicsMenu.chooseIntoSubmenu(
   },
 );
 
-trackedTopicsMenu.interact('✨ Add new', 'add', {
+ignoredTopicsMenu.interact('✨ Add new', 'add', {
   do: async ctx => {
-    const message = 'What is the URL of the topic you want to track?';
+    const message = 'What is the URL of the topic you want to ignore?';
 
-    await addTrackedTopicLinkQuestion.replyWithHTML(ctx, message);
+    await addIgnoredTopicLinkQuestion.replyWithHTML(ctx, message);
     return true;
   },
 });
 
-trackedTopicsMenu.interact('↩ Go Back', 'back', {
+ignoredTopicsMenu.interact('↩ Go Back', 'back', {
   do: () => {
     return '..';
   },
   joinLastRow: true,
 });
 
-export { addTrackedTopicLinkQuestion };
-export default trackedTopicsMenu;
+export { addIgnoredTopicLinkQuestion };
+export default ignoredTopicsMenu;

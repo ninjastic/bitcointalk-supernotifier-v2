@@ -3,7 +3,7 @@ import User from '../../../../modules/users/infra/typeorm/entities/User';
 
 import IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
 
-type NotificationType = 'mentions' | 'merits';
+type NotificationType = 'mentions' | 'merits' | 'modlogs';
 
 @injectable()
 export default class UpdateUserNotificationService {
@@ -23,6 +23,8 @@ export default class UpdateUserNotificationService {
       user.enable_mentions = value;
     } else if (type === 'merits') {
       user.enable_merits = value;
+    } else if (type === 'modlogs') {
+      user.enable_modlogs = value;
     }
 
     await this.usersRepository.save(user);

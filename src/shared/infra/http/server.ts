@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import express, { Express } from 'express';
+import cors from 'cors';
 
 import '../typeorm';
 import '../../container';
@@ -12,6 +13,7 @@ class Server {
 
   constructor() {
     this.app = express();
+    this.app.use(cors());
     this.app.use(loggerHttp);
     this.app.use(routes);
     this.app.listen(3333);

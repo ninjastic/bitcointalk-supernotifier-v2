@@ -1,11 +1,11 @@
 import { getRepository, Repository, MoreThanOrEqual } from 'typeorm';
 import { sub } from 'date-fns';
 
-import CreateMeritDTO from '../../dtos/CreateMeritDTO';
-import FindMeritDTO from '../../dtos/FindMeritDTO';
+import CreateMeritDTO from '../../../dtos/CreateMeritDTO';
+import FindMeritDTO from '../../../dtos/FindMeritDTO';
 
-import Merit from '../typeorm/entities/Merit';
-import IMeritsRepository from '../../repositories/IMeritsRepository';
+import Merit from '../entities/Merit';
+import IMeritsRepository from '../../../repositories/IMeritsRepository';
 
 export default class MeritsRepository implements IMeritsRepository {
   private ormRepository: Repository<Merit>;

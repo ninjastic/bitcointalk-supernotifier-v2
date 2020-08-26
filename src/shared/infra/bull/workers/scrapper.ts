@@ -9,8 +9,8 @@ import '../../../container';
 import cacheConfig from '../../../../config/cache';
 import loggerHandler from '../handlers/loggerHandler';
 
-import ScrapeMeritsRepository from '../../../../modules/merits/infra/repositories/ScrapeMeritsRepository';
-import ScrapePostsRepository from '../../../../modules/posts/infra/repositories/ScrapePostsRepository';
+import ScrapeMeritsRepository from '../../../../modules/merits/infra/typeorm/repositories/ScrapeMeritsRepository';
+import ScrapePostsRepository from '../../../../modules/posts/infra/typeorm/repositories/ScrapePostsRepository';
 
 import SavePostService from '../../../../modules/posts/services/SavePostService';
 import ScrapeUserMeritCountService from '../../../../modules/merits/services/ScrapeUserMeritCountService';

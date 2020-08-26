@@ -10,6 +10,7 @@ import ICacheProvider from '../../../shared/container/providers/models/ICachePro
 import SetPostCheckedService from './SetPostCheckedService';
 import GetTrackedTopicsService from './GetTrackedTopicsService';
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
+import GetIgnoredTopicsService from './GetIgnoredTopicsService';
 
 @injectable()
 export default class CheckPostsService {
@@ -30,9 +31,11 @@ export default class CheckPostsService {
 
     const getTrackedTopics = container.resolve(GetTrackedTopicsService);
     const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
+    const getIgnoredTopics = container.resolve(GetIgnoredTopicsService);
 
     const trackedTopics = await getTrackedTopics.execute();
     const ignoredUsers = await getIgnoredUsers.execute();
+    const ignoredTopics = await getIgnoredTopics.execute();
 
     const setPostChecked = container.resolve(SetPostCheckedService);
 
@@ -129,6 +132,17 @@ export default class CheckPostsService {
             if (
               foundIgnoredUser &&
               foundIgnoredUser.ignoring.includes(user.telegram_id)
+            ) {
+              return Promise.resolve();
+            }
+
+            const foundIgnoredTopic = ignoredTopics.find(
+              ignoredTopic => ignoredTopic.topic_id === post.topic_id,
+            );
+
+            if (
+              foundIgnoredTopic &&
+              foundIgnoredTopic.ignoring.includes(user.telegram_id)
             ) {
               return Promise.resolve();
             }

@@ -35,6 +35,9 @@ class User {
   @Column()
   enable_merits: boolean;
 
+  @Column()
+  enable_modlogs: boolean;
+
   @Column({ default: false })
   blocked: boolean;
 

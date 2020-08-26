@@ -3,10 +3,10 @@ import { sub } from 'date-fns';
 
 import FindModLogDTO from 'modules/modlog/dtos/FindModLogDTO';
 import FindUncheckedTypeDTO from 'modules/modlog/dtos/FindUncheckedTypeDTO';
-import IModLogRepository from '../../repositories/IModLogRepository';
-import CreateModLogDTO from '../../dtos/CreateModLogDTO';
+import IModLogRepository from '../../../repositories/IModLogRepository';
+import CreateModLogDTO from '../../../dtos/CreateModLogDTO';
 
-import ModLog from '../typeorm/entities/ModLog';
+import ModLog from '../entities/ModLog';
 
 export default class ModLogRepository implements IModLogRepository {
   private ormRepository: Repository<ModLog>;

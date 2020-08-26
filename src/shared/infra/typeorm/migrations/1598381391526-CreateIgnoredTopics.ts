@@ -1,10 +1,15 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
-export class CreateIgnoredUsers1597876661841 implements MigrationInterface {
+export class CreateIgnoredTopics1598381391526 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: 'ignored_users',
+        name: 'ignored_topics',
         columns: [
           {
             name: 'id',
@@ -14,8 +19,13 @@ export class CreateIgnoredUsers1597876661841 implements MigrationInterface {
             generationStrategy: 'uuid',
           },
           {
-            name: 'username',
-            type: 'varchar',
+            name: 'topic_id',
+            type: 'integer',
+            isUnique: true,
+          },
+          {
+            name: 'post_id',
+            type: 'integer',
             isUnique: true,
           },
           {
@@ -36,9 +46,20 @@ export class CreateIgnoredUsers1597876661841 implements MigrationInterface {
         ],
       }),
     );
+
+    await queryRunner.createForeignKey(
+      'ignored_topics',
+      new TableForeignKey({
+        columnNames: ['post_id'],
+        referencedTableName: 'posts',
+        referencedColumnNames: ['post_id'],
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+      }),
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('ignored_users');
+    await queryRunner.dropTable('ignored_topics');
   }
 }

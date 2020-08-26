@@ -5,16 +5,28 @@ import {
   UpdateDateColumn,
   Index,
   PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
-@Entity('ignored_users')
-class IgnoredUser {
+import Post from './Post';
+
+@Entity('ignored_topics')
+class IgnoredTopic {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
   @Index({ unique: true })
-  username: string;
+  topic_id: number;
+
+  @Column()
+  @Index({ unique: true })
+  post_id: number;
+
+  @OneToOne(() => Post)
+  @JoinColumn({ name: 'post_id', referencedColumnName: 'post_id' })
+  post: Post;
 
   @Column({ type: 'integer', array: true, default: [] })
   ignoring: number[];
@@ -26,4 +38,4 @@ class IgnoredUser {
   updated_at: Date;
 }
 
-export default IgnoredUser;
+export default IgnoredTopic;

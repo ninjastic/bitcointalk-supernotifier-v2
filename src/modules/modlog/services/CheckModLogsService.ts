@@ -26,7 +26,7 @@ export default class CheckModLogsService {
 
   public async execute(): Promise<void> {
     const modLogs = await this.modLogRepository.findUnchecked('remove_topic');
-    const users = await this.usersRepository.getUsersWithMentions();
+    const users = await this.usersRepository.getUsersWithModlogs();
 
     const setModLogChecked = container.resolve(SetModLogCheckedService);
 

@@ -4,6 +4,11 @@ import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 import IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
 
+interface PostSearchServiceDTO {
+  author?: string;
+  content?: string;
+}
+
 @injectable()
 export default class PostSearchService {
   constructor(
@@ -11,7 +16,10 @@ export default class PostSearchService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute(search: string, limit: number): Promise<Post[]> {
-    return this.postsRepository.findPostsByContent(search, limit);
+  public async execute(
+    { author, content }: PostSearchServiceDTO,
+    limit: number,
+  ): Promise<Post[]> {
+    return this.postsRepository.findPosts({ author, content }, limit);
   }
 }

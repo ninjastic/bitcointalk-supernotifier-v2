@@ -1,9 +1,9 @@
 import { Repository, getRepository } from 'typeorm';
 
-import CreateIgnoredUserDTO from '../../dtos/CreateIgnoredUserDTO';
+import CreateIgnoredUserDTO from '../../../dtos/CreateIgnoredUserDTO';
 
-import IgnoredUser from '../typeorm/entities/IgnoredUser';
-import IIgnoredUserRepository from '../../repositories/IIgnoredUserRepository';
+import IgnoredUser from '../entities/IgnoredUser';
+import IIgnoredUserRepository from '../../../repositories/IIgnoredUserRepository';
 
 export default class IgnoredUserRepository implements IIgnoredUserRepository {
   private ormRepository: Repository<IgnoredUser>;

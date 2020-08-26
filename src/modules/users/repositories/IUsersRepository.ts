@@ -8,4 +8,5 @@ export default interface IUsersRepository {
   findByTelegramId(telegram_id: number): Promise<User | undefined>;
   getUsersWithMentions(): Promise<User[]>;
   getUsersWithMerits(): Promise<User[]>;
+  getUsersWithModlogs(): Promise<User[]>;
 }

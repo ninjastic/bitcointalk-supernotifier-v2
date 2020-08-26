@@ -1,12 +1,12 @@
 import { container } from 'tsyringe';
 
-import IScrapeMeritsRepository from '../../repositories/IScrapeMeritsRepository';
+import IScrapeMeritsRepository from '../../../repositories/IScrapeMeritsRepository';
 
-import Merit from '../typeorm/entities/Merit';
+import Merit from '../entities/Merit';
 
-import ScrapeMeritsService from '../../services/ScrapeMeritsService';
-import ParseMeritElementService from '../../services/ParseMeritElementService';
-import SaveMeritService from '../../services/SaveMeritService';
+import ScrapeMeritsService from '../../../services/ScrapeMeritsService';
+import ParseMeritElementService from '../../../services/ParseMeritElementService';
+import SaveMeritService from '../../../services/SaveMeritService';
 
 export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
   public async scrapeMerits(): Promise<void> {

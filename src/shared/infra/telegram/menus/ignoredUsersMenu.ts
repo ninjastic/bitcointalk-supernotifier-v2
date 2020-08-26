@@ -3,6 +3,8 @@ import { MenuTemplate } from 'telegraf-inline-menu';
 import { container } from 'tsyringe';
 import TelegrafStatelessQuestion from 'telegraf-stateless-question';
 
+import logger from '../../../services/logger';
+
 import ISession from '../@types/ISession';
 
 import FindIgnoredUsersByTelegramIdService from '../services/FindIgnoredUsersByTelegramIdService';
@@ -24,7 +26,7 @@ const ignoredUsersMenu = new MenuTemplate<MenuContext>(() => {
 
 const ignoredUsersMenuInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
   let message = '';
-  message += `<b>Selected Ignored User:</b>\n\n`;
+  message += `<b>Ignored User:</b>\n\n`;
   message += `🏷️ <b>Username:</b> ${ctx.match[1]}\n`;
 
   return {
@@ -94,6 +96,11 @@ const addIgnoredUserQuestion = new TelegrafStatelessQuestion(
 
           return;
         }
+
+        logger.error(
+          { telegram_id: ctx.chat.id, error },
+          'Error while adding Ignored User.',
+        );
 
         await ctx.reply('Something went wrong...');
       }

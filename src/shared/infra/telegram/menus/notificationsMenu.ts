@@ -46,6 +46,17 @@ const handleNotificationToggle = async (ctx: MenuContext) => {
     );
   }
 
+  if (ctx.update.callback_query.data === '/main/notifications/modlogs') {
+    ctx.session.modlogs = !ctx.session.modlogs;
+    await bot.session.saveSession(bot.session.getSessionKey(ctx), ctx.session);
+
+    await updateUserNotification.execute(
+      ctx.update.callback_query.from.id,
+      'modlogs',
+      ctx.session.modlogs,
+    );
+  }
+
   await ctx.answerCbQuery();
 };
 
@@ -55,6 +66,10 @@ const mentionsEnabled = (ctx: MenuContext) => {
 
 const meritsEnabled = (ctx: MenuContext) => {
   return ctx.session.merits;
+};
+
+const modlogsEnabled = (ctx: MenuContext) => {
+  return ctx.session.modlogs;
 };
 
 notificationsMenu.interact(
@@ -74,6 +89,20 @@ notificationsMenu.interact(
 notificationsMenu.interact(
   ctx => (meritsEnabled(ctx) ? '❌ Disable Merits' : '✅ Enable Merits'),
   'merits',
+  {
+    do: async ctx => {
+      await ctx.answerCbQuery();
+
+      handleNotificationToggle(ctx);
+
+      return true;
+    },
+  },
+);
+
+notificationsMenu.interact(
+  ctx => (modlogsEnabled(ctx) ? '❌ Disable ModLogs' : '✅ Enable ModLogs'),
+  'modlogs',
   {
     do: async ctx => {
       await ctx.answerCbQuery();

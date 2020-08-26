@@ -23,7 +23,9 @@ export default class AddTrackedTopicService {
     topic_id: number,
     telegram_id?: number,
   ): Promise<TrackedTopic> {
-    const topicExists = await this.trackedTopicsRepository.findOne(topic_id);
+    const topicExists = await this.trackedTopicsRepository.findOneByTopicId(
+      topic_id,
+    );
 
     if (topicExists) {
       if (!telegram_id) {
@@ -60,7 +62,7 @@ export default class AddTrackedTopicService {
 
     await this.trackedTopicsRepository.save(trackedTopic);
 
-    const trackedWithTopic = await this.trackedTopicsRepository.findOne(
+    const trackedWithTopic = await this.trackedTopicsRepository.findOneByTopicId(
       topic_id,
     );
 

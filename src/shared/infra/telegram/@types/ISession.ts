@@ -7,6 +7,7 @@ export default interface ISession extends TelegrafContext {
   userId: number;
   mentions: boolean;
   merits: boolean;
+  modlogs: boolean;
   alternative_usernames: Array<string>;
   page: number;
 }

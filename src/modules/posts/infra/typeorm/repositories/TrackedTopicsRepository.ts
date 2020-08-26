@@ -1,9 +1,9 @@
 import { getRepository, Repository } from 'typeorm';
 
-import CreateTrackedTopicDTO from '../../dtos/CreateTrackedTopicDTO';
+import CreateTrackedTopicDTO from '../../../dtos/CreateTrackedTopicDTO';
 
-import TrackedTopic from '../typeorm/entities/TrackedTopic';
-import ITrackedTopicsRepository from '../../repositories/ITrackedTopicsRepository';
+import TrackedTopic from '../entities/TrackedTopic';
+import ITrackedTopicsRepository from '../../../repositories/ITrackedTopicsRepository';
 
 export default class TrackedTopicsRepository
   implements ITrackedTopicsRepository {
@@ -25,7 +25,9 @@ export default class TrackedTopicsRepository
     return savedTrackedTopic;
   }
 
-  public async findOne(topic_id: number): Promise<TrackedTopic | null> {
+  public async findOneByTopicId(
+    topic_id: number,
+  ): Promise<TrackedTopic | null> {
     const trackedTopic = await this.ormRepository.findOne({
       where: {
         topic_id,
