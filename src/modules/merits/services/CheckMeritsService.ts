@@ -5,6 +5,7 @@ import cacheConfig from '../../../config/cache';
 
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
+import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import SetMeritCheckedService from './SetMeritCheckedService';
 
@@ -16,6 +17,9 @@ export default class CheckMeritsService {
 
     @inject('UsersRepository')
     private usersRepository: IUsersRepository,
+
+    @inject('CacheRepository')
+    private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute(): Promise<void> {
@@ -42,6 +46,21 @@ export default class CheckMeritsService {
             if (merit.notified_to.includes(user.telegram_id)) {
               return Promise.resolve();
             }
+
+            const meritNotified = await this.cacheProvider.recover<boolean>(
+              `notified:${merit.date}-${merit.amount}-${merit.post_id}`,
+            );
+
+            if (meritNotified) {
+              return Promise.resolve();
+            }
+
+            await this.cacheProvider.save(
+              `notified:${merit.date}-${merit.amount}-${merit.post_id}`,
+              true,
+              'EX',
+              180,
+            );
 
             return queue.add('sendMeritNotification', { merit, user });
           }),

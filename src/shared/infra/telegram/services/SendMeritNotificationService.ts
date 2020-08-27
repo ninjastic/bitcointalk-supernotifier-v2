@@ -1,6 +1,6 @@
 import { container, injectable, inject } from 'tsyringe';
 import pluralize from 'pluralize';
-import Bull from 'bull';
+import Queue from 'bull';
 
 import logger from '../../../services/logger';
 import cacheConfig from '../../../../config/cache';
@@ -45,15 +45,21 @@ export default class SendMeritNotificationService {
         300,
       );
     } else {
-      const queue = new Bull('ForumScrapperSideQueue', {
+      const queue = new Queue('ForumScrapperSideQueue', {
         redis: cacheConfig.config.redis,
       });
 
-      const job = await queue.add('scrapeUserMeritCount', {
-        uid: receiver_uid,
-      });
+      const job = await queue.add(
+        'scrapeUserMeritCount',
+        {
+          uid: receiver_uid,
+        },
+        { delay: 10000 },
+      );
 
       totalMeritCount = await job.finished();
+
+      await queue.close();
 
       await this.cacheRepository.save(
         `meritCount:${telegram_id}`,
