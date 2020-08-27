@@ -61,4 +61,11 @@ export default class UsersRepository implements IUsersRepository {
 
     return users;
   }
+
+  public async findAll(only_unblocked?: boolean): Promise<User[]> {
+    if (only_unblocked) {
+      return this.ormRepository.find({ where: { blocked: false } });
+    }
+    return this.ormRepository.find();
+  }
 }

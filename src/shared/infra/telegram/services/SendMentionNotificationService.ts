@@ -1,10 +1,10 @@
 import { container } from 'tsyringe';
 import cheerio from 'cheerio';
+
 import logger from '../../../services/logger';
+import bot from '../index';
 
 import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-
-import bot from '../index';
 
 import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
 import SetUserBlockedService from './SetUserBlockedService';
@@ -38,7 +38,7 @@ export default class SendMentionNotificationService {
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error: error.response },
+            { error },
             'Error while sending Mention Notification telegram message',
           );
 
@@ -53,6 +53,11 @@ export default class SendMentionNotificationService {
             'Telegram user marked as blocked',
           );
           await setUserBlocked.execute(telegram_id);
+        } else {
+          logger.error(
+            { error: error.response, telegram_id, post: post.id },
+            'Error while sending Mention Notification telegram message',
+          );
         }
       });
   }

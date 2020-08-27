@@ -40,7 +40,7 @@ export default class SendRemovedTopicNotificationService {
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error: error.response },
+            { error },
             'Error while sending Removed Topic Notification telegram message',
           );
 
@@ -55,6 +55,11 @@ export default class SendRemovedTopicNotificationService {
             'Telegram user marked as blocked',
           );
           await setUserBlocked.execute(telegram_id);
+        } else {
+          logger.error(
+            { error: error.response, telegram_id, modLog, posts },
+            'Error while sending Removed Topic Notification telegram message',
+          );
         }
       });
   }

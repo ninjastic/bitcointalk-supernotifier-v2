@@ -26,6 +26,7 @@ import {
 
 import startCommand from './commands/startCommand';
 import menuCommand from './commands/menuCommand';
+import alertCommand from './commands/alertCommand';
 import messageHandler from './commands/messageHandler';
 import callbackHandler from './commands/callbackHandler';
 
@@ -84,6 +85,7 @@ class TelegramBot {
   commands(): void {
     this.instance.start(startCommand);
     this.instance.command('menu', menuCommand);
+    this.instance.hears(/\/alert (.*)/, alertCommand);
     this.instance.on('message', messageHandler);
   }
 

@@ -41,7 +41,7 @@ export default class SendTopicTrackingNotificationService {
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error: error.response },
+            { error },
             'Error while sending Topic Tracking Notification telegram message',
           );
 
@@ -56,6 +56,11 @@ export default class SendTopicTrackingNotificationService {
             'Telegram user marked as blocked',
           );
           await setUserBlocked.execute(telegram_id);
+        } else {
+          logger.error(
+            { error: error.response, telegram_id, post: post.id },
+            'Error while sending Tracked Topic Notification telegram message',
+          );
         }
       });
   }

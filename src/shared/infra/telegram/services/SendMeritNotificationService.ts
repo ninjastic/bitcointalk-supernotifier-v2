@@ -84,7 +84,7 @@ export default class SendMeritNotificationService {
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error: error.response },
+            { error },
             'Error while sending Merit Notification telegram message',
           );
 
@@ -99,6 +99,11 @@ export default class SendMeritNotificationService {
             'Telegram user marked as blocked',
           );
           await setUserBlocked.execute(telegram_id);
+        } else {
+          logger.error(
+            { error: error.response, telegram_id, merit: merit.id },
+            'Error while sending Merit Notification telegram message',
+          );
         }
       });
   }

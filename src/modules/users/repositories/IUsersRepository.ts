@@ -9,4 +9,5 @@ export default interface IUsersRepository {
   getUsersWithMentions(): Promise<User[]>;
   getUsersWithMerits(): Promise<User[]>;
   getUsersWithModlogs(): Promise<User[]>;
+  findAll(only_unblocked?: boolean): Promise<User[]>;
 }
