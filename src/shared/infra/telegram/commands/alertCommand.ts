@@ -15,7 +15,7 @@ const alertCommand = async (ctx: MenuContext): Promise<void> => {
       SendGlobalNotificationService,
     );
 
-    const message = ctx.match[1];
+    const message = ctx.message.text.replace('/alert ', '');
 
     await sendGlobalNotification
       .execute(message)

@@ -85,7 +85,7 @@ class TelegramBot {
   commands(): void {
     this.instance.start(startCommand);
     this.instance.command('menu', menuCommand);
-    this.instance.hears(/\/alert (.*)/, alertCommand);
+    this.instance.command('alert', alertCommand);
     this.instance.on('message', messageHandler);
   }
 
