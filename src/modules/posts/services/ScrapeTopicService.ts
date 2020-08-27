@@ -32,6 +32,14 @@ export default class ScrapeTopicService {
       return savePost.execute(post);
     }
 
-    return post;
+    if (postExists.title === '(Unknown Title)' || !postExists.boards.length) {
+      postExists.title = post.title;
+      postExists.boards = post.boards;
+      postExists.date = post.date;
+
+      await this.postsRepository.save(postExists);
+    }
+
+    return postExists;
   }
 }
