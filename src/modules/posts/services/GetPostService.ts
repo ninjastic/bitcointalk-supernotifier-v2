@@ -1,4 +1,4 @@
-import { inject, injectable } from 'tsyringe';
+import { inject, injectable, container } from 'tsyringe';
 import Queue from 'bull';
 
 import cacheConfig from '../../../config/cache';
@@ -7,6 +7,8 @@ import Post from '../infra/typeorm/entities/Post';
 
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import IPostsRepository from '../repositories/IPostsRepository';
+
+import ScrapePostService from './ScrapePostService';
 
 @injectable()
 export default class GetPostService {
@@ -36,6 +38,21 @@ export default class GetPostService {
     const foundPost = await this.postsRepository.findOneByPostId(post_id);
 
     if (foundPost) {
+      if (foundPost.title === '(Unknown Title)' || !foundPost.boards.length) {
+        const scrapePost = container.resolve(ScrapePostService);
+
+        const updatedPost = await scrapePost.execute({
+          post_id: foundPost.post_id,
+          topic_id: foundPost.topic_id,
+        });
+
+        foundPost.title = updatedPost.title;
+        foundPost.boards = updatedPost.boards;
+        foundPost.date = updatedPost.date;
+
+        await this.postsRepository.save(foundPost);
+      }
+
       await this.cacheRepository.save(
         `post:${foundPost.post_id}`,
         foundPost,
