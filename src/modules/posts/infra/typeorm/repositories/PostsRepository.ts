@@ -6,10 +6,7 @@ import CreatePostDTO from '../../../dtos/CreatePostDTO';
 import Post from '../entities/Post';
 import IPostsRepository from '../../../repositories/IPostsRepository';
 
-interface IFindPostsConditions {
-  author?: string;
-  content?: string;
-}
+import IFindPostsConditionsDTO from '../../../dtos/IFindPostsConditionsDTO';
 
 export default class PostsRepository implements IPostsRepository {
   private ormRepository: Repository<Post>;
@@ -84,12 +81,12 @@ export default class PostsRepository implements IPostsRepository {
   }
 
   public async findPosts(
-    conditions: IFindPostsConditions,
+    conditions: IFindPostsConditionsDTO,
     limit: number,
   ): Promise<Post[]> {
     const actual_limit = Math.min(limit || 20, 200);
 
-    const { author, content } = conditions;
+    const { author, content, topic_id, last } = conditions;
 
     return this.ormRepository
       .createQueryBuilder('posts')
@@ -113,6 +110,10 @@ export default class PostsRepository implements IPostsRepository {
       .andWhere(author ? `lower(author) = :author` : '1=1', {
         author: author ? author.toLowerCase() : undefined,
       })
+      .andWhere(last ? `post_id <= :last` : '1=1', {
+        last,
+      })
+      .andWhere(topic_id ? `topic_id = :topic_id` : '1=1', { topic_id })
       .addOrderBy('post_id', 'DESC')
       .limit(actual_limit)
       .getMany();

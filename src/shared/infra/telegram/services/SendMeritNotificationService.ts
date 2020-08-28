@@ -41,8 +41,6 @@ export default class SendMeritNotificationService {
       await this.cacheRepository.save(
         `meritCount:${telegram_id}`,
         totalMeritCount,
-        'EX',
-        300,
       );
     } else {
       const queue = new Queue('ForumScrapperSideQueue', {
@@ -54,7 +52,7 @@ export default class SendMeritNotificationService {
         {
           uid: receiver_uid,
         },
-        { delay: 10000 },
+        { delay: 5000 },
       );
 
       totalMeritCount = await job.finished();
@@ -64,8 +62,6 @@ export default class SendMeritNotificationService {
       await this.cacheRepository.save(
         `meritCount:${telegram_id}`,
         totalMeritCount,
-        'EX',
-        300,
       );
     }
 
@@ -92,7 +88,8 @@ export default class SendMeritNotificationService {
         }
         if (
           error.response.description ===
-          'Forbidden: bot was blocked by the user'
+            'Forbidden: bot was blocked by the user' ||
+          error.response.description === 'Forbidden: user is deactivated'
         ) {
           logger.info(
             { error: error.response, telegram_id, merit: merit.id },

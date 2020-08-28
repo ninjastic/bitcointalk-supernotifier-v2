@@ -4,10 +4,7 @@ import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 import IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
 
-interface PostSearchServiceDTO {
-  author?: string;
-  content?: string;
-}
+import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
 
 @injectable()
 export default class PostSearchService {
@@ -17,9 +14,12 @@ export default class PostSearchService {
   ) {}
 
   public async execute(
-    { author, content }: PostSearchServiceDTO,
+    { author, content, topic_id, last }: IFindPostsConditionsDTO,
     limit: number,
   ): Promise<Post[]> {
-    return this.postsRepository.findPosts({ author, content }, limit);
+    return this.postsRepository.findPosts(
+      { author, content, topic_id, last },
+      limit,
+    );
   }
 }

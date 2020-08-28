@@ -48,7 +48,8 @@ export default class SendRemovedTopicNotificationService {
         }
         if (
           error.response.description ===
-          'Forbidden: bot was blocked by the user'
+            'Forbidden: bot was blocked by the user' ||
+          error.response.description === 'Forbidden: user is deactivated'
         ) {
           logger.info(
             { error: error.response, telegram_id, modLog, posts },

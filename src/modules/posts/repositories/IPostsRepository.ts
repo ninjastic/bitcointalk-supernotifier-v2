@@ -1,10 +1,7 @@
 import Post from '../infra/typeorm/entities/Post';
 import CreatePostDTO from '../dtos/CreatePostDTO';
 
-interface IFindPostsConditions {
-  author?: string;
-  content?: string;
-}
+import IFindPostsConditionsDTO from '../dtos/IFindPostsConditionsDTO';
 
 export default interface IPostsRepository {
   create(data: CreatePostDTO): Post;
@@ -14,5 +11,8 @@ export default interface IPostsRepository {
   findPostsFromTopicId(topic_id: number): Promise<Post[]>;
   findPostsByContent(search: string, limit: number): Promise<Post[]>;
   findPostsByAuthor(author: string, limit: number): Promise<Post[]>;
-  findPosts(conditions: IFindPostsConditions, limit: number): Promise<Post[]>;
+  findPosts(
+    conditions: IFindPostsConditionsDTO,
+    limit: number,
+  ): Promise<Post[]>;
 }
