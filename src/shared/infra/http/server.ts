@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import express, { Express } from 'express';
+import helmet from 'helmet';
 import cors from 'cors';
 
 import '../typeorm';
@@ -13,6 +14,7 @@ class Server {
 
   constructor() {
     this.app = express();
+    this.app.use(helmet());
     this.app.use(cors());
     this.app.use(loggerHttp);
     this.app.use(routes);

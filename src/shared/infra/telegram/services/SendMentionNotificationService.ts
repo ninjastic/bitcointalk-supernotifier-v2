@@ -14,16 +14,22 @@ export default class SendMentionNotificationService {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
 
-    const $ = cheerio.load(post.content);
+    const { post_id, topic_id, title, author, boards, content } = post;
+
+    const $ = cheerio.load(content);
     const data = $('body');
     data.children('div.quote').remove();
     data.children('div.quoteheader').remove();
     data.find('br').replaceWith('&nbsp;');
     const contentFiltered = data.text().replace(/\s\s+/g, ' ').trim();
 
+    const titleWithBoards = boards.length
+      ? `${boards[boards.length - 1]} / ${title}`
+      : title;
+
     let message = '';
-    message += `You have been mentioned by <b>${post.author}</b> `;
-    message += `in <a href="https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}">${post.title}</a>\n`;
+    message += `You have been mentioned by <b>${author}</b> `;
+    message += `in <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">${titleWithBoards}</a>\n`;
     message += `<pre>`;
     message += `${contentFiltered.substring(0, 150)}`;
     message += `${contentFiltered.length > 150 ? '...' : ''}`;
