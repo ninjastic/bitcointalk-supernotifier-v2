@@ -12,6 +12,7 @@ import loggerHandler from '../handlers/loggerHandler';
 import CheckPostsService from '../../../../modules/posts/services/CheckPostsService';
 import CheckMeritsService from '../../../../modules/merits/services/CheckMeritsService';
 import CheckModLogsService from '../../../../modules/modlog/services/CheckModLogsService';
+import CheckPostsAddressesService from '../../../../modules/posts/services/CheckPostsAddressesService';
 
 (async () => {
   const queue = new Queue('CheckerQueue', {
@@ -21,6 +22,7 @@ import CheckModLogsService from '../../../../modules/modlog/services/CheckModLog
   await queue.removeRepeatable('checkPosts', { every: 5000 });
   await queue.removeRepeatable('checkMerits', { every: 5000 });
   await queue.removeRepeatable('checkModLogs', { every: 300000 });
+  await queue.removeRepeatable('checkPostsAddresses', { every: 20000 });
 
   await queue.add('checkPosts', null, {
     removeOnComplete: true,
@@ -40,6 +42,12 @@ import CheckModLogsService from '../../../../modules/modlog/services/CheckModLog
     repeat: { every: 300000 },
   });
 
+  await queue.add('checkPostsAddresses', null, {
+    removeOnComplete: true,
+    removeOnFail: true,
+    repeat: { every: 20000 },
+  });
+
   queue.process('checkPosts', async () => {
     const checkPosts = container.resolve(CheckPostsService);
     await checkPosts.execute();
@@ -53,6 +61,11 @@ import CheckModLogsService from '../../../../modules/modlog/services/CheckModLog
   queue.process('checkModLogs', async () => {
     const checkModLogs = container.resolve(CheckModLogsService);
     await checkModLogs.execute();
+  });
+
+  queue.process('checkPostsAddresses', async () => {
+    const checkPostsAddresses = container.resolve(CheckPostsAddressesService);
+    await checkPostsAddresses.execute();
   });
 
   loggerHandler(queue);

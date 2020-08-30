@@ -38,4 +38,16 @@ export default class AddressesRepository implements IAddressesRepository {
       })
       .execute();
   }
+
+  public async findLatestPostId(): Promise<number | undefined> {
+    const address = await this.ormRepository.query(
+      'SELECT unnest(posts_id) AS post_id FROM addresses ORDER BY post_id DESC LIMIT 1',
+    );
+
+    if (address) {
+      return address[0].post_id;
+    }
+
+    return undefined;
+  }
 }

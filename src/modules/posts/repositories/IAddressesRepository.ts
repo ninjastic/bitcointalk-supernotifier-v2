@@ -6,4 +6,5 @@ export default interface IAddressesRepository {
   save(address: Address): Promise<Address>;
   findOneByAddress(address: string): Promise<Address | undefined>;
   findByPostId(post_id: number): Promise<Address[] | undefined>;
+  findLatestPostId(): Promise<number | undefined>;
 }

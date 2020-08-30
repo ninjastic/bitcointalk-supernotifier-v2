@@ -84,7 +84,7 @@ export default class PostsRepository implements IPostsRepository {
     conditions: IFindPostsConditionsDTO,
     limit: number,
   ): Promise<Post[]> {
-    const { author, content, topic_id, last } = conditions;
+    const { author, content, topic_id, last, after } = conditions;
 
     return this.ormRepository
       .createQueryBuilder('posts')
@@ -99,7 +99,7 @@ export default class PostsRepository implements IPostsRepository {
         'posts.boards',
         'posts.archive',
       ])
-      .andWhere(
+      .where(
         content
           ? `to_tsvector_forum_content(content) @@ plainto_tsquery('simple', :content)`
           : '1=1',
@@ -110,6 +110,9 @@ export default class PostsRepository implements IPostsRepository {
       })
       .andWhere(last ? `post_id < :last` : '1=1', {
         last,
+      })
+      .andWhere(after ? `post_id > :after` : '1=1', {
+        after,
       })
       .andWhere(topic_id ? `topic_id = :topic_id` : '1=1', { topic_id })
       .addOrderBy('post_id', 'DESC')

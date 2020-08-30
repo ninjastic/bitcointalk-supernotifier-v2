@@ -3,4 +3,5 @@ export default interface IFindPostsConditionsDTO {
   content?: string;
   topic_id?: number;
   last?: number;
+  after?: number;
 }
