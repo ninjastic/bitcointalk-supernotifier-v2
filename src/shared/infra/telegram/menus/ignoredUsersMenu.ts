@@ -87,12 +87,17 @@ const addIgnoredUserQuestion = new TelegrafStatelessQuestion(
         message += 'You are now ignoring the user: ';
         message += `<b>${text}</b>`;
 
-        await ctx.reply(message, { parse_mode: 'HTML' });
+        await ctx.reply(message, {
+          parse_mode: 'HTML',
+          reply_markup: { remove_keyboard: true },
+        });
 
         await ignoredUsersMenuMiddleware.replyToContext(ctx);
       } catch (error) {
         if (error.message === 'User already being ignored.') {
-          await ctx.reply('You are already ignoring this user.');
+          await ctx.reply('You are already ignoring this user.', {
+            reply_markup: { remove_keyboard: true },
+          });
 
           return;
         }
@@ -102,7 +107,9 @@ const addIgnoredUserQuestion = new TelegrafStatelessQuestion(
           'Error while adding Ignored User.',
         );
 
-        await ctx.reply('Something went wrong...');
+        await ctx.reply('Something went wrong...', {
+          reply_markup: { remove_keyboard: true },
+        });
       }
     } else {
       const message = `Invalid Username. What is the username of the user you want to ignore?`;

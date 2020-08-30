@@ -17,9 +17,11 @@ export default class PostSearchService {
     { author, content, topic_id, last }: IFindPostsConditionsDTO,
     limit: number,
   ): Promise<Post[]> {
+    const actual_limit = Math.min(limit || 20, 200);
+
     return this.postsRepository.findPosts(
       { author, content, topic_id, last },
-      limit,
+      actual_limit,
     );
   }
 }

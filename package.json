@@ -63,6 +63,7 @@
    },
    "dependencies": {
       "axios": "^0.19.2",
+      "bitcoin-address-validation": "^1.0.2",
       "bull": "^3.18.0",
       "cheerio": "^1.0.0-rc.3",
       "cors": "^2.8.5",

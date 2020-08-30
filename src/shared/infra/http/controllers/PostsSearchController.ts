@@ -5,7 +5,7 @@ import PostSearchService from '../services/PostSearchService';
 
 import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
 
-export default class PostSearchController {
+export default class PostsSearchController {
   public async show(request: Request, response: Response): Promise<Response> {
     const { author, content, limit, topic_id, last } = request.query;
 

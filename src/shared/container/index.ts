@@ -24,6 +24,9 @@ import ModLogRepository from '../../modules/modlog/infra/typeorm/repositories/Mo
 import IReportRepository from '../../modules/reports/repositories/IReportRepository';
 import ReportRepository from '../../modules/reports/infra/typeorm/repositories/ReportRepository';
 
+import IAddressesRepository from '../../modules/posts/repositories/IAddressesRepository';
+import AddressesRepository from '../../modules/posts/infra/typeorm/repositories/AddressesRepository';
+
 import ICacheRepository from './providers/models/ICacheProvider';
 import RedisProvider from './providers/implementations/RedisProvider';
 
@@ -65,6 +68,11 @@ container.registerSingleton<IModLogRepository>(
 container.registerSingleton<IReportRepository>(
   'ReportRepository',
   ReportRepository,
+);
+
+container.registerSingleton<IAddressesRepository>(
+  'AddressesRepository',
+  AddressesRepository,
 );
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);

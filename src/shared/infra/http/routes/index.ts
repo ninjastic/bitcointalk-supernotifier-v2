@@ -1,17 +1,23 @@
 import { Router } from 'express';
 
-import PostSearchController from '../controllers/PostSearchController';
+import PostsSearchController from '../controllers/PostsSearchController';
 import ReportsController from '../controllers/ReportsController';
-import PostController from '../controllers/PostController';
+import PostsController from '../controllers/PostsController';
+import AddressesController from '../controllers/AddressesController';
+import PostsAddressesController from '../controllers/PostsAddressesController';
 
 const routes = Router();
 
-const postController = new PostController();
-const postSearchController = new PostSearchController();
+const postsController = new PostsController();
+const postsSearchController = new PostsSearchController();
 const reportsController = new ReportsController();
+const addressesController = new AddressesController();
+const postsAddressesController = new PostsAddressesController();
 
-routes.get('/posts/search', postSearchController.show);
-routes.get('/posts/:id', postController.show);
+routes.get('/posts/search', postsSearchController.show);
+routes.get('/posts/:ids', postsController.show);
 routes.get('/reports', reportsController.index);
+routes.get('/addresses/post/:id', postsAddressesController.show);
+routes.get('/addresses/:address', addressesController.show);
 
 export default routes;

@@ -16,7 +16,7 @@ class Server {
     this.app = express();
     this.app.use(helmet());
     this.app.use(cors());
-    this.app.use(loggerHttp);
+    // this.app.use(loggerHttp);
     this.app.use(routes);
     this.app.listen(3333);
   }

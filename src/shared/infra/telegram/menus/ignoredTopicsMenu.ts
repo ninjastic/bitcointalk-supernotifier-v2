@@ -109,6 +109,7 @@ const addIgnoredTopicLinkQuestion = new TelegrafStatelessQuestion(
         );
         await ctx.reply(
           'Hmm... are you sure this link is valid and from a BitcoinTalk topic?',
+          { reply_markup: { remove_keyboard: true } },
         );
 
         return;
@@ -129,27 +130,30 @@ const addIgnoredTopicLinkQuestion = new TelegrafStatelessQuestion(
           ctx.message.chat.id,
         );
 
-        let message = '';
-        message += 'You are now ignoring the topic: ';
-        message += `<b><a href="https://bitcointalk.org/index.php?topic=${ignoredTopic.post.topic_id}">${ignoredTopic.post.title}</a></b>`;
-
-        await bot.instance.telegram.editMessageText(
-          statusMessage.chat.id,
-          statusMessage.message_id,
-          undefined,
-          message,
-          { parse_mode: 'HTML' },
-        );
-
-        await ignoredTopicsMenuMiddleware.replyToContext(ctx);
-      } catch (error) {
         await bot.instance.telegram.deleteMessage(
           statusMessage.chat.id,
           statusMessage.message_id,
         );
 
+        let message = '';
+        message += 'You are now ignoring the topic: ';
+        message += `<b><a href="https://bitcointalk.org/index.php?topic=${ignoredTopic.post.topic_id}">${ignoredTopic.post.title}</a></b>`;
+
+        await ctx.reply(message, {
+          parse_mode: 'HTML',
+          reply_markup: { remove_keyboard: true },
+        });
+
+        await ignoredTopicsMenuMiddleware.replyToContext(ctx);
+      } catch (error) {
+        await bot.instance.telegram
+          .deleteMessage(statusMessage.chat.id, statusMessage.message_id)
+          .catch();
+
         if (error.message === 'Topic already being ignored.') {
-          await ctx.reply('You are already ignoring this topic.');
+          await ctx.reply('You are already ignoring this topic.', {
+            reply_markup: { remove_keyboard: true },
+          });
 
           return;
         }
@@ -159,7 +163,9 @@ const addIgnoredTopicLinkQuestion = new TelegrafStatelessQuestion(
           'Error while adding Ignored Topic.',
         );
 
-        await ctx.reply('Something went wrong...');
+        await ctx.reply('Something went wrong...', {
+          reply_markup: { remove_keyboard: true },
+        });
       }
     } else {
       const message = `Invalid URL. What is the URL of the topic you want to track?`;
