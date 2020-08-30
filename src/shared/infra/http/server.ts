@@ -22,7 +22,11 @@ class Server {
   middlewares() {
     this.app.use(helmet());
 
-    const whitelist = ['https://ninjastic.design', 'https://ninjastic.space'];
+    const whitelist = [
+      'https://ninjastic.design',
+      'https://api.ninjastic.design',
+      'https://ninjastic.space',
+    ];
     const corsOptions = {
       origin(origin, callback) {
         if (
@@ -31,7 +35,7 @@ class Server {
         ) {
           callback(null, true);
         } else {
-          callback(new Error('Not allowed by CORS'));
+          callback(null, false);
         }
       },
     };
