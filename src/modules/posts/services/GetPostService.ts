@@ -32,7 +32,7 @@ export default class GetPostService {
 
   public async execute(data: Data, options?: Options): Promise<Post> {
     const { post_id, topic_id } = data;
-    const { skipCache, skipScraping } = options;
+    const { skipCache, skipScraping } = options || {};
 
     if (!skipCache) {
       const cachedPost = await this.cacheRepository.recover<Post>(
