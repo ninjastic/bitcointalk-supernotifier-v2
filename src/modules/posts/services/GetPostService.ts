@@ -10,6 +10,16 @@ import IPostsRepository from '../repositories/IPostsRepository';
 
 import ScrapePostService from './ScrapePostService';
 
+interface Data {
+  post_id: number;
+  topic_id?: number;
+}
+
+interface Options {
+  skipCache?: boolean;
+  skipScraping?: boolean;
+}
+
 @injectable()
 export default class GetPostService {
   constructor(
@@ -20,11 +30,10 @@ export default class GetPostService {
     private cacheRepository: ICacheProvider,
   ) {}
 
-  public async execute(
-    post_id: number,
-    topic_id?: number,
-    skipCache?: boolean,
-  ): Promise<Post> {
+  public async execute(data: Data, options?: Options): Promise<Post> {
+    const { post_id, topic_id } = data;
+    const { skipCache, skipScraping } = options;
+
     if (!skipCache) {
       const cachedPost = await this.cacheRepository.recover<Post>(
         `post:${post_id}`,
@@ -38,7 +47,10 @@ export default class GetPostService {
     const foundPost = await this.postsRepository.findOneByPostId(post_id);
 
     if (foundPost) {
-      if (foundPost.title === '(Unknown Title)' || !foundPost.boards.length) {
+      if (
+        (foundPost.title === '(Unknown Title)' || !foundPost.boards.length) &&
+        !skipScraping
+      ) {
         const scrapePost = container.resolve(ScrapePostService);
 
         const updatedPost = await scrapePost.execute({
@@ -46,11 +58,13 @@ export default class GetPostService {
           topic_id: foundPost.topic_id,
         });
 
-        foundPost.title = updatedPost.title;
-        foundPost.boards = updatedPost.boards;
-        foundPost.date = updatedPost.date;
+        if (updatedPost.title && updatedPost.date) {
+          foundPost.title = updatedPost.title;
+          foundPost.boards = updatedPost.boards;
+          foundPost.date = updatedPost.date;
 
-        await this.postsRepository.save(foundPost);
+          await this.postsRepository.save(foundPost);
+        }
       }
 
       await this.cacheRepository.save(

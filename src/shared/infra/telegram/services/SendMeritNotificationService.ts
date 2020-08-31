@@ -26,7 +26,10 @@ export default class SendMeritNotificationService {
     const setUserBlocked = container.resolve(SetUserBlockedService);
     const getPost = container.resolve(GetPostService);
 
-    const post = await getPost.execute(merit.post_id, merit.topic_id);
+    const post = await getPost.execute({
+      post_id: merit.post_id,
+      topic_id: merit.topic_id,
+    });
 
     const { title, boards } = post;
     const { amount, sender, topic_id, post_id, receiver_uid } = merit;

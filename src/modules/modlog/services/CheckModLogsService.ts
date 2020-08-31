@@ -36,7 +36,7 @@ export default class CheckModLogsService {
 
     await Promise.all(
       modLogs.map(async modLog => {
-        const topicPosts = await this.postsRepository.findPostsFromTopicId(
+        const topicPosts = await this.postsRepository.findPostsByTopicId(
           modLog.topic_id,
         );
 

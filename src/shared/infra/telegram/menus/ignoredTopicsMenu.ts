@@ -29,7 +29,7 @@ const ignoredTopicsMenu = new MenuTemplate<MenuContext>(() => {
 
 const getPostInfo = async (post_id: number) => {
   const getPost = container.resolve(GetPostService);
-  const post = await getPost.execute(post_id);
+  const post = await getPost.execute({ post_id });
 
   return post;
 };

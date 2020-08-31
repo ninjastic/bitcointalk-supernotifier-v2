@@ -51,7 +51,19 @@ export default class CheckPostsService {
 
     addressesGroup.forEach(addressGroup =>
       addressGroup.forEach(address => {
-        operations.push(address);
+        const foundIndex = operations.findIndex(
+          o => o.address === address.address,
+        );
+
+        if (foundIndex === -1) {
+          operations.push(address);
+          return;
+        }
+
+        operations[foundIndex].posts_id = [
+          ...operations[foundIndex].posts_id,
+          ...address.posts_id,
+        ];
       }),
     );
 

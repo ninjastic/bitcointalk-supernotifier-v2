@@ -29,7 +29,7 @@ const trackedTopicsMenu = new MenuTemplate<MenuContext>(() => {
 
 const getPostInfo = async (post_id: number) => {
   const getPost = container.resolve(GetPostService);
-  const post = await getPost.execute(post_id);
+  const post = await getPost.execute({ post_id });
 
   return post;
 };
@@ -55,7 +55,7 @@ const getTrackedTopicUrl = async (ctx: MenuContext): Promise<string> => {
   const post_id = Number(ctx.match[1]);
 
   const getPost = container.resolve(GetPostService);
-  const post = await getPost.execute(post_id);
+  const post = await getPost.execute({ post_id });
 
   return `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
 };

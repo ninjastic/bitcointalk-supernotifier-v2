@@ -27,7 +27,10 @@ export default class PostsController {
     }
 
     try {
-      const post = await getPost.execute(Number(ids));
+      const post = await getPost.execute(
+        { post_id: Number(ids) },
+        { skipScraping: true },
+      );
 
       return response.json(post);
     } catch (error) {

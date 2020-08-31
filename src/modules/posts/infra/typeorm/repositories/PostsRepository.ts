@@ -28,9 +28,7 @@ export default class PostsRepository implements IPostsRepository {
   }
 
   public async findOneByPostId(post_id: number): Promise<Post | undefined> {
-    const post = await this.ormRepository.findOne({ post_id });
-
-    return post;
+    return this.ormRepository.findOne({ post_id });
   }
 
   public async findLatestUncheckedPosts(limit: number): Promise<Post[]> {
@@ -45,7 +43,7 @@ export default class PostsRepository implements IPostsRepository {
     });
   }
 
-  public async findPostsFromTopicId(topic_id: number): Promise<Post[]> {
+  public async findPostsByTopicId(topic_id: number): Promise<Post[]> {
     return this.ormRepository.find({
       where: {
         topic_id,
