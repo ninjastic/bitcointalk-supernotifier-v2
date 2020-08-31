@@ -1,8 +1,11 @@
 import { container } from 'tsyringe';
 import { Request, Response } from 'express';
 
+import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
+
 import GetPostService from '../../../../modules/posts/services/GetPostService';
 import GetPostsFromListService from '../../../../modules/posts/services/GetPostsFromListService';
+import PostSearchService from '../services/PostSearchService';
 
 export default class PostsController {
   public async show(request: Request, response: Response): Promise<Response> {
@@ -30,5 +33,37 @@ export default class PostsController {
     } catch (error) {
       return response.status(404).json({ error: 'Not found' });
     }
+  }
+
+  public async index(request: Request, response: Response): Promise<Response> {
+    const { author, content, limit, last, after, topic_id } = request.query;
+
+    const postSearch = container.resolve(PostSearchService);
+
+    const query = {} as IFindPostsConditionsDTO;
+
+    if (author) {
+      query.author = String(author);
+    }
+
+    if (content) {
+      query.content = String(content);
+    }
+
+    if (last) {
+      query.last = Number(last);
+    }
+
+    if (after) {
+      query.after = Number(after);
+    }
+
+    if (topic_id) {
+      query.topic_id = Number(topic_id);
+    }
+
+    const posts = await postSearch.execute(query, Number(limit));
+
+    return response.json(posts);
   }
 }

@@ -47,7 +47,7 @@ export class CreateAddresses1598734976233 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX addresses_posts_id_idx;`);
+    await queryRunner.query('DROP INDEX addresses_posts_id_idx;');
 
     await queryRunner.dropTable('addresses');
   }

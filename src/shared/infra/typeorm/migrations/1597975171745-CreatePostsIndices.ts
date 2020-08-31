@@ -54,13 +54,9 @@ export class CreatePostsIndices1597975171745 implements MigrationInterface {
     );
     await queryRunner.dropIndex('posts', index);
 
-    await queryRunner.query(
-      'DROP INDEX IF EXISTS posts_content_search ON posts;',
-    );
+    await queryRunner.query('DROP INDEX IF EXISTS posts_content_search;');
 
-    await queryRunner.query(
-      'DROP INDEX IF EXISTS posts_checked_archive_idx ON posts;',
-    );
+    await queryRunner.query('DROP INDEX IF EXISTS posts_checked_archive_idx;');
 
     await queryRunner.query(
       'DROP FUNCTION IF EXISTS to_tsvector_forum_content(text_content text);',

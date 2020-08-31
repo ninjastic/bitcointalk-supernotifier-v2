@@ -1,5 +1,6 @@
 import Address from '../infra/typeorm/entities/Address';
 import ICreateAddressDTO from '../dtos/ICreateAddressDTO';
+import IFindAddressesConditionsDTO from '../dtos/IFindAddressesConditionsDTO';
 
 export default interface IAddressesRepository {
   create(data: ICreateAddressDTO): Address;
@@ -7,4 +8,8 @@ export default interface IAddressesRepository {
   findOneByAddress(address: string): Promise<Address | undefined>;
   findByPostId(post_id: number): Promise<Address[] | undefined>;
   findLatestPostId(): Promise<number | undefined>;
+  findAddresses(
+    conditions: IFindAddressesConditionsDTO,
+    limit: number,
+  ): Promise<Address[]>;
 }

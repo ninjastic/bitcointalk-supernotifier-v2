@@ -1,10 +1,11 @@
 import { Repository, getRepository } from 'typeorm';
 
 import ICreateAddressDTO from '../../../dtos/ICreateAddressDTO';
+import IAddressesRepository from '../../../repositories/IAddressesRepository';
 
 import Address from '../entities/Address';
 
-import IAddressesRepository from '../../../repositories/IAddressesRepository';
+import IFindAddressesConditionsDTO from '../../../dtos/IFindAddressesConditionsDTO';
 
 export default class AddressesRepository implements IAddressesRepository {
   private ormRepository: Repository<Address>;
@@ -49,5 +50,22 @@ export default class AddressesRepository implements IAddressesRepository {
     }
 
     return undefined;
+  }
+
+  public async findAddresses(
+    conditions: IFindAddressesConditionsDTO,
+    limit: number,
+  ): Promise<Address[]> {
+    const actual_limit = Math.min(limit || 20, 200);
+
+    const { address } = conditions;
+
+    return this.ormRepository
+      .createQueryBuilder('addresses')
+      .select(['*'])
+      .where(address ? 'address = :address' : '1=1', { address })
+      .orderBy('random()')
+      .limit(address ? 1 : actual_limit)
+      .execute();
   }
 }
