@@ -71,12 +71,13 @@ interface ScrapeTopicJob extends Job {
   });
 
   mainQueue.process('scrapeRecentPosts', async () => {
-    const scrapePostsRepository = new ScrapePostsRepository();
+    const scrapePostsRepository = container.resolve(ScrapePostsRepository);
+
     return scrapePostsRepository.scrapeRecent();
   });
 
   mainQueue.process('scrapeMerits', async () => {
-    const scrapeMeritsRepository = new ScrapeMeritsRepository();
+    const scrapeMeritsRepository = container.resolve(ScrapeMeritsRepository);
     return scrapeMeritsRepository.scrapeMerits();
   });
 
@@ -87,7 +88,7 @@ interface ScrapeTopicJob extends Job {
   });
 
   sideQueue.process('scrapePost', async (job: ScrapePostJob) => {
-    const scrapePostsRepository = new ScrapePostsRepository();
+    const scrapePostsRepository = container.resolve(ScrapePostsRepository);
     const savePostService = container.resolve(SavePostService);
 
     const post = await scrapePostsRepository.scrapePost({

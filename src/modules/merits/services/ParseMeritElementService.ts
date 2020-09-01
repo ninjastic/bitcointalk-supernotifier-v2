@@ -1,12 +1,14 @@
 import cheerio from 'cheerio';
 import { inject, injectable } from 'tsyringe';
 
+import Post from 'modules/posts/infra/typeorm/entities/Post';
 import ScrapePostJob from '../../posts/infra/jobs/ScrapePostJob';
 
 import Merit from '../infra/typeorm/entities/Merit';
 
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import IPostsRepository from '../../posts/repositories/IPostsRepository';
+import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 @injectable()
 export default class ParseRecentPostElementService {
@@ -16,6 +18,9 @@ export default class ParseRecentPostElementService {
 
     @inject('PostsRepository')
     private postsRepository: IPostsRepository,
+
+    @inject('CacheRepository')
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(element: CheerioElement): Promise<Merit> {
@@ -36,20 +41,43 @@ export default class ParseRecentPostElementService {
     const post_id = Number($.html().match(/#msg(\d*)/)[1]);
     const topic_id = Number($.html().match(/topic=(\d*)/)[1]);
 
-    const postExists = await this.postsRepository.findOneByPostId(post_id);
+    let postExists = await this.cacheRepository.recover<Post>(
+      `post:${post_id}`,
+    );
 
     let receiver: string;
     let receiver_uid: number;
 
-    if (postExists) {
+    if (!postExists) {
+      postExists = await this.postsRepository.findOneByPostId(post_id);
+
+      if (postExists) {
+        receiver = postExists.author;
+        receiver_uid = postExists.author_uid;
+
+        await this.cacheRepository.save(
+          `post:${postExists.post_id}`,
+          postExists,
+          'EX',
+          600,
+        );
+      } else {
+        const scrapePostJob = new ScrapePostJob();
+        const post = await scrapePostJob.start({ topic_id, post_id });
+
+        receiver = post.author;
+        receiver_uid = post.author_uid;
+
+        await this.cacheRepository.save(
+          `post:${post.post_id}`,
+          post,
+          'EX',
+          600,
+        );
+      }
+    } else {
       receiver = postExists.author;
       receiver_uid = postExists.author_uid;
-    } else {
-      const scrapePostJob = new ScrapePostJob();
-      const post = await scrapePostJob.start({ topic_id, post_id });
-
-      receiver = post.author;
-      receiver_uid = post.author_uid;
     }
 
     const merit = this.meritsRepository.create({

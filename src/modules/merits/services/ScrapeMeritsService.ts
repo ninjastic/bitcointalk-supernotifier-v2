@@ -28,12 +28,13 @@ export default class ScrapeMeritsService {
 
         return true;
       })
-      .map(element => this.parseMeritElement.execute(element));
+      .map(element => this.parseMeritElement.execute(element))
+      .filter(result => result);
 
     const scrapeResults = await Promise.all(scrapingPromises).then(results => {
       return results;
     });
 
-    return scrapeResults;
+    return scrapeResults as Merit[];
   }
 }

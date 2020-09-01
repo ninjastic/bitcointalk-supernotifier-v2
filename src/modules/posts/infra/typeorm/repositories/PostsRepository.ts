@@ -38,7 +38,7 @@ export default class PostsRepository implements IPostsRepository {
         archive: false,
         date: MoreThanOrEqual(sub(new Date(), { minutes: 30 })),
       },
-      order: { created_at: -1 },
+      order: { post_id: 'DESC' },
       take: limit,
     });
   }
