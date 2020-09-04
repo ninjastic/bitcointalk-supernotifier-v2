@@ -40,7 +40,12 @@ export default class GetPostService {
       );
 
       if (cachedPost) {
-        return cachedPost;
+        if (
+          skipScraping ||
+          (cachedPost.title !== '(Unknown Title)' && cachedPost.boards.length)
+        ) {
+          return cachedPost;
+        }
       }
     }
 
