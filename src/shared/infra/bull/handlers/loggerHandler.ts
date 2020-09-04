@@ -9,7 +9,7 @@ const loggerHandler = (queue: Queue): void => {
 
   queue.on('failed', job => {
     logger.error(
-      { data: job.failedReason, stacktrace: job.stacktrace },
+      { reason: job.failedReason, stacktrace: job.stacktrace, data: job.data },
       'Job failed %s',
       job.name,
     );

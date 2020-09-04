@@ -12,4 +12,5 @@ export default interface IAddressesRepository {
     conditions: IFindAddressesConditionsDTO,
     limit: number,
   ): Promise<Address[]>;
+  findAuthorsByAddress(address: string): Promise<string[]>;
 }

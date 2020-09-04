@@ -68,4 +68,11 @@ export default class AddressesRepository implements IAddressesRepository {
       .limit(address ? 1 : actual_limit)
       .execute();
   }
+
+  public async findAuthorsByAddress(address: string): Promise<string[]> {
+    return this.ormRepository.query(
+      'select p.author, p.author_uid, array_agg(p.post_id) as posts_id from addresses a left join posts p on p.post_id = any(posts_id) where address = $1 group by author, author_uid',
+      [address],
+    );
+  }
 }
