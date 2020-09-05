@@ -26,7 +26,7 @@ export default class SendRemovedTopicNotificationService {
     message += ` deleted because `;
     message += posts.length === 1 ? 'its' : 'their';
     message += ` parent topic got nuked.\n\n`;
-    message += `<b>Topic:</b> <a href="https://bitcointalk.org/index.php?topic=${modLog.topic_id}">${modLog.title}</a>`;
+    message += `<b>Archived Topic:</b> <a href="https://ninjastic.design/topic/${modLog.topic_id}">${modLog.title}</a>`;
 
     await bot.instance.telegram
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
