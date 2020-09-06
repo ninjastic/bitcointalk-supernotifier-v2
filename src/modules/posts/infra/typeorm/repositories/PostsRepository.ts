@@ -82,7 +82,15 @@ export default class PostsRepository implements IPostsRepository {
     conditions: IFindPostsConditionsDTO,
     limit: number,
   ): Promise<Post[]> {
-    const { author, content, topic_id, last, after } = conditions;
+    const {
+      author,
+      content,
+      topic_id,
+      last,
+      after,
+      after_date,
+      before_date,
+    } = conditions;
 
     return this.ormRepository
       .createQueryBuilder('posts')
@@ -113,6 +121,12 @@ export default class PostsRepository implements IPostsRepository {
         after,
       })
       .andWhere(topic_id ? `topic_id = :topic_id` : '1=1', { topic_id })
+      .andWhere(after_date ? `date >= :after_date` : '1=1', {
+        after_date,
+      })
+      .andWhere(before_date ? `date <= :before_date` : '1=1', {
+        before_date,
+      })
       .addOrderBy('post_id', 'DESC')
       .limit(limit)
       .getMany();

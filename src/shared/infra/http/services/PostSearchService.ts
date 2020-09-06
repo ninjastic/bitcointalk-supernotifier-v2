@@ -14,13 +14,21 @@ export default class PostSearchService {
   ) {}
 
   public async execute(
-    { author, content, topic_id, last, after }: IFindPostsConditionsDTO,
+    {
+      author,
+      content,
+      topic_id,
+      last,
+      after,
+      after_date,
+      before_date,
+    }: IFindPostsConditionsDTO,
     limit: number,
   ): Promise<Post[]> {
     const actual_limit = Math.min(limit || 20, 200);
 
     return this.postsRepository.findPosts(
-      { author, content, topic_id, last, after },
+      { author, content, topic_id, last, after, after_date, before_date },
       actual_limit,
     );
   }

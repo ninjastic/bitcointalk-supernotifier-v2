@@ -39,7 +39,16 @@ export default class PostsController {
   }
 
   public async index(request: Request, response: Response): Promise<Response> {
-    const { author, content, limit, last, after, topic_id } = request.query;
+    const {
+      author,
+      content,
+      limit,
+      last,
+      after,
+      topic_id,
+      after_date,
+      before_date,
+    } = request.query;
 
     const postSearch = container.resolve(PostSearchService);
 
@@ -63,6 +72,14 @@ export default class PostsController {
 
     if (topic_id) {
       query.topic_id = Number(topic_id);
+    }
+
+    if (after_date) {
+      query.after_date = String(after_date);
+    }
+
+    if (before_date) {
+      query.before_date = String(before_date);
     }
 
     const posts = await postSearch.execute(query, Number(limit));
