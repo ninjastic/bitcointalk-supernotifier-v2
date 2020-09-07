@@ -126,8 +126,8 @@ export default class PostsRepository implements IPostsRepository {
       .andWhere(before_date ? `date <= :before_date` : '1=1', {
         before_date,
       })
-      .addGroupBy('id')
       .addOrderBy('post_id', post_id_order || 'DESC')
+      .addOrderBy(content ? 'date' : '1=1')
       .limit(limit)
       .getMany();
   }
