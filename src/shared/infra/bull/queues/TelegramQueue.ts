@@ -25,8 +25,8 @@ class TelegramQueue {
     this.instance.process('sendMentionNotification', async job => {
       const sendMentionNotification = new SendMentionNotificationService();
 
-      const { post, user } = job.data;
-      await sendMentionNotification.execute(user.telegram_id, post);
+      const { post, user, history } = job.data;
+      await sendMentionNotification.execute(user.telegram_id, post, history);
     });
 
     this.instance.process('sendMeritNotification', async job => {

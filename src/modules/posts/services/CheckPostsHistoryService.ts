@@ -64,7 +64,10 @@ export default class CheckPostsHistoryService {
               return Promise.resolve();
             }
 
-            if (history.post.notified_to.includes(user.telegram_id)) {
+            if (
+              history.post.notified_to.includes(user.telegram_id) ||
+              history.notified_to.includes(user.telegram_id)
+            ) {
               return Promise.resolve();
             }
 
