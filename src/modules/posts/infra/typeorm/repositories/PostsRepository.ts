@@ -16,9 +16,7 @@ export default class PostsRepository implements IPostsRepository {
   }
 
   public create(data: CreatePostDTO): Post {
-    const post = this.ormRepository.create(data);
-
-    return post;
+    return this.ormRepository.create(data);
   }
 
   public async save(post: Post): Promise<Post> {
@@ -81,6 +79,7 @@ export default class PostsRepository implements IPostsRepository {
   public async findPosts(
     conditions: IFindPostsConditionsDTO,
     limit: number,
+    post_id_order?: 'ASC' | 'DESC',
   ): Promise<Post[]> {
     const {
       author,
@@ -107,7 +106,7 @@ export default class PostsRepository implements IPostsRepository {
       ])
       .where(
         content
-          ? `to_tsvector_forum_content(content) @@ plainto_tsquery('simple', :content)`
+          ? `to_simple_tsvector_forum_content(content) @@ plainto_tsquery('simple', :content)`
           : '1=1',
         { content: `'${content}'` },
       )
@@ -127,7 +126,7 @@ export default class PostsRepository implements IPostsRepository {
       .andWhere(before_date ? `date <= :before_date` : '1=1', {
         before_date,
       })
-      .addOrderBy('post_id', 'DESC')
+      .addOrderBy('post_id', post_id_order || 'DESC')
       .limit(limit)
       .getMany();
   }

@@ -33,7 +33,7 @@ export default class ParseRecentPostElementService {
         .match(/topic=(\d*)/)[1],
     );
 
-    const title = fullTitleWithBoards.find('b > a').text();
+    const title = fullTitleWithBoards.find('b > a').text().trim();
 
     const author = $('tr:nth-child(2) > td > span > a:nth-child(2)').text();
 

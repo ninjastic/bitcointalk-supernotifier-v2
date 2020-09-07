@@ -9,6 +9,8 @@ import '../../../container';
 import cacheConfig from '../../../../config/cache';
 import loggerHandler from '../handlers/loggerHandler';
 
+import ScrapePostDTO from '../../../../modules/posts/dtos/ScrapePostDTO';
+
 import ScrapeMeritsRepository from '../../../../modules/merits/infra/typeorm/repositories/ScrapeMeritsRepository';
 import ScrapePostsRepository from '../../../../modules/posts/infra/typeorm/repositories/ScrapePostsRepository';
 
@@ -16,8 +18,7 @@ import SavePostService from '../../../../modules/posts/services/SavePostService'
 import ScrapeUserMeritCountService from '../../../../modules/merits/services/ScrapeUserMeritCountService';
 import ScrapeTopicService from '../../../../modules/posts/services/ScrapeTopicService';
 import ScrapeModLogService from '../../../../modules/modlog/services/ScrapeModLogService';
-
-import ScrapePostDTO from '../../../../modules/posts/dtos/ScrapePostDTO';
+import ScrapePostForEditsService from '../../../../modules/posts/services/ScrapePostForEditsService';
 
 interface ScrapePostJob extends Job {
   data: ScrapePostDTO;
@@ -114,6 +115,14 @@ interface ScrapeTopicJob extends Job {
     const scrapeTopic = container.resolve(ScrapeTopicService);
 
     return scrapeTopic.execute(job.data.topic_id);
+  });
+
+  sideQueue.process('scrapePostForEdit', async (job: ScrapePostJob) => {
+    const { topic_id, post_id } = job.data;
+
+    const scrapePostForEdits = container.resolve(ScrapePostForEditsService);
+
+    return scrapePostForEdits.execute({ topic_id, post_id });
   });
 
   loggerHandler(mainQueue);

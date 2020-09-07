@@ -27,6 +27,9 @@ import ReportRepository from '../../modules/reports/infra/typeorm/repositories/R
 import IAddressesRepository from '../../modules/posts/repositories/IAddressesRepository';
 import AddressesRepository from '../../modules/posts/infra/typeorm/repositories/AddressesRepository';
 
+import IPostsHistoryRepository from '../../modules/posts/repositories/IPostsHistoryRepository';
+import PostsHistoryRepository from '../../modules/posts/infra/typeorm/repositories/PostsHistoryRepository';
+
 import ICacheRepository from './providers/models/ICacheProvider';
 import RedisProvider from './providers/implementations/RedisProvider';
 
@@ -73,6 +76,11 @@ container.registerSingleton<IReportRepository>(
 container.registerSingleton<IAddressesRepository>(
   'AddressesRepository',
   AddressesRepository,
+);
+
+container.registerSingleton<IPostsHistoryRepository>(
+  'PostsHistoryRepository',
+  PostsHistoryRepository,
 );
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);

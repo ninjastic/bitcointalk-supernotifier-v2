@@ -37,7 +37,11 @@ export default class CheckPostsService {
       }
     }
 
-    const posts = await this.postsRepository.findPosts({ after: lastId }, 200);
+    const posts = await this.postsRepository.findPosts(
+      { after: lastId },
+      200,
+      'ASC',
+    );
 
     const addressesGroup = await Promise.all(
       posts

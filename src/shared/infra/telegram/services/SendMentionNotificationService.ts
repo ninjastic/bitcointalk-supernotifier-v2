@@ -7,11 +7,20 @@ import bot from '../index';
 import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
+import SetPostHistoryNotifiedService from '../../../../modules/posts/services/SetPostHistoryNotifiedService';
 import SetUserBlockedService from './SetUserBlockedService';
 
 export default class SendMentionNotificationService {
-  public async execute(telegram_id: number, post: Post): Promise<void> {
+  public async execute(
+    telegram_id: number,
+    post: Post,
+    history?: boolean,
+  ): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
+    const setPostHistoryNotified = container.resolve(
+      SetPostHistoryNotifiedService,
+    );
+
     const setUserBlocked = container.resolve(SetUserBlockedService);
 
     const { post_id, topic_id, title, author, boards, content } = post;
@@ -39,7 +48,12 @@ export default class SendMentionNotificationService {
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
         logger.info({ telegram_id, message }, 'Mention notification was sent');
-        await setPostNotified.execute(post.post_id, telegram_id);
+
+        if (history) {
+          await setPostHistoryNotified.execute(post.post_id, telegram_id);
+        } else {
+          await setPostNotified.execute(post.post_id, telegram_id);
+        }
       })
       .catch(async error => {
         if (!error.response) {

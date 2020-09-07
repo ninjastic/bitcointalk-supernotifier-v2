@@ -14,6 +14,7 @@ export default interface IPostsRepository {
   findPosts(
     conditions: IFindPostsConditionsDTO,
     limit: number,
+    post_id_order?: 'ASC' | 'DESC',
   ): Promise<Post[]>;
   findPostsFromList(posts_id: number[]): Promise<Post[]>;
 }

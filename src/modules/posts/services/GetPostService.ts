@@ -67,6 +67,7 @@ export default class GetPostService {
           foundPost.title = updatedPost.title;
           foundPost.boards = updatedPost.boards;
           foundPost.date = updatedPost.date;
+          foundPost.archive = false;
 
           await this.postsRepository.save(foundPost);
         }

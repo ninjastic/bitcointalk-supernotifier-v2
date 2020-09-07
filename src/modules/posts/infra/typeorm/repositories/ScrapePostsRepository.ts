@@ -1,5 +1,8 @@
 import { container, inject, injectable } from 'tsyringe';
 import { getManager } from 'typeorm';
+import Queue from 'bull';
+
+import cacheConfig from '../../../../../config/cache';
 
 import IScrapePostsRepository from '../../../repositories/IScrapePostsRepository';
 import ICacheProvider from '../../../../../shared/container/providers/models/ICacheProvider';
@@ -66,7 +69,7 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
       return;
     }
 
-    await getManager()
+    const inserted = await getManager()
       .createQueryBuilder()
       .insert()
       .into(Post)
@@ -89,6 +92,22 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
     });
 
     await this.cacheRepository.saveMany(valuesToSet);
+
+    if (inserted.generatedMaps.length) {
+      const sideQueue = new Queue('ForumScrapperSideQueue', {
+        redis: cacheConfig.config.redis,
+      });
+
+      await Promise.all(
+        inserted.generatedMaps.map(async post => {
+          await sideQueue.add(
+            'scrapePostForEdit',
+            { topic_id: post.topic_id, post_id: post.post_id },
+            { delay: 300000 },
+          );
+        }),
+      );
+    }
   }
 
   public parseRecentPostElement(element: CheerioElement): Post {

@@ -3,7 +3,7 @@ import iconv from 'iconv-lite';
 import { add, isBefore } from 'date-fns';
 
 const MAX_REQUESTS_COUNT = 1;
-const INTERVAL_MS = 1000;
+const INTERVAL_MS = 900;
 let PENDING_REQUESTS = 0;
 let WAITING = false;
 let LAST_REQUEST = null;

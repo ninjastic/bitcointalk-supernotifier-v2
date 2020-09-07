@@ -5,31 +5,26 @@ import {
   UpdateDateColumn,
   Index,
   PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
-@Entity('posts')
-class Post {
+import Post from './Post';
+
+@Entity('posts_history')
+class PostHistory {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  @Index({ unique: true })
   post_id: number;
 
-  @Column()
-  @Index()
-  topic_id: number;
+  @OneToOne(() => Post)
+  @JoinColumn({ name: 'post_id', referencedColumnName: 'post_id' })
+  post: Post;
 
   @Column()
   title: string;
-
-  @Column()
-  @Index()
-  author: string;
-
-  @Column()
-  @Index()
-  author_uid: number;
 
   @Column()
   @Index()
@@ -38,10 +33,11 @@ class Post {
   @Column()
   date: Date;
 
-  edited: Date;
-
   @Column({ type: 'varchar', array: true, default: [] })
   boards: string[];
+
+  @Column()
+  version: number;
 
   @Column({ default: false })
   notified: boolean;
@@ -53,7 +49,7 @@ class Post {
   checked: boolean;
 
   @Column({ default: false })
-  archive?: boolean;
+  deleted: boolean;
 
   @CreateDateColumn()
   created_at: Date;
@@ -62,4 +58,4 @@ class Post {
   updated_at: Date;
 }
 
-export default Post;
+export default PostHistory;

@@ -75,6 +75,14 @@ export default class ParsePostElementService {
                 .replace(/Last edit:.*/, ''),
             );
 
+            const editedDate = new Date(
+              $(e)
+                .find('span.edited')
+                .text()
+                .replace('Today at', today)
+                .replace(/Last edit:.*/, ''),
+            );
+
             post = createPost.execute({
               post_id,
               topic_id,
@@ -88,6 +96,8 @@ export default class ParsePostElementService {
               notified: false,
               notified_to: [],
             });
+
+            post.edited = editedDate;
           }
         }
       });

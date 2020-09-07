@@ -6,6 +6,7 @@ import AddressesController from '../controllers/AddressesController';
 import PostsAddressesController from '../controllers/PostsAddressesController';
 import TopicsController from '../controllers/TopicsController';
 import AddressAuthorsController from '../controllers/AddressAuthorsController';
+import PostsHistoryController from '../controllers/PostsHistoryController';
 
 const routes = Router();
 
@@ -15,10 +16,12 @@ const addressesController = new AddressesController();
 const postsAddressesController = new PostsAddressesController();
 const topicsController = new TopicsController();
 const addressAuthorsController = new AddressAuthorsController();
+const postsHistoryController = new PostsHistoryController();
 
 routes.get('/posts', postsController.index);
 routes.get('/posts/topic/:id', topicsController.show);
 routes.get('/posts/:ids', postsController.show);
+routes.get('/posts/:id/history', postsHistoryController.show);
 
 routes.get('/reports', reportsController.index);
 
