@@ -20,20 +20,8 @@ export class CreatePostsIndices1597975171745 implements MigrationInterface {
       }),
     );
 
-    await queryRunner.query(`
-      CREATE FUNCTION to_tsvector_forum_content(text_content text) returns tsvector as $$
-        begin
-          return to_tsvector('simple', regexp_replace(regexp_replace(text_content, E'<br>', ' ', 'gi'), E'Quote from:.*</div>|(_|-){3,}', '', 'gi'));
-        end
-      $$ LANGUAGE plpgsql;
-    `);
-
     await queryRunner.query(
       'CREATE INDEX IF NOT EXISTS posts_checked_archive_idx ON posts(checked, archive) WHERE checked = false AND archive = false;',
-    );
-
-    await queryRunner.query(
-      'CREATE INDEX IF NOT EXISTS posts_content_search ON posts using gin(to_tsvector_forum_content(content));',
     );
   }
 
@@ -54,12 +42,6 @@ export class CreatePostsIndices1597975171745 implements MigrationInterface {
     );
     await queryRunner.dropIndex('posts', index);
 
-    await queryRunner.query('DROP INDEX IF EXISTS posts_content_search;');
-
     await queryRunner.query('DROP INDEX IF EXISTS posts_checked_archive_idx;');
-
-    await queryRunner.query(
-      'DROP FUNCTION IF EXISTS to_tsvector_forum_content(text_content text);',
-    );
   }
 }
