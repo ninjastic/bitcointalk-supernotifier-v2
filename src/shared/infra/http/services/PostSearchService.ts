@@ -1,4 +1,5 @@
 import { inject, injectable } from 'tsyringe';
+import { ApiResponse } from '@elastic/elasticsearch';
 
 import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
@@ -24,10 +25,10 @@ export default class PostSearchService {
       before_date,
     }: IFindPostsConditionsDTO,
     limit: number,
-  ): Promise<Post[]> {
+  ): Promise<ApiResponse> {
     const actual_limit = Math.min(limit || 20, 200);
 
-    return this.postsRepository.findPosts(
+    return this.postsRepository.findPostsES(
       { author, content, topic_id, last, after, after_date, before_date },
       actual_limit,
     );

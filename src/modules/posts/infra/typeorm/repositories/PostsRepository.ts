@@ -1,5 +1,8 @@
 import { Repository, MoreThanOrEqual, getRepository } from 'typeorm';
-import { sub } from 'date-fns';
+import { sub, isValid } from 'date-fns';
+import { ApiResponse } from '@elastic/elasticsearch';
+
+import esClient from '../../../../../shared/services/elastic';
 
 import CreatePostDTO from '../../../dtos/CreatePostDTO';
 
@@ -49,20 +52,6 @@ export default class PostsRepository implements IPostsRepository {
     });
   }
 
-  public async findPostsByContent(
-    search: string,
-    limit: number,
-  ): Promise<Post[]> {
-    const actual_limit = Math.min(limit || 20, 200);
-
-    return this.ormRepository.query(
-      `SELECT post_id, topic_id, title, author, author_uid, content, date,
-        boards, archive FROM posts WHERE to_tsvector_forum_content(content) @@
-        plainto_tsquery('simple', $1) ORDER BY post_id, date DESC LIMIT $2;`,
-      [search, actual_limit],
-    );
-  }
-
   public async findPostsByAuthor(
     author: string,
     limit: number,
@@ -76,6 +65,82 @@ export default class PostsRepository implements IPostsRepository {
     );
   }
 
+  public async findPostsES(
+    conditions: IFindPostsConditionsDTO,
+    limit: number,
+    post_id_order?: 'ASC' | 'DESC',
+  ): Promise<ApiResponse<Post>> {
+    const {
+      author,
+      content,
+      topic_id,
+      last,
+      after,
+      after_date,
+      before_date,
+    } = conditions;
+
+    const must = [];
+
+    if (author) {
+      must.push({ match: { author } });
+    }
+
+    if (content) {
+      must.push({
+        match: { content: { query: content, minimum_should_match: '100%' } },
+      });
+    }
+
+    if (topic_id) {
+      if (Number.isNaN(topic_id)) {
+        throw new Error('topic_id is invalid');
+      }
+
+      must.push({ match: { topic_id } });
+    }
+
+    if (last || after) {
+      if (last && Number.isNaN(last)) {
+        throw new Error('last is invalid');
+      }
+
+      if (after && Number.isNaN(after)) {
+        throw new Error('after is invalid');
+      }
+
+      must.push({ range: { post_id: { gt: after, lt: last } } });
+    }
+
+    if (after_date || before_date) {
+      if (after_date && !isValid(new Date(after_date))) {
+        throw new Error('after_date is invalid');
+      }
+
+      if (before_date && !isValid(new Date(before_date))) {
+        throw new Error('after_date is invalid');
+      }
+
+      must.push({ range: { date: { gte: after_date, lte: before_date } } });
+    }
+
+    const results = await esClient.search<Post>({
+      index: 'posts',
+      scroll: '1m',
+      body: {
+        size: limit,
+        query: {
+          bool: {
+            must,
+          },
+        },
+        sort: [{ date: { order: post_id_order || 'DESC' } }],
+      },
+    });
+
+    return results;
+  }
+
   public async findPosts(
     conditions: IFindPostsConditionsDTO,
     limit: number,
@@ -83,7 +148,6 @@ export default class PostsRepository implements IPostsRepository {
   ): Promise<Post[]> {
     const {
       author,
-      content,
       topic_id,
       last,
       after,
@@ -104,13 +168,7 @@ export default class PostsRepository implements IPostsRepository {
         'posts.boards',
         'posts.archive',
       ])
-      .where(
-        content
-          ? `to_simple_tsvector_forum_content(content) @@ plainto_tsquery('simple', :content)`
-          : '1=1',
-        { content: `'${content}'` },
-      )
-      .andWhere(author ? `lower(author) = :author` : '1=1', {
+      .where(author ? `lower(author) = :author` : '1=1', {
         author: author ? author.toLowerCase() : undefined,
       })
       .andWhere(last ? `post_id < :last` : '1=1', {
@@ -127,7 +185,6 @@ export default class PostsRepository implements IPostsRepository {
         before_date,
       })
       .addOrderBy('post_id', post_id_order || 'DESC')
-      .addOrderBy(content ? 'date' : '1=1')
       .limit(limit)
       .getMany();
   }

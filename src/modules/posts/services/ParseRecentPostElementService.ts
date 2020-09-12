@@ -57,14 +57,20 @@ export default class ParseRecentPostElementService {
     );
 
     const boards = $(fullTitleWithBoards).find('a');
-    const boardsArray: string[] = [];
+    const boardsArray: number[] = [];
 
     $(boards).each((boardIndex, board) => {
       const { length } = boards;
-      const boardName = $(board).text();
+      const boardIdRegEx = new RegExp('board=(\\d+)');
+      const boardUrl = $(board).attr('href');
+
+      if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board='))
+        return;
 
       if (boardIndex < length - 1) {
-        boardsArray.push(boardName);
+        const boardId = boardUrl.match(boardIdRegEx)[1];
+
+        boardsArray.push(Number(boardId));
       }
     });
 
@@ -76,7 +82,8 @@ export default class ParseRecentPostElementService {
       author_uid,
       content,
       date,
-      boards: boardsArray,
+      boards: [],
+      board_id: boardsArray[boardsArray.length - 1],
       checked: false,
       notified: false,
       notified_to: [],

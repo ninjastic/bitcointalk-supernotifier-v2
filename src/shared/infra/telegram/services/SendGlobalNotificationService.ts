@@ -42,7 +42,7 @@ export default class SendGlobalNotificationService {
             .catch(async error => {
               if (!error.response) {
                 logger.error(
-                  { error },
+                  { error, telegram_id: user.telegram_id, message },
                   'Error while sending Global Notification telegram message',
                 );
 
@@ -54,13 +54,21 @@ export default class SendGlobalNotificationService {
                 error.response.description === 'Forbidden: user is deactivated'
               ) {
                 logger.info(
-                  { error: error.response, telegram_id: user.telegram_id },
+                  {
+                    error: error.response,
+                    telegram_id: user.telegram_id,
+                    message,
+                  },
                   'Telegram user marked as blocked',
                 );
                 await setUserBlocked.execute(user.telegram_id);
               } else {
                 logger.error(
-                  { error: error.response, telegram_id: user.telegram_id },
+                  {
+                    error: error.response,
+                    telegram_id: user.telegram_id,
+                    message,
+                  },
                   'Error while sending Global Notification telegram message',
                 );
               }

@@ -64,6 +64,7 @@
       "typesync": "^0.7.0"
    },
    "dependencies": {
+      "@elastic/elasticsearch": "^7.9.0",
       "axios": "^0.19.2",
       "bitcoin-address-validation": "^1.0.2",
       "bull": "^3.18.0",

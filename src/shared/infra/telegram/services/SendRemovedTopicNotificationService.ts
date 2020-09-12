@@ -40,7 +40,7 @@ export default class SendRemovedTopicNotificationService {
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error },
+            { error, telegram_id, modLog, posts, message },
             'Error while sending Removed Topic Notification telegram message',
           );
 
@@ -52,13 +52,13 @@ export default class SendRemovedTopicNotificationService {
           error.response.description === 'Forbidden: user is deactivated'
         ) {
           logger.info(
-            { error: error.response, telegram_id, modLog, posts },
+            { error: error.response, telegram_id, modLog, posts, message },
             'Telegram user marked as blocked',
           );
           await setUserBlocked.execute(telegram_id);
         } else {
           logger.error(
-            { error: error.response, telegram_id, modLog, posts },
+            { error: error.response, telegram_id, modLog, posts, message },
             'Error while sending Removed Topic Notification telegram message',
           );
         }

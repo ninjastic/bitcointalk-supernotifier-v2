@@ -12,6 +12,10 @@ export default class GetPostsFromTopicIdService {
   ) {}
 
   public async execute(topic_id: number): Promise<Post[]> {
+    if (Number.isNaN(topic_id)) {
+      throw new Error('topic_id is invalid');
+    }
+
     return this.postsRepository.findPostsByTopicId(topic_id);
   }
 }

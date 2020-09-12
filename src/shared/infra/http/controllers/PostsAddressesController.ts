@@ -9,6 +9,10 @@ export default class PostsAddressesController {
 
     const { id } = request.params;
 
+    if (Number.isNaN(Number(id))) {
+      return response.status(400).json({ error: 'id is invalid' });
+    }
+
     const addresses = await getAddressesByPostId.execute(Number(id));
 
     if (!addresses.length) {

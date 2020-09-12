@@ -25,7 +25,8 @@
         "camelcase": "off",
         "no-useless-constructor": "off",
         "import/prefer-default-export": "off",
-        "no-restricted-syntax": "off"
+        "no-restricted-syntax": "off",
+        "no-underscore-dangle": "off"
     },
     "settings": {
         "import/resolver": {

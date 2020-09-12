@@ -1,8 +1,6 @@
 import { container } from 'tsyringe';
 import { Request, Response } from 'express';
 
-import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
-
 import GetPostService from '../../../../modules/posts/services/GetPostService';
 import GetPostsFromListService from '../../../../modules/posts/services/GetPostsFromListService';
 import PostSearchService from '../services/PostSearchService';
@@ -17,6 +15,10 @@ export default class PostsController {
     if (ids.match(/\d+,/)) {
       const posts_id = ids.split(',').map(id => Number(id));
 
+      if (posts_id.some(Number.isNaN)) {
+        return response.status(400).json({ error: 'id list is invalid' });
+      }
+
       const addresses = await getPostsFromList.execute(posts_id);
 
       if (!addresses.length) {
@@ -24,6 +26,10 @@ export default class PostsController {
       }
 
       return response.json(addresses);
+    }
+
+    if (Number.isNaN(Number(ids))) {
+      return response.status(400).json({ error: 'id is invalid' });
     }
 
     try {
@@ -42,7 +48,6 @@ export default class PostsController {
     const {
       author,
       content,
-      limit,
       last,
       after,
       topic_id,
@@ -50,40 +55,40 @@ export default class PostsController {
       before_date,
     } = request.query;
 
+    const limit = Number(request.query.limit);
+
     const postSearch = container.resolve(PostSearchService);
 
-    const query = {} as IFindPostsConditionsDTO;
+    const query = {
+      author: author ? String(author) : undefined,
+      content: content ? String(content) : undefined,
+      topic_id: topic_id ? Number(topic_id) : undefined,
+      last: last ? Number(last) : undefined,
+      after: after ? Number(after) : undefined,
+      after_date: after_date ? String(after_date) : undefined,
+      before_date: before_date ? String(before_date) : undefined,
+    };
 
-    if (author) {
-      query.author = String(author);
+    try {
+      if (topic_id && Number.isNaN(Number(topic_id))) {
+        throw new Error('topic_id is invalid');
+      }
+
+      if (last && Number.isNaN(Number(last))) {
+        throw new Error('last is invalid');
+      }
+
+      if (after && Number.isNaN(Number(after))) {
+        throw new Error('after is invalid');
+      }
+
+      const posts = await postSearch.execute(query, limit);
+
+      delete posts.body._shards;
+
+      return response.json(posts.body);
+    } catch (error) {
+      return response.status(400).json({ error: error.message });
     }
-
-    if (content) {
-      query.content = String(content);
-    }
-
-    if (last) {
-      query.last = Number(last);
-    }
-
-    if (after) {
-      query.after = Number(after);
-    }
-
-    if (topic_id) {
-      query.topic_id = Number(topic_id);
-    }
-
-    if (after_date) {
-      query.after_date = String(after_date);
-    }
-
-    if (before_date) {
-      query.before_date = String(before_date);
-    }
-
-    const posts = await postSearch.execute(query, Number(limit));
-
-    return response.json(posts);
   }
 }

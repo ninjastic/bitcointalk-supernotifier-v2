@@ -1,3 +1,5 @@
+import { ApiResponse } from '@elastic/elasticsearch';
+
 import Post from '../infra/typeorm/entities/Post';
 import CreatePostDTO from '../dtos/CreatePostDTO';
 
@@ -9,12 +11,16 @@ export default interface IPostsRepository {
   findOneByPostId(post_id: number): Promise<Post | undefined>;
   findLatestUncheckedPosts(limit: number): Promise<Post[]>;
   findPostsByTopicId(topic_id: number): Promise<Post[]>;
-  findPostsByContent(search: string, limit: number): Promise<Post[]>;
   findPostsByAuthor(author: string, limit: number): Promise<Post[]>;
   findPosts(
     conditions: IFindPostsConditionsDTO,
     limit: number,
     post_id_order?: 'ASC' | 'DESC',
   ): Promise<Post[]>;
+  findPostsES(
+    conditions: IFindPostsConditionsDTO,
+    limit: number,
+    post_id_order?: 'ASC' | 'DESC',
+  ): Promise<ApiResponse>;
   findPostsFromList(posts_id: number[]): Promise<Post[]>;
 }

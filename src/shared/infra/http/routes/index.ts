@@ -7,6 +7,8 @@ import PostsAddressesController from '../controllers/PostsAddressesController';
 import TopicsController from '../controllers/TopicsController';
 import AddressAuthorsController from '../controllers/AddressAuthorsController';
 import PostsHistoryController from '../controllers/PostsHistoryController';
+import UserPostsDataController from '../controllers/UserPostsDataController';
+import UserPostsPeriodController from '../controllers/UserPostsPeriodController';
 
 const routes = Router();
 
@@ -17,6 +19,8 @@ const postsAddressesController = new PostsAddressesController();
 const topicsController = new TopicsController();
 const addressAuthorsController = new AddressAuthorsController();
 const postsHistoryController = new PostsHistoryController();
+const userPostsDataController = new UserPostsDataController();
+const userPostsPeriodController = new UserPostsPeriodController();
 
 routes.get('/posts', postsController.index);
 routes.get('/posts/topic/:id', topicsController.show);
@@ -29,5 +33,8 @@ routes.get('/addresses/post/:id', postsAddressesController.show);
 routes.get('/addresses', addressesController.index);
 routes.get('/addresses/:address', addressesController.show);
 routes.get('/addresses/:address/authors', addressAuthorsController.show);
+
+routes.get('/users/:username', userPostsDataController.show);
+routes.get('/users/:username/posts', userPostsPeriodController.show);
 
 export default routes;

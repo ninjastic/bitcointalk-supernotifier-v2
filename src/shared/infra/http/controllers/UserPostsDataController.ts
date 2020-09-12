@@ -1,0 +1,41 @@
+import { Request, Response } from 'express';
+
+import GetUserPostsDataService from '../../../../modules/posts/services/GetUserPostsDataService';
+
+export default class UserPostsDataController {
+  public async show(request: Request, response: Response): Promise<Response> {
+    const getUserPostsData = new GetUserPostsDataService();
+
+    const { username } = request.params;
+
+    try {
+      const data = await getUserPostsData.execute(username);
+
+      if (!data.body.hits.hits[0]) {
+        return response.status(404).json({ error: 'Not found' });
+      }
+
+      const total_boards = data.body.aggregations.boards.buckets.reduce(
+        (accum, curr) => {
+          return accum + curr.doc_count;
+        },
+        0,
+      );
+
+      const results = {
+        user: {
+          author: data.body.hits.hits[0]._source.author,
+          author_uid: data.body.hits.hits[0]._source.author_uid,
+        },
+        posts_count: data.body.hits.total.value,
+        total_boards:
+          total_boards + data.body.aggregations.boards.sum_other_doc_count,
+        boards: data.body.aggregations.boards.buckets,
+      };
+
+      return response.json(results);
+    } catch (error) {
+      return response.status(400).json({ error: 'Something went wrong' });
+    }
+  }
+}

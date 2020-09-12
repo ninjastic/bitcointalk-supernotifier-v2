@@ -87,7 +87,7 @@ export default class SendMeritNotificationService {
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error },
+            { error, telegram_id, merit: merit.id, message },
             'Error while sending Merit Notification telegram message',
           );
 
@@ -99,13 +99,13 @@ export default class SendMeritNotificationService {
           error.response.description === 'Forbidden: user is deactivated'
         ) {
           logger.info(
-            { error: error.response, telegram_id, merit: merit.id },
+            { error: error.response, telegram_id, merit: merit.id, message },
             'Telegram user marked as blocked',
           );
           await setUserBlocked.execute(telegram_id);
         } else {
           logger.error(
-            { error: error.response, telegram_id, merit: merit.id },
+            { error: error.response, telegram_id, merit: merit.id, message },
             'Error while sending Merit Notification telegram message',
           );
         }

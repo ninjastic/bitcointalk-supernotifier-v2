@@ -9,12 +9,20 @@ export default class PostsController {
 
     const { id } = request.params;
 
-    const posts = await getPostsFromTopicId.execute(Number(id));
-
-    if (!posts.length) {
-      return response.status(404).json({ error: 'Not found' });
+    if (Number.isNaN(Number(id))) {
+      return response.status(400).json({ error: 'id is invalid' });
     }
 
-    return response.json(posts);
+    try {
+      const posts = await getPostsFromTopicId.execute(Number(id));
+
+      if (!posts.length) {
+        return response.status(404).json({ error: 'Not found' });
+      }
+
+      return response.json(posts);
+    } catch (error) {
+      return response.status(400).json({ error: error.message });
+    }
   }
 }

@@ -7,6 +7,7 @@ export default interface CreatePostDTO {
   content: string;
   date: Date;
   boards: string[];
+  board_id?: number;
   checked: boolean;
   notified: boolean;
   notified_to: number[];
