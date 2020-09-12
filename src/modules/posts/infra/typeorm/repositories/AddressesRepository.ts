@@ -45,7 +45,7 @@ export default class AddressesRepository implements IAddressesRepository {
       'SELECT unnest(posts_id) AS post_id FROM addresses ORDER BY post_id DESC LIMIT 1',
     );
 
-    if (address) {
+    if (address && address[0] && address[0].post_id) {
       return address[0].post_id;
     }
 
