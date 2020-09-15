@@ -44,7 +44,9 @@ export default class CheckModLogsService {
           users.map(async user => {
             const postsDeleted = [] as Post[];
 
-            topicPosts.forEach(topicPost => {
+            topicPosts.body.hits.hits.forEach(topicPostRaw => {
+              const topicPost = topicPostRaw._source;
+
               if (topicPost.author_uid !== user.user_id) {
                 return;
               }
