@@ -46,25 +46,45 @@ export default class PostsRepository implements IPostsRepository {
     });
   }
 
-  public async findPostsByTopicId(topic_id: number): Promise<Post[]> {
-    return this.ormRepository.find({
-      where: {
-        topic_id,
+  public async findPostsByTopicId(topic_id: number): Promise<ApiResponse> {
+    const results = await esClient.search<Post>({
+      index: 'posts',
+      scroll: '1m',
+      size: 5000,
+      body: {
+        query: {
+          match: {
+            topic_id,
+          },
+        },
+        sort: [{ date: { order: 'DESC' } }],
       },
     });
+
+    return results;
   }
 
   public async findPostsByAuthor(
     author: string,
     limit: number,
-  ): Promise<Post[]> {
+  ): Promise<ApiResponse> {
     const actual_limit = Math.min(limit || 20, 200);
 
-    return this.ormRepository.query(
-      `SELECT post_id, topic_id, title, author, author_uid, content, date,
-        boards, archive FROM posts WHERE author = $1 ORDER BY post_id, date DESC LIMIT $2;`,
-      [author, actual_limit],
-    );
+    const results = await esClient.search<Post>({
+      index: 'posts',
+      scroll: '1m',
+      size: actual_limit,
+      body: {
+        query: {
+          match: {
+            author,
+          },
+        },
+        sort: [{ date: { order: 'DESC' } }],
+      },
+    });
+
+    return results;
   }
 
   public async findPostsES(

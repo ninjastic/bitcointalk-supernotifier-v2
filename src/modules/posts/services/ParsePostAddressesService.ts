@@ -70,6 +70,8 @@ export default class ParsePostAddressesService {
           address: match,
           coin: match.startsWith('0x') ? 'ETH' : 'BTC',
           posts_id: matched[match],
+          authors: [post.author],
+          authors_uid: [post.author_uid],
         });
 
         addresses.push(address);

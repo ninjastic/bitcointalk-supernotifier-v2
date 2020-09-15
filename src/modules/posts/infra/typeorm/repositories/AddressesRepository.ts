@@ -75,4 +75,11 @@ export default class AddressesRepository implements IAddressesRepository {
       [address],
     );
   }
+
+  public async findAddressesByAuthor(username: string): Promise<string[]> {
+    return this.ormRepository.query(
+      'SELECT * FROM addresses WHERE ARRAY[$1::varchar] && array_lowercase(authors)',
+      [username],
+    );
+  }
 }

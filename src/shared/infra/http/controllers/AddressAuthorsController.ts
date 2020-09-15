@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 
 import FindAuthorsByAddressService from '../../../../modules/posts/services/FindAuthorsByAddressService';
 
-export default class AddressesController {
+export default class AddressAuthorsController {
   public async show(request: Request, response: Response): Promise<Response> {
     const findAuthorsByAddress = container.resolve(FindAuthorsByAddressService);
 

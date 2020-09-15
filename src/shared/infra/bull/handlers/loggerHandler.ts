@@ -15,8 +15,8 @@ const loggerHandler = (queue: Queue): void => {
     );
   });
 
-  queue.on('error', err => {
-    logger.error({ data: err }, 'Job error');
+  queue.on('error', error => {
+    logger.error({ error: error.message, stack: error.stack }, 'Job error');
   });
 };
 

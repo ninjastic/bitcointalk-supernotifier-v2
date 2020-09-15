@@ -10,8 +10,8 @@ export default interface IPostsRepository {
   save(post: Post): Promise<Post>;
   findOneByPostId(post_id: number): Promise<Post | undefined>;
   findLatestUncheckedPosts(limit: number): Promise<Post[]>;
-  findPostsByTopicId(topic_id: number): Promise<Post[]>;
-  findPostsByAuthor(author: string, limit: number): Promise<Post[]>;
+  findPostsByTopicId(topic_id: number): Promise<ApiResponse>;
+  findPostsByAuthor(author: string, limit: number): Promise<ApiResponse>;
   findPosts(
     conditions: IFindPostsConditionsDTO,
     limit: number,

@@ -13,4 +13,5 @@ export default interface IAddressesRepository {
     limit: number,
   ): Promise<Address[]>;
   findAuthorsByAddress(address: string): Promise<string[]>;
+  findAddressesByAuthor(username: string): Promise<string[]>;
 }

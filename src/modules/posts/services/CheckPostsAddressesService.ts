@@ -74,7 +74,9 @@ export default class CheckPostsService {
         .into(Address)
         .values(operations)
         .onConflict(
-          '("address") DO UPDATE SET posts_id = array(SELECT DISTINCT unnest(addresses.posts_id || excluded.posts_id))',
+          `("address") DO UPDATE SET posts_id = array(SELECT DISTINCT unnest(addresses.posts_id || excluded.posts_id)),
+            authors = array(SELECT DISTINCT unnest(addresses.authors || excluded.authors)),
+            authors_uid = array(SELECT DISTINCT unnest(addresses.authors_uid || excluded.authors_uid))`,
         )
         .execute();
     }

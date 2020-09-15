@@ -1,6 +1,5 @@
+import { ApiResponse } from '@elastic/elasticsearch';
 import { inject, injectable } from 'tsyringe';
-
-import Post from '../infra/typeorm/entities/Post';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 
@@ -11,7 +10,7 @@ export default class GetPostsFromTopicIdService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute(topic_id: number): Promise<Post[]> {
+  public async execute(topic_id: number): Promise<ApiResponse> {
     if (Number.isNaN(topic_id)) {
       throw new Error('topic_id is invalid');
     }
