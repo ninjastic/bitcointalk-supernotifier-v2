@@ -79,7 +79,9 @@ export default class CheckPostsService {
         .execute();
     }
 
-    const lastCheckedPostId = posts[0] ? posts[0].post_id : lastId;
+    const lastCheckedPostId = posts.length
+      ? posts[posts.length - 1].post_id
+      : lastId;
 
     await this.cacheProvider.save(
       'checkPostsAddresses:lastId',
