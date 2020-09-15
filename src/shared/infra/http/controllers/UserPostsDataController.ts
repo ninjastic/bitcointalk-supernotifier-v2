@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import logger from '../../../services/logger';
 
 import GetUserPostsDataService from '../../../../modules/posts/services/GetUserPostsDataService';
 
@@ -17,7 +18,7 @@ export default class UserPostsDataController {
 
       const total_boards = data.body.aggregations.boards.buckets.reduce(
         (accum, curr) => {
-          return accum + curr.doc_count;
+          return accum + curr.count;
         },
         0,
       );
@@ -35,6 +36,10 @@ export default class UserPostsDataController {
 
       return response.json(results);
     } catch (error) {
+      logger.error(
+        { error: error.message, stack: error.stack },
+        'Error on UserPostsDataController',
+      );
       return response.status(400).json({ error: 'Something went wrong' });
     }
   }

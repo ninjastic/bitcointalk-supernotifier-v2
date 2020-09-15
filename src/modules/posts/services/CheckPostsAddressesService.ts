@@ -31,15 +31,11 @@ export default class CheckPostsService {
 
     if (!lastId) {
       lastId = await this.addressesRepository.findLatestPostId();
-
-      if (!lastId) {
-        return;
-      }
     }
 
     const posts = await this.postsRepository.findPosts(
-      { after: lastId },
-      200,
+      { after: lastId || 0 },
+      150,
       'ASC',
     );
 

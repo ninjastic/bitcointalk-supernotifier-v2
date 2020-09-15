@@ -9,6 +9,7 @@ import AddressAuthorsController from '../controllers/AddressAuthorsController';
 import PostsHistoryController from '../controllers/PostsHistoryController';
 import UserPostsDataController from '../controllers/UserPostsDataController';
 import UserPostsPeriodController from '../controllers/UserPostsPeriodController';
+import BoardsController from '../controllers/BoardsController';
 
 const routes = Router();
 
@@ -21,6 +22,7 @@ const addressAuthorsController = new AddressAuthorsController();
 const postsHistoryController = new PostsHistoryController();
 const userPostsDataController = new UserPostsDataController();
 const userPostsPeriodController = new UserPostsPeriodController();
+const boardsController = new BoardsController();
 
 routes.get('/posts', postsController.index);
 routes.get('/posts/topic/:id', topicsController.show);
@@ -36,5 +38,7 @@ routes.get('/addresses/:address/authors', addressAuthorsController.show);
 
 routes.get('/users/:username', userPostsDataController.show);
 routes.get('/users/:username/posts', userPostsPeriodController.show);
+
+routes.get('/boards', boardsController.index);
 
 export default routes;

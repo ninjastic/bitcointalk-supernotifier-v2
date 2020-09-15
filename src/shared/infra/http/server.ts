@@ -48,7 +48,11 @@ class Server {
     });
 
     this.app.use(limiter);
-    // this.app.use(loggerHttp);
+
+    if (process.env.NODE_ENV !== 'development') {
+      this.app.use(loggerHttp);
+    }
+
     this.app.use(routes);
   }
 }

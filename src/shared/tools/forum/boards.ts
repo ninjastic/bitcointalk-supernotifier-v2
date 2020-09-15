@@ -98,8 +98,6 @@ const scrapeBoards = async (
       finalBoardsArray.push(...boardsArray);
     }
 
-    console.log(finalBoardsArray);
-
     await createQueryBuilder()
       .insert()
       .into('boards')

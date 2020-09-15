@@ -21,6 +21,7 @@ export default class PostSearchService {
       topic_id,
       last,
       after,
+      board,
       after_date,
       before_date,
     }: IFindPostsConditionsDTO,
@@ -29,7 +30,16 @@ export default class PostSearchService {
     const actual_limit = Math.min(limit || 20, 200);
 
     return this.postsRepository.findPostsES(
-      { author, content, topic_id, last, after, after_date, before_date },
+      {
+        author,
+        content,
+        topic_id,
+        last,
+        after,
+        board,
+        after_date,
+        before_date,
+      },
       actual_limit,
     );
   }

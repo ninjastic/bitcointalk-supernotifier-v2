@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { sub } from 'date-fns';
+import logger from '../../../services/logger';
 
 import GetUserPostsOnPeriodService from '../../../../modules/posts/services/GetUserPostsOnPeriodService';
 
@@ -36,6 +37,10 @@ export default class UserPostsDataController {
 
       return response.json(results);
     } catch (error) {
+      logger.error(
+        { error: error.message, stack: error.stack },
+        'Error on UserPostsPeriodController',
+      );
       return response.status(400).json({ error: 'Something went wrong' });
     }
   }

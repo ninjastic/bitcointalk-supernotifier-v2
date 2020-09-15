@@ -11,6 +11,8 @@ import IPostsRepository from '../../../repositories/IPostsRepository';
 
 import IFindPostsConditionsDTO from '../../../dtos/IFindPostsConditionsDTO';
 
+import GetBoardChildrensFromIdService from '../../../services/GetBoardChildrensFromIdService';
+
 export default class PostsRepository implements IPostsRepository {
   private ormRepository: Repository<Post>;
 
@@ -76,6 +78,7 @@ export default class PostsRepository implements IPostsRepository {
       topic_id,
       last,
       after,
+      board,
       after_date,
       before_date,
     } = conditions;
@@ -124,11 +127,23 @@ export default class PostsRepository implements IPostsRepository {
       must.push({ range: { date: { gte: after_date, lte: before_date } } });
     }
 
+    if (board) {
+      if (Number.isNaN(last)) {
+        throw new Error('board is invalid');
+      }
+
+      const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
+
+      const boards = await getBoardChildrensFromId.execute(board);
+
+      must.push({ terms: { board_id: boards } });
+    }
+
     const results = await esClient.search<Post>({
       index: 'posts',
       scroll: '1m',
+      size: limit,
       body: {
-        size: limit,
         query: {
           bool: {
             must,

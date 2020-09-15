@@ -1,14 +1,18 @@
 import { container } from 'tsyringe';
 import { Request, Response } from 'express';
 
+import logger from '../../../services/logger';
+
 import GetPostService from '../../../../modules/posts/services/GetPostService';
 import GetPostsFromListService from '../../../../modules/posts/services/GetPostsFromListService';
+import GetBoardNameFromIdService from '../../../../modules/posts/services/GetBoardNameFromIdService';
 import PostSearchService from '../services/PostSearchService';
 
 export default class PostsController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getPost = container.resolve(GetPostService);
     const getPostsFromList = container.resolve(GetPostsFromListService);
+    const getBoardNameFromId = container.resolve(GetBoardNameFromIdService);
 
     const { ids } = request.params;
 
@@ -19,13 +23,13 @@ export default class PostsController {
         return response.status(400).json({ error: 'id list is invalid' });
       }
 
-      const addresses = await getPostsFromList.execute(posts_id);
+      const posts = await getPostsFromList.execute(posts_id);
 
-      if (!addresses.length) {
+      if (!posts.length) {
         return response.status(404).json({ error: 'Not found' });
       }
 
-      return response.json(addresses);
+      return response.json(posts);
     }
 
     if (Number.isNaN(Number(ids))) {
@@ -38,8 +42,14 @@ export default class PostsController {
         { skipScraping: true },
       );
 
-      return response.json(post);
+      if (post.board_id) {
+        const boardName = await getBoardNameFromId.execute(post.board_id);
+        return response.json({ ...post, board_name: boardName });
+      }
+
+      return response.json({ ...post });
     } catch (error) {
+      logger.error({ error: error.message, stack: error.stack });
       return response.status(404).json({ error: 'Not found' });
     }
   }
@@ -51,6 +61,7 @@ export default class PostsController {
       last,
       after,
       topic_id,
+      board,
       after_date,
       before_date,
     } = request.query;
@@ -65,6 +76,7 @@ export default class PostsController {
       topic_id: topic_id ? Number(topic_id) : undefined,
       last: last ? Number(last) : undefined,
       after: after ? Number(after) : undefined,
+      board: board ? Number(board) : undefined,
       after_date: after_date ? String(after_date) : undefined,
       before_date: before_date ? String(before_date) : undefined,
     };
@@ -82,13 +94,18 @@ export default class PostsController {
         throw new Error('after is invalid');
       }
 
+      if (board && Number.isNaN(Number(board))) {
+        throw new Error('board is invalid');
+      }
+
       const posts = await postSearch.execute(query, limit);
 
       delete posts.body._shards;
 
       return response.json(posts.body);
     } catch (error) {
-      return response.status(400).json({ error: error.message });
+      logger.error({ error: error.message, stack: error.stack });
+      return response.status(400).json({ error: 'Something went wrong...' });
     }
   }
 }

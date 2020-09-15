@@ -1,6 +1,10 @@
+import { container } from 'tsyringe';
 import { ApiResponse } from '@elastic/elasticsearch';
 
 import esClient from '../../../shared/services/elastic';
+
+import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
+import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
 
 interface GetUserPostsOnPeriodParams {
   from: string;
@@ -13,6 +17,17 @@ export default class GetUserPostsOnPeriodService {
     username: string,
     { from, to, interval }: GetUserPostsOnPeriodParams,
   ): Promise<ApiResponse> {
+    const getCache = container.resolve(GetCacheService);
+    const saveCache = container.resolve(SaveCacheService);
+
+    const cachedData = await getCache.execute<ApiResponse>(
+      `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
+    );
+
+    if (cachedData) {
+      return cachedData;
+    }
+
     const results = await esClient.search({
       index: 'posts',
       scroll: '1m',
@@ -59,6 +74,13 @@ export default class GetUserPostsOnPeriodService {
         },
       },
     });
+
+    await saveCache.execute(
+      `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
+      results,
+      'EX',
+      180,
+    );
 
     return results;
   }
