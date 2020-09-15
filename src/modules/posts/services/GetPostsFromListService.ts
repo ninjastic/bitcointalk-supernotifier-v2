@@ -1,6 +1,5 @@
 import { inject, injectable } from 'tsyringe';
-
-import Post from '../infra/typeorm/entities/Post';
+import { ApiResponse } from '@elastic/elasticsearch';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 
@@ -11,7 +10,7 @@ export default class GetPostsService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute(posts_id: number[]): Promise<Post[]> {
-    return this.postsRepository.findPostsFromList(posts_id);
+  public async execute(posts_id: number[]): Promise<ApiResponse> {
+    return this.postsRepository.findPostsFromListES(posts_id);
   }
 }

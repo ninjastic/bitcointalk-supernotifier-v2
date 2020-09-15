@@ -10,6 +10,7 @@ import PostsHistoryController from '../controllers/PostsHistoryController';
 import UserPostsDataController from '../controllers/UserPostsDataController';
 import UserPostsPeriodController from '../controllers/UserPostsPeriodController';
 import BoardsController from '../controllers/BoardsController';
+import UserMeritsCountController from '../controllers/UserMeritsCountController';
 
 const routes = Router();
 
@@ -23,6 +24,7 @@ const postsHistoryController = new PostsHistoryController();
 const userPostsDataController = new UserPostsDataController();
 const userPostsPeriodController = new UserPostsPeriodController();
 const boardsController = new BoardsController();
+const userMeritsCountController = new UserMeritsCountController();
 
 routes.get('/posts', postsController.index);
 routes.get('/posts/topic/:id', topicsController.show);
@@ -38,6 +40,7 @@ routes.get('/addresses/:address/authors', addressAuthorsController.show);
 
 routes.get('/users/:username', userPostsDataController.show);
 routes.get('/users/:username/posts', userPostsPeriodController.show);
+routes.get('/users/:username/merits', userMeritsCountController.show);
 
 routes.get('/boards', boardsController.index);
 

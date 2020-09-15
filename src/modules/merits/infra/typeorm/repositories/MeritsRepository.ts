@@ -48,4 +48,13 @@ export default class MeritsRepository implements IMeritsRepository {
 
     return merits;
   }
+
+  public async getAmountByUserOnPeriod(
+    username: string,
+  ): Promise<Array<{ date: string; count: string }>> {
+    return this.ormRepository.query(
+      "SELECT date_trunc('day', date) as date, sum(amount) as amount FROM merits WHERE receiver = $1 GROUP BY 1 ORDER BY 1;",
+      [username],
+    );
+  }
 }

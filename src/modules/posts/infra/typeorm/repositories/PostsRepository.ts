@@ -223,4 +223,30 @@ export default class PostsRepository implements IPostsRepository {
       })
       .execute();
   }
+
+  public async findPostsFromListES(
+    posts_id: number[],
+  ): Promise<ApiResponse<Post>> {
+    const ids = [];
+
+    posts_id.forEach(post_id => {
+      ids.push(post_id);
+    });
+
+    const results = await esClient.search({
+      index: 'posts',
+      scroll: '1m',
+      size: ids.length,
+      body: {
+        query: {
+          terms: {
+            post_id: ids,
+          },
+        },
+        sort: [{ date: { order: 'DESC' } }],
+      },
+    });
+
+    return results;
+  }
 }

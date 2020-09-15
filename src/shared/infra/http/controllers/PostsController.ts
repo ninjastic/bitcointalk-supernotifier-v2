@@ -25,11 +25,11 @@ export default class PostsController {
 
       const posts = await getPostsFromList.execute(posts_id);
 
-      if (!posts.length) {
+      if (!posts.body.hits.hits.length) {
         return response.status(404).json({ error: 'Not found' });
       }
 
-      return response.json(posts);
+      return response.json(posts.body.hits.hits);
     }
 
     if (Number.isNaN(Number(ids))) {

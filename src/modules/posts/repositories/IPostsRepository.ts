@@ -23,4 +23,5 @@ export default interface IPostsRepository {
     post_id_order?: 'ASC' | 'DESC',
   ): Promise<ApiResponse>;
   findPostsFromList(posts_id: number[]): Promise<Post[]>;
+  findPostsFromListES(posts_id: number[]): Promise<ApiResponse>;
 }
