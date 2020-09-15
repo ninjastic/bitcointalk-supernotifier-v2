@@ -24,8 +24,8 @@ class Server {
 
     const whitelist = [
       'https://ninjastic.design',
-      'https://api.ninjastic.design',
       'https://ninjastic.space',
+      'http://localhost:3000',
     ];
     const corsOptions = {
       origin(origin, callback) {

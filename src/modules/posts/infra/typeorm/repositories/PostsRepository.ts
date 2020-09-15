@@ -224,9 +224,7 @@ export default class PostsRepository implements IPostsRepository {
       .execute();
   }
 
-  public async findPostsFromListES(
-    posts_id: number[],
-  ): Promise<ApiResponse<Post>> {
+  public async findPostsFromListES(posts_id: number[]): Promise<ApiResponse> {
     const ids = [];
 
     posts_id.forEach(post_id => {
