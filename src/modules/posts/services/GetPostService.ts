@@ -42,7 +42,7 @@ export default class GetPostService {
       if (cachedPost) {
         if (
           skipScraping ||
-          (cachedPost.title !== '(Unknown Title)' && cachedPost.boards.length)
+          (cachedPost.title !== '(Unknown Title)' && cachedPost.board_id)
         ) {
           return cachedPost;
         }
@@ -53,7 +53,7 @@ export default class GetPostService {
 
     if (foundPost) {
       if (
-        (foundPost.title === '(Unknown Title)' || !foundPost.boards.length) &&
+        (foundPost.title === '(Unknown Title)' || !foundPost.board_id) &&
         !skipScraping
       ) {
         const scrapePost = container.resolve(ScrapePostService);
@@ -65,7 +65,7 @@ export default class GetPostService {
 
         if (updatedPost.title && updatedPost.date) {
           foundPost.title = updatedPost.title;
-          foundPost.boards = updatedPost.boards;
+          foundPost.board_id = updatedPost.board_id;
           foundPost.date = updatedPost.date;
           foundPost.archive = false;
 

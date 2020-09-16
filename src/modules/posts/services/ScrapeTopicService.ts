@@ -32,9 +32,9 @@ export default class ScrapeTopicService {
       return savePost.execute(post);
     }
 
-    if (postExists.title === '(Unknown Title)' || !postExists.boards.length) {
+    if (postExists.title === '(Unknown Title)' || !postExists.board_id) {
       postExists.title = post.title;
-      postExists.boards = post.boards;
+      postExists.board_id = post.board_id;
       postExists.date = post.date;
 
       await this.postsRepository.save(postExists);
