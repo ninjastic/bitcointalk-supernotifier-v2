@@ -16,6 +16,8 @@ export default class GetAddressService {
     conditions: IFindAddressesConditionsDTO,
     limit: number,
   ): Promise<Address[]> {
-    return this.addressesRepository.findAddresses(conditions, limit);
+    const actual_limit = Math.min(limit || 20, 200);
+
+    return this.addressesRepository.findAddresses(conditions, actual_limit);
   }
 }

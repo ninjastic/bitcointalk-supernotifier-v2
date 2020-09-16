@@ -1,6 +1,7 @@
 import Address from '../infra/typeorm/entities/Address';
 import ICreateAddressDTO from '../dtos/ICreateAddressDTO';
 import IFindAddressesConditionsDTO from '../dtos/IFindAddressesConditionsDTO';
+import IFindAddressesByAuthorDTO from '../dtos/IFindAddressesByAuthorDTO';
 
 export default interface IAddressesRepository {
   create(data: ICreateAddressDTO): Address;
@@ -13,5 +14,5 @@ export default interface IAddressesRepository {
     limit: number,
   ): Promise<Address[]>;
   findAuthorsByAddress(address: string): Promise<string[]>;
-  findAddressesByAuthor(username: string): Promise<string[]>;
+  findAddressesByAuthor(params: IFindAddressesByAuthorDTO): Promise<string[]>;
 }

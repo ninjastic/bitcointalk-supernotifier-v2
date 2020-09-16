@@ -1,5 +1,6 @@
 import { Repository, getRepository } from 'typeorm';
 
+import IFindAddressesByAuthorDTO from 'modules/posts/dtos/IFindAddressesByAuthorDTO';
 import ICreateAddressDTO from '../../../dtos/ICreateAddressDTO';
 import IAddressesRepository from '../../../repositories/IAddressesRepository';
 
@@ -56,8 +57,6 @@ export default class AddressesRepository implements IAddressesRepository {
     conditions: IFindAddressesConditionsDTO,
     limit: number,
   ): Promise<Address[]> {
-    const actual_limit = Math.min(limit || 20, 200);
-
     const { address } = conditions;
 
     return this.ormRepository
@@ -65,7 +64,7 @@ export default class AddressesRepository implements IAddressesRepository {
       .select(['*'])
       .where(address ? 'address = :address' : '1=1', { address })
       .orderBy('random()')
-      .limit(address ? 1 : actual_limit)
+      .limit(address ? 1 : limit)
       .execute();
   }
 
@@ -76,10 +75,22 @@ export default class AddressesRepository implements IAddressesRepository {
     );
   }
 
-  public async findAddressesByAuthor(username: string): Promise<string[]> {
+  public async findAddressesByAuthor({
+    username,
+    limit,
+    last_address,
+    last_created_at,
+    last_id,
+  }: IFindAddressesByAuthorDTO): Promise<string[]> {
+    if (last_address && last_created_at && last_id) {
+      return this.ormRepository.query(
+        'SELECT * FROM addresses WHERE ARRAY[$1::varchar] && array_lowercase(authors) AND (address, created_at, id) > ($3, $4, $5) ORDER BY address, created_at, id DESC LIMIT $2 OFFSET 1',
+        [username, limit, last_address, last_created_at, last_id],
+      );
+    }
     return this.ormRepository.query(
-      'SELECT * FROM addresses WHERE ARRAY[$1::varchar] && array_lowercase(authors)',
-      [username],
+      'SELECT * FROM addresses WHERE ARRAY[$1::varchar] && array_lowercase(authors) ORDER BY address, created_at, id DESC LIMIT $2',
+      [username, limit],
     );
   }
 }

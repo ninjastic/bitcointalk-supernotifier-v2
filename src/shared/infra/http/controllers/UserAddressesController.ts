@@ -11,9 +11,19 @@ export default class AddressAuthorsController {
 
     const { username } = request.params;
 
-    const foundAddresses = await findAddressesByAuthor.execute(
-      username.toLowerCase(),
-    );
+    const { limit, last } = request.query;
+
+    const [last_address, last_created_at, last_id] = String(last)
+      .trim()
+      .split(',');
+
+    const foundAddresses = await findAddressesByAuthor.execute({
+      username: username.toLowerCase(),
+      limit: Number(limit),
+      last_address,
+      last_created_at: new Date(last_created_at),
+      last_id,
+    });
 
     if (!foundAddresses.length) {
       return response.status(404).json({ error: 'Not found' });
