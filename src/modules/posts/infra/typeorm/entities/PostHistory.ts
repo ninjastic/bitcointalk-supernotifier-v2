@@ -36,6 +36,9 @@ class PostHistory {
   @Column({ type: 'varchar', array: true, default: [] })
   boards: string[];
 
+  @Column({ nullable: true })
+  board_id?: number;
+
   @Column()
   version: number;
 

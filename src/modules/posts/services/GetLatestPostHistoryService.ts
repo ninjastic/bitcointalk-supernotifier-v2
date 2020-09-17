@@ -1,6 +1,7 @@
 import { inject, injectable } from 'tsyringe';
+import { ApiResponse } from '@elastic/elasticsearch';
 
-import PostHistory from '../infra/typeorm/entities/PostHistory';
+import IFindAllPostsHistoryDTO from '../dtos/IFindAllPostsHistoryDTO';
 
 import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 
@@ -11,9 +12,15 @@ export default class GetLatestPostHistoryService {
     private postsHistoryRepository: IPostsHistoryRepository,
   ) {}
 
-  public async execute(limit?: number): Promise<PostHistory[]> {
+  public async execute({
+    limit,
+    ...rest
+  }: IFindAllPostsHistoryDTO): Promise<ApiResponse> {
     const actual_limit = Math.min(limit || 20, 200);
 
-    return this.postsHistoryRepository.find(actual_limit);
+    return this.postsHistoryRepository.findAll({
+      limit: actual_limit,
+      ...rest,
+    });
   }
 }

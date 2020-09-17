@@ -1,8 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 import { ApiResponse } from '@elastic/elasticsearch';
 
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-
 import IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
 
 import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';

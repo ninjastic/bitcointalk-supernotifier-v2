@@ -4,11 +4,11 @@ import { ApiResponse } from '@elastic/elasticsearch';
 
 import esClient from '../../../../../shared/services/elastic';
 
-import CreatePostDTO from '../../../dtos/CreatePostDTO';
-
 import Post from '../entities/Post';
+
 import IPostsRepository from '../../../repositories/IPostsRepository';
 
+import CreatePostDTO from '../../../dtos/CreatePostDTO';
 import IFindPostsConditionsDTO from '../../../dtos/IFindPostsConditionsDTO';
 
 import GetBoardChildrensFromIdService from '../../../services/GetBoardChildrensFromIdService';
