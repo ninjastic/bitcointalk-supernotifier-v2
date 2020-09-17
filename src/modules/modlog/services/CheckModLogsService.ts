@@ -32,6 +32,7 @@ export default class CheckModLogsService {
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
     });
 
     await Promise.all(

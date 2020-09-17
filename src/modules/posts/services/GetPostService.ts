@@ -91,6 +91,7 @@ export default class GetPostService {
 
     const queue = new Queue('ForumScrapperSideQueue', {
       redis: cacheConfig.config.redis,
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
     });
 
     const job = await queue.add(

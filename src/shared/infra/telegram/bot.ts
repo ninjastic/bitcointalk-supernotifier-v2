@@ -28,6 +28,7 @@ import startCommand from './commands/startCommand';
 import menuCommand from './commands/menuCommand';
 import alertCommand from './commands/alertCommand';
 import messageHandler from './commands/messageHandler';
+import setMeritCommand from './commands/setMeritCommand';
 import callbackHandler from './commands/callbackHandler';
 
 import TelegramQueue from '../bull/queues/TelegramQueue';
@@ -86,6 +87,7 @@ class TelegramBot {
     this.instance.start(startCommand);
     this.instance.command('menu', menuCommand);
     this.instance.command('alert', alertCommand);
+    this.instance.hears(/\/?setMerit (.*)/gi, setMeritCommand);
     this.instance.on('message', messageHandler);
   }
 

@@ -43,10 +43,12 @@ interface ScrapeTopicJob extends Job {
 (async () => {
   const mainQueue = new Queue('ForumScrapperQueue', {
     redis: cacheConfig.config.redis,
+    defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
   });
 
   const sideQueue = new Queue('ForumScrapperSideQueue', {
     redis: cacheConfig.config.redis,
+    defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
   });
 
   await mainQueue.removeRepeatable('scrapeRecentPosts', { every: 5000 });
@@ -55,20 +57,14 @@ interface ScrapeTopicJob extends Job {
 
   await mainQueue.add('scrapeRecentPosts', null, {
     repeat: { every: 5000 },
-    removeOnComplete: true,
-    removeOnFail: true,
   });
 
   await mainQueue.add('scrapeMerits', null, {
     repeat: { every: 15000 },
-    removeOnComplete: true,
-    removeOnFail: true,
   });
 
   await mainQueue.add('scrapeModLog', null, {
     repeat: { every: 300000 },
-    removeOnComplete: true,
-    removeOnFail: true,
   });
 
   mainQueue.process('scrapeRecentPosts', async () => {

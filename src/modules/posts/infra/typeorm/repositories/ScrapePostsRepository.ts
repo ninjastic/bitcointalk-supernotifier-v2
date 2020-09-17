@@ -96,6 +96,7 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
     if (inserted.generatedMaps.length) {
       const sideQueue = new Queue('ForumScrapperSideQueue', {
         redis: cacheConfig.config.redis,
+        defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
       });
 
       await Promise.all(

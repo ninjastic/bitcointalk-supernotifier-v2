@@ -42,6 +42,7 @@ export default class CheckPostsHistoryService {
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
     });
 
     await Promise.all(

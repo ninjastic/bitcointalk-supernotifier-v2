@@ -48,6 +48,7 @@ export default class SendMeritNotificationService {
     } else {
       const queue = new Queue('ForumScrapperSideQueue', {
         redis: cacheConfig.config.redis,
+        defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
       });
 
       const job = await queue.add(

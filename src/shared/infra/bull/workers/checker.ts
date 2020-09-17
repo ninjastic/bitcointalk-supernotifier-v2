@@ -18,6 +18,7 @@ import CheckPostsAddressesService from '../../../../modules/posts/services/Check
 (async () => {
   const queue = new Queue('CheckerQueue', {
     redis: cacheConfig.config.redis,
+    defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
   });
 
   await queue.removeRepeatable('checkPosts', { every: 5000 });
@@ -27,32 +28,22 @@ import CheckPostsAddressesService from '../../../../modules/posts/services/Check
   await queue.removeRepeatable('checkPostsAddresses', { every: 20000 });
 
   await queue.add('checkPosts', null, {
-    removeOnComplete: true,
-    removeOnFail: true,
     repeat: { every: 5000 },
   });
 
   await queue.add('checkPostsHistory', null, {
-    removeOnComplete: true,
-    removeOnFail: true,
     repeat: { every: 120000 },
   });
 
   await queue.add('checkMerits', null, {
-    removeOnComplete: true,
-    removeOnFail: true,
     repeat: { every: 5000 },
   });
 
   await queue.add('checkModLogs', null, {
-    removeOnComplete: true,
-    removeOnFail: true,
     repeat: { every: 300000 },
   });
 
   await queue.add('checkPostsAddresses', null, {
-    removeOnComplete: true,
-    removeOnFail: true,
     repeat: { every: 20000 },
   });
 

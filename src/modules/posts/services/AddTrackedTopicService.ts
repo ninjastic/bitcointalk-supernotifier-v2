@@ -48,6 +48,7 @@ export default class AddTrackedTopicService {
 
     const queue = new Queue('ForumScrapperSideQueue', {
       redis: cacheConfig.config.redis,
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
     });
 
     const job = await queue.add('scrapeTopic', { topic_id }, { priority: 1 });

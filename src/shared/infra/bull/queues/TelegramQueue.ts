@@ -17,6 +17,8 @@ class TelegramQueue {
       redis: cacheConfig.config.redis,
       defaultJobOptions: {
         attempts: 2,
+        removeOnComplete: true,
+        removeOnFail: true,
       },
     });
   }
