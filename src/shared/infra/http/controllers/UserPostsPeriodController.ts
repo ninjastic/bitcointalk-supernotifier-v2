@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { sub } from 'date-fns';
+
 import logger from '../../../services/logger';
 
 import GetUserPostsOnPeriodService from '../../../../modules/posts/services/GetUserPostsOnPeriodService';

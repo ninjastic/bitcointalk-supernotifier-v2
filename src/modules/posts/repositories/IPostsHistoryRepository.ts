@@ -8,4 +8,5 @@ export default interface IPostsHistoryRepository {
   save(post: PostHistory): Promise<PostHistory>;
   findOne(conditions: IFindOnePostHistoryDTO): Promise<PostHistory | undefined>;
   findLatestUncheckedPosts(limit: number): Promise<PostHistory[]>;
+  find(limit?: number): Promise<PostHistory[]>;
 }

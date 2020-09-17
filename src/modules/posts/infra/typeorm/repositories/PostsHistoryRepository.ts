@@ -40,4 +40,12 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       relations: ['post'],
     });
   }
+
+  public async find(limit: number): Promise<PostHistory[]> {
+    return this.ormRepository.find({
+      order: { post_id: 'DESC' },
+      take: limit,
+      relations: ['post'],
+    });
+  }
 }
