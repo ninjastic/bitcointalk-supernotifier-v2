@@ -26,7 +26,7 @@ export default class CheckPostsHistoryService {
 
   public async execute(): Promise<void> {
     const histories = await this.postsHistoryRepository.findLatestUncheckedPosts(
-      50,
+      30,
     );
     const users = await this.usersRepository.getUsersWithMentions();
 
@@ -60,8 +60,14 @@ export default class CheckPostsHistoryService {
             }
 
             const usernameRegex = new RegExp(`\\b${user.username}\\b`, 'gi');
+            const altUsernameRegex = user.alternative_usernames.length
+              ? new RegExp(`\\b${user.alternative_usernames[0]}\\b`, 'gi')
+              : null;
 
-            if (!history.content.match(usernameRegex)) {
+            if (
+              !history.content.match(usernameRegex) &&
+              !history.content.match(altUsernameRegex)
+            ) {
               return Promise.resolve();
             }
 

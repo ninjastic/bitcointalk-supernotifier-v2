@@ -117,8 +117,14 @@ export default class CheckPostsService {
             }
 
             const usernameRegex = new RegExp(`\\b${user.username}\\b`, 'gi');
+            const altUsernameRegex = user.alternative_usernames.length
+              ? new RegExp(`\\b${user.alternative_usernames[0]}\\b`, 'gi')
+              : null;
 
-            if (!post.content.match(usernameRegex)) {
+            if (
+              !post.content.match(usernameRegex) &&
+              !post.content.match(altUsernameRegex)
+            ) {
               return Promise.resolve();
             }
 
