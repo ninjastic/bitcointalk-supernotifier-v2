@@ -64,11 +64,14 @@ export default class CheckPostsHistoryService {
               ? new RegExp(`\\b${user.alternative_usernames[0]}\\b`, 'gi')
               : null;
 
-            if (
-              !history.content.match(usernameRegex) &&
-              !history.content.match(altUsernameRegex)
-            ) {
-              return Promise.resolve();
+            if (!history.content.match(usernameRegex)) {
+              if (!altUsernameRegex) {
+                return Promise.resolve();
+              }
+
+              if (!history.content.match(altUsernameRegex)) {
+                return Promise.resolve();
+              }
             }
 
             if (

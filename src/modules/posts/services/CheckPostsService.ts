@@ -121,11 +121,14 @@ export default class CheckPostsService {
               ? new RegExp(`\\b${user.alternative_usernames[0]}\\b`, 'gi')
               : null;
 
-            if (
-              !post.content.match(usernameRegex) &&
-              !post.content.match(altUsernameRegex)
-            ) {
-              return Promise.resolve();
+            if (!post.content.match(usernameRegex)) {
+              if (!altUsernameRegex) {
+                return Promise.resolve();
+              }
+
+              if (!post.content.match(altUsernameRegex)) {
+                return Promise.resolve();
+              }
             }
 
             if (post.notified_to.includes(user.telegram_id)) {
