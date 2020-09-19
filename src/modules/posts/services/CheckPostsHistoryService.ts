@@ -105,7 +105,7 @@ export default class CheckPostsHistoryService {
             }
 
             const postNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${history.post.post_id}:${user.telegram_id}`,
+              `notified:${history.post_id}:${user.telegram_id}`,
             );
 
             if (postNotified) {
@@ -113,10 +113,10 @@ export default class CheckPostsHistoryService {
             }
 
             await this.cacheProvider.save(
-              `notified:${history.post.post_id}:${user.telegram_id}`,
+              `notified:${history.post_id}:${user.telegram_id}`,
               true,
               'EX',
-              180,
+              900,
             );
 
             const postToNotify = {

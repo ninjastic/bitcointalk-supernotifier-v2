@@ -26,7 +26,7 @@ export default class CheckPostsService {
   ) {}
 
   public async execute(): Promise<void> {
-    const posts = await this.postsRepository.findLatestUncheckedPosts(20);
+    const posts = await this.postsRepository.findLatestUncheckedPosts(30);
     const users = await this.usersRepository.getUsersWithMentions();
 
     const getTrackedTopics = container.resolve(GetTrackedTopicsService);
@@ -94,7 +94,7 @@ export default class CheckPostsService {
                   `notified:${post.post_id}:${user.telegram_id}`,
                   true,
                   'EX',
-                  180,
+                  900,
                 );
 
                 return queue.add('sendTopicTrackingNotification', {
@@ -169,7 +169,7 @@ export default class CheckPostsService {
               `notified:${post.post_id}:${user.telegram_id}`,
               true,
               'EX',
-              180,
+              900,
             );
 
             return queue.add('sendMentionNotification', { post, user });
