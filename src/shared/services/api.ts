@@ -12,7 +12,7 @@ const api = axios.create({
   baseURL: 'https://bitcointalk.org',
   timeout: 5000,
   headers: {
-    Cookie: process.env.BITCOINTALK_COOKIE,
+    Cookie: process.env.BITCOINTALK_COOKIE || '',
     'Cache-Control': 'no-cache',
   },
   responseType: 'arraybuffer',

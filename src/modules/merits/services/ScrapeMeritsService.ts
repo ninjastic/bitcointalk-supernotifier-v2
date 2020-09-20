@@ -5,6 +5,7 @@ import api from '../../../shared/services/api';
 import Merit from '../infra/typeorm/entities/Merit';
 
 import ParseMeritElementService from './ParseMeritElementService';
+import ForumLoginService from './ForumLoginService';
 
 export default class ScrapeMeritsService {
   private parseMeritElement: ParseMeritElementService;
@@ -16,6 +17,14 @@ export default class ScrapeMeritsService {
   public async execute(): Promise<Merit[]> {
     const response = await api.get('index.php?action=merit;stats=recent');
     const $ = cheerio.load(response.data, { decodeEntities: false });
+
+    const logged = $("#hellomember");
+
+    if (!logged.length) {
+      const forumLogin = new ForumLoginService();
+      
+      await forumLogin.execute();
+    }
 
     const merits = $('ul > li');
 
