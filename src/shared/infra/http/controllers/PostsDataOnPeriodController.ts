@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { sub, startOfHour } from 'date-fns';
+import { sub, startOfHour, endOfHour } from 'date-fns';
 
 import logger from '../../../services/logger';
 
@@ -18,7 +18,7 @@ export default class PostsDataOnPeriodController {
     try {
       const data = await getPostsDataOnPeriod.execute({
         from: from || startOfHour(sub(new Date(), { days: 1 })).toISOString(),
-        to: to || new Date().toISOString(),
+        to: to || endOfHour(new Date()).toISOString(),
         interval: interval || '30m',
       });
 
