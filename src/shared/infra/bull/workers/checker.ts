@@ -14,6 +14,7 @@ import CheckPostsHistoryService from '../../../../modules/posts/services/CheckPo
 import CheckMeritsService from '../../../../modules/merits/services/CheckMeritsService';
 import CheckModLogsService from '../../../../modules/modlog/services/CheckModLogsService';
 import CheckPostsAddressesService from '../../../../modules/posts/services/CheckPostsAddressesService';
+import CheckPostsRescraperForChangesService from '../../../../modules/posts/services/CheckPostsRescraperForChangesService';
 
 (async () => {
   const queue = new Queue('CheckerQueue', {
@@ -26,6 +27,7 @@ import CheckPostsAddressesService from '../../../../modules/posts/services/Check
   await queue.removeRepeatable('checkMerits', { every: 5000 });
   await queue.removeRepeatable('checkModLogs', { every: 300000 });
   await queue.removeRepeatable('checkPostsAddresses', { every: 20000 });
+  await queue.removeRepeatable('checkPostsRescraperForChanges', { every: 20000 });
 
   await queue.add('checkPosts', null, {
     repeat: { every: 5000 },
@@ -45,6 +47,10 @@ import CheckPostsAddressesService from '../../../../modules/posts/services/Check
 
   await queue.add('checkPostsAddresses', null, {
     repeat: { every: 20000 },
+  });
+
+  await queue.add('checkPostsRescraperForChanges', null, {
+    repeat: { every: 30000 },
   });
 
   queue.process('checkPosts', async () => {
@@ -70,6 +76,11 @@ import CheckPostsAddressesService from '../../../../modules/posts/services/Check
   queue.process('checkPostsAddresses', async () => {
     const checkPostsAddresses = container.resolve(CheckPostsAddressesService);
     await checkPostsAddresses.execute();
+  });
+
+  queue.process('checkPostsRescraperForChanges', async () => {
+    const checkPostsRescraperForChanges = container.resolve(CheckPostsRescraperForChangesService);
+    await checkPostsRescraperForChanges.execute();
   });
 
   loggerHandler(queue);

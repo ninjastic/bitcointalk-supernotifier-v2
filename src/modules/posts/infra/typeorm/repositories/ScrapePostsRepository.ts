@@ -1,8 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
 import { getManager } from 'typeorm';
-import Queue from 'bull';
-
-import cacheConfig from '../../../../../config/cache';
+import { addMinutes, format } from 'date-fns';
 
 import IScrapePostsRepository from '../../../repositories/IScrapePostsRepository';
 import ICacheProvider from '../../../../../shared/container/providers/models/ICacheProvider';
@@ -94,20 +92,22 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
     await this.cacheRepository.saveMany(valuesToSet);
 
     if (inserted.generatedMaps.length) {
-      const sideQueue = new Queue('ForumScrapperSideQueue', {
-        redis: cacheConfig.config.redis,
-        defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
-      });
+      const scrapeForChangesJobs = []
 
       await Promise.all(
         inserted.generatedMaps.map(async post => {
-          await sideQueue.add(
-            'scrapePostForEdit',
-            { topic_id: post.topic_id, post_id: post.post_id },
-            { delay: 300000 },
-          );
+          const date = addMinutes(new Date(), 5).getTime()
+
+          scrapeForChangesJobs.push({
+            key: `RescrapeForChanges:${date}:${post.post_id}`,
+            value: { time: date, topic_id: post.topic_id, post_id: post.post_id },
+            arg: 'EX',
+            time: '1800'
+          })
         }),
       );
+
+      await this.cacheRepository.saveMany(scrapeForChangesJobs)
     }
   }
 

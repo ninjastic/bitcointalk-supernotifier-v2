@@ -18,7 +18,7 @@ import SavePostService from '../../../../modules/posts/services/SavePostService'
 import ScrapeUserMeritCountService from '../../../../modules/merits/services/ScrapeUserMeritCountService';
 import ScrapeTopicService from '../../../../modules/posts/services/ScrapeTopicService';
 import ScrapeModLogService from '../../../../modules/modlog/services/ScrapeModLogService';
-import ScrapePostForEditsService from '../../../../modules/posts/services/ScrapePostForEditsService';
+import ScrapePostForEditsService from '../../../../modules/posts/services/ScrapePostForChangesService';
 
 interface ScrapePostJob extends Job {
   data: ScrapePostDTO;
@@ -48,6 +48,15 @@ interface ScrapeTopicJob extends Job {
 
   const sideQueue = new Queue('ForumScrapperSideQueue', {
     redis: cacheConfig.config.redis,
+    defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+  });
+
+  const lowPrioritySideQueue = new Queue('ForumScrapperLowPrioritySideQueue', {
+    redis: cacheConfig.config.redis,
+    limiter: {
+      max: 1,
+      duration: 1000
+    },
     defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
   });
 
@@ -113,7 +122,7 @@ interface ScrapeTopicJob extends Job {
     return scrapeTopic.execute(job.data.topic_id);
   });
 
-  sideQueue.process('scrapePostForEdit', async (job: ScrapePostJob) => {
+  lowPrioritySideQueue.process('scrapePostForChanges', async (job: ScrapePostJob) => {
     const { topic_id, post_id } = job.data;
 
     const scrapePostForEdits = container.resolve(ScrapePostForEditsService);
@@ -123,4 +132,5 @@ interface ScrapeTopicJob extends Job {
 
   loggerHandler(mainQueue);
   loggerHandler(sideQueue);
+  loggerHandler(lowPrioritySideQueue);
 })();

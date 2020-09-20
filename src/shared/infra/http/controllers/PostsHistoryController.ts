@@ -5,22 +5,30 @@ import logger from '../../../services/logger';
 
 import GetPostsHistoryByPostIdService from '../../../../modules/posts/services/GetPostsHistoryByPostIdService';
 import GetLatestPostHistoryService from '../../../../modules/posts/services/GetLatestPostHistoryService';
+import GetNextPostChangeCheckService from '../../../../modules/posts/services/GetNextPostChangeCheckService';
 
 export default class PostsHistoryController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getPostsHistoryByPostId = container.resolve(
       GetPostsHistoryByPostIdService,
     );
+    const getNextPostChangeCheck= container.resolve(GetNextPostChangeCheckService)
 
     const { id } = request.params;
 
     const postHistory = await getPostsHistoryByPostId.execute(Number(id));
+    const next_check = await getNextPostChangeCheck.execute(Number(id))
 
     if (!postHistory) {
+      if (!next_check) {
       return response.status(404).json({ error: 'Not found' });
     }
 
-    return response.json(postHistory);
+      return response.json({ next_check });
+    }
+
+
+    return response.json({...postHistory, next_check: next_check || null });
   }
 
   public async index(request: Request, response: Response): Promise<Response> {
@@ -29,7 +37,6 @@ export default class PostsHistoryController {
       topic_id,
       deleted,
       last,
-      after,
       board,
       after_date,
       before_date,
@@ -61,6 +68,7 @@ export default class PostsHistoryController {
         ...query,
         limit,
       });
+
 
       delete postsHistory.body._shards;
 

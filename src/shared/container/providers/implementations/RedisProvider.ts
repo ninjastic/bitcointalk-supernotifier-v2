@@ -74,6 +74,30 @@ export default class RedisProvider implements ICacheProvider {
     return values;
   }
 
+  public async recoverByPrefix<T>(prefix: string): Promise<T[]> {
+    const keys = await this.client.keys(prefix);
+
+    const pipeline = this.client.pipeline();
+
+    keys.forEach(key => {
+      pipeline.get(key);
+    });
+
+    const values = [];
+
+    await pipeline.exec((err, result) => {
+      result.forEach(res => {
+        if (res[0]) {
+          values.push(res[0]);
+        } else {
+          values.push(JSON.parse(res[1]));
+        }
+      });
+    });
+
+    return values;
+  }
+
   public async invalidate(key: string): Promise<void> {
     await this.client.del(key);
   }
