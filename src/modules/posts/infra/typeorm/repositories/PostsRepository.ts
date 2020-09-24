@@ -76,7 +76,7 @@ export default class PostsRepository implements IPostsRepository {
       size: actual_limit,
       body: {
         query: {
-          match: {
+          match_phrase: {
             author,
           },
         },
@@ -106,7 +106,7 @@ export default class PostsRepository implements IPostsRepository {
     const must = [];
 
     if (author) {
-      must.push({ match: { author } });
+      must.push({ match_phrase: { author } });
     }
 
     if (content) {

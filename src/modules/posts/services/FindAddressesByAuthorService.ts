@@ -44,7 +44,7 @@ export default class FindAddressesByAuthorService {
       `userAddresses:${username}:${last_address}:${last_created_at}:${last_id}:${limit}`,
       data,
       'EX',
-      600,
+      300,
     );
 
     return data;

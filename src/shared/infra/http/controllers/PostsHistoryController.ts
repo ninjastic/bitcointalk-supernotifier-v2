@@ -12,23 +12,24 @@ export default class PostsHistoryController {
     const getPostsHistoryByPostId = container.resolve(
       GetPostsHistoryByPostIdService,
     );
-    const getNextPostChangeCheck= container.resolve(GetNextPostChangeCheckService)
+    const getNextPostChangeCheck = container.resolve(
+      GetNextPostChangeCheckService,
+    );
 
     const { id } = request.params;
 
     const postHistory = await getPostsHistoryByPostId.execute(Number(id));
-    const next_check = await getNextPostChangeCheck.execute(Number(id))
+    const next_check = await getNextPostChangeCheck.execute(Number(id));
 
     if (!postHistory) {
       if (!next_check) {
-      return response.status(404).json({ error: 'Not found' });
-    }
+        return response.status(404).json({ error: 'Not found' });
+      }
 
       return response.json({ next_check });
     }
 
-
-    return response.json({...postHistory, next_check: next_check || null });
+    return response.json({ ...postHistory, next_check: next_check || null });
   }
 
   public async index(request: Request, response: Response): Promise<Response> {
@@ -50,7 +51,9 @@ export default class PostsHistoryController {
       topic_id: topic_id ? Number(topic_id) : undefined,
       last: last ? new Date(String(last)) : undefined,
       board: board ? Number(board) : undefined,
-      deleted: deleted ? !!deleted : undefined,
+      deleted: deleted
+        ? !!(String(deleted) === 'true' || String(deleted) === '1')
+        : undefined,
       after_date: after_date ? String(after_date) : undefined,
       before_date: before_date ? String(before_date) : undefined,
     };
@@ -68,7 +71,6 @@ export default class PostsHistoryController {
         ...query,
         limit,
       });
-
 
       delete postsHistory.body._shards;
 

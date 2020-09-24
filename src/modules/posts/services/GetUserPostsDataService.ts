@@ -8,17 +8,21 @@ import GetCacheService from '../../../shared/container/providers/services/GetCac
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
 
 export default class GetUserPostsDataService {
-  public async execute(username: string): Promise<ApiResponse> {
+  public async execute(
+    username: string,
+    from: string,
+    to: string,
+  ): Promise<ApiResponse> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute<ApiResponse>(
-      `userPostsData:${username}`,
-    );
+    // const cachedData = await getCache.execute<ApiResponse>(
+    //   `userPostsData:${username}:${from}:${to}`,
+    // );
 
-    if (cachedData) {
-      return cachedData;
-    }
+    // if (cachedData) {
+    //   return cachedData;
+    // }
 
     const results = await esClient.search({
       index: 'posts',
@@ -32,6 +36,14 @@ export default class GetUserPostsDataService {
               {
                 match_phrase: {
                   author: username,
+                },
+              },
+              {
+                range: {
+                  date: {
+                    from,
+                    to,
+                  },
                 },
               },
             ],
@@ -81,7 +93,12 @@ export default class GetUserPostsDataService {
       },
     };
 
-    await saveCache.execute(`userPostsData:${username}`, data, 'EX', 180);
+    await saveCache.execute(
+      `userPostsData:${username}:${from}:${to}`,
+      data,
+      'EX',
+      180,
+    );
 
     return data;
   }
