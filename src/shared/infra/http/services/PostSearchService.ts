@@ -24,6 +24,7 @@ export default class PostSearchService {
       before_date,
     }: IFindPostsConditionsDTO,
     limit: number,
+    post_id_order?: 'ASC' | 'DESC',
   ): Promise<ApiResponse> {
     const actual_limit = Math.min(limit || 20, 200);
 
@@ -39,6 +40,7 @@ export default class PostSearchService {
         before_date,
       },
       actual_limit,
+      post_id_order,
     );
   }
 }

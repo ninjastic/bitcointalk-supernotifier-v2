@@ -64,6 +64,7 @@ export default class PostsController {
       board,
       after_date,
       before_date,
+      order,
     } = request.query;
 
     const limit = Number(request.query.limit);
@@ -80,6 +81,8 @@ export default class PostsController {
       after_date: after_date ? String(after_date) : undefined,
       before_date: before_date ? String(before_date) : undefined,
     };
+
+    const queryOrder = order ? (String(order) as 'ASC' | 'DESC') : undefined;
 
     try {
       if (topic_id && Number.isNaN(Number(topic_id))) {
@@ -98,7 +101,7 @@ export default class PostsController {
         throw new Error('board is invalid');
       }
 
-      const posts = await postSearch.execute(query, limit);
+      const posts = await postSearch.execute(query, limit, queryOrder);
 
       delete posts.body._shards;
 
