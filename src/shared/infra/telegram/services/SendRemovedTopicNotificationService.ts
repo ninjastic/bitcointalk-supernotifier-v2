@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import pluralize from 'pluralize';
+import escape from 'escape-html';
 
 import logger from '../../../services/logger';
 
@@ -26,7 +27,9 @@ export default class SendRemovedTopicNotificationService {
     message += ` deleted because `;
     message += posts.length === 1 ? 'its' : 'their';
     message += ` parent topic got nuked.\n\n`;
-    message += `<b>Archived Topic:</b> <a href="https://ninjastic.space/topic/${modLog.topic_id}">${modLog.title}</a>`;
+    message += `<b>Archived Topic:</b> <a href="https://ninjastic.space/topic/${modLog.topic_id}">`;
+    message += `${escape(modLog.title)}`;
+    message += `</a>`;
 
     await bot.instance.telegram
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })

@@ -70,6 +70,10 @@ export default class CheckPostsService {
                   return Promise.resolve();
                 }
 
+                if (post.notified_to.includes(user.telegram_id)) {
+                  return Promise.resolve();
+                }
+
                 const foundIgnoredUser = ignoredUsers.find(
                   ignoredUser =>
                     ignoredUser.username === post.author.toLowerCase(),

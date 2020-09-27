@@ -1,5 +1,6 @@
 import { container, injectable, inject } from 'tsyringe';
 import pluralize from 'pluralize';
+import escape from 'escape-html';
 import Queue from 'bull';
 
 import logger from '../../../services/logger';
@@ -76,8 +77,10 @@ export default class SendMeritNotificationService {
     let message = '';
     message += `(Merits: <b>${totalMeritCount}</b>) `;
     message += `You received <b>${amount}</b> ${pluralize('merit', amount)} `;
-    message += `from <b>${sender}</b> `;
-    message += `for <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">${titleWithBoards}</a>`;
+    message += `from <b>${escape(sender)}</b> `;
+    message += `for <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
+    message += `${escape(titleWithBoards)}`;
+    message += `</a>`;
 
     await bot.instance.telegram
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })

@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import cheerio from 'cheerio';
+import escape from 'escape-html';
 
 import logger from '../../../services/logger';
 import bot from '../index';
@@ -37,10 +38,12 @@ export default class SendMentionNotificationService {
       : title;
 
     let message = '';
-    message += `You have been mentioned by <b>${author}</b> `;
-    message += `in <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">${titleWithBoards}</a>\n`;
+    message += `You have been mentioned by <b>${escape(author)}</b> `;
+    message += `in <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
+    message += `${escape(titleWithBoards)}`;
+    message += `</a>\n`;
     message += `<pre>`;
-    message += `${contentFiltered.substring(0, 150)}`;
+    message += `${escape(contentFiltered.substring(0, 150))}`;
     message += `${contentFiltered.length > 150 ? '...' : ''}`;
     message += `</pre>`;
 

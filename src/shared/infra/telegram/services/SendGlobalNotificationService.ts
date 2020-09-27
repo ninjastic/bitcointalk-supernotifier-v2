@@ -1,4 +1,5 @@
 import { injectable, inject, container } from 'tsyringe';
+import escape from 'escape-html';
 
 import logger from '../../../services/logger';
 import bot from '../index';
@@ -26,7 +27,7 @@ export default class SendGlobalNotificationService {
       users.map(async (user, index, array) => {
         setTimeout(async () => {
           await bot.instance.telegram
-            .sendMessage(user.telegram_id, message, {
+            .sendMessage(user.telegram_id, escape(message), {
               parse_mode: 'HTML',
               reply_markup: {
                 remove_keyboard: true,

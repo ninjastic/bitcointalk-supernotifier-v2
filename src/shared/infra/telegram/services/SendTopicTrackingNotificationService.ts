@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import cheerio from 'cheerio';
+import escape from 'escape-html';
 import logger from '../../../services/logger';
 
 import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
@@ -28,10 +29,12 @@ export default class SendTopicTrackingNotificationService {
       : title;
 
     let message = '';
-    message += `There is a new reply by <b>${author}</b> `;
-    message += `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">${titleWithBoards}</a>\n`;
+    message += `There is a new reply by <b>${escape(author)}</b> `;
+    message += `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
+    message += `${escape(titleWithBoards)}`;
+    message += `</a>\n`;
     message += `<pre>`;
-    message += `${contentFiltered.substring(0, 150)}`;
+    message += `${escape(contentFiltered.substring(0, 150))}`;
     message += `${contentFiltered.length > 150 ? '...' : ''}`;
     message += `</pre>`;
 
