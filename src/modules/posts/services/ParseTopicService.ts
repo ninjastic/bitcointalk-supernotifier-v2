@@ -14,7 +14,7 @@ export default class ParseTopicService {
   public execute({ html, topic_id }: Data): Post {
     const createPost = container.resolve(CreatePostService);
 
-    const $ = cheerio.load(html, { decodeEntities: false });
+    const $ = cheerio.load(html, { decodeEntities: true });
     const posts = $('#quickModForm > table.bordercolor');
 
     let post = {} as Post;

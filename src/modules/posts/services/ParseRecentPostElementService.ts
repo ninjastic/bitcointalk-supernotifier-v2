@@ -13,7 +13,7 @@ export default class ParseRecentPostElementService {
   ) {}
 
   public execute(element: CheerioElement): Post {
-    const $ = cheerio.load(element, { decodeEntities: false });
+    const $ = cheerio.load(element, { decodeEntities: true });
 
     const fullTitleWithBoards = $(
       'tbody > tr.titlebg2 > td > div:nth-child(2)',

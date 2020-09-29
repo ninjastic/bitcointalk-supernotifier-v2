@@ -16,7 +16,7 @@ export default class ScrapeMeritsService {
 
   public async execute(): Promise<Merit[]> {
     const response = await api.get('index.php?action=merit;stats=recent');
-    const $ = cheerio.load(response.data, { decodeEntities: false });
+    const $ = cheerio.load(response.data, { decodeEntities: true });
 
     const logged = $('#hellomember');
 

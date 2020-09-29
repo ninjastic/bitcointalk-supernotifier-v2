@@ -15,7 +15,7 @@ export default class ParseModLogService {
   ) {}
 
   public execute(element: CheerioElement): ModLog | false {
-    const $ = cheerio.load(element, { decodeEntities: false });
+    const $ = cheerio.load(element, { decodeEntities: true });
 
     const topic = $('a:nth-child(2)');
     const user = $('a:nth-child(3)');

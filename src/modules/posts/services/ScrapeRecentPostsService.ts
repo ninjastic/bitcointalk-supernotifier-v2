@@ -17,7 +17,7 @@ export default class ScrapeRecentPostsService {
 
   public async execute(): Promise<Post[]> {
     const response = await api.get('index.php?action=recent');
-    const $ = cheerio.load(response.data, { decodeEntities: false });
+    const $ = cheerio.load(response.data, { decodeEntities: true });
 
     const recentPosts = $('div#bodyarea table[cellpadding="4"] > tbody');
 

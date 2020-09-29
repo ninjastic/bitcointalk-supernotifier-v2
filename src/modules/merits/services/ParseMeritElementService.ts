@@ -24,7 +24,7 @@ export default class ParseRecentPostElementService {
   ) {}
 
   public async execute(element: CheerioElement): Promise<Merit> {
-    const $ = cheerio.load(element, { decodeEntities: false });
+    const $ = cheerio.load(element, { decodeEntities: true });
 
     const amount = Number($.html().match(/: (\d*) from/)[1]);
 

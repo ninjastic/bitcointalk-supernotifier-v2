@@ -12,7 +12,7 @@ export default class ScrapeModLogService {
   public async execute(): Promise<void> {
     const response = await api.get('modlog.php');
 
-    const $ = cheerio.load(response.data, { decodeEntities: false });
+    const $ = cheerio.load(response.data, { decodeEntities: true });
 
     const logsToScrape = $('#helpmain > ul > li')
       .toArray()

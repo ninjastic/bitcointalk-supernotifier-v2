@@ -46,7 +46,7 @@ const decompressFile = async (file, dir) => {
 const scrapePostFromBuffer = buffer => {
   const utf8String = iconv.decode(buffer, 'ISO-8859-1');
 
-  const $ = cheerio.load(utf8String, { decodeEntities: false });
+  const $ = cheerio.load(utf8String, { decodeEntities: true });
 
   const post_id = Number($('body > b:nth-child(1) > a').text());
   const post_url = $('body > b:nth-child(1) > a').attr('href');
