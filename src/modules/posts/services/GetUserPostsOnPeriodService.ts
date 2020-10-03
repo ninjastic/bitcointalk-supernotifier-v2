@@ -64,7 +64,7 @@ export default class GetUserPostsOnPeriodService {
           date: {
             date_histogram: {
               field: 'date',
-              calendar_interval: interval,
+              fixed_interval: interval,
               extended_bounds: {
                 min: from,
                 max: to,
