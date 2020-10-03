@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { sub, startOfHour, endOfHour } from 'date-fns';
+import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
 
 import logger from '../../../services/logger';
 
@@ -15,10 +15,17 @@ export default class PostsDataOnPeriodController {
       interval: string;
     };
 
+    const currentDate = new Date();
+    const currentDateUTC = addMinutes(
+      currentDate,
+      currentDate.getTimezoneOffset(),
+    );
+
     try {
       const data = await getPostsDataOnPeriod.execute({
-        from: from || startOfHour(sub(new Date(), { days: 1 })).toISOString(),
-        to: to || endOfHour(new Date()).toISOString(),
+        from:
+          from || startOfHour(sub(currentDateUTC, { days: 1 })).toISOString(),
+        to: to || endOfHour(sub(currentDateUTC, { hours: 1 })).toISOString(),
         interval: interval || '30m',
       });
 
