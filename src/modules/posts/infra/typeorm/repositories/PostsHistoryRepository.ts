@@ -65,7 +65,13 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     const must = [];
 
     if (author) {
-      must.push({ match: { author } });
+      must.push({
+        term: {
+          'author.keyword': {
+            value: author,
+          },
+        },
+      });
     }
 
     if (deleted) {

@@ -5,7 +5,7 @@ import logger from '../../../services/logger';
 
 import GetUserPostsOnPeriodService from '../../../../modules/posts/services/GetUserPostsOnPeriodService';
 
-export default class UserPostsDataController {
+export default class UserPostsPeriodsController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getUserPostsOnPeriod = new GetUserPostsOnPeriodService();
 
@@ -33,26 +33,15 @@ export default class UserPostsDataController {
         interval: interval || '1d',
       });
 
-      if (!data.body.hits.hits[0]) {
-        return response.status(404).json({ error: 'Not found' });
-      }
-
-      const results = {
-        user: {
-          author: data.body.hits.hits[0]._source.author,
-          author_uid: data.body.hits.hits[0]._source.author_uid,
-        },
-        posts_count: data.body.hits.total.value,
-        intervals: data.body.aggregations.date.buckets,
-      };
-
-      return response.json(results);
+      return response.json(data);
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
-        'Error on UserPostsPeriodController',
+        'Error on UserPostsPeriodsController',
       );
-      return response.status(400).json({ error: 'Something went wrong' });
+      return response
+        .status(400)
+        .json({ result: 400, error: 'Something went wrong' });
     }
   }
 }

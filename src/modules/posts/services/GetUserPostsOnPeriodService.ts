@@ -1,12 +1,23 @@
 import { container } from 'tsyringe';
-import { ApiResponse } from '@elastic/elasticsearch';
 
 import esClient from '../../../shared/services/elastic';
 
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
 
-interface GetUserPostsOnPeriodParams {
+interface Data {
+  key_as_string: string;
+  key: number;
+  doc_cound: number;
+}
+
+interface Response {
+  timed_out: boolean;
+  result: number;
+  data: Data[];
+}
+
+interface Params {
   from: string;
   to: string;
   interval: string;
@@ -15,12 +26,12 @@ interface GetUserPostsOnPeriodParams {
 export default class GetUserPostsOnPeriodService {
   public async execute(
     username: string,
-    { from, to, interval }: GetUserPostsOnPeriodParams,
-  ): Promise<ApiResponse> {
+    { from, to, interval }: Params,
+  ): Promise<Response> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute<ApiResponse>(
+    const cachedData = await getCache.execute<Response>(
       `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
     );
 
@@ -40,8 +51,10 @@ export default class GetUserPostsOnPeriodService {
           bool: {
             must: [
               {
-                match_phrase: {
-                  author: username,
+                term: {
+                  'author.keyword': {
+                    value: username,
+                  },
                 },
               },
               {
@@ -75,13 +88,19 @@ export default class GetUserPostsOnPeriodService {
       },
     });
 
+    const response = {
+      timed_out: results.body.timed_out,
+      result: 200,
+      data: results.body.aggregations.date.buckets,
+    };
+
     await saveCache.execute(
       `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
-      results,
+      response,
       'EX',
       180,
     );
 
-    return results;
+    return response;
   }
 }

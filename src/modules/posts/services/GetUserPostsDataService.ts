@@ -1,5 +1,4 @@
 import { container } from 'tsyringe';
-import { ApiResponse } from '@elastic/elasticsearch';
 import { getManager } from 'typeorm';
 
 import esClient from '../../../shared/services/elastic';
@@ -7,22 +6,41 @@ import esClient from '../../../shared/services/elastic';
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
 
+interface Board {
+  name: string;
+  count: number;
+}
+
+interface Data {
+  author: string;
+  author_uid: number;
+  posts_count_total: number;
+  posts_count_with_boards: number;
+  boards: Board[];
+}
+
+interface Response {
+  timed_out: boolean;
+  result: number;
+  data: Data;
+}
+
 export default class GetUserPostsDataService {
   public async execute(
     username: string,
     from: string,
     to: string,
-  ): Promise<ApiResponse> {
+  ): Promise<Response> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    // const cachedData = await getCache.execute<ApiResponse>(
-    //   `userPostsData:${username}:${from}:${to}`,
-    // );
+    const cachedData = await getCache.execute<Response>(
+      `userPostsData:${username}:${from}:${to}`,
+    );
 
-    // if (cachedData) {
-    //   return cachedData;
-    // }
+    if (cachedData) {
+      return cachedData;
+    }
 
     const results = await esClient.search({
       index: 'posts',
@@ -34,8 +52,10 @@ export default class GetUserPostsDataService {
           bool: {
             must: [
               {
-                match_phrase: {
-                  author: username,
+                term: {
+                  'author.keyword': {
+                    value: username,
+                  },
                 },
               },
               {
@@ -79,10 +99,9 @@ export default class GetUserPostsDataService {
       }),
     );
 
-    const data = {
-      ...results,
+    const organized = {
       body: {
-        ...results.body,
+        hits: results.body.hits,
         aggregations: {
           boards: {
             sum_other_doc_count:
@@ -93,13 +112,38 @@ export default class GetUserPostsDataService {
       },
     };
 
+    const posts_count_with_boards = organized.body.aggregations.boards.buckets.reduce(
+      (accum: number, curr: { count: number }) => {
+        return accum + curr.count;
+      },
+      0,
+    );
+
+    const data = results.body.hits.hits.length
+      ? {
+          author: organized.body.hits.hits[0]._source.author,
+          author_uid: organized.body.hits.hits[0]._source.author_uid,
+          posts_count_total: organized.body.hits.total.value,
+          posts_count_with_boards:
+            posts_count_with_boards +
+            organized.body.aggregations.boards.sum_other_doc_count,
+          boards: organized.body.aggregations.boards.buckets as Board[],
+        }
+      : null;
+
+    const response = {
+      timed_out: results.body.timed_out,
+      result: 200,
+      data,
+    };
+
     await saveCache.execute(
       `userPostsData:${username}:${from}:${to}`,
-      data,
+      response,
       'EX',
       180,
     );
 
-    return data;
+    return response;
   }
 }
