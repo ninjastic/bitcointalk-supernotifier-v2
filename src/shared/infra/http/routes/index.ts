@@ -16,6 +16,8 @@ import UserMeritsCountController from '../controllers/UserMeritsCountController'
 import UserAddressesController from '../controllers/UserAddressesController';
 import UserInfoController from '../controllers/UserInfoController';
 
+import AlertsController from '../controllers/AlertsController';
+
 const routes = Router();
 
 const postsController = new PostsController();
@@ -31,6 +33,7 @@ const userMeritsCountController = new UserMeritsCountController();
 const userAddressesController = new UserAddressesController();
 const userInfoController = new UserInfoController();
 const postsDataOnPeriodController = new PostsDataOnPeriodController();
+const alertsController = new AlertsController();
 
 routes.get('/posts', postsController.index);
 routes.get('/posts/history', postsHistoryController.index);
@@ -51,5 +54,8 @@ routes.get('/users/:username/merits', userMeritsCountController.show);
 routes.get('/users/:username/addresses', userAddressesController.show);
 
 routes.get('/boards', boardsController.index);
+
+routes.get('/alerts', alertsController.show);
+routes.post('/alerts', alertsController.create);
 
 export default routes;
