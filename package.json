@@ -26,6 +26,7 @@
    "devDependencies": {
       "@commitlint/cli": "^9.1.2",
       "@commitlint/config-conventional": "^9.1.2",
+      "@types/body-parser": "^1.19.0",
       "@types/bull": "^3.14.0",
       "@types/cheerio": "^0.22.21",
       "@types/cors": "^2.8.7",
@@ -69,6 +70,7 @@
       "@elastic/elasticsearch": "^7.9.0",
       "axios": "^0.19.2",
       "bitcoin-address-validation": "^1.0.2",
+      "body-parser": "^1.19.0",
       "bull": "^3.18.0",
       "cheerio": "^1.0.0-rc.3",
       "cors": "^2.8.5",
@@ -86,6 +88,7 @@
       "helmet": "^4.1.0",
       "iconv-lite": "^0.6.2",
       "ioredis": "^4.17.3",
+      "joi": "^17.2.1",
       "node-fetch": "^2.6.1",
       "pg": "^8.3.0",
       "pino": "^6.5.1",

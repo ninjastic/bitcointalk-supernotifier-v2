@@ -3,6 +3,7 @@ import express, { Express } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import bodyParser from 'body-parser';
 
 import '../typeorm';
 import '../../container';
@@ -21,6 +22,7 @@ class Server {
 
   middlewares() {
     this.app.use(helmet());
+    this.app.use(bodyParser.json());
 
     const whitelist = [
       'https://ninjastic.design',
