@@ -52,10 +52,8 @@ export default class GetUserPostsDataService {
           bool: {
             must: [
               {
-                term: {
-                  'author.keyword': {
-                    value: username,
-                  },
+                match: {
+                  author: username,
                 },
               },
               {

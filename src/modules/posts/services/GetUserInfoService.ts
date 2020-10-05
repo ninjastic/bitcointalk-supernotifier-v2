@@ -35,10 +35,8 @@ export default class GetUserInfoService {
       size: 1,
       body: {
         query: {
-          term: {
-            'author.keyword': {
-              value: username,
-            },
+          match: {
+            author: username,
           },
         },
         aggs: {

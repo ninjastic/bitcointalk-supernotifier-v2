@@ -66,10 +66,8 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
 
     if (author) {
       must.push({
-        term: {
-          'author.keyword': {
-            value: author,
-          },
+        match: {
+          author,
         },
       });
     }

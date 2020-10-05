@@ -76,10 +76,8 @@ export default class PostsRepository implements IPostsRepository {
       size: actual_limit,
       body: {
         query: {
-          term: {
-            'author.keyword': {
-              value: author,
-            },
+          match: {
+            author,
           },
         },
         sort: [{ date: { order: 'DESC' } }],
@@ -109,10 +107,8 @@ export default class PostsRepository implements IPostsRepository {
 
     if (author) {
       must.push({
-        term: {
-          'author.keyword': {
-            value: author,
-          },
+        match: {
+          author,
         },
       });
     }

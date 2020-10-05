@@ -51,10 +51,8 @@ export default class GetUserPostsOnPeriodService {
           bool: {
             must: [
               {
-                term: {
-                  'author.keyword': {
-                    value: username,
-                  },
+                match: {
+                  author: username,
                 },
               },
               {
