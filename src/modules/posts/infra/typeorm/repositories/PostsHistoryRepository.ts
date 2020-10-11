@@ -72,7 +72,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       });
     }
 
-    if (deleted) {
+    if (deleted !== undefined) {
       must.push({ match: { deleted } });
     }
 
@@ -115,6 +115,8 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
 
       must.push({ terms: { board_id: boards } });
     }
+
+    console.log(must);
 
     const results = await esClient.search<PostHistory>({
       index: 'posts_history',
