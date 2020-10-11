@@ -116,8 +116,6 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       must.push({ terms: { board_id: boards } });
     }
 
-    console.log(must);
-
     const results = await esClient.search<PostHistory>({
       index: 'posts_history',
       track_total_hits: true,

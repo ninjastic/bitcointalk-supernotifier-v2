@@ -2,6 +2,8 @@ import { Router } from 'express';
 
 import PostsController from '../controllers/PostsController';
 import PostsDataOnPeriodController from '../controllers/PostsDataOnPeriodController';
+import UserTopTopicsController from '../controllers/UserTopTopicsController';
+import BoardsController from '../controllers/BoardsController';
 
 import PostsAddressesController from '../controllers/PostsAddressesController';
 import TopicsController from '../controllers/TopicsController';
@@ -10,7 +12,6 @@ import TopicsAuthorsController from '../controllers/TopicsAuthorsController';
 import AddressesController from '../controllers/AddressesController';
 import AddressAuthorsController from '../controllers/AddressAuthorsController';
 import PostsHistoryController from '../controllers/PostsHistoryController';
-import BoardsController from '../controllers/BoardsController';
 
 import UserPostsBoardsController from '../controllers/UserPostsBoardsController';
 import UserPostsPeriodsController from '../controllers/UserPostsPeriodsController';
@@ -40,6 +41,7 @@ const userInfoController = new UserInfoController();
 const postsDataOnPeriodController = new PostsDataOnPeriodController();
 const alertsController = new AlertsController();
 const webUsersController = new WebUsersController();
+const userTopTopicsController = new UserTopTopicsController();
 
 routes.get('/posts', postsController.index);
 routes.get('/posts/history', postsHistoryController.index);
@@ -59,6 +61,7 @@ routes.get('/users/:username/boards', userPostsBoardsController.show);
 routes.get('/users/:username/posts', userPostsPeriodsController.show);
 routes.get('/users/:username/merits', userMeritsCountController.show);
 routes.get('/users/:username/addresses', userAddressesController.show);
+routes.get('/users/:username/topics', userTopTopicsController.show);
 
 routes.get('/boards', boardsController.index);
 
