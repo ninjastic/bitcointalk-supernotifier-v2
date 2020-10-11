@@ -42,8 +42,14 @@ export default class PostsController {
         { skipScraping: true },
       );
 
+      delete post.notified;
+      delete post.notified_to;
+      delete post.checked;
+      delete post.boards;
+
       if (post.board_id) {
         const boardName = await getBoardNameFromId.execute(post.board_id);
+
         return response.json({ ...post, board_name: boardName });
       }
 
