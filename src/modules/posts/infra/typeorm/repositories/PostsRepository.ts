@@ -49,7 +49,7 @@ export default class PostsRepository implements IPostsRepository {
   public async findPostsByTopicId(topic_id: number): Promise<ApiResponse> {
     const results = await esClient.search<Post>({
       index: 'posts',
-      scroll: '1m',
+      track_total_hits: true,
       size: 5000,
       body: {
         query: {

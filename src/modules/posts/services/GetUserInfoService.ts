@@ -13,7 +13,7 @@ interface Data {
 
 interface Response {
   timed_out: boolean;
-  result: number;
+  result: string;
   data: Data | null;
 }
 
@@ -51,7 +51,7 @@ export default class GetUserInfoService {
 
     const response = {
       timed_out: results.body.timed_out,
-      result: results.body.hits.hits.length ? 200 : 404,
+      result: 'success',
       data: results.body.hits.hits.length
         ? {
             author: results.body.hits.hits[0]._source.author,

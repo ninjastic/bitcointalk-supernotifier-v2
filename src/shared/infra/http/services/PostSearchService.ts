@@ -1,5 +1,4 @@
 import { inject, injectable } from 'tsyringe';
-import { ApiResponse } from '@elastic/elasticsearch';
 
 import IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
 
@@ -25,10 +24,10 @@ export default class PostSearchService {
     }: IFindPostsConditionsDTO,
     limit: number,
     post_id_order?: 'ASC' | 'DESC',
-  ): Promise<ApiResponse> {
+  ): Promise<any> {
     const actual_limit = Math.min(limit || 20, 200);
 
-    return this.postsRepository.findPostsES(
+    const dataRaw = await this.postsRepository.findPostsES(
       {
         author,
         content,
@@ -42,5 +41,34 @@ export default class PostSearchService {
       actual_limit,
       post_id_order,
     );
+
+    const posts = dataRaw.body.hits.hits.map(post => {
+      const postData = post._source;
+
+      return {
+        post_id: postData.post_id,
+        topic_id: postData.topic_id,
+        author: postData.author,
+        author_uid: postData.author_uid,
+        title: postData.title,
+        content: postData.content,
+        date: postData.date,
+        board_id: postData.board_id,
+        archive: postData.archive,
+        created_at: postData.created_at,
+        updated_at: postData.updated_at,
+      };
+    });
+
+    const response = {
+      timed_out: dataRaw.body.timed_out,
+      result: 'success',
+      data: {
+        total_results: dataRaw.body.hits.total.value,
+        posts,
+      },
+    };
+
+    return response;
   }
 }

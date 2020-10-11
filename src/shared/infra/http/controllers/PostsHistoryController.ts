@@ -77,7 +77,9 @@ export default class PostsHistoryController {
       return response.json(postsHistory.body);
     } catch (error) {
       logger.error({ error: error.message, stack: error.stack });
-      return response.status(400).json({ error: 'Something went wrong...' });
+      return response
+        .status(400)
+        .json({ result: 400, error: 'Something went wrong' });
     }
   }
 }

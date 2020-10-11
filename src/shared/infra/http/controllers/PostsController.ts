@@ -103,12 +103,12 @@ export default class PostsController {
 
       const posts = await postSearch.execute(query, limit, queryOrder);
 
-      delete posts.body._shards;
-
-      return response.json(posts.body);
+      return response.json(posts);
     } catch (error) {
       logger.error({ error: error.message, stack: error.stack });
-      return response.status(400).json({ error: 'Something went wrong...' });
+      return response
+        .status(400)
+        .json({ result: 400, error: 'Something went wrong' });
     }
   }
 }

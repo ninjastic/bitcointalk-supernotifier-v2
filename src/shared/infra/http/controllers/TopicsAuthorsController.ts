@@ -3,11 +3,13 @@ import { Request, Response } from 'express';
 
 import logger from '../../../services/logger';
 
-import GetPostsFromTopicIdService from '../../../../modules/posts/services/GetPostsFromTopicIdService';
+import GetAuthorsFromTopicIdService from '../services/GetAuthorsFromTopicIdService';
 
-export default class TopicsController {
+export default class TopicsAuthorsController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getPostsFromTopicId = container.resolve(GetPostsFromTopicIdService);
+    const getAuthorsFromTopicId = container.resolve(
+      GetAuthorsFromTopicIdService,
+    );
 
     const id = Number(request.params.id);
 
@@ -16,7 +18,7 @@ export default class TopicsController {
     }
 
     try {
-      const posts = await getPostsFromTopicId.execute(id);
+      const posts = await getAuthorsFromTopicId.execute(id);
 
       return response.json(posts);
     } catch (error) {

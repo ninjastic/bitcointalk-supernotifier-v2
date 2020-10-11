@@ -78,8 +78,8 @@ export class CreateReports1597894449722 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       DROP TRIGGER increment_daily_posts ON posts;
-      DROP TRIGGER increment_daily_merits ON posts;
-      DROP TRIGGER increment_daily_users ON posts;
+      DROP TRIGGER increment_daily_merits ON merits;
+      DROP TRIGGER increment_daily_users ON users;
     `);
 
     await queryRunner.query(`

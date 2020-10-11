@@ -21,7 +21,7 @@ interface Data {
 
 interface Response {
   timed_out: boolean;
-  result: number;
+  result: string;
   data: Data;
 }
 
@@ -131,7 +131,7 @@ export default class GetUserPostsDataService {
 
     const response = {
       timed_out: results.body.timed_out,
-      result: 200,
+      result: 'success',
       data,
     };
 

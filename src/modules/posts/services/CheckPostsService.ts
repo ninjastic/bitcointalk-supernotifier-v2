@@ -5,12 +5,14 @@ import cacheConfig from '../../../config/cache';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
+import IWebUsersRepository from '../../web/repositories/IWebUsersRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import SetPostCheckedService from './SetPostCheckedService';
 import GetTrackedTopicsService from './GetTrackedTopicsService';
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
 import GetIgnoredTopicsService from './GetIgnoredTopicsService';
+import CreateWebNotificationService from '../../web/services/CreateWebNotificationService';
 
 @injectable()
 export default class CheckPostsService {
@@ -21,12 +23,16 @@ export default class CheckPostsService {
     @inject('UsersRepository')
     private usersRepository: IUsersRepository,
 
+    @inject('WebUsersRepository')
+    private webUsersRepository: IWebUsersRepository,
+
     @inject('CacheRepository')
     private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute(): Promise<void> {
     const posts = await this.postsRepository.findLatestUncheckedPosts(30);
+    const webUsers = await this.webUsersRepository.findAll();
     const users = await this.usersRepository.getUsersWithMentions();
 
     const getTrackedTopics = container.resolve(GetTrackedTopicsService);
@@ -38,6 +44,9 @@ export default class CheckPostsService {
     const ignoredTopics = await getIgnoredTopics.execute();
 
     const setPostChecked = container.resolve(SetPostCheckedService);
+    const createWebNotification = container.resolve(
+      CreateWebNotificationService,
+    );
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
@@ -46,6 +55,8 @@ export default class CheckPostsService {
 
     await Promise.all(
       posts.map(async post => {
+        await setPostChecked.execute(post.post_id);
+
         await Promise.all(
           trackedTopics.map(async trackedTopic => {
             if (trackedTopic.topic_id !== post.topic_id) {
@@ -179,8 +190,29 @@ export default class CheckPostsService {
             return queue.add('sendMentionNotification', { post, user });
           }),
         );
+      }),
+    );
 
-        return setPostChecked.execute(post.post_id);
+    await Promise.all(
+      posts.map(async post => {
+        await Promise.all(
+          webUsers.map(async webUser => {
+            if (post.author.toLowerCase() === webUser.username.toLowerCase()) {
+              return Promise.resolve();
+            }
+
+            const usernameRegex = new RegExp(`\\b${webUser.username}\\b`, 'gi');
+
+            if (!post.content.match(usernameRegex)) {
+              return Promise.resolve();
+            }
+
+            return createWebNotification.execute({
+              user_id: webUser.id,
+              post_id: post.post_id,
+            });
+          }),
+        );
       }),
     );
 

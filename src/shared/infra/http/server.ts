@@ -46,7 +46,7 @@ class Server {
 
     const limiter = rateLimit({
       windowMs: 1 * 60 * 1000,
-      max: 300,
+      max: 100,
     });
 
     this.app.use(limiter);

@@ -3,7 +3,6 @@ import { Request, Response } from 'express';
 
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
-import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
 export default class AlertsController {
   public async show(request: Request, response: Response): Promise<Response> {
@@ -12,9 +11,9 @@ export default class AlertsController {
     const alert = await getCache.execute('alertMessage');
 
     const data = {
-        result: 200,
-        data: alert,
-      };
+      result: 'success',
+      data: alert,
+    };
 
     return response.json(data);
   }
@@ -22,14 +21,14 @@ export default class AlertsController {
   public async create(request: Request, response: Response): Promise<Response> {
     const saveCache = container.resolve(SaveCacheService);
 
-    const message = request.body.message;
+    const { message } = request.body;
 
-    const alert = await saveCache.execute('alertMessage', message);
+    await saveCache.execute('alertMessage', message);
 
     const data = {
-        result: 200,
-        data: message,
-      };
+      result: 'success',
+      data: message,
+    };
 
     return response.json(data);
   }

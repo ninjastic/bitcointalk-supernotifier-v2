@@ -3,9 +3,11 @@ import { Router } from 'express';
 import PostsController from '../controllers/PostsController';
 import PostsDataOnPeriodController from '../controllers/PostsDataOnPeriodController';
 
-import AddressesController from '../controllers/AddressesController';
 import PostsAddressesController from '../controllers/PostsAddressesController';
 import TopicsController from '../controllers/TopicsController';
+import TopicsAuthorsController from '../controllers/TopicsAuthorsController';
+
+import AddressesController from '../controllers/AddressesController';
 import AddressAuthorsController from '../controllers/AddressAuthorsController';
 import PostsHistoryController from '../controllers/PostsHistoryController';
 import BoardsController from '../controllers/BoardsController';
@@ -18,12 +20,15 @@ import UserInfoController from '../controllers/UserInfoController';
 
 import AlertsController from '../controllers/AlertsController';
 
+import WebUsersController from '../controllers/WebUsersController';
+
 const routes = Router();
 
 const postsController = new PostsController();
 const addressesController = new AddressesController();
 const postsAddressesController = new PostsAddressesController();
 const topicsController = new TopicsController();
+const topicsAuthorsController = new TopicsAuthorsController();
 const addressAuthorsController = new AddressAuthorsController();
 const postsHistoryController = new PostsHistoryController();
 const boardsController = new BoardsController();
@@ -34,10 +39,12 @@ const userAddressesController = new UserAddressesController();
 const userInfoController = new UserInfoController();
 const postsDataOnPeriodController = new PostsDataOnPeriodController();
 const alertsController = new AlertsController();
+const webUsersController = new WebUsersController();
 
 routes.get('/posts', postsController.index);
 routes.get('/posts/history', postsHistoryController.index);
 routes.get('/posts/count', postsDataOnPeriodController.show);
+routes.get('/posts/topic/:id/authors', topicsAuthorsController.show);
 routes.get('/posts/topic/:id', topicsController.show);
 routes.get('/posts/:ids', postsController.show);
 routes.get('/posts/:id/history', postsHistoryController.show);
@@ -57,5 +64,8 @@ routes.get('/boards', boardsController.index);
 
 routes.get('/alerts', alertsController.show);
 routes.post('/alerts', alertsController.create);
+
+routes.get('/webUsers/:user_id', webUsersController.index);
+routes.post('/webUsers', webUsersController.create);
 
 export default routes;
