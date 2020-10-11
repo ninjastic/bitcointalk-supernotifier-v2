@@ -23,6 +23,9 @@ export default class ScrapePostForChangesService {
     const savedPost = await getPost.execute({ post_id }, { skipCache: true });
 
     if (!currentPost.title) {
+      delete savedPost.created_at;
+      delete savedPost.updated_at;
+
       const postHistory = this.postsHistoryRepository.create({
         ...savedPost,
         deleted: true,

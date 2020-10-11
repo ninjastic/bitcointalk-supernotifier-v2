@@ -118,7 +118,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
 
     const results = await esClient.search<PostHistory>({
       index: 'posts_history',
-      scroll: '1m',
+      track_total_hits: true,
       size: limit,
       body: {
         query: {
