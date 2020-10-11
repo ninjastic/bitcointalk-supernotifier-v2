@@ -15,6 +15,10 @@ class TelegramQueue {
   constructor() {
     this.instance = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
+      limiter: {
+        max: 1,
+        duration: 200,
+      },
       defaultJobOptions: {
         attempts: 2,
         removeOnComplete: true,

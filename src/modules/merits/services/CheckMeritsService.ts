@@ -33,8 +33,8 @@ export default class CheckMeritsService {
       defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
       limiter: {
         max: 1,
-        duration: 900
-      }
+        duration: 900,
+      },
     });
 
     await Promise.all(
