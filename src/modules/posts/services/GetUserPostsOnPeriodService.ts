@@ -5,33 +5,19 @@ import esClient from '../../../shared/services/elastic';
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
 
-interface Data {
-  key_as_string: string;
-  key: number;
-  doc_cound: number;
-}
-
-interface Response {
-  timed_out: boolean;
-  result: number;
-  data: Data[];
-}
-
 interface Params {
+  username: string;
   from: string;
   to: string;
   interval: string;
 }
 
 export default class GetUserPostsOnPeriodService {
-  public async execute(
-    username: string,
-    { from, to, interval }: Params,
-  ): Promise<Response> {
+  public async execute({ username, from, to, interval }: Params): Promise<any> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute<Response>(
+    const cachedData = await getCache.execute<any>(
       `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
     );
 
@@ -86,19 +72,15 @@ export default class GetUserPostsOnPeriodService {
       },
     });
 
-    const response = {
-      timed_out: results.body.timed_out,
-      result: 200,
-      data: results.body.aggregations.date.buckets,
-    };
+    const data = results.body.aggregations.date.buckets;
 
     await saveCache.execute(
       `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
-      response,
+      data,
       'EX',
       180,
     );
 
-    return response;
+    return data;
   }
 }

@@ -33,11 +33,11 @@ export default class CheckPostsService {
       lastId = await this.addressesRepository.findLatestPostId();
     }
 
-    const posts = await this.postsRepository.findPosts(
-      { after: lastId || 0 },
-      150,
-      'ASC',
-    );
+    const posts = await this.postsRepository.findPosts({
+      after: lastId || 0,
+      limit: 150,
+      order: 'ASC',
+    });
 
     const addressesGroup = await Promise.all(
       posts

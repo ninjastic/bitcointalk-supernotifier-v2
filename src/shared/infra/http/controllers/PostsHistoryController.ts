@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import { Request, Response } from 'express';
+import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
@@ -16,70 +17,106 @@ export default class PostsHistoryController {
       GetNextPostChangeCheckService,
     );
 
-    const { id } = request.params;
+    const params = (request.params as unknown) as { post_id: number };
 
-    const postHistory = await getPostsHistoryByPostId.execute(Number(id));
-    const next_check = await getNextPostChangeCheck.execute(Number(id));
+    const schemaValidation = Joi.object({
+      post_id: Joi.number().required(),
+    });
 
-    if (!postHistory) {
-      if (!next_check) {
-        return response.status(404).json({ error: 'Not found' });
-      }
-
-      return response.json({ next_check });
+    try {
+      await schemaValidation.validateAsync(params);
+    } catch (error) {
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
+      });
     }
 
-    return response.json({ ...postHistory, next_check: next_check || null });
+    try {
+      const postHistory = await getPostsHistoryByPostId.execute(params);
+      const nextCheck = await getNextPostChangeCheck.execute(params);
+
+      if (postHistory) {
+        delete postHistory.boards;
+        delete postHistory.version;
+        delete postHistory.notified;
+        delete postHistory.notified_to;
+        delete postHistory.checked;
+      }
+
+      return response.json({
+        result: 'success',
+        message: null,
+        data: {
+          next_check: nextCheck || null,
+          post_history: postHistory ? [{ ...postHistory }] : [],
+        },
+      });
+    } catch (error) {
+      logger.error(
+        { error: error.message, stack: error.stack },
+        'Error on PostsHistoryController',
+      );
+      return response
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
+    }
   }
 
   public async index(request: Request, response: Response): Promise<Response> {
-    const {
-      author,
-      topic_id,
-      deleted,
-      last,
-      board,
-      after_date,
-      before_date,
-    } = request.query;
     const getLatestPostHistory = container.resolve(GetLatestPostHistoryService);
 
-    const limit = Number(request.query.limit);
+    const schemaValidation = Joi.object({
+      author: Joi.string().allow('', null),
+      content: Joi.string().allow('', null),
+      topic_id: Joi.number().allow('', null),
+      board: Joi.number().allow('', null),
+      deleted: Joi.valid('1', '0', 'true', 'false'),
+      last: Joi.string().isoDate().allow('', null),
+      after: Joi.string().isoDate().allow('', null),
+      after_date: Joi.string().isoDate().allow('', null),
+      before_date: Joi.string().isoDate().allow('', null),
+      limit: Joi.number().allow('', null),
+      order: Joi.string().valid('ASC', 'DESC').insensitive(),
+    });
+
+    try {
+      await schemaValidation.validateAsync(request.query);
+    } catch (error) {
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
+      });
+    }
 
     const query = {
-      author: author ? String(author) : undefined,
-      topic_id: topic_id ? Number(topic_id) : undefined,
-      last: last ? new Date(String(last)) : undefined,
-      board: board ? Number(board) : undefined,
-      deleted: deleted
-        ? !!(String(deleted) === 'true' || String(deleted) === '1')
-        : undefined,
-      after_date: after_date ? String(after_date) : undefined,
-      before_date: before_date ? String(before_date) : undefined,
+      ...request.query,
+      deleted: !!(
+        request.query.deleted === '1' ||
+        String(request.query.deleted).toLowerCase() === 'true'
+      ),
     };
 
     try {
-      if (topic_id && Number.isNaN(Number(topic_id))) {
-        throw new Error('topic_id is invalid');
-      }
+      const data = await getLatestPostHistory.execute(query);
 
-      if (board && Number.isNaN(Number(board))) {
-        throw new Error('board is invalid');
-      }
+      const result = {
+        result: 'success',
+        message: null,
+        data,
+      };
 
-      const postsHistory = await getLatestPostHistory.execute({
-        ...query,
-        limit,
-      });
-
-      delete postsHistory.body._shards;
-
-      return response.json(postsHistory.body);
+      return response.json(result);
     } catch (error) {
-      logger.error({ error: error.message, stack: error.stack });
+      logger.error(
+        { error: error.message, stack: error.stack },
+        'Error on PostsHistoryController',
+      );
       return response
-        .status(400)
-        .json({ result: 400, error: 'Something went wrong' });
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

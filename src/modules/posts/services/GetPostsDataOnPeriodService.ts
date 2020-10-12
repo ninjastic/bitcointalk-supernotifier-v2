@@ -1,5 +1,4 @@
 import { container } from 'tsyringe';
-import { ApiResponse } from '@elastic/elasticsearch';
 
 import esClient from '../../../shared/services/elastic';
 
@@ -17,11 +16,11 @@ export default class GetPostsDataOnPeriodService {
     from,
     to,
     interval,
-  }: GetPostsDataOnPeriodParams): Promise<ApiResponse> {
+  }: GetPostsDataOnPeriodParams): Promise<any> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute<ApiResponse>(
+    const cachedData = await getCache.execute(
       `postsDataOnPeriod:${from}-${to}-${interval}`,
     );
 
@@ -31,8 +30,8 @@ export default class GetPostsDataOnPeriodService {
 
     const results = await esClient.search({
       index: 'posts',
-      scroll: '1m',
-      size: 1,
+      track_total_hits: true,
+      size: 0,
       body: {
         size: 0,
         query: {
@@ -63,13 +62,15 @@ export default class GetPostsDataOnPeriodService {
       },
     });
 
+    const data = results.body.aggregations.date.buckets;
+
     await saveCache.execute(
       `postsDataOnPeriod:${from}-${to}-${interval}`,
-      results,
+      data,
       'EX',
       180,
     );
 
-    return results;
+    return data;
   }
 }

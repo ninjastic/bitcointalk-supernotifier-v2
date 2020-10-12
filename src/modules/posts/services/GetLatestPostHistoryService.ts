@@ -12,15 +12,12 @@ export default class GetLatestPostHistoryService {
     private postsHistoryRepository: IPostsHistoryRepository,
   ) {}
 
-  public async execute({
-    limit,
-    ...rest
-  }: IFindAllPostsHistoryDTO): Promise<ApiResponse> {
-    const actual_limit = Math.min(limit || 20, 200);
+  public async execute(query: IFindAllPostsHistoryDTO): Promise<ApiResponse> {
+    const limit = Math.min(query.limit || 20, 200);
 
     return this.postsHistoryRepository.findAll({
-      limit: actual_limit,
-      ...rest,
+      ...query,
+      limit,
     });
   }
 }

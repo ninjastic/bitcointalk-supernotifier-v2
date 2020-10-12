@@ -10,7 +10,9 @@ export default class GetAddressesByPostIdService {
     private addressesRepository: IAddressesRepository,
   ) {}
 
-  public async execute(post_id: number): Promise<Address[]> {
-    return this.addressesRepository.findByPostId(post_id);
+  public async execute({ post_id }: { post_id: number }): Promise<any> {
+    const results = await this.addressesRepository.findByPostId(post_id);
+
+    return results;
   }
 }

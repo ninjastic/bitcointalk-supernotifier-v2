@@ -1,11 +1,7 @@
 import esClient from '../../../services/elastic';
 
 export default class GetAuthorsFromTopicIdService {
-  public async execute(topic_id: number): Promise<any> {
-    if (Number.isNaN(topic_id)) {
-      throw new Error('topic_id is invalid');
-    }
-
+  public async execute({ topic_id }: { topic_id: number }): Promise<any> {
     const dataRaw = await esClient.search({
       index: 'posts',
       size: 0,
@@ -42,12 +38,6 @@ export default class GetAuthorsFromTopicIdService {
       };
     });
 
-    const response = {
-      timed_out: dataRaw.body.timed_out,
-      result: 'success',
-      data,
-    };
-
-    return response;
+    return data;
   }
 }

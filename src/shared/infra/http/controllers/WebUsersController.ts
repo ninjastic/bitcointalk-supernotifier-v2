@@ -30,6 +30,7 @@ export default class WebUsersRepository {
 
     return response.json({
       result: 'success',
+      message: null,
       data,
     });
   }
@@ -71,6 +72,7 @@ export default class WebUsersRepository {
 
     return response.json({
       result: 'success',
+      message: null,
       data: createdWebUser,
     });
   }

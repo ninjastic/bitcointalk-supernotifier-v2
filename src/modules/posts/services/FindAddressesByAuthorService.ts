@@ -24,16 +24,16 @@ export default class FindAddressesByAuthorService {
   }: IFindAddressesByAuthorDTO): Promise<any[]> {
     const actual_limit = Math.min(limit || 20, 200);
 
-    const cached = await this.cacheRepository.recover<any[]>(
+    const cachedData = await this.cacheRepository.recover<any[]>(
       `userAddresses:${username}:${last_address}:${last_created_at}:${last_id}:${limit}`,
     );
 
-    if (cached) {
-      return cached;
+    if (cachedData) {
+      return cachedData;
     }
 
     const data = await this.addressesRepository.findAddressesByAuthor({
-      username,
+      username: username.toLowerCase(),
       limit: actual_limit,
       last_address,
       last_created_at,
@@ -44,7 +44,7 @@ export default class FindAddressesByAuthorService {
       `userAddresses:${username}:${last_address}:${last_created_at}:${last_id}:${limit}`,
       data,
       'EX',
-      300,
+      240,
     );
 
     return data;

@@ -18,7 +18,7 @@ interface Response {
 }
 
 export default class GetUserInfoService {
-  public async execute(username: string): Promise<Response> {
+  public async execute({ username }: { username: string }): Promise<any> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
@@ -49,20 +49,14 @@ export default class GetUserInfoService {
       },
     });
 
-    const response = {
-      timed_out: results.body.timed_out,
-      result: 'success',
-      data: results.body.hits.hits.length
-        ? {
-            author: results.body.hits.hits[0]._source.author,
-            author_uid: results.body.hits.hits[0]._source.author_uid,
-            posts_count: results.body.hits.total.value,
-          }
-        : null,
+    const data = {
+      author: results.body.hits.hits[0]._source.author,
+      author_uid: results.body.hits.hits[0]._source.author_uid,
+      posts_count: results.body.hits.total.value,
     };
 
-    await saveCache.execute(`userInfo:${username}`, response, 'EX', 180);
+    await saveCache.execute(`userInfo:${username}`, data, 'EX', 180);
 
-    return response;
+    return data;
   }
 }

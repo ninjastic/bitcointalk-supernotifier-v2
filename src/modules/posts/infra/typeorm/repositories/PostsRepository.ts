@@ -1,5 +1,5 @@
 import { Repository, MoreThanOrEqual, getRepository } from 'typeorm';
-import { sub, isValid } from 'date-fns';
+import { sub } from 'date-fns';
 import { ApiResponse } from '@elastic/elasticsearch';
 
 import esClient from '../../../../../shared/services/elastic';
@@ -50,7 +50,6 @@ export default class PostsRepository implements IPostsRepository {
     const results = await esClient.search<Post>({
       index: 'posts',
       track_total_hits: true,
-      size: 5000,
       body: {
         query: {
           match: {
@@ -89,18 +88,18 @@ export default class PostsRepository implements IPostsRepository {
 
   public async findPostsES(
     conditions: IFindPostsConditionsDTO,
-    limit: number,
-    post_id_order?: 'ASC' | 'DESC',
   ): Promise<ApiResponse<Post>> {
     const {
       author,
       content,
       topic_id,
+      board,
       last,
       after,
-      board,
       after_date,
       before_date,
+      limit,
+      order,
     } = conditions;
 
     const must = [];
@@ -122,44 +121,26 @@ export default class PostsRepository implements IPostsRepository {
     }
 
     if (topic_id) {
-      if (Number.isNaN(topic_id)) {
-        throw new Error('topic_id is invalid');
-      }
-
       must.push({ match: { topic_id } });
     }
 
     if (last || after) {
-      if (last && Number.isNaN(last)) {
-        throw new Error('last is invalid');
-      }
-
-      if (after && Number.isNaN(after)) {
-        throw new Error('after is invalid');
-      }
-
-      must.push({ range: { post_id: { gt: after, lt: last } } });
+      must.push({
+        range: {
+          post_id: {
+            gt: Number(after) ? after : null,
+            lt: Number(last) ? last : null,
+          },
+        },
+      });
     }
 
     if (after_date || before_date) {
-      if (after_date && !isValid(new Date(after_date))) {
-        throw new Error('after_date is invalid');
-      }
-
-      if (before_date && !isValid(new Date(before_date))) {
-        throw new Error('after_date is invalid');
-      }
-
       must.push({ range: { date: { gte: after_date, lte: before_date } } });
     }
 
     if (board) {
-      if (Number.isNaN(last)) {
-        throw new Error('board is invalid');
-      }
-
       const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
-
       const boards = await getBoardChildrensFromId.execute(board);
 
       must.push({ terms: { board_id: boards } });
@@ -175,18 +156,14 @@ export default class PostsRepository implements IPostsRepository {
             must,
           },
         },
-        sort: [{ date: { order: post_id_order || 'DESC' } }],
+        sort: [{ date: { order: order || 'DESC' } }],
       },
     });
 
     return results;
   }
 
-  public async findPosts(
-    conditions: IFindPostsConditionsDTO,
-    limit: number,
-    post_id_order?: 'ASC' | 'DESC',
-  ): Promise<Post[]> {
+  public async findPosts(conditions: IFindPostsConditionsDTO): Promise<Post[]> {
     const {
       author,
       topic_id,
@@ -194,6 +171,8 @@ export default class PostsRepository implements IPostsRepository {
       after,
       after_date,
       before_date,
+      limit,
+      order,
     } = conditions;
 
     return this.ormRepository
@@ -225,7 +204,7 @@ export default class PostsRepository implements IPostsRepository {
       .andWhere(before_date ? `date <= :before_date` : '1=1', {
         before_date,
       })
-      .addOrderBy('post_id', post_id_order || 'DESC')
+      .addOrderBy('post_id', order || 'DESC')
       .limit(limit)
       .getMany();
   }
@@ -250,16 +229,10 @@ export default class PostsRepository implements IPostsRepository {
       .execute();
   }
 
-  public async findPostsFromListES(posts_id: number[]): Promise<ApiResponse> {
-    const ids = [];
-
-    posts_id.forEach(post_id => {
-      ids.push(post_id);
-    });
-
+  public async findPostsFromListES(ids: number[]): Promise<any> {
     const results = await esClient.search({
       index: 'posts',
-      scroll: '1m',
+      track_total_hits: true,
       size: ids.length,
       body: {
         query: {
@@ -271,6 +244,24 @@ export default class PostsRepository implements IPostsRepository {
       },
     });
 
-    return results;
+    const data = results.body.hits.hits.map(post => {
+      const postData = post._source;
+
+      return {
+        post_id: postData.post_id,
+        topic_id: postData.topic_id,
+        author: postData.author,
+        author_uid: postData.author_uid,
+        title: postData.title,
+        content: postData.content,
+        date: postData.date,
+        board_id: postData.board_id,
+        archive: postData.archive,
+        created_at: postData.created_at,
+        updated_at: postData.updated_at,
+      };
+    });
+
+    return data;
   }
 }

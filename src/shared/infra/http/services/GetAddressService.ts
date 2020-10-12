@@ -1,6 +1,5 @@
 import { injectable, inject } from 'tsyringe';
 
-import Address from 'modules/posts/infra/typeorm/entities/Address';
 import IAddressesRepository from '../../../../modules/posts/repositories/IAddressesRepository';
 
 @injectable()
@@ -10,7 +9,9 @@ export default class GetAddressService {
     private addressesRepository: IAddressesRepository,
   ) {}
 
-  public async execute(address: string): Promise<Address> {
-    return this.addressesRepository.findOneByAddress(address);
+  public async execute({ address }: { address: string }): Promise<any> {
+    const results = await this.addressesRepository.findOneByAddress(address);
+
+    return results;
   }
 }

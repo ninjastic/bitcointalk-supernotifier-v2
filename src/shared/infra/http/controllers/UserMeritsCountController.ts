@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import { Request, Response } from 'express';
+import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
@@ -11,22 +12,42 @@ export default class UserMeritsCountController {
       GetUserMeritCountOnPeriodService,
     );
 
-    const { username } = request.params;
+    const params = (request.params as unknown) as {
+      username: string;
+    };
+
+    const schemaValidation = Joi.object({
+      username: Joi.string().required(),
+    });
 
     try {
-      const data = await getUserMeritCountOnPeriod.execute(username);
+      await schemaValidation.validateAsync(params);
+    } catch (error) {
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
+      });
+    }
 
-      if (!data.length) {
-        return response.status(404).json({ error: 'Not found' });
-      }
+    try {
+      const data = await getUserMeritCountOnPeriod.execute(params);
 
-      return response.json(data);
+      const result = {
+        result: 'success',
+        message: null,
+        data,
+      };
+
+      return response.json(result);
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
         'Error on UserMeritsDataController',
       );
-      return response.status(400).json({ error: 'Something went wrong' });
+      return response
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

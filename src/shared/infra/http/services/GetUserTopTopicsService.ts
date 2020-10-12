@@ -1,11 +1,13 @@
 import esClient from '../../../services/elastic';
 
+interface Params {
+  username: string;
+  from?: string;
+  to?: string;
+}
+
 export default class GetUserTopTopicsService {
-  public async execute(
-    username: string,
-    from?: string,
-    to?: string,
-  ): Promise<any> {
+  public async execute({ username, from, to }: Params): Promise<any> {
     const dataRaw = await esClient.search({
       index: 'posts',
       size: 0,
@@ -61,12 +63,6 @@ export default class GetUserTopTopicsService {
       };
     });
 
-    const response = {
-      timed_out: dataRaw.body.timed_out,
-      result: 'success',
-      data,
-    };
-
-    return response;
+    return data;
   }
 }

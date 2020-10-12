@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
+import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
@@ -9,37 +10,57 @@ export default class PostsDataOnPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getPostsDataOnPeriod = new GetPostsDataOnPeriodService();
 
+    const date = new Date();
+    const dateUTC = addMinutes(date, date.getTimezoneOffset());
+
     const { from, to, interval } = request.query as {
       from: string;
       to: string;
       interval: string;
     };
 
-    const currentDate = new Date();
-    const currentDateUTC = addMinutes(
-      currentDate,
-      currentDate.getTimezoneOffset(),
-    );
+    const query = {
+      from: from || startOfHour(sub(dateUTC, { days: 1 })).toISOString(),
+      to: to || endOfHour(sub(dateUTC, { hours: 1 })).toISOString(),
+      interval: interval || '30m',
+    };
+
+    const schemaValidation = Joi.object({
+      from: Joi.string().isoDate().allow('', null),
+      to: Joi.string().isoDate().allow('', null),
+      interval: Joi.string()
+        .regex(/^\d{0,3}(d|h|m)$/)
+        .allow('', null),
+    });
 
     try {
-      const data = await getPostsDataOnPeriod.execute({
-        from:
-          from || startOfHour(sub(currentDateUTC, { days: 1 })).toISOString(),
-        to: to || endOfHour(sub(currentDateUTC, { hours: 1 })).toISOString(),
-        interval: interval || '30m',
+      await schemaValidation.validateAsync(query);
+    } catch (error) {
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
       });
+    }
 
-      if (!data.body.aggregations.date.buckets.length) {
-        return response.status(404).json({ error: 'Not found' });
-      }
+    try {
+      const data = await getPostsDataOnPeriod.execute(query);
 
-      return response.json(data.body.aggregations.date.buckets);
+      const result = {
+        result: 'success',
+        message: null,
+        data,
+      };
+
+      return response.json(result);
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
         'Error on PostsDataOnPeriodController',
       );
-      return response.status(400).json({ error: 'Something went wrong' });
+      return response
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

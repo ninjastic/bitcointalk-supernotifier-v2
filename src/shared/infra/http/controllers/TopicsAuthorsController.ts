@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import { Request, Response } from 'express';
+import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
@@ -11,24 +12,40 @@ export default class TopicsAuthorsController {
       GetAuthorsFromTopicIdService,
     );
 
-    const id = Number(request.params.id);
+    const params = (request.params as unknown) as { topic_id: number };
 
-    if (Number.isNaN(id)) {
-      return response.status(400).json({ error: 'id is invalid' });
+    const schemaValidation = Joi.object({
+      topic_id: Joi.number().allow('', null),
+    });
+
+    try {
+      await schemaValidation.validateAsync(request.params);
+    } catch (error) {
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
+      });
     }
 
     try {
-      const posts = await getAuthorsFromTopicId.execute(id);
+      const data = await getAuthorsFromTopicId.execute(params);
 
-      return response.json(posts);
+      const result = {
+        result: 'success',
+        message: null,
+        data,
+      };
+
+      return response.json(result);
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
         'Error on TopicsController',
       );
       return response
-        .status(400)
-        .json({ result: 400, error: 'Something went wrong' });
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

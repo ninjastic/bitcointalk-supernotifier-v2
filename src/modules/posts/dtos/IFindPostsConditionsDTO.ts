@@ -3,8 +3,10 @@ export default interface IFindPostsConditionsDTO {
   content?: string;
   topic_id?: number;
   board?: number;
-  after_date?: string;
-  before_date?: string;
   last?: number;
   after?: number;
+  after_date?: string;
+  before_date?: string;
+  limit: number;
+  order?: 'ASC' | 'DESC';
 }

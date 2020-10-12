@@ -12,11 +12,8 @@ export default class GetPostsService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute(
-    conditions: IFindPostsConditionsDTO,
-    limit?: number,
-  ): Promise<Post[]> {
-    const posts = await this.postsRepository.findPosts(conditions, limit);
+  public async execute(conditions: IFindPostsConditionsDTO): Promise<Post[]> {
+    const posts = await this.postsRepository.findPosts(conditions);
 
     return posts;
   }

@@ -9,14 +9,10 @@ export default class GetPostsFromTopicIdService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute(topic_id: number): Promise<any> {
-    if (Number.isNaN(topic_id)) {
-      throw new Error('topic_id is invalid');
-    }
+  public async execute({ topic_id }: { topic_id: number }): Promise<any> {
+    const results = await this.postsRepository.findPostsByTopicId(topic_id);
 
-    const dataRaw = await this.postsRepository.findPostsByTopicId(topic_id);
-
-    const data = dataRaw.body.hits.hits.map(post => {
+    const data = results.body.hits.hits.map(post => {
       const postData = post._source;
 
       return {
@@ -34,12 +30,6 @@ export default class GetPostsFromTopicIdService {
       };
     });
 
-    const response = {
-      timed_out: dataRaw.body.timed_out,
-      result: 'success',
-      data,
-    };
-
-    return response;
+    return data;
   }
 }

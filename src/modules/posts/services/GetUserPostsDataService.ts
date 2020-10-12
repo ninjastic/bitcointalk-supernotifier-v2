@@ -6,35 +6,18 @@ import esClient from '../../../shared/services/elastic';
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
 
-interface Board {
-  name: string;
-  count: number;
-}
-
-interface Data {
-  author: string;
-  author_uid: number;
-  posts_count_total: number;
-  posts_count_with_boards: number;
-  boards: Board[];
-}
-
-interface Response {
-  timed_out: boolean;
-  result: string;
-  data: Data;
+interface Params {
+  username: string;
+  from: string;
+  to: string;
 }
 
 export default class GetUserPostsDataService {
-  public async execute(
-    username: string,
-    from: string,
-    to: string,
-  ): Promise<Response> {
+  public async execute({ username, from, to }: Params): Promise<any> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute<Response>(
+    const cachedData = await getCache.execute(
       `userPostsData:${username}:${from}:${to}`,
     );
 
@@ -117,31 +100,21 @@ export default class GetUserPostsDataService {
       0,
     );
 
-    const data = results.body.hits.hits.length
-      ? {
-          author: organized.body.hits.hits[0]._source.author,
-          author_uid: organized.body.hits.hits[0]._source.author_uid,
-          posts_count_total: organized.body.hits.total.value,
-          posts_count_with_boards:
-            posts_count_with_boards +
-            organized.body.aggregations.boards.sum_other_doc_count,
-          boards: organized.body.aggregations.boards.buckets as Board[],
-        }
-      : null;
-
-    const response = {
-      timed_out: results.body.timed_out,
-      result: 'success',
-      data,
+    const data = {
+      total_results: organized.body.hits.total.value,
+      total_results_with_board:
+        posts_count_with_boards +
+        organized.body.aggregations.boards.sum_other_doc_count,
+      boards: organized.body.aggregations.boards.buckets,
     };
 
     await saveCache.execute(
       `userPostsData:${username}:${from}:${to}`,
-      response,
+      data,
       'EX',
       180,
     );
 
-    return response;
+    return data;
   }
 }

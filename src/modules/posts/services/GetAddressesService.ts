@@ -14,10 +14,9 @@ export default class GetAddressService {
 
   public async execute(
     conditions: IFindAddressesConditionsDTO,
-    limit: number,
   ): Promise<Address[]> {
-    const actual_limit = Math.min(limit || 20, 200);
+    const limit = Math.min(conditions.limit || 20, 200);
 
-    return this.addressesRepository.findAddresses(conditions, actual_limit);
+    return this.addressesRepository.findAddresses(conditions, limit);
   }
 }

@@ -1,8 +1,10 @@
-import { inject, injectable } from 'tsyringe';
+import { container, inject, injectable } from 'tsyringe';
+
+import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
 
 import IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
 
-import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
+import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
 @injectable()
 export default class PostSearchService {
@@ -11,39 +13,20 @@ export default class PostSearchService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute(
-    {
-      author,
-      content,
-      topic_id,
-      last,
-      after,
-      board,
-      after_date,
-      before_date,
-    }: IFindPostsConditionsDTO,
-    limit: number,
-    post_id_order?: 'ASC' | 'DESC',
-  ): Promise<any> {
-    const actual_limit = Math.min(limit || 20, 200);
+  public async execute(query: IFindPostsConditionsDTO): Promise<any> {
+    const limit = Math.min(query.limit || 20, 200);
 
-    const dataRaw = await this.postsRepository.findPostsES(
-      {
-        author,
-        content,
-        topic_id,
-        last,
-        after,
-        board,
-        after_date,
-        before_date,
-      },
-      actual_limit,
-      post_id_order,
-    );
+    const results = await this.postsRepository.findPostsES({ ...query, limit });
 
-    const posts = dataRaw.body.hits.hits.map(post => {
-      const postData = post._source;
+    const getBoardsList = container.resolve(GetBoardsListService);
+    const boards = await getBoardsList.execute(true);
+
+    const data = results.body.hits.hits.map(post => {
+      const boardName = boards.find(
+        board => board.board_id === post._source.board_id,
+      )?.name;
+
+      const postData = { ...post._source, board_name: boardName };
 
       return {
         post_id: postData.post_id,
@@ -54,6 +37,7 @@ export default class PostSearchService {
         content: postData.content,
         date: postData.date,
         board_id: postData.board_id,
+        board_name: postData.board_name,
         archive: postData.archive,
         created_at: postData.created_at,
         updated_at: postData.updated_at,
@@ -61,12 +45,8 @@ export default class PostSearchService {
     });
 
     const response = {
-      timed_out: dataRaw.body.timed_out,
-      result: 'success',
-      data: {
-        total_results: dataRaw.body.hits.total.value,
-        posts,
-      },
+      total_results: results.body.hits.total.value,
+      posts: data,
     };
 
     return response;

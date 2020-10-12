@@ -1,5 +1,8 @@
 import { container } from 'tsyringe';
 import { Request, Response } from 'express';
+import Joi from 'joi';
+
+import logger from '../../../services/logger';
 
 import GetAddressesByPostIdService from '../services/GetAddressesByPostIdService';
 
@@ -7,18 +10,40 @@ export default class PostsAddressesController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getAddressesByPostId = container.resolve(GetAddressesByPostIdService);
 
-    const { id } = request.params;
+    const params = (request.params as unknown) as { post_id: number };
 
-    if (Number.isNaN(Number(id))) {
-      return response.status(400).json({ error: 'id is invalid' });
+    const schemaValidation = Joi.object({
+      post_id: Joi.number().required(),
+    });
+
+    try {
+      await schemaValidation.validateAsync(params);
+    } catch (error) {
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
+      });
     }
 
-    const addresses = await getAddressesByPostId.execute(Number(id));
+    try {
+      const data = await getAddressesByPostId.execute(params);
 
-    if (!addresses.length) {
-      return response.status(404).json({ error: 'Not found' });
+      const result = {
+        result: 'success',
+        message: null,
+        data,
+      };
+
+      return response.json(result);
+    } catch (error) {
+      logger.error(
+        { error: error.message, stack: error.stack },
+        'Error on PostsAddressesController',
+      );
+      return response
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
     }
-
-    return response.json(addresses);
   }
 }

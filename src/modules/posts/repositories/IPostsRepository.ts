@@ -12,16 +12,8 @@ export default interface IPostsRepository {
   findLatestUncheckedPosts(limit: number): Promise<Post[]>;
   findPostsByTopicId(topic_id: number): Promise<ApiResponse>;
   findPostsByAuthor(author: string, limit: number): Promise<ApiResponse>;
-  findPosts(
-    conditions: IFindPostsConditionsDTO,
-    limit: number,
-    post_id_order?: 'ASC' | 'DESC',
-  ): Promise<Post[]>;
-  findPostsES(
-    conditions: IFindPostsConditionsDTO,
-    limit: number,
-    post_id_order?: 'ASC' | 'DESC',
-  ): Promise<ApiResponse>;
+  findPosts(conditions: IFindPostsConditionsDTO): Promise<Post[]>;
+  findPostsES(conditions: IFindPostsConditionsDTO): Promise<ApiResponse>;
   findPostsFromList(posts_id: number[]): Promise<Post[]>;
-  findPostsFromListES(posts_id: number[]): Promise<ApiResponse>;
+  findPostsFromListES(posts_id: number[]): Promise<any>;
 }

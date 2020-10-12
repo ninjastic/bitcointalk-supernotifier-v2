@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
@@ -8,29 +9,55 @@ export default class UserPostsBoardsController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getUserPostsData = new GetUserPostsDataService();
 
-    const { username } = request.params;
+    const params = (request.params as unknown) as {
+      username: string;
+    };
 
-    const { from, to } = request.query as {
+    const query = (request.query as unknown) as {
       from: string;
       to: string;
     };
 
-    try {
-      const data = await getUserPostsData.execute(
-        username,
-        from || undefined,
-        to || undefined,
-      );
+    const schemaValidation = Joi.object({
+      username: Joi.string().required(),
+      from: Joi.string().isoDate().allow('', null),
+      to: Joi.string().isoDate().allow('', null),
+    });
 
-      return response.json(data);
+    const settings = {
+      username: params.username,
+      from: query.from || null,
+      to: query.to || null,
+    };
+
+    try {
+      await schemaValidation.validateAsync(settings);
+    } catch (error) {
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
+      });
+    }
+
+    try {
+      const data = await getUserPostsData.execute(settings);
+
+      const result = {
+        result: 'success',
+        message: null,
+        data,
+      };
+
+      return response.json(result);
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
         'Error on UserPostsBoardsController',
       );
       return response
-        .status(400)
-        .json({ result: 400, error: 'Something went wrong' });
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

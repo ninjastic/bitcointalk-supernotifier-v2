@@ -1,6 +1,4 @@
 import { getRepository, Repository } from 'typeorm';
-import { isValid } from 'date-fns';
-import { ApiResponse } from '@elastic/elasticsearch';
 
 import esClient from '../../../../../shared/services/elastic';
 
@@ -48,9 +46,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     });
   }
 
-  public async findAll(
-    conditions: IFindAllPostsHistoryDTO,
-  ): Promise<ApiResponse> {
+  public async findAll(conditions: IFindAllPostsHistoryDTO): Promise<any> {
     const {
       author,
       topic_id,
@@ -72,51 +68,30 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       });
     }
 
-    if (deleted !== undefined) {
+    if (deleted) {
       must.push({ match: { deleted } });
     }
 
     if (topic_id) {
-      if (Number.isNaN(topic_id)) {
-        throw new Error('topic_id is invalid');
-      }
-
       must.push({ match: { topic_id } });
     }
 
     if (last) {
-      if (!isValid(last)) {
-        throw new Error('last is invalid');
-      }
-
       must.push({ range: { created_at: { lt: last } } });
     }
 
     if (after_date || before_date) {
-      if (after_date && !isValid(new Date(after_date))) {
-        throw new Error('after_date is invalid');
-      }
-
-      if (before_date && !isValid(new Date(before_date))) {
-        throw new Error('after_date is invalid');
-      }
-
       must.push({ range: { date: { gte: after_date, lte: before_date } } });
     }
 
     if (board) {
-      if (Number.isNaN(last)) {
-        throw new Error('board is invalid');
-      }
-
       const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
-
       const boards = await getBoardChildrensFromId.execute(board);
 
       must.push({ terms: { board_id: boards } });
     }
 
-    const results = await esClient.search<PostHistory>({
+    const results = await esClient.search({
       index: 'posts_history',
       track_total_hits: true,
       size: limit,
@@ -130,6 +105,29 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       },
     });
 
-    return results;
+    const posts_history = results.body.hits.hits.map(post => {
+      const postData = post._source;
+
+      return {
+        post_id: postData.post_id,
+        topic_id: postData.topic_id,
+        author: postData.author,
+        author_uid: postData.author_uid,
+        title: postData.title,
+        content: postData.content,
+        date: postData.date,
+        board_id: postData.board_id,
+        deleted: postData.deleted,
+        created_at: postData.created_at,
+        updated_at: postData.updated_at,
+      };
+    });
+
+    const data = {
+      total_results: results.body.hits.total.value,
+      posts_history,
+    };
+
+    return data;
   }
 }

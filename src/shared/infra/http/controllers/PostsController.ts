@@ -1,120 +1,93 @@
 import { container } from 'tsyringe';
 import { Request, Response } from 'express';
+import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetPostService from '../../../../modules/posts/services/GetPostService';
+import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
+
 import GetPostsFromListService from '../../../../modules/posts/services/GetPostsFromListService';
-import GetBoardNameFromIdService from '../../../../modules/posts/services/GetBoardNameFromIdService';
 import PostSearchService from '../services/PostSearchService';
 
 export default class PostsController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getPost = container.resolve(GetPostService);
     const getPostsFromList = container.resolve(GetPostsFromListService);
-    const getBoardNameFromId = container.resolve(GetBoardNameFromIdService);
 
-    const { ids } = request.params;
+    const params = (request.params as unknown) as { ids: string };
 
-    if (ids.match(/\d+,/)) {
-      const posts_id = ids.split(',').map(id => Number(id));
+    const ids = params.ids.split(',').map(id => Number(id));
 
-      if (posts_id.some(Number.isNaN)) {
-        return response.status(400).json({ error: 'id list is invalid' });
-      }
-
-      const posts = await getPostsFromList.execute(posts_id);
-
-      if (!posts.body.hits.hits.length) {
-        return response.status(404).json({ error: 'Not found' });
-      }
-
-      return response.json(posts.body.hits.hits);
-    }
-
-    if (Number.isNaN(Number(ids))) {
-      return response.status(400).json({ error: 'id is invalid' });
-    }
+    const schemaValidation = Joi.object({
+      ids: Joi.array().items(Joi.number()),
+    });
 
     try {
-      const post = await getPost.execute(
-        { post_id: Number(ids) },
-        { skipScraping: true },
-      );
-
-      delete post.notified;
-      delete post.notified_to;
-      delete post.checked;
-      delete post.boards;
-
-      if (post.board_id) {
-        const boardName = await getBoardNameFromId.execute(post.board_id);
-
-        return response.json({ ...post, board_name: boardName });
-      }
-
-      return response.json({ ...post });
+      await schemaValidation.validateAsync({ ids });
     } catch (error) {
-      logger.error({ error: error.message, stack: error.stack });
-      return response.status(404).json({ error: 'Not found' });
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
+      });
     }
+
+    const data = await getPostsFromList.execute({ ids });
+
+    const result = {
+      result: 'success',
+      message: null,
+      data,
+    };
+
+    return response.json(result);
   }
 
   public async index(request: Request, response: Response): Promise<Response> {
-    const {
-      author,
-      content,
-      last,
-      after,
-      topic_id,
-      board,
-      after_date,
-      before_date,
-      order,
-    } = request.query;
-
-    const limit = Number(request.query.limit);
-
     const postSearch = container.resolve(PostSearchService);
 
-    const query = {
-      author: author ? String(author) : undefined,
-      content: content ? String(content) : undefined,
-      topic_id: topic_id ? Number(topic_id) : undefined,
-      last: last ? Number(last) : undefined,
-      after: after ? Number(after) : undefined,
-      board: board ? Number(board) : undefined,
-      after_date: after_date ? String(after_date) : undefined,
-      before_date: before_date ? String(before_date) : undefined,
-    };
+    const schemaValidation = Joi.object({
+      author: Joi.string().allow('', null),
+      content: Joi.string().allow('', null),
+      topic_id: Joi.number().allow('', null),
+      board: Joi.number().allow('', null),
+      last: Joi.number().allow('', null),
+      after: Joi.number().allow('', null),
+      after_date: Joi.string().isoDate().allow('', null),
+      before_date: Joi.string().isoDate().allow('', null),
+      limit: Joi.number().allow('', null),
+      order: Joi.string().valid('ASC', 'DESC').insensitive(),
+    });
 
-    const queryOrder = order ? (String(order) as 'ASC' | 'DESC') : undefined;
+    const query = request.query as unknown;
 
     try {
-      if (topic_id && Number.isNaN(Number(topic_id))) {
-        throw new Error('topic_id is invalid');
-      }
-
-      if (last && Number.isNaN(Number(last))) {
-        throw new Error('last is invalid');
-      }
-
-      if (after && Number.isNaN(Number(after))) {
-        throw new Error('after is invalid');
-      }
-
-      if (board && Number.isNaN(Number(board))) {
-        throw new Error('board is invalid');
-      }
-
-      const posts = await postSearch.execute(query, limit, queryOrder);
-
-      return response.json(posts);
+      await schemaValidation.validateAsync(query);
     } catch (error) {
-      logger.error({ error: error.message, stack: error.stack });
+      return response.status(400).json({
+        result: 'fail',
+        message: error.details[0].message,
+        data: null,
+      });
+    }
+
+    try {
+      const data = await postSearch.execute(query as IFindPostsConditionsDTO);
+
+      const result = {
+        result: 'success',
+        message: null,
+        data,
+      };
+
+      return response.json(result);
+    } catch (error) {
+      logger.error(
+        { error: error.message, stack: error.stack },
+        'Error on PostsController',
+      );
       return response
-        .status(400)
-        .json({ result: 400, error: 'Something went wrong' });
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

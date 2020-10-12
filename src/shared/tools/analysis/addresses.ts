@@ -34,7 +34,7 @@ createConnection().then(async () => {
       'analysis:AddressesPostLastId',
     );
 
-    const posts = await getPosts.execute({ last: lastPostId }, 100000);
+    const posts = await getPosts.execute({ last: lastPostId, limit: 100000 });
 
     const matched = [];
     const authors = [];

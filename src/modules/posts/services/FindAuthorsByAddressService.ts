@@ -9,7 +9,7 @@ export default class FindAuthorsByAddressService {
     private addressesRepository: IAddressesRepository,
   ) {}
 
-  public async execute(address: string): Promise<string[]> {
+  public async execute({ address }: { address: string }): Promise<string[]> {
     return this.addressesRepository.findAuthorsByAddress(address);
   }
 }

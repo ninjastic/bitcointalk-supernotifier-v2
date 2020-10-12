@@ -11,11 +11,7 @@ export default class GetUserMeritCountOnPeriodService {
     private meritsRepository: IMeritsRepository,
   ) {}
 
-  public async execute(username: string): Promise<Merit[]> {
-    const merits = await this.meritsRepository.getAmountByUserOnPeriod(
-      username,
-    );
-
-    return merits;
+  public async execute({ username }: { username: string }): Promise<Merit[]> {
+    return this.meritsRepository.getAmountByUserOnPeriod(username);
   }
 }

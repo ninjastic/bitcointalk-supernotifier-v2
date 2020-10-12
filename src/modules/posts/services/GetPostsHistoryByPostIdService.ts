@@ -11,7 +11,7 @@ export default class GetPostsHistoryByPostIdService {
     private postsHistoryRepository: IPostsHistoryRepository,
   ) {}
 
-  public async execute(post_id: number): Promise<PostHistory> {
+  public async execute({ post_id }: { post_id: number }): Promise<PostHistory> {
     return this.postsHistoryRepository.findOne({ post_id, version: 1 });
   }
 }

@@ -9,7 +9,11 @@ export default class GetNextPostChangeCheckService {
     private cacheRepository: ICacheProvider,
   ) {}
 
-  public async execute(post_id: number): Promise<number | undefined> {
+  public async execute({
+    post_id,
+  }: {
+    post_id: number;
+  }): Promise<number | undefined> {
     const data = await this.cacheRepository.recoverByPrefix<{ time: number }>(
       `RescrapeForChanges:*:${post_id}`,
     );
