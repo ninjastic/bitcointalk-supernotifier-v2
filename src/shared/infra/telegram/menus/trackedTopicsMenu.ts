@@ -12,7 +12,10 @@ import ISession from '../@types/ISession';
 import AddTrackedTopicService from '../../../../modules/posts/services/AddTrackedTopicService';
 import RemoveTrackedTopicService from '../../../../modules/posts/services/RemoveTrackedTopicService';
 import FindTrackedTopicsByTelegramIdService from '../services/FindTrackedTopicsByTelegramIdService';
-import GetPostService from '../../../../modules/posts/services/GetPostService';
+import FindTrackedTopicUsersService from '../services/FindTrackedTopicUsersService';
+import CreateTrackedTopicUserService from '../services/CreateTrackedTopicUserService';
+import DeleteTrackedTopicUserService from '../services/DeleteTrackedTopicUserService';
+import FindPostByTrackedTopicService from '../services/FindPostByTrackedTopicService';
 
 import { trackedTopicsMenuMiddleware } from './index';
 
@@ -27,15 +30,19 @@ const trackedTopicsMenu = new MenuTemplate<MenuContext>(() => {
   };
 });
 
-const getPostInfo = async (post_id: number) => {
-  const getPost = container.resolve(GetPostService);
-  const post = await getPost.execute({ post_id });
+const getPostInfo = async (topic_id: number) => {
+  const findPostByTrackedTopic = container.resolve(
+    FindPostByTrackedTopicService,
+  );
+
+  const post = await findPostByTrackedTopic.execute({ topic_id });
 
   return post;
 };
 
 const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
-  const post = await getPostInfo(Number(ctx.match[1]));
+  const postId = Number(ctx.match[1]);
+  const post = await getPostInfo(postId);
 
   const formattedDate = format(new Date(post.date), 'Pp');
 
@@ -43,7 +50,7 @@ const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
   message += `<b>Selected Topic:</b>\n\n`;
   message += `🏷️ <b>Title:</b> ${post.title}\n`;
   message += `✍️ <b>Author:</b> ${post.author}\n`;
-  message += `🕗 <b>Date:</b> ${formattedDate}\n`;
+  message += `🕗 <b>Date:</b> ${formattedDate}\n\n`;
 
   return {
     text: message,
@@ -52,15 +59,217 @@ const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
 });
 
 const getTrackedTopicUrl = async (ctx: MenuContext): Promise<string> => {
-  const post_id = Number(ctx.match[1]);
+  const topicId = Number(ctx.match[1]);
 
-  const getPost = container.resolve(GetPostService);
-  const post = await getPost.execute({ post_id });
+  const findPostByTrackedTopic = container.resolve(
+    FindPostByTrackedTopicService,
+  );
+
+  const post = await findPostByTrackedTopic.execute({ topic_id: topicId });
 
   return `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
 };
 
 trackedTopicInfoMenu.url('🔗 Visit Topic', getTrackedTopicUrl);
+
+const trackedTopicAuthorsMenu = new MenuTemplate<MenuContext>(async ctx => {
+  const post = await getPostInfo(Number(ctx.match[1]));
+
+  const formattedDate = format(new Date(post.date), 'Pp');
+
+  let message = '';
+  message += `<b>Selected Topic:</b>\n\n`;
+  message += `🏷️ <b>Title:</b> ${post.title}\n`;
+  message += `✍️ <b>Author:</b> ${post.author}\n`;
+  message += `🕗 <b>Date:</b> ${formattedDate}\n\n`;
+  message += `If you add an user to your tracked topic, you will only get notified about his posts.`;
+
+  return {
+    text: message,
+    parse_mode: 'HTML',
+  };
+});
+
+trackedTopicInfoMenu.submenu(
+  '👤 Specify Authors',
+  'a',
+  trackedTopicAuthorsMenu,
+);
+
+const getTrackedTopicUsersList = async (ctx: MenuContext) => {
+  const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
+
+  const choices = await findTrackedTopicUsers.execute({
+    telegram_id: ctx.chat.id,
+    topic_id: Number(ctx.match[1]),
+  });
+
+  const formatted = {};
+
+  choices.forEach(choice => {
+    let formattedTitle = '';
+    formattedTitle += choice.username;
+
+    formatted[choice.username] = formattedTitle;
+  });
+
+  return formatted;
+};
+
+const trackedTopicUsersInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
+  const post = await getPostInfo(Number(ctx.match[1]));
+
+  let message = '';
+  message += `🏷️ <b>Topic:</b> `;
+  message += `${post.title}\n\n`;
+  message += `👤 <b>User:</b> `;
+  message += `${ctx.match[2]}`;
+
+  return {
+    text: message,
+    parse_mode: 'HTML',
+  };
+});
+
+const confirmRemoveTrackedTopicUser = new MenuTemplate<MenuContext>(
+  async ctx => {
+    return {
+      text: `Are you sure you want to remove the user: <b>${ctx.match[2]}</b>?`,
+      parse_mode: 'HTML',
+    };
+  },
+);
+
+confirmRemoveTrackedTopicUser.interact('Yes, do it!', 'yes', {
+  do: async ctx => {
+    const findTrackedTopicUsers = container.resolve(
+      FindTrackedTopicUsersService,
+    );
+
+    const deleteTrackedTopicUser = container.resolve(
+      DeleteTrackedTopicUserService,
+    );
+
+    const trackedTopicUser = await findTrackedTopicUsers.execute({
+      telegram_id: ctx.chat.id,
+      topic_id: Number(ctx.match[1]),
+      username: ctx.match[2],
+    });
+
+    await deleteTrackedTopicUser.execute(trackedTopicUser[0]);
+
+    return `/main/tt/tt:${ctx.match[1]}/a/`;
+  },
+});
+
+confirmRemoveTrackedTopicUser.interact('No, go back!', 'no', {
+  do: async () => {
+    return `..`;
+  },
+});
+
+trackedTopicUsersInfoMenu.submenu(
+  '❌ Remove User',
+  'remove',
+  confirmRemoveTrackedTopicUser,
+);
+
+trackedTopicUsersInfoMenu.interact('↩ Go Back', 'back', {
+  do: () => {
+    return '..';
+  },
+  joinLastRow: true,
+});
+
+const addTrackedTopicUserQuestion = new TelegrafStatelessQuestion(
+  'addUser',
+  async (ctx: MenuContext) => {
+    const text = ctx.message.text.toLowerCase().trim();
+
+    if (text) {
+      const createTrackedTopicUser = container.resolve(
+        CreateTrackedTopicUserService,
+      );
+
+      try {
+        await createTrackedTopicUser.execute({
+          username: text,
+          telegram_id: ctx.message.chat.id,
+          topic_id: ctx.session.addTrackedTopicUserTopicId,
+        });
+
+        let message = '';
+        message += 'User added to tracked topic: ';
+        message += `<b>${text}</b>`;
+
+        await ctx.reply(message, {
+          parse_mode: 'HTML',
+          reply_markup: { remove_keyboard: true },
+        });
+
+        await trackedTopicsMenuMiddleware.replyToContext(ctx);
+      } catch (error) {
+        if (
+          error.message === 'User already exists in the specified tracked topic'
+        ) {
+          await ctx.reply('You already added this user.', {
+            reply_markup: { remove_keyboard: true },
+          });
+
+          return;
+        }
+
+        logger.error(
+          { telegram_id: ctx.chat.id, error },
+          'Error while adding Tracked Topic User.',
+        );
+
+        await ctx.reply('Something went wrong...', {
+          reply_markup: { remove_keyboard: true },
+        });
+      }
+    } else {
+      const message = `Invalid Username. What is the username of the user you want to add?`;
+      await addTrackedTopicUserQuestion.replyWithHTML(ctx, message);
+    }
+  },
+);
+
+trackedTopicAuthorsMenu.chooseIntoSubmenu(
+  'authors',
+  getTrackedTopicUsersList,
+  trackedTopicUsersInfoMenu,
+  {
+    maxRows: 4,
+    columns: 1,
+    getCurrentPage: ctx => ctx.session.page,
+    setPage: (ctx, page) => {
+      ctx.session.page = page;
+    },
+    disableChoiceExistsCheck: true,
+  },
+);
+
+trackedTopicAuthorsMenu.interact('✨ Add new', 'add', {
+  do: async ctx => {
+    const message = 'What is the username of the user you want to add?';
+
+    const topicId = ctx.match[1];
+
+    ctx.session.addTrackedTopicUserTopicId = Number(topicId);
+    await bot.session.saveSession(bot.session.getSessionKey(ctx), ctx.session);
+
+    await addTrackedTopicUserQuestion.replyWithHTML(ctx, message);
+    return true;
+  },
+});
+
+trackedTopicAuthorsMenu.interact('↩ Go Back', 'back', {
+  do: () => {
+    return '..';
+  },
+  joinLastRow: true,
+});
 
 const confirmRemoveTrackedTopicMenu = new MenuTemplate<MenuContext>(
   async ctx => {
@@ -78,7 +287,7 @@ confirmRemoveTrackedTopicMenu.interact('Yes, do it!', 'yes', {
 
     await removeTrackedTopic.execute(Number(ctx.match[1]), ctx.chat.id);
 
-    return '/main/trackedTopics/';
+    return '/main/tt/';
   },
 });
 
@@ -198,14 +407,14 @@ const getTrackedTopicsList = async (ctx: MenuContext) => {
     formattedTitle += choice.post.title.substr(0, 35);
     formattedTitle += choice.post.title.length >= 35 ? '...' : '';
 
-    formatted[choice.post.post_id] = formattedTitle;
+    formatted[choice.post.topic_id] = formattedTitle;
   });
 
   return formatted;
 };
 
 trackedTopicsMenu.chooseIntoSubmenu(
-  'trackedTopics',
+  'tt',
   getTrackedTopicsList,
   trackedTopicInfoMenu,
   {
@@ -235,5 +444,5 @@ trackedTopicsMenu.interact('↩ Go Back', 'back', {
   joinLastRow: true,
 });
 
-export { addTrackedTopicLinkQuestion };
+export { addTrackedTopicLinkQuestion, addTrackedTopicUserQuestion };
 export default trackedTopicsMenu;

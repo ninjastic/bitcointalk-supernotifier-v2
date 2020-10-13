@@ -15,15 +15,15 @@ export default class RemoveTrackedTopicService {
   ) {}
 
   public async execute(
-    post_id: number,
+    topic_id: number,
     telegram_id?: number,
   ): Promise<TrackedTopic> {
-    const topicExists = await this.trackedTopicsRepository.findOneByPostId(
-      post_id,
+    const topicExists = await this.trackedTopicsRepository.findOneByTopicId(
+      topic_id,
     );
 
     if (!topicExists) {
-      throw new Error('Ignored user does not exist.');
+      throw new Error('Tracked topic does not exist.');
     }
 
     const index = topicExists.tracking.indexOf(telegram_id);

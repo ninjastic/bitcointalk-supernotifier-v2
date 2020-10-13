@@ -8,6 +8,7 @@ import configureMeritsMenu from './configureMeritsMenu';
 import mainMenu from './mainMenu';
 import trackedTopicsMenu, {
   addTrackedTopicLinkQuestion,
+  addTrackedTopicUserQuestion,
 } from './trackedTopicsMenu';
 import ignoredUsersMenu, { addIgnoredUserQuestion } from './ignoredUsersMenu';
 import ignoredTopicsMenu, {
@@ -37,17 +38,17 @@ const configureMeritsMenuMiddleware = new MenuMiddleware(
 const mainMenuMiddleware = new MenuMiddleware('/main/', mainMenu);
 
 const trackedTopicsMenuMiddleware = new MenuMiddleware(
-  '/main/trackedTopics/',
+  '/main/tt/',
   trackedTopicsMenu,
 );
 
 const ignoredUsersMenuMiddleware = new MenuMiddleware(
-  '/main/ignoredUsers/',
+  '/main/iu/',
   ignoredUsersMenu,
 );
 
 const ignoredTopicsMenuMiddleware = new MenuMiddleware(
-  '/main/ignoredTopics/',
+  '/main/it/',
   ignoredTopicsMenu,
 );
 
@@ -59,6 +60,7 @@ export {
   mainMenuMiddleware,
   trackedTopicsMenuMiddleware,
   addTrackedTopicLinkQuestion,
+  addTrackedTopicUserQuestion,
   ignoredUsersMenuMiddleware,
   addIgnoredUserQuestion,
   ignoredTopicsMenuMiddleware,

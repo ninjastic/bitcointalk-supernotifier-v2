@@ -4680,10 +4680,12 @@ tar-stream@^1.5.2:
     to-buffer "^1.1.1"
     xtend "^4.0.0"
 
-telegraf-inline-menu@^5.0.0:
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/telegraf-inline-menu/-/telegraf-inline-menu-5.0.0.tgz#e81d2731c9cfc7275752a8e52d6de0d68bc25778"
-  integrity sha512-Ty381mXeeCH1YJ2bmPYK2j48bxmbTsDcdFoHc74HynwpsjODzeIcsl5Z17rgPkWc9vba/3IAmgBKRzrgkGbX8Q==
+telegraf-inline-menu@^5.3.0:
+  version "5.3.0"
+  resolved "https://registry.yarnpkg.com/telegraf-inline-menu/-/telegraf-inline-menu-5.3.0.tgz#a3aae9c96cc618c3f681c92382de98271a2fb7b1"
+  integrity sha512-26uZFF/7JeRa0wN1wbAu6jv/Lrc59rSWLqzya3txNCt1Lsq72gOUiKVZCzalDxibx8l7bqEnPnKaYFUh2lr7cQ==
+  dependencies:
+    typegram "^2.2.2"
 
 telegraf-session-local@^2.0.0:
   version "2.0.0"
@@ -4693,10 +4695,10 @@ telegraf-session-local@^2.0.0:
     "@types/lowdb" "^1.0.9"
     lowdb "^1.0.0"
 
-telegraf-stateless-question@^0.1.1:
-  version "0.1.1"
-  resolved "https://registry.yarnpkg.com/telegraf-stateless-question/-/telegraf-stateless-question-0.1.1.tgz#3a40d0e72081efdd050ab01ee11b9ead8f8c93cf"
-  integrity sha512-M38jt/Ax/g3j7Gsue/8mSeCK1BRPGYn+7nUh/3mbcYQDhuKC0n5NHYkRWikkU7j8dySxLk2VCw3x6h52/483LA==
+telegraf-stateless-question@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/telegraf-stateless-question/-/telegraf-stateless-question-1.0.0.tgz#34286b9db6eceb7548c9be7c491a0774afec94aa"
+  integrity sha512-uKixLana4RAFq7N7kGU4A7GNwRx0eQ4ybz1SJuy0xtrECv9jmJJNmNRFIY25zfANI+SklLRBKh9Tc1oRfhWUkg==
   dependencies:
     telegram-format "^2.0.0"
 
@@ -4934,6 +4936,11 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c=
+
+typegram@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/typegram/-/typegram-2.2.2.tgz#7efb5fcce3c83d00b75d32e8197a5d21cf7a3c18"
+  integrity sha512-KUdBVs2Qdj8IXDvVEYtIi9fMq65T69/4qyQ34F2BLt7gcVRHD+kpnMFSTkENNcjQD3SRbe2wd8B/kiCq/G2yxA==
 
 typeorm@0.2.25:
   version "0.2.25"

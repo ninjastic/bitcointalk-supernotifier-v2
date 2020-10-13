@@ -12,6 +12,9 @@ import PostsRepository from '../../modules/posts/infra/typeorm/repositories/Post
 import ITrackedTopicsRepository from '../../modules/posts/repositories/ITrackedTopicsRepository';
 import TrackedTopicsRepository from '../../modules/posts/infra/typeorm/repositories/TrackedTopicsRepository';
 
+import ITrackedTopicUsersRepository from '../../modules/posts/repositories/ITrackedTopicUsersRepository';
+import TrackedTopicUsersRepository from '../../modules/posts/infra/typeorm/repositories/TrackedTopicUsersRepository';
+
 import IIgnoredTopicsRepository from '../../modules/posts/repositories/IIgnoredTopicsRepository';
 import IgnoredTopicsRepository from '../../modules/posts/infra/typeorm/repositories/IgnoredTopicsRepository';
 
@@ -57,6 +60,11 @@ container.registerSingleton<IPostsRepository>(
 container.registerSingleton<ITrackedTopicsRepository>(
   'TrackedTopicsRepository',
   TrackedTopicsRepository,
+);
+
+container.registerSingleton<ITrackedTopicUsersRepository>(
+  'TrackedTopicUsersRepository',
+  TrackedTopicUsersRepository,
 );
 
 container.registerSingleton<IIgnoredTopicsRepository>(

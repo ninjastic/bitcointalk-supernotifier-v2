@@ -12,4 +12,5 @@ export default interface ICacheProvider {
   recoverMany<T>(keys: string[]): Promise<T[]>;
   recoverByPrefix<T>(prefix: string): Promise<T[]>;
   invalidate(key: string): Promise<void>;
+  invalidateByPrefix(prefix: string): Promise<void>;
 }

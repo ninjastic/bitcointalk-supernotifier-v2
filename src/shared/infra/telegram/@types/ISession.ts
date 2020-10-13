@@ -10,4 +10,5 @@ export default interface ISession extends TelegrafContext {
   modlogs: boolean;
   alternative_usernames: Array<string>;
   page: number;
+  addTrackedTopicUserTopicId: number;
 }

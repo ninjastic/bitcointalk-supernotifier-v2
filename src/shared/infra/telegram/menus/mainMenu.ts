@@ -20,9 +20,9 @@ const mainMenu = new MenuTemplate<MenuContext>(async (ctx: MenuContext) => {
   };
 });
 
-mainMenu.submenu('📗 Tracked Topics', 'trackedTopics', trackedTopicsMenu);
-mainMenu.submenu('🚫 Ignored Topics', 'ignoredTopics', ignoredTopicsMenu);
-mainMenu.submenu('🚫 Ignored Users', 'ignoredUsers', ignoredUsersMenu, {
+mainMenu.submenu('📗 Tracked Topics', 'tt', trackedTopicsMenu);
+mainMenu.submenu('🚫 Ignored Topics', 'it', ignoredTopicsMenu);
+mainMenu.submenu('🚫 Ignored Users', 'iu', ignoredUsersMenu, {
   joinLastRow: true,
 });
 mainMenu.submenu('🔔 Notifications', 'notifications', notificationsMenu);

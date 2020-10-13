@@ -13,6 +13,7 @@ import GetTrackedTopicsService from './GetTrackedTopicsService';
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
 import GetIgnoredTopicsService from './GetIgnoredTopicsService';
 import CreateWebNotificationService from '../../web/services/CreateWebNotificationService';
+import FindTrackedTopicUsersService from '../../../shared/infra/telegram/services/FindTrackedTopicUsersService';
 
 @injectable()
 export default class CheckPostsService {
@@ -36,6 +37,9 @@ export default class CheckPostsService {
     const users = await this.usersRepository.getUsersWithMentions();
 
     const getTrackedTopics = container.resolve(GetTrackedTopicsService);
+    const findTrackedTopicUsers = container.resolve(
+      FindTrackedTopicUsersService,
+    );
     const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
     const getIgnoredTopics = container.resolve(GetIgnoredTopicsService);
 
@@ -103,6 +107,22 @@ export default class CheckPostsService {
 
                 if (postNotified) {
                   return Promise.resolve();
+                }
+
+                const trackedTopicUsers = await findTrackedTopicUsers.execute({
+                  telegram_id: user.telegram_id,
+                  topic_id: post.topic_id,
+                });
+
+                if (trackedTopicUsers.length) {
+                  const withlistedAuthor = trackedTopicUsers.findIndex(
+                    trackedTopicUser =>
+                      trackedTopicUser.username === post.author.toLowerCase(),
+                  );
+
+                  if (withlistedAuthor === -1) {
+                    return Promise.resolve();
+                  }
                 }
 
                 await this.cacheProvider.save(
