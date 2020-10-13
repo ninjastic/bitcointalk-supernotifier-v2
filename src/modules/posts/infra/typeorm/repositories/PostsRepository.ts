@@ -136,7 +136,9 @@ export default class PostsRepository implements IPostsRepository {
     }
 
     if (after_date || before_date) {
-      must.push({ range: { date: { gte: after_date, lte: before_date } } });
+      must.push({
+        range: { date: { gte: after_date || null, lte: before_date || null } },
+      });
     }
 
     if (board) {
