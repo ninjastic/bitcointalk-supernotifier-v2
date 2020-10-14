@@ -21,7 +21,7 @@ export default class DeleteTrackedTopicUserService {
     await this.trackedTopicUsersRepository.delete(trackedTopicUser);
 
     await this.cacheRepository.invalidateByPrefix(
-      `trackedTopics:${trackedTopicUser.telegram_id}:${trackedTopicUser.tracked_topic_id}:*`,
+      `trackedTopics:${trackedTopicUser.telegram_id}:*`,
     );
 
     return trackedTopicUser;

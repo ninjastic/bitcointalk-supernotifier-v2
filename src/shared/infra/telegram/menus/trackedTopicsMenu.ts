@@ -25,7 +25,7 @@ interface MenuContext extends Context {
 
 const trackedTopicsMenu = new MenuTemplate<MenuContext>(() => {
   return {
-    text: `<b>Tracked Topics</b>\n\nAdd or remove topics so you get notified of new replies.`,
+    text: `<b>Tracked Topics</b>\n\nAdd or remove topics so you get notified of new replies.\n\n<code>* Topic with whitelisted users</code>`,
     parse_mode: 'HTML',
   };
 });
@@ -52,8 +52,8 @@ const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
   });
 
   const usersMessage = users.reduce((p, c, i, a) => {
-    if (i === 0) return c.username;
-    return `${p}, ${c.username}`;
+    if (i === 0) return `<pre>${c.username}</pre>`;
+    return `${p}, <pre>${c.username}</pre>`;
   }, '');
 
   const formattedDate = format(new Date(post.date), 'Pp');
@@ -213,7 +213,7 @@ const addTrackedTopicUserQuestion = new TelegrafStatelessQuestion(
         });
 
         let message = '';
-        message += 'User added to tracked topic: ';
+        message += 'Whitelisted user added to tracked topic: ';
         message += `<b>${text}</b>`;
 
         await ctx.reply(message, {
@@ -414,10 +414,26 @@ const getTrackedTopicsList = async (ctx: MenuContext) => {
 
   const choices = await findTrackedTopicsByTelegramId.execute(ctx.chat.id);
 
+  const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
+
+  const trackedTopicUsers = await findTrackedTopicUsers.execute({
+    telegram_id: ctx.chat.id,
+  });
+
+  const userTopicsWithWhitelist = [];
+
+  trackedTopicUsers.forEach(trackedUser => {
+    if (!userTopicsWithWhitelist.includes(trackedUser.tracked_topic_id)) {
+      userTopicsWithWhitelist.push(trackedUser.tracked_topic_id);
+    }
+  });
+
   const formatted = {};
 
   choices.forEach(choice => {
-    let formattedTitle = '';
+    let formattedTitle = userTopicsWithWhitelist.includes(choice.topic_id)
+      ? '* '
+      : '';
     formattedTitle += choice.post.title.substr(0, 35);
     formattedTitle += choice.post.title.length >= 35 ? '...' : '';
 

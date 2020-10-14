@@ -43,7 +43,7 @@ export default class CreateTrackedTopicUserService {
     await this.trackedTopicUsersRepository.save(trackedTopicUser);
 
     await this.cacheRepository.invalidateByPrefix(
-      `trackedTopics:${telegram_id}:${topic_id}:*`,
+      `trackedTopics:${telegram_id}:*`,
     );
 
     return trackedTopicUser;
