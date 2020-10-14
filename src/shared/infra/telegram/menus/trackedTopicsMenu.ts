@@ -30,7 +30,7 @@ const trackedTopicsMenu = new MenuTemplate<MenuContext>(() => {
   };
 });
 
-const getPostInfo = async (topic_id: number) => {
+const getTopicInfo = async (topic_id: number) => {
   const findPostByTrackedTopic = container.resolve(
     FindPostByTrackedTopicService,
   );
@@ -42,7 +42,19 @@ const getPostInfo = async (topic_id: number) => {
 
 const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
   const postId = Number(ctx.match[1]);
-  const post = await getPostInfo(postId);
+  const post = await getTopicInfo(postId);
+
+  const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
+
+  const users = await findTrackedTopicUsers.execute({
+    telegram_id: ctx.chat.id,
+    topic_id: Number(ctx.match[1]),
+  });
+
+  const usersMessage = users.reduce((p, c, i, a) => {
+    if (i === 0) return c.username;
+    return `${p}, ${c.username}`;
+  }, '');
 
   const formattedDate = format(new Date(post.date), 'Pp');
 
@@ -51,6 +63,8 @@ const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
   message += `🏷️ <b>Title:</b> ${post.title}\n`;
   message += `✍️ <b>Author:</b> ${post.author}\n`;
   message += `🕗 <b>Date:</b> ${formattedDate}\n\n`;
+  message += `👤 <b>Whitelisted:</b> `;
+  message += !users.length ? 'Everyone' : usersMessage;
 
   return {
     text: message,
@@ -73,7 +87,7 @@ const getTrackedTopicUrl = async (ctx: MenuContext): Promise<string> => {
 trackedTopicInfoMenu.url('🔗 Visit Topic', getTrackedTopicUrl);
 
 const trackedTopicAuthorsMenu = new MenuTemplate<MenuContext>(async ctx => {
-  const post = await getPostInfo(Number(ctx.match[1]));
+  const post = await getTopicInfo(Number(ctx.match[1]));
 
   const formattedDate = format(new Date(post.date), 'Pp');
 
@@ -91,7 +105,7 @@ const trackedTopicAuthorsMenu = new MenuTemplate<MenuContext>(async ctx => {
 });
 
 trackedTopicInfoMenu.submenu(
-  '👤 Specify Authors',
+  '👤 Whitelist Authors',
   'a',
   trackedTopicAuthorsMenu,
 );
@@ -117,7 +131,7 @@ const getTrackedTopicUsersList = async (ctx: MenuContext) => {
 };
 
 const trackedTopicUsersInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
-  const post = await getPostInfo(Number(ctx.match[1]));
+  const post = await getTopicInfo(Number(ctx.match[1]));
 
   let message = '';
   message += `🏷️ <b>Topic:</b> `;
@@ -273,7 +287,7 @@ trackedTopicAuthorsMenu.interact('↩ Go Back', 'back', {
 
 const confirmRemoveTrackedTopicMenu = new MenuTemplate<MenuContext>(
   async ctx => {
-    const post = await getPostInfo(Number(ctx.match[1]));
+    const post = await getTopicInfo(Number(ctx.match[1]));
     return {
       text: `Are you sure you want to remove the tracked topic: <b>${post.title}</b>?`,
       parse_mode: 'HTML',
