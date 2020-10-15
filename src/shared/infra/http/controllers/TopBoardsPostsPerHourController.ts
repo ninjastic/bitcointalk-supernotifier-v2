@@ -4,15 +4,13 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetUserTopTopicsService from '../services/GetUserTopTopicsService';
+import GetTopBoardsPostsPerHourService from '../services/GetTopBoardsPostsPerHourService';
+import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
-export default class UserTopTopicsController {
+export default class TopBoardsPostsPerHourController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getUserTopTopics = new GetUserTopTopicsService();
-
-    const params = (request.params as unknown) as {
-      username: string;
-    };
+    const getTopBoardsPostsPerHour = new GetTopBoardsPostsPerHourService();
+    const getBoardsListService = new GetBoardsListService();
 
     const query = (request.query as unknown) as {
       from: string;
@@ -22,17 +20,18 @@ export default class UserTopTopicsController {
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
 
+    const defaultFrom = startOfHour(
+      sub(dateUTC, { days: 1, hours: 1 }),
+    ).toISOString();
     const defaultTo = endOfHour(sub(dateUTC, { hours: 1 })).toISOString();
 
     const schemaValidation = Joi.object({
-      username: Joi.string().required(),
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
     });
 
     const settings = {
-      username: params.username,
-      from: query.from || null,
+      from: query.from || defaultFrom,
       to: query.to || defaultTo,
     };
 
@@ -47,7 +46,16 @@ export default class UserTopTopicsController {
     }
 
     try {
-      const data = await getUserTopTopics.execute(settings);
+      const results = await getTopBoardsPostsPerHour.execute(settings);
+      const boards = await getBoardsListService.execute(true);
+
+      const data = results.map(result => {
+        return {
+          board_name: boards.find(board => board.board_id === result.board_id)
+            ?.name,
+          ...result,
+        };
+      });
 
       const result = {
         result: 'success',
@@ -59,7 +67,7 @@ export default class UserTopTopicsController {
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
-        'Error on UserTopTopicsController',
+        'Error on TopBoardsPostsPerHourController',
       );
       return response
         .status(500)

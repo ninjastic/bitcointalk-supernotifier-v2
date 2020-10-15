@@ -4,15 +4,11 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetUserTopTopicsService from '../services/GetUserTopTopicsService';
+import GetTopUserPostsPerHourService from '../services/GetTopUserPostsPerHourService';
 
-export default class UserTopTopicsController {
+export default class TopUsersPostsPerHourController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getUserTopTopics = new GetUserTopTopicsService();
-
-    const params = (request.params as unknown) as {
-      username: string;
-    };
+    const getTopUserPostsPerHour = new GetTopUserPostsPerHourService();
 
     const query = (request.query as unknown) as {
       from: string;
@@ -22,17 +18,18 @@ export default class UserTopTopicsController {
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
 
+    const defaultFrom = startOfHour(
+      sub(dateUTC, { days: 1, hours: 1 }),
+    ).toISOString();
     const defaultTo = endOfHour(sub(dateUTC, { hours: 1 })).toISOString();
 
     const schemaValidation = Joi.object({
-      username: Joi.string().required(),
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
     });
 
     const settings = {
-      username: params.username,
-      from: query.from || null,
+      from: query.from || defaultFrom,
       to: query.to || defaultTo,
     };
 
@@ -47,7 +44,7 @@ export default class UserTopTopicsController {
     }
 
     try {
-      const data = await getUserTopTopics.execute(settings);
+      const data = await getTopUserPostsPerHour.execute(settings);
 
       const result = {
         result: 'success',
@@ -59,7 +56,7 @@ export default class UserTopTopicsController {
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
-        'Error on UserTopTopicsController',
+        'Error on TopUsersPostsPerHourController',
       );
       return response
         .status(500)

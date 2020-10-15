@@ -51,7 +51,7 @@ const trackedTopicInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
     topic_id: Number(ctx.match[1]),
   });
 
-  const usersMessage = users.reduce((p, c, i, a) => {
+  const usersMessage = users.reduce((p, c, i) => {
     if (i === 0) return `<pre>${c.username}</pre>`;
     return `${p}, <pre>${c.username}</pre>`;
   }, '');
