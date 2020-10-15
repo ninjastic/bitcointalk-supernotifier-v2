@@ -96,7 +96,7 @@ const trackedTopicAuthorsMenu = new MenuTemplate<MenuContext>(async ctx => {
   message += `🏷️ <b>Title:</b> ${post.title}\n`;
   message += `✍️ <b>Author:</b> ${post.author}\n`;
   message += `🕗 <b>Date:</b> ${formattedDate}\n\n`;
-  message += `If you add an user to your tracked topic, you will only get notified about his posts.`;
+  message += `If you add a user to your tracked topic, you will only get notified about his posts.`;
 
   return {
     text: message,
