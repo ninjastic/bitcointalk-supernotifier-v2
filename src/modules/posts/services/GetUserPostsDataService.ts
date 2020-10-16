@@ -76,7 +76,7 @@ export default class GetUserPostsDataService {
 
         const { name } = query[0];
 
-        return { name, count: board.doc_count };
+        return { name, key: board.key, count: board.doc_count };
       }),
     );
 
