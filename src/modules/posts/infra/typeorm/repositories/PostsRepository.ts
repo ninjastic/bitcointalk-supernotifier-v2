@@ -91,6 +91,7 @@ export default class PostsRepository implements IPostsRepository {
   ): Promise<ApiResponse<Post>> {
     const {
       author,
+      author_uid,
       content,
       topic_id,
       board,
@@ -108,6 +109,14 @@ export default class PostsRepository implements IPostsRepository {
       must.push({
         match: {
           author,
+        },
+      });
+    }
+
+    if (author_uid) {
+      must.push({
+        match: {
+          author_uid,
         },
       });
     }

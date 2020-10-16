@@ -25,6 +25,20 @@ export default class GetUserPostsOnPeriodService {
       return cachedData;
     }
 
+    const dataUsername = await esClient.search({
+      index: 'posts',
+      track_total_hits: true,
+      _source: ['author', 'author_uid'],
+      size: 1,
+      body: {
+        query: {
+          match: {
+            author: username,
+          },
+        },
+      },
+    });
+
     const results = await esClient.search({
       index: 'posts',
       scroll: '1m',
@@ -38,7 +52,8 @@ export default class GetUserPostsOnPeriodService {
             must: [
               {
                 match: {
-                  author: username,
+                  author_uid:
+                    dataUsername.body.hits.hits[0]?._source.author_uid,
                 },
               },
               {

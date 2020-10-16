@@ -28,7 +28,7 @@ export default class GetUserInfoService {
       return cachedData;
     }
 
-    const results = await esClient.search({
+    const dataUsername = await esClient.search({
       index: 'posts',
       track_total_hits: true,
       _source: ['author', 'author_uid'],
@@ -39,10 +39,34 @@ export default class GetUserInfoService {
             author: username,
           },
         },
+      },
+    });
+
+    if (!dataUsername.body.hits.hits.length) {
+      return null;
+    }
+
+    const results = await esClient.search({
+      index: 'posts',
+      track_total_hits: true,
+      _source: ['author', 'author_uid'],
+      size: 1,
+      body: {
+        query: {
+          match: {
+            author_uid: dataUsername.body.hits.hits[0]?._source.author_uid,
+          },
+        },
         aggs: {
           posts: {
             value_count: {
               field: 'post_id',
+            },
+          },
+          usernames: {
+            terms: {
+              field: 'author.keyword',
+              size: 10,
             },
           },
         },
@@ -53,6 +77,7 @@ export default class GetUserInfoService {
       author: results.body.hits.hits[0]._source.author,
       author_uid: results.body.hits.hits[0]._source.author_uid,
       posts_count: results.body.hits.total.value,
+      usernames: results.body.aggregations.usernames.buckets.map(u => u.key),
     };
 
     await saveCache.execute(`userInfo:${username}`, data, 'EX', 180);

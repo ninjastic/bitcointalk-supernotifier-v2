@@ -8,6 +8,20 @@ interface Params {
 
 export default class GetUserTopTopicsService {
   public async execute({ username, from, to }: Params): Promise<any> {
+    const dataUsername = await esClient.search({
+      index: 'posts',
+      track_total_hits: true,
+      _source: ['author', 'author_uid'],
+      size: 1,
+      body: {
+        query: {
+          match: {
+            author: username,
+          },
+        },
+      },
+    });
+
     const dataRaw = await esClient.search({
       index: 'posts',
       size: 0,
@@ -18,8 +32,8 @@ export default class GetUserTopTopicsService {
             must: [
               {
                 term: {
-                  'author.keyword': {
-                    value: username,
+                  author_uid: {
+                    value: dataUsername.body.hits.hits[0]?._source.author_uid,
                   },
                 },
               },
