@@ -2,7 +2,7 @@
 import 'reflect-metadata';
 import 'dotenv/config.js';
 import { container } from 'tsyringe';
-import { createConnection, getManager } from 'typeorm';
+import { createConnection, getManager, InsertResult } from 'typeorm';
 import cheerio from 'cheerio';
 import validate from 'bitcoin-address-validation';
 
@@ -102,9 +102,10 @@ createConnection().then(async () => {
     }
 
     const manager = getManager();
+    let inserted = null as InsertResult;
 
     if (operations.length) {
-      await manager
+      inserted = await manager
         .createQueryBuilder()
         .insert()
         .into(PostAddress)
@@ -113,10 +114,10 @@ createConnection().then(async () => {
         .execute();
     }
 
-    if (last) {
+    if (last && inserted) {
       await saveCache.execute('analysis:AddressesPostLastId', last.post_id);
       console.log(
-        `Inserted ${operations.length}, first: ${first.post_id} last: ${last.post_id}`,
+        `Inserted ${inserted.raw.length}, first: ${first.post_id} last: ${last.post_id}`,
       );
     } else {
       console.log('nothing happened...');

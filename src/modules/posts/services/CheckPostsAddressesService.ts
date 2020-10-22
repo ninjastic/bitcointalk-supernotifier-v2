@@ -1,10 +1,10 @@
 import { inject, injectable, container } from 'tsyringe';
 import { getManager } from 'typeorm';
 
-import Address from '../infra/typeorm/entities/Address';
+import PostAddress from '../infra/typeorm/entities/PostAddress';
 
 import IPostsRepository from '../repositories/IPostsRepository';
-import IAddressesRepository from '../repositories/IAddressesRepository';
+import IPostsAddressesRepository from '../repositories/IPostsAddressesRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import ParsePostAddressesService from './ParsePostAddressesService';
@@ -15,8 +15,8 @@ export default class CheckPostsService {
     @inject('PostsRepository')
     private postsRepository: IPostsRepository,
 
-    @inject('AddressesRepository')
-    private addressesRepository: IAddressesRepository,
+    @inject('PostsAddressesRepository')
+    private postsAddressesRepository: IPostsAddressesRepository,
 
     @inject('CacheRepository')
     private cacheProvider: ICacheProvider,
@@ -30,7 +30,10 @@ export default class CheckPostsService {
     );
 
     if (!lastId) {
-      lastId = await this.addressesRepository.findLatestPostId();
+      const last = await this.postsAddressesRepository.findOne({
+        order: 'DESC',
+      });
+      lastId = last.post_id;
     }
 
     const posts = await this.postsRepository.findPosts({
@@ -51,19 +54,7 @@ export default class CheckPostsService {
 
     addressesGroup.forEach(addressGroup =>
       addressGroup.forEach(address => {
-        const foundIndex = operations.findIndex(
-          o => o.address === address.address,
-        );
-
-        if (foundIndex === -1) {
-          operations.push(address);
-          return;
-        }
-
-        operations[foundIndex].posts_id = [
-          ...operations[foundIndex].posts_id,
-          ...address.posts_id,
-        ];
+        operations.push(address);
       }),
     );
 
@@ -71,13 +62,9 @@ export default class CheckPostsService {
       await getManager()
         .createQueryBuilder()
         .insert()
-        .into(Address)
+        .into(PostAddress)
         .values(operations)
-        .onConflict(
-          `("address") DO UPDATE SET posts_id = array(SELECT DISTINCT unnest(addresses.posts_id || excluded.posts_id)),
-            authors = array(SELECT DISTINCT unnest(addresses.authors || excluded.authors)),
-            authors_uid = array(SELECT DISTINCT unnest(addresses.authors_uid || excluded.authors_uid))`,
-        )
+        .onConflict('("address", "post_id") DO NOTHING')
         .execute();
     }
 

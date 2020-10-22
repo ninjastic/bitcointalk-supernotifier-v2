@@ -31,7 +31,6 @@ export default class ParsePostAddressesService {
     const bitcoinAddresses = contentWithoutQuotes.match(bitcoinRegex);
     const ethereumAddresses = contentWithoutQuotes.match(ethereumRegex);
 
-    const matched = [];
     const addresses = [];
 
     if (bitcoinAddresses) {
@@ -42,40 +41,34 @@ export default class ParsePostAddressesService {
           return;
         }
 
-        if (matched[address] && matched[address].length) {
-          if (matched[address].findIndex(a => a === post.post_id) === -1) {
-            matched[address].push(post.post_id);
-          }
-        } else {
-          matched[address] = [post.post_id];
+        if (
+          addresses.findIndex(
+            m => m.post_id === post.post_id && m.address === address,
+          ) === -1
+        ) {
+          addresses.push({
+            post_id: post.post_id,
+            coin: 'BTC',
+            address,
+          });
         }
       });
     }
 
     if (ethereumAddresses) {
       ethereumAddresses.forEach(address => {
-        if (matched[address] && matched[address].length) {
-          if (matched[address].findIndex(a => a === post.post_id) === -1) {
-            matched[address].push(post.post_id);
-          }
-        } else {
-          matched[address] = [post.post_id];
+        if (
+          addresses.findIndex(
+            m => m.post_id === post.post_id && m.address === address,
+          ) === -1
+        ) {
+          addresses.push({
+            post_id: post.post_id,
+            coin: 'ETH',
+            address,
+          });
         }
       });
-    }
-
-    for (const match in matched) {
-      if (matched[match]) {
-        const address = this.addressesRepository.create({
-          address: match,
-          coin: match.startsWith('0x') ? 'ETH' : 'BTC',
-          posts_id: matched[match],
-          authors: [post.author],
-          authors_uid: [post.author_uid],
-        });
-
-        addresses.push(address);
-      }
     }
 
     return addresses;

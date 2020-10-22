@@ -1,17 +1,46 @@
-import { injectable, inject } from 'tsyringe';
+import { container } from 'tsyringe';
 
-import IAddressesRepository from '../../../../modules/posts/repositories/IAddressesRepository';
+import esClient from '../../../services/elastic';
 
-@injectable()
+import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+
 export default class GetAddressService {
-  constructor(
-    @inject('AddressesRepository')
-    private addressesRepository: IAddressesRepository,
-  ) {}
-
   public async execute({ address }: { address: string }): Promise<any> {
-    const results = await this.addressesRepository.findOneByAddress(address);
+    const getBoardsList = container.resolve(GetBoardsListService);
 
-    return results;
+    const results = await esClient.search({
+      index: 'posts_addresses',
+      track_total_hits: true,
+      size: 1,
+      body: {
+        query: {
+          match: {
+            address,
+          },
+        },
+      },
+    });
+
+    const boards = await getBoardsList.execute(true);
+
+    const data = results.body.hits.hits.map(raw => {
+      const e = raw._source;
+
+      return {
+        address: e.address,
+        coin: e.coin,
+        post_id: e.post_id,
+        topic_id: e.topic_id,
+        author: e.author,
+        author_uid: e.author_uid,
+        title: e.title,
+        content: e.content,
+        date: e.date,
+        board_id: e.board_id,
+        board_name: boards.find(b => b.board_id === e.board_id)?.name || null,
+      };
+    });
+
+    return data;
   }
 }

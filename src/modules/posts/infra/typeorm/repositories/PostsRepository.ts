@@ -159,7 +159,7 @@ export default class PostsRepository implements IPostsRepository {
 
     const results = await esClient.search<Post>({
       index: 'posts',
-      scroll: '1m',
+      track_total_hits: true,
       size: limit,
       body: {
         query: {

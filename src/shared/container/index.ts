@@ -30,6 +30,9 @@ import ReportRepository from '../../modules/reports/infra/typeorm/repositories/R
 import IAddressesRepository from '../../modules/posts/repositories/IAddressesRepository';
 import AddressesRepository from '../../modules/posts/infra/typeorm/repositories/AddressesRepository';
 
+import IPostsAddressesRepository from '../../modules/posts/repositories/IPostsAddressesRepository';
+import PostsAddressesRepository from '../../modules/posts/infra/typeorm/repositories/PostsAddressesRepository';
+
 import IPostsHistoryRepository from '../../modules/posts/repositories/IPostsHistoryRepository';
 import PostsHistoryRepository from '../../modules/posts/infra/typeorm/repositories/PostsHistoryRepository';
 
@@ -90,6 +93,11 @@ container.registerSingleton<IReportRepository>(
 container.registerSingleton<IAddressesRepository>(
   'AddressesRepository',
   AddressesRepository,
+);
+
+container.registerSingleton<IPostsAddressesRepository>(
+  'PostsAddressesRepository',
+  PostsAddressesRepository,
 );
 
 container.registerSingleton<IPostsHistoryRepository>(

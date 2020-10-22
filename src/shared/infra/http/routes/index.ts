@@ -59,8 +59,8 @@ routes.get('/posts/authors', topUsersPostsPerHourController.show);
 routes.get('/posts/:ids', postsController.show);
 routes.get('/posts/:post_id/history', postsHistoryController.show);
 
-routes.get('/addresses/post/:post_id', postsAddressesController.show);
 routes.get('/addresses', addressesController.index);
+routes.get('/addresses/post/:post_id', postsAddressesController.show);
 routes.get('/addresses/:address', addressesController.show);
 routes.get('/addresses/:address/authors', addressAuthorsController.show);
 
