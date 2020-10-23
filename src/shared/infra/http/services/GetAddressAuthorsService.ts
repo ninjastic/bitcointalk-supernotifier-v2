@@ -12,6 +12,7 @@ export default class GetAddressAuthorsService {
       content,
       topic_id,
       board,
+      child_boards,
       after_date,
       before_date,
       order,
@@ -57,10 +58,14 @@ export default class GetAddressAuthorsService {
     }
 
     if (board) {
-      const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
-      const boards = await getBoardChildrensFromId.execute(board);
+      if (child_boards) {
+        const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
+        const boards = await getBoardChildrensFromId.execute(board);
 
-      must.push({ terms: { board_id: boards } });
+        must.push({ terms: { board_id: boards } });
+      } else {
+        must.push({ terms: { board_id: [board] } });
+      }
     }
 
     const results = await esClient.search({
@@ -77,7 +82,7 @@ export default class GetAddressAuthorsService {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: 2000,
+              size: 1000,
             },
             aggs: {
               author_uid: {

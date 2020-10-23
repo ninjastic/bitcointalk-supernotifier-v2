@@ -12,6 +12,7 @@ export default class GetPostsAuthorsService {
       content,
       topic_id,
       board,
+      child_boards,
       last,
       after,
       after_date,
@@ -69,10 +70,14 @@ export default class GetPostsAuthorsService {
     }
 
     if (board) {
-      const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
-      const boards = await getBoardChildrensFromId.execute(board);
+      if (child_boards) {
+        const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
+        const boards = await getBoardChildrensFromId.execute(board);
 
-      must.push({ terms: { board_id: boards } });
+        must.push({ terms: { board_id: boards } });
+      } else {
+        must.push({ terms: { board_id: [board] } });
+      }
     }
 
     const results = await esClient.search({
@@ -89,7 +94,7 @@ export default class GetPostsAuthorsService {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: 2000,
+              size: 1000,
             },
             aggs: {
               author_uid: {

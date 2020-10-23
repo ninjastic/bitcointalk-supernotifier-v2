@@ -4,6 +4,7 @@ import esClient from '../../../shared/services/elastic';
 
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
+import GetAuthorInfoService from '../../../shared/infra/http/services/GetAuthorInfoService';
 
 interface Params {
   username: string;
@@ -12,12 +13,24 @@ interface Params {
   interval: string;
 }
 
+interface Data {
+  key_as_string: string;
+  key: number;
+  doc_count: number;
+}
+
 export default class GetUserPostsOnPeriodService {
-  public async execute({ username, from, to, interval }: Params): Promise<any> {
+  public async execute({
+    username,
+    from,
+    to,
+    interval,
+  }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
+    const getAuthorInfo = container.resolve(GetAuthorInfoService);
 
-    const cachedData = await getCache.execute<any>(
+    const cachedData = await getCache.execute<Data>(
       `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
     );
 
@@ -25,19 +38,7 @@ export default class GetUserPostsOnPeriodService {
       return cachedData;
     }
 
-    const dataUsername = await esClient.search({
-      index: 'posts',
-      track_total_hits: true,
-      _source: ['author', 'author_uid'],
-      size: 1,
-      body: {
-        query: {
-          match: {
-            author: username,
-          },
-        },
-      },
-    });
+    const authorInfo = await getAuthorInfo.execute({ username });
 
     const results = await esClient.search({
       index: 'posts',
@@ -52,8 +53,7 @@ export default class GetUserPostsOnPeriodService {
             must: [
               {
                 match: {
-                  author_uid:
-                    dataUsername.body.hits.hits[0]?._source.author_uid,
+                  author_uid: authorInfo.author_uid,
                 },
               },
               {

@@ -4,47 +4,28 @@ import esClient from '../../../shared/services/elastic';
 
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
+import GetAuthorInfoService from '../../../shared/infra/http/services/GetAuthorInfoService';
 
 interface Data {
   author: string;
   author_uid: number;
   posts_count: number;
-}
-
-interface Response {
-  timed_out: boolean;
-  result: string;
-  data: Data | null;
+  other_usernames: string[];
 }
 
 export default class GetUserInfoService {
-  public async execute({ username }: { username: string }): Promise<any> {
+  public async execute({ username }: { username: string }): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
+    const getAuthorInfo = container.resolve(GetAuthorInfoService);
 
-    const cachedData = await getCache.execute<Response>(`userInfo:${username}`);
+    const cachedData = await getCache.execute<Data>(`userInfo:${username}`);
 
     if (cachedData) {
       return cachedData;
     }
 
-    const dataUsername = await esClient.search({
-      index: 'posts',
-      track_total_hits: true,
-      _source: ['author', 'author_uid'],
-      size: 1,
-      body: {
-        query: {
-          match: {
-            author: username,
-          },
-        },
-      },
-    });
-
-    if (!dataUsername.body.hits.hits.length) {
-      return null;
-    }
+    const authorInfo = await getAuthorInfo.execute({ username });
 
     const results = await esClient.search({
       index: 'posts',
@@ -54,7 +35,7 @@ export default class GetUserInfoService {
       body: {
         query: {
           match: {
-            author_uid: dataUsername.body.hits.hits[0]?._source.author_uid,
+            author_uid: authorInfo.author_uid,
           },
         },
         aggs: {
@@ -74,10 +55,8 @@ export default class GetUserInfoService {
     });
 
     const data = {
-      author: results.body.hits.hits[0]._source.author,
-      author_uid: results.body.hits.hits[0]._source.author_uid,
+      ...authorInfo,
       posts_count: results.body.hits.total.value,
-      usernames: results.body.aggregations.usernames.buckets.map(u => u.key),
     };
 
     await saveCache.execute(`userInfo:${username}`, data, 'EX', 180);

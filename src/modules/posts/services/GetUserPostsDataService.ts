@@ -5,6 +5,7 @@ import esClient from '../../../shared/services/elastic';
 
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
+import GetAuthorInfoService from '../../../shared/infra/http/services/GetAuthorInfoService';
 
 interface Params {
   username: string;
@@ -12,12 +13,25 @@ interface Params {
   to: string;
 }
 
+interface Board {
+  name: string;
+  key: number;
+  count: number;
+}
+
+interface Data {
+  total_results: number;
+  total_results_with_board: number;
+  boards: Board[];
+}
+
 export default class GetUserPostsDataService {
-  public async execute({ username, from, to }: Params): Promise<any> {
+  public async execute({ username, from, to }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
+    const getAuthorInfo = container.resolve(GetAuthorInfoService);
 
-    const cachedData = await getCache.execute(
+    const cachedData = await getCache.execute<Data>(
       `userPostsData:${username}:${from}:${to}`,
     );
 
@@ -25,19 +39,7 @@ export default class GetUserPostsDataService {
       return cachedData;
     }
 
-    const dataUsername = await esClient.search({
-      index: 'posts',
-      track_total_hits: true,
-      _source: ['author', 'author_uid'],
-      size: 1,
-      body: {
-        query: {
-          match: {
-            author: username,
-          },
-        },
-      },
-    });
+    const authorInfo = await getAuthorInfo.execute({ username });
 
     const results = await esClient.search({
       index: 'posts',
@@ -50,8 +52,7 @@ export default class GetUserPostsDataService {
             must: [
               {
                 match: {
-                  author_uid:
-                    dataUsername.body.hits.hits[0]?._source.author_uid,
+                  author_uid: authorInfo.author_uid,
                 },
               },
               {
@@ -115,13 +116,13 @@ export default class GetUserPostsDataService {
       0,
     );
 
-    const data = {
+    const data = ({
       total_results: organized.body.hits.total.value,
       total_results_with_board:
         posts_count_with_boards +
         organized.body.aggregations.boards.sum_other_doc_count,
       boards: organized.body.aggregations.boards.buckets,
-    };
+    } as unknown) as Data;
 
     await saveCache.execute(
       `userPostsData:${username}:${from}:${to}`,

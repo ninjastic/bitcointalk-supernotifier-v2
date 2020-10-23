@@ -1,4 +1,9 @@
+import { container } from 'tsyringe';
 import esClient from '../../../services/elastic';
+
+import GetCacheService from '../../../container/providers/services/GetCacheService';
+import SaveCacheService from '../../../container/providers/services/SaveCacheService';
+import GetAuthorInfoService from './GetAuthorInfoService';
 
 interface Params {
   username: string;
@@ -6,21 +11,27 @@ interface Params {
   to?: string;
 }
 
+interface Response {
+  title: string;
+  topic_id: number;
+  count: number;
+}
+
 export default class GetUserTopTopicsService {
-  public async execute({ username, from, to }: Params): Promise<any> {
-    const dataUsername = await esClient.search({
-      index: 'posts',
-      track_total_hits: true,
-      _source: ['author', 'author_uid'],
-      size: 1,
-      body: {
-        query: {
-          match: {
-            author: username,
-          },
-        },
-      },
-    });
+  public async execute({ username, from, to }: Params): Promise<Response[]> {
+    const getCache = container.resolve(GetCacheService);
+    const saveCache = container.resolve(SaveCacheService);
+    const getAuthorInfo = container.resolve(GetAuthorInfoService);
+
+    const cachedData = await getCache.execute<Response[]>(
+      `userTopTopics:${username}:${from}:${to}`,
+    );
+
+    if (cachedData) {
+      return cachedData;
+    }
+
+    const authorInfo = await getAuthorInfo.execute({ username });
 
     const dataRaw = await esClient.search({
       index: 'posts',
@@ -33,7 +44,7 @@ export default class GetUserTopTopicsService {
               {
                 term: {
                   author_uid: {
-                    value: dataUsername.body.hits.hits[0]?._source.author_uid,
+                    value: authorInfo.author_uid,
                   },
                 },
               },
@@ -76,6 +87,13 @@ export default class GetUserTopTopicsService {
         count: topic.doc_count,
       };
     });
+
+    await saveCache.execute(
+      `userTopTopics:${username}:${from}:${to}`,
+      data,
+      'EX',
+      240,
+    );
 
     return data;
   }

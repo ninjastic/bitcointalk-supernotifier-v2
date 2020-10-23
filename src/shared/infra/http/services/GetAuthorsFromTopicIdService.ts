@@ -16,7 +16,7 @@ export default class GetAuthorsFromTopicIdService {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: 2000,
+              size: 1000,
             },
             aggs: {
               author_uid: {

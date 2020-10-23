@@ -95,6 +95,7 @@ export default class PostsRepository implements IPostsRepository {
       content,
       topic_id,
       board,
+      child_boards,
       last,
       after,
       after_date,
@@ -154,10 +155,14 @@ export default class PostsRepository implements IPostsRepository {
     }
 
     if (board) {
-      const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
-      const boards = await getBoardChildrensFromId.execute(board);
+      if (child_boards) {
+        const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
+        const boards = await getBoardChildrensFromId.execute(board);
 
-      must.push({ terms: { board_id: boards } });
+        must.push({ terms: { board_id: boards } });
+      } else {
+        must.push({ terms: { board_id: [board] } });
+      }
     }
 
     const results = await esClient.search<Post>({

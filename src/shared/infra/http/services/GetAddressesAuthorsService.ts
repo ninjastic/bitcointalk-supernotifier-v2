@@ -2,9 +2,12 @@ import esClient from '../../../services/elastic';
 
 import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
+import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+
 export default class GetAddressesAuthorsService {
   public async execute(query: IFindPostAddressesDTO): Promise<any> {
-    const { address, author, coin, post_id, topic_id, board } = query || {};
+    const { address, author, coin, post_id, topic_id, board, child_boards } =
+      query || {};
 
     const must = [];
 
@@ -29,7 +32,14 @@ export default class GetAddressesAuthorsService {
     }
 
     if (board) {
-      must.push({ match: { board_id: board } });
+      if (child_boards) {
+        const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
+        const boards = await getBoardChildrensFromId.execute(board);
+
+        must.push({ terms: { board_id: boards } });
+      } else {
+        must.push({ terms: { board_id: [board] } });
+      }
     }
 
     const results = await esClient.search({
@@ -46,7 +56,7 @@ export default class GetAddressesAuthorsService {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: 2000,
+              size: 1000,
             },
             aggs: {
               author_uid: {
