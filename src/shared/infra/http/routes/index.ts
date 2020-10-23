@@ -7,6 +7,9 @@ import TopTopicsPostsPerHourController from '../controllers/TopTopicsPostsPerHou
 import TopUsersPostsPerHourController from '../controllers/TopUsersPostsPerHourController';
 import TopBoardsPostsPerHourController from '../controllers/TopBoardsPostsPerHourController';
 
+import PostsAuthorsController from '../controllers/PostsAuthorsController';
+import AddressesAuthorsController from '../controllers/AddressesAuthorsController';
+
 import PostsAddressesController from '../controllers/PostsAddressesController';
 import TopicsController from '../controllers/TopicsController';
 import TopicsAuthorsController from '../controllers/TopicsAuthorsController';
@@ -48,18 +51,22 @@ const userTopTopicsController = new UserTopTopicsController();
 const topTopicsPostsPerHourController = new TopTopicsPostsPerHourController();
 const topUsersPostsPerHourController = new TopUsersPostsPerHourController();
 const topBoardsPostsPerHourController = new TopBoardsPostsPerHourController();
+const postsAuthorsController = new PostsAuthorsController();
+const addressesAuthorsController = new AddressesAuthorsController();
 
 routes.get('/posts', postsController.index);
 routes.get('/posts/history', postsHistoryController.index);
 routes.get('/posts/count', postsDataOnPeriodController.show);
 routes.get('/posts/topic/:topic_id/authors', topicsAuthorsController.show);
 routes.get('/posts/topic/:topic_id', topicsController.show);
-routes.get('/posts/topics', topTopicsPostsPerHourController.show);
-routes.get('/posts/authors', topUsersPostsPerHourController.show);
+routes.get('/posts/topics/top', topTopicsPostsPerHourController.show);
+routes.get('/posts/authors', postsAuthorsController.index);
+routes.get('/posts/authors/top', topUsersPostsPerHourController.show);
 routes.get('/posts/:ids', postsController.show);
 routes.get('/posts/:post_id/history', postsHistoryController.show);
 
 routes.get('/addresses', addressesController.index);
+routes.get('/addresses/authors', addressesAuthorsController.index);
 routes.get('/addresses/post/:post_id', postsAddressesController.show);
 routes.get('/addresses/:address', addressesController.show);
 routes.get('/addresses/:address/authors', addressAuthorsController.show);

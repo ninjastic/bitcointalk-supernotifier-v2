@@ -6,14 +6,34 @@ import IPostsRepository from '../../../../modules/posts/repositories/IPostsRepos
 
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
+interface Post {
+  post_id: number;
+  topic_id: number;
+  author: string;
+  author_uid: number;
+  title: string;
+  content: string;
+  date: string;
+  board_id: number;
+  board_name: string;
+  archive: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Data {
+  total_results: number;
+  posts: Post[];
+}
+
 @injectable()
-export default class PostSearchService {
+export default class GetPostSearchService {
   constructor(
     @inject('PostsRepository')
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute(query: IFindPostsConditionsDTO): Promise<any> {
+  public async execute(query: IFindPostsConditionsDTO): Promise<Data> {
     const limit = Math.min(query.limit || 20, 200);
 
     const results = await this.postsRepository.findPostsES({ ...query, limit });

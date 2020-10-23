@@ -123,8 +123,11 @@ export default class PostsRepository implements IPostsRepository {
 
     if (content) {
       must.push({
-        match_phrase_prefix: {
-          content: { query: content },
+        match: {
+          content: {
+            query: content,
+            minimum_should_match: '100%',
+          },
         },
       });
     }
