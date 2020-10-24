@@ -70,7 +70,10 @@ export default class GetPostsAuthorsService {
     }
 
     if (board) {
-      if (child_boards) {
+      if (
+        child_boards &&
+        (child_boards === '1' || child_boards.toLowerCase() === 'true')
+      ) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
 

@@ -5,7 +5,7 @@ export default interface IFindPostAddressesDTO {
   topic_id?: number;
   author?: string;
   board?: number;
-  child_boards?: boolean;
+  child_boards?: string;
   last?: number;
   order?: 'ASC' | 'DESC';
   limit?: number;

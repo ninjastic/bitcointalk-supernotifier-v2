@@ -17,6 +17,7 @@ export default class AddressesAuthorsController {
       author: Joi.string().allow('', null),
       coin: Joi.string().allow('', null),
       board: Joi.number().allow('', null),
+      child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
     });
 
     const query = request.query as unknown;

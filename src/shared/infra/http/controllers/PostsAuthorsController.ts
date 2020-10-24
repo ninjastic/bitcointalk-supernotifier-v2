@@ -17,6 +17,7 @@ export default class PostsAuthorsController {
       content: Joi.string().allow('', null),
       topic_id: Joi.number().allow('', null),
       board: Joi.number().allow('', null),
+      child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       after_date: Joi.string().isoDate().allow('', null),
       before_date: Joi.string().isoDate().allow('', null),
     });

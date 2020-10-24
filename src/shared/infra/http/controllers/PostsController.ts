@@ -50,6 +50,7 @@ export default class PostsController {
       content: Joi.string().allow('', null),
       topic_id: Joi.number().allow('', null),
       board: Joi.number().allow('', null),
+      child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       last: Joi.number().allow('', null),
       after: Joi.number().allow('', null),
       after_date: Joi.string().isoDate().allow('', null),

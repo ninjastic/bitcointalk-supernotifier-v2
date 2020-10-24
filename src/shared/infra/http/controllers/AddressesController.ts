@@ -70,6 +70,7 @@ export default class AddressesController {
       post_id: Joi.number().allow('', null),
       topic_id: Joi.number().allow('', null),
       board: Joi.number().allow('', null),
+      child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       last: Joi.number().allow('', null),
       order: Joi.string().valid('ASC', 'DESC').insensitive().allow('', null),
       limit: Joi.number().allow('', null),

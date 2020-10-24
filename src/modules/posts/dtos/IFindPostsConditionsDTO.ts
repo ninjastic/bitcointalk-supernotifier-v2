@@ -4,7 +4,7 @@ export default interface IFindPostsConditionsDTO {
   content?: string;
   topic_id?: number;
   board?: number;
-  child_boards?: boolean;
+  child_boards?: string;
   last?: number;
   after?: number;
   after_date?: string;

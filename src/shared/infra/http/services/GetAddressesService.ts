@@ -4,6 +4,7 @@ import esClient from '../../../services/elastic';
 
 import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 
 export default class GetAddressesService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<any> {
@@ -16,6 +17,7 @@ export default class GetAddressesService {
       post_id,
       topic_id,
       board,
+      child_boards,
       last,
       order,
       limit,
@@ -44,7 +46,17 @@ export default class GetAddressesService {
     }
 
     if (board) {
-      must.push({ match: { board_id: board } });
+      if (
+        child_boards &&
+        (child_boards === '1' || child_boards.toLowerCase() === 'true')
+      ) {
+        const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
+        const boards = await getBoardChildrensFromId.execute(board);
+
+        must.push({ terms: { board_id: boards } });
+      } else {
+        must.push({ terms: { board_id: [board] } });
+      }
     }
 
     if (last) {
