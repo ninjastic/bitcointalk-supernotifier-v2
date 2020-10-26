@@ -4,16 +4,13 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetTopUserPostsPerHourService from '../services/GetTopUserPostsPerHourService';
+import GetPostsBoardsPeriodService from '../services/GetPostsBoardsPeriodService';
+import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
-export default class TopUsersPostsPerHourController {
+export default class PostsBoardsPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getTopUserPostsPerHour = new GetTopUserPostsPerHourService();
-
-    const query = (request.query as unknown) as {
-      from: string;
-      to: string;
-    };
+    const getPostsBoardsPeriod = new GetPostsBoardsPeriodService();
+    const getBoardsListService = new GetBoardsListService();
 
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
@@ -29,8 +26,8 @@ export default class TopUsersPostsPerHourController {
     });
 
     const settings = {
-      from: query.from || defaultFrom,
-      to: query.to || defaultTo,
+      from: (request.query.from || defaultFrom) as string,
+      to: (request.query.to || defaultTo) as string,
     };
 
     try {
@@ -44,7 +41,16 @@ export default class TopUsersPostsPerHourController {
     }
 
     try {
-      const data = await getTopUserPostsPerHour.execute(settings);
+      const results = await getPostsBoardsPeriod.execute(settings);
+      const boards = await getBoardsListService.execute(true);
+
+      const data = results.map(result => {
+        return {
+          board_name: boards.find(board => board.board_id === result.board_id)
+            ?.name,
+          ...result,
+        };
+      });
 
       const result = {
         result: 'success',
@@ -56,7 +62,7 @@ export default class TopUsersPostsPerHourController {
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
-        'Error on TopUsersPostsPerHourController',
+        'Error on PostsBoardsPeriodController',
       );
       return response
         .status(500)

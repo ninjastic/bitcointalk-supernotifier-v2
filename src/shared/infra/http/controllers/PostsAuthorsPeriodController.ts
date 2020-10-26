@@ -4,37 +4,37 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetPostsDataOnPeriodService from '../../../../modules/posts/services/GetPostsDataOnPeriodService';
+import GetPostsAuthorsPeriodService from '../services/GetPostsAuthorsPeriodService';
 
-export default class PostsDataOnPeriodController {
+export default class PostsAuthorsPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getPostsDataOnPeriod = new GetPostsDataOnPeriodService();
+    const getPostsAuthorsPeriod = new GetPostsAuthorsPeriodService();
+
+    const query = (request.query as unknown) as {
+      from: string;
+      to: string;
+    };
 
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
 
-    const { from, to, interval } = request.query as {
-      from: string;
-      to: string;
-      interval: string;
-    };
-
-    const query = {
-      from: from || startOfHour(sub(dateUTC, { days: 1 })).toISOString(),
-      to: to || endOfHour(sub(dateUTC, { hours: 1 })).toISOString(),
-      interval: interval || '30m',
-    };
+    const defaultFrom = startOfHour(
+      sub(dateUTC, { days: 1, hours: 1 }),
+    ).toISOString();
+    const defaultTo = endOfHour(sub(dateUTC, { hours: 1 })).toISOString();
 
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
-      interval: Joi.string()
-        .regex(/^\d{0,3}(d|h|m)$/)
-        .allow('', null),
     });
 
+    const settings = {
+      from: query.from || defaultFrom,
+      to: query.to || defaultTo,
+    };
+
     try {
-      await schemaValidation.validateAsync(query);
+      await schemaValidation.validateAsync(settings);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -44,7 +44,7 @@ export default class PostsDataOnPeriodController {
     }
 
     try {
-      const data = await getPostsDataOnPeriod.execute(query);
+      const data = await getPostsAuthorsPeriod.execute(settings);
 
       const result = {
         result: 'success',
@@ -56,7 +56,7 @@ export default class PostsDataOnPeriodController {
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
-        'Error on PostsDataOnPeriodController',
+        'Error on PostsAuthorsPeriodController',
       );
       return response
         .status(500)

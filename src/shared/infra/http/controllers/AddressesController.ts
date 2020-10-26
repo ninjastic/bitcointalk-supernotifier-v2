@@ -51,33 +51,23 @@ export default class AddressesController {
   public async index(request: Request, response: Response): Promise<Response> {
     const getAddresses = container.resolve(GetAddressesService);
 
-    const params = (request.query as unknown) as {
-      address: string;
-      author: string;
-      coin: string;
-      post_id: number;
-      topic_id: number;
-      board_id: number;
-      last: number;
-      order: 'ASC' | 'DESC';
-      limit: number;
-    };
+    const { query } = request;
 
     const schemaValidation = Joi.object({
-      address: Joi.string().allow('', null),
-      author: Joi.string().allow('', null),
-      coin: Joi.string().valid('BTC', 'ETH').insensitive().allow('', null),
-      post_id: Joi.number().allow('', null),
-      topic_id: Joi.number().allow('', null),
-      board: Joi.number().allow('', null),
-      child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
-      last: Joi.number().allow('', null),
-      order: Joi.string().valid('ASC', 'DESC').insensitive().allow('', null),
-      limit: Joi.number().allow('', null),
+      address: Joi.string(),
+      author: Joi.string(),
+      coin: Joi.string().valid('BTC', 'ETH').insensitive(),
+      post_id: Joi.number(),
+      topic_id: Joi.number(),
+      board: Joi.number(),
+      child_boards: Joi.number().allow('1', '0'),
+      last: Joi.number(),
+      order: Joi.string().valid('ASC', 'DESC').insensitive(),
+      limit: Joi.number(),
     });
 
     try {
-      await schemaValidation.validateAsync(request.query);
+      await schemaValidation.validateAsync(query);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -87,7 +77,7 @@ export default class AddressesController {
     }
 
     try {
-      const data = await getAddresses.execute(params);
+      const data = await getAddresses.execute(query);
 
       const result = {
         result: 'success',
@@ -97,10 +87,11 @@ export default class AddressesController {
 
       return response.json(result);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on AddressesController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'AddressesController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

@@ -9,14 +9,12 @@ export default class UserInfoController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getUserInfoService = new GetUserInfoService();
 
-    const params = (request.params as unknown) as { username: string };
-
     const schemaValidation = Joi.object({
       username: Joi.string().required(),
     });
 
     try {
-      await schemaValidation.validateAsync(params);
+      await schemaValidation.validateAsync(request.params);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -25,24 +23,16 @@ export default class UserInfoController {
       });
     }
 
-    try {
-      const data = await getUserInfoService.execute(params);
+    const data = await getUserInfoService.execute({
+      username: request.params.username,
+    });
 
-      const result = {
-        result: 'success',
-        message: null,
-        data,
-      };
+    const result = {
+      result: 'success',
+      message: null,
+      data,
+    };
 
-      return response.json(result);
-    } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on UserInfoController',
-      );
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
-    }
+    return response.json(result);
   }
 }

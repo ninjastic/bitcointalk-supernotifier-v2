@@ -1,27 +1,29 @@
 import { container } from 'tsyringe';
 
-import esClient from '../../../shared/services/elastic';
+import esClient from '../../../services/elastic';
 
-import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
-import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
+import GetCacheService from '../../../container/providers/services/GetCacheService';
+import SaveCacheService from '../../../container/providers/services/SaveCacheService';
 
-interface GetPostsDataOnPeriodParams {
+interface Params {
   from: string;
   to: string;
   interval: string;
 }
 
-export default class GetPostsDataOnPeriodService {
-  public async execute({
-    from,
-    to,
-    interval,
-  }: GetPostsDataOnPeriodParams): Promise<any> {
+interface Data {
+  key_as_string: string;
+  key: number;
+  doc_count: number;
+}
+
+export default class GetPostsCountPeriodService {
+  public async execute({ from, to, interval }: Params): Promise<Data[]> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute(
-      `postsDataOnPeriod:${from}-${to}-${interval}`,
+    const cachedData = await getCache.execute<Data[]>(
+      `postsCountPeriod:${from}-${to}-${interval}`,
     );
 
     if (cachedData) {
@@ -65,7 +67,7 @@ export default class GetPostsDataOnPeriodService {
     const data = results.body.aggregations.date.buckets;
 
     await saveCache.execute(
-      `postsDataOnPeriod:${from}-${to}-${interval}`,
+      `postsCountPeriod:${from}-${to}-${interval}`,
       data,
       'EX',
       180,

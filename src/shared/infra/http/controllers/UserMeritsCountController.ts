@@ -12,16 +12,12 @@ export default class UserMeritsCountController {
       GetUserMeritCountOnPeriodService,
     );
 
-    const params = (request.params as unknown) as {
-      username: string;
-    };
-
     const schemaValidation = Joi.object({
       username: Joi.string().required(),
     });
 
     try {
-      await schemaValidation.validateAsync(params);
+      await schemaValidation.validateAsync(request.params);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -31,7 +27,9 @@ export default class UserMeritsCountController {
     }
 
     try {
-      const data = await getUserMeritCountOnPeriod.execute(params);
+      const data = await getUserMeritCountOnPeriod.execute({
+        username: request.params.username,
+      });
 
       const result = {
         result: 'success',
@@ -41,10 +39,11 @@ export default class UserMeritsCountController {
 
       return response.json(result);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on UserMeritsDataController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'UserMeritsDataController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

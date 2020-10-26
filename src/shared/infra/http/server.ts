@@ -2,13 +2,14 @@ import 'reflect-metadata';
 import express, { Express } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import bodyParser from 'body-parser';
 
 import '../typeorm';
 import '../../container';
 
-import { loggerHttp } from '../../services/logger';
+import loggerHttp from './middlewares/loggerHttp';
+import rateLimiter from './middlewares/rateLimiter';
+
 import routes from './routes';
 
 class Server {
@@ -17,45 +18,27 @@ class Server {
   constructor() {
     this.app = express();
     this.middlewares();
+    this.app.use(routes);
+    this.exceptionHandler();
     this.app.listen(3333);
   }
 
   middlewares() {
     this.app.use(helmet());
     this.app.use(bodyParser.json());
-
-    const whitelist = [
-      'https://ninjastic.design',
-      'https://ninjastic.space',
-      'http://localhost:3000',
-    ];
-    const corsOptions = {
-      origin(origin, callback) {
-        if (
-          whitelist.indexOf(origin) !== -1 ||
-          process.env.NODE_ENV === 'development'
-        ) {
-          callback(null, true);
-        } else {
-          callback(null, false);
-        }
-      },
-    };
-
-    this.app.use(cors(corsOptions));
-
-    const limiter = rateLimit({
-      windowMs: 1 * 60 * 1000,
-      max: 100,
-    });
-
-    this.app.use(limiter);
+    this.app.use(cors());
+    this.app.use(rateLimiter);
 
     if (process.env.NODE_ENV !== 'development') {
       this.app.use(loggerHttp);
     }
+  }
 
-    this.app.use(routes);
+  exceptionHandler() {
+    this.app.use((error, req, res, next) => {
+      console.log('abc');
+      return res.status(500).json({ error: error.toString() });
+    });
   }
 }
 

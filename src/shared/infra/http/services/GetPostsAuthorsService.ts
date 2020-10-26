@@ -120,7 +120,7 @@ export default class GetPostsAuthorsService {
     });
 
     const response = {
-      total_results: results.body.hits.total.value,
+      total_results: authors.length,
       authors,
     };
 

@@ -4,16 +4,11 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetTopTopicsPostsPerHourService from '../services/GetTopTopicsPostsPerHourService';
+import GetPostsTopicsPeriodService from '../services/GetPostsTopicsPeriodService';
 
-export default class TopTopicsPostsPerHourController {
+export default class PostsTopicsPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getTopTopicsPostsPerHour = new GetTopTopicsPostsPerHourService();
-
-    const query = (request.query as unknown) as {
-      from: string;
-      to: string;
-    };
+    const getPostsTopicsPeriod = new GetPostsTopicsPeriodService();
 
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
@@ -28,13 +23,13 @@ export default class TopTopicsPostsPerHourController {
       to: Joi.string().isoDate().allow('', null),
     });
 
-    const settings = {
-      from: query.from || defaultFrom,
-      to: query.to || defaultTo,
+    const query = {
+      from: (request.query.from || defaultFrom) as string,
+      to: (request.query.to || defaultTo) as string,
     };
 
     try {
-      await schemaValidation.validateAsync(settings);
+      await schemaValidation.validateAsync(query);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -44,7 +39,7 @@ export default class TopTopicsPostsPerHourController {
     }
 
     try {
-      const data = await getTopTopicsPostsPerHour.execute(settings);
+      const data = await getPostsTopicsPeriod.execute(query);
 
       const result = {
         result: 'success',
@@ -56,7 +51,7 @@ export default class TopTopicsPostsPerHourController {
     } catch (error) {
       logger.error(
         { error: error.message, stack: error.stack },
-        'Error on TopTopicsPostsPerHourController',
+        'Error on PostsTopicsPeriodController',
       );
       return response
         .status(500)

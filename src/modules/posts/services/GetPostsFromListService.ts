@@ -5,6 +5,10 @@ import IPostsRepository from '../repositories/IPostsRepository';
 
 import GetBoardsListService from './GetBoardsListService';
 
+interface Params {
+  id_list: number[];
+}
+
 @injectable()
 export default class GetPostsService {
   constructor(
@@ -12,10 +16,10 @@ export default class GetPostsService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute({ ids }: { ids: number[] }): Promise<ApiResponse> {
+  public async execute({ id_list }: Params): Promise<ApiResponse> {
     const getBoardsList = container.resolve(GetBoardsListService);
 
-    const results = await this.postsRepository.findPostsFromListES(ids);
+    const results = await this.postsRepository.findPostsFromListES(id_list);
     const boards = await getBoardsList.execute(true);
 
     const data = results.map(post => {

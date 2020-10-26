@@ -13,16 +13,16 @@ export default class PostsController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getPostsFromList = container.resolve(GetPostsFromListService);
 
-    const params = (request.params as unknown) as { ids: string };
+    const params = (request.params as unknown) as { id_list: string };
 
-    const ids = params.ids.split(',').map(id => Number(id));
+    const id_list = params.id_list.split(',').map(id => Number(id));
 
     const schemaValidation = Joi.object({
-      ids: Joi.array().items(Joi.number()),
+      id_list: Joi.array().items(Joi.number()),
     });
 
     try {
-      await schemaValidation.validateAsync({ ids });
+      await schemaValidation.validateAsync({ id_list });
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -31,7 +31,7 @@ export default class PostsController {
       });
     }
 
-    const data = await getPostsFromList.execute({ ids });
+    const data = await getPostsFromList.execute({ id_list });
 
     const result = {
       result: 'success',

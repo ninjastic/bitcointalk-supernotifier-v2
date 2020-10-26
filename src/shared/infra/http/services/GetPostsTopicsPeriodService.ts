@@ -5,8 +5,18 @@ interface Params {
   to?: string;
 }
 
-export default class GetTopUserPostsPerHourService {
-  public async execute({ from, to }: Params): Promise<any> {
+interface Data {
+  title: string;
+  topic_id: number;
+  timestamps: Array<{
+    key_as_string: string;
+    key: number;
+    doc_count: number;
+  }>;
+}
+
+export default class GetPostsTopicsPeriodService {
+  public async execute({ from, to }: Params): Promise<Data[]> {
     const dataRaw = await esClient.search({
       index: 'posts',
       size: 0,
@@ -27,9 +37,9 @@ export default class GetTopUserPostsPerHourService {
           },
         },
         aggs: {
-          authors: {
+          topics: {
             terms: {
-              field: 'author.keyword',
+              field: 'topic_id',
               size: 10,
             },
             aggs: {
@@ -43,16 +53,25 @@ export default class GetTopUserPostsPerHourService {
                   },
                 },
               },
+              title: {
+                top_hits: {
+                  size: 1,
+                  _source: {
+                    includes: ['title'],
+                  },
+                },
+              },
             },
           },
         },
       },
     });
 
-    const data = dataRaw.body.aggregations.authors.buckets.map(author => {
+    const data = dataRaw.body.aggregations.topics.buckets.map(topic => {
       return {
-        author: author.key,
-        timestamps: author.date.buckets,
+        title: topic.title.hits.hits[0]._source.title,
+        topic_id: topic.key,
+        timestamps: topic.date.buckets,
       };
     });
 

@@ -6,8 +6,38 @@ import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddre
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 
+interface Address {
+  address: string;
+  coin: 'BTC' | 'ETH';
+  post_id: number;
+  topic_id: number;
+  author: string;
+  author_uid: number;
+  title: string;
+  content: string;
+  date: string;
+  board_id: number;
+  board_name: string;
+}
+
+interface SearchResponse<T> {
+  hits: {
+    total: {
+      value: number;
+    };
+    hits: Array<{
+      _source: T;
+    }>;
+  };
+}
+
+interface Data {
+  total_results: number;
+  addresses: Address[];
+}
+
 export default class GetAddressesService {
-  public async execute(conditions: IFindPostAddressesDTO): Promise<any> {
+  public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
     const getBoardsList = container.resolve(GetBoardsListService);
 
     const {
@@ -46,10 +76,7 @@ export default class GetAddressesService {
     }
 
     if (board) {
-      if (
-        child_boards &&
-        (child_boards === '1' || child_boards.toLowerCase() === 'true')
-      ) {
+      if (child_boards && Number(child_boards) === 1) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
 
@@ -59,17 +86,11 @@ export default class GetAddressesService {
       }
     }
 
-    if (last) {
-      must.push({
-        range: {
-          post_id: {
-            lt: Number(last) ? last : null,
-          },
-        },
-      });
+    if (last && Number(last)) {
+      must.push({ range: { post_id: { lt: last } } });
     }
 
-    const results = await esClient.search({
+    const results = await esClient.search<SearchResponse<Address>>({
       index: 'posts_addresses',
       track_total_hits: true,
       size: limit || 100,
@@ -85,27 +106,28 @@ export default class GetAddressesService {
 
     const boards = await getBoardsList.execute(true);
 
-    const data = results.body.hits.hits.map(raw => {
-      const e = raw._source;
-
+    const addresses = results.body.hits.hits.map(({ _source: record }) => {
       return {
-        address: e.address,
-        coin: e.coin,
-        post_id: e.post_id,
-        topic_id: e.topic_id,
-        author: e.author,
-        author_uid: e.author_uid,
-        title: e.title,
-        content: e.content,
-        date: e.date,
-        board_id: e.board_id,
-        board_name: boards.find(b => b.board_id === e.board_id)?.name || null,
+        address: record.address,
+        coin: record.coin,
+        post_id: record.post_id,
+        topic_id: record.topic_id,
+        author: record.author,
+        author_uid: record.author_uid,
+        title: record.title,
+        content: record.content,
+        date: record.date,
+        board_id: record.board_id,
+        board_name:
+          boards.find(b => b.board_id === record.board_id)?.name || null,
       };
     });
 
-    return {
+    const data = {
       total_results: results.body.hits.total.value,
-      addresses: data,
+      addresses,
     };
+
+    return data;
   }
 }

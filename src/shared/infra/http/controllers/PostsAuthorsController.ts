@@ -10,7 +10,7 @@ import GetPostsAuthorsService from '../services/GetPostsAuthorsService';
 
 export default class PostsAuthorsController {
   public async index(request: Request, response: Response): Promise<Response> {
-    const getPosts = container.resolve(GetPostsAuthorsService);
+    const getPostsAuthors = container.resolve(GetPostsAuthorsService);
 
     const schemaValidation = Joi.object({
       author: Joi.string().allow('', null),
@@ -35,7 +35,9 @@ export default class PostsAuthorsController {
     }
 
     try {
-      const data = await getPosts.execute(query as IFindPostsConditionsDTO);
+      const data = await getPostsAuthors.execute(
+        query as IFindPostsConditionsDTO,
+      );
 
       const result = {
         result: 'success',

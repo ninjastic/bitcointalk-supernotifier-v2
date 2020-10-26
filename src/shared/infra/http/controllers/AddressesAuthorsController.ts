@@ -13,11 +13,16 @@ export default class AddressesAuthorsController {
     const getAddresses = container.resolve(GetAddressesAuthorsService);
 
     const schemaValidation = Joi.object({
-      address: Joi.string().allow('', null),
-      author: Joi.string().allow('', null),
-      coin: Joi.string().allow('', null),
-      board: Joi.number().allow('', null),
-      child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
+      address: Joi.string(),
+      author: Joi.string(),
+      coin: Joi.string().valid('BTC', 'ETH').insensitive(),
+      post_id: Joi.number(),
+      topic_id: Joi.number(),
+      board: Joi.number(),
+      child_boards: Joi.number().allow('1', '0'),
+      last: Joi.number(),
+      order: Joi.string().valid('ASC', 'DESC').insensitive(),
+      limit: Joi.number(),
     });
 
     const query = request.query as unknown;

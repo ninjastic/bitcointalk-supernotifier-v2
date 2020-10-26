@@ -5,8 +5,17 @@ interface Params {
   to?: string;
 }
 
-export default class GetUserTopTopicsService {
-  public async execute({ from, to }: Params): Promise<any> {
+interface Data {
+  board_id: number;
+  timestamps: Array<{
+    key_as_string: string;
+    key: number;
+    doc_count: number;
+  }>;
+}
+
+export default class GetPostsBoardsPeriodService {
+  public async execute({ from, to }: Params): Promise<Data[]> {
     const dataRaw = await esClient.search({
       index: 'posts',
       size: 0,
@@ -27,9 +36,9 @@ export default class GetUserTopTopicsService {
           },
         },
         aggs: {
-          topics: {
+          boards: {
             terms: {
-              field: 'topic_id',
+              field: 'board_id',
               size: 10,
             },
             aggs: {
@@ -43,25 +52,16 @@ export default class GetUserTopTopicsService {
                   },
                 },
               },
-              title: {
-                top_hits: {
-                  size: 1,
-                  _source: {
-                    includes: ['title'],
-                  },
-                },
-              },
             },
           },
         },
       },
     });
 
-    const data = dataRaw.body.aggregations.topics.buckets.map(topic => {
+    const data = dataRaw.body.aggregations.boards.buckets.map(board => {
       return {
-        title: topic.title.hits.hits[0]._source.title,
-        topic_id: topic.key,
-        timestamps: topic.date.buckets,
+        board_id: board.key,
+        timestamps: board.date.buckets,
       };
     });
 
