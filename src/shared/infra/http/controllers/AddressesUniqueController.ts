@@ -6,11 +6,11 @@ import logger from '../../../services/logger';
 
 import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
-import GetAddressesAuthorsService from '../services/GetAddressesAuthorsService';
+import GetAddressesUniqueService from '../services/GetAddressesUniqueService';
 
-export default class AddressesAuthorsController {
+export default class AddressesUniqueController {
   public async index(request: Request, response: Response): Promise<Response> {
-    const getAddressesAuthors = container.resolve(GetAddressesAuthorsService);
+    const getAddressesUnique = container.resolve(GetAddressesUniqueService);
 
     const schemaValidation = Joi.object({
       address: Joi.string(),
@@ -35,7 +35,7 @@ export default class AddressesAuthorsController {
     }
 
     try {
-      const data = await getAddressesAuthors.execute(
+      const data = await getAddressesUnique.execute(
         query as IFindPostAddressesDTO,
       );
 
@@ -47,10 +47,11 @@ export default class AddressesAuthorsController {
 
       return response.json(result);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on AddressesAuthorsController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'AddressesUniqueController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

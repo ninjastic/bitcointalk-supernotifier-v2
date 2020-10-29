@@ -13,8 +13,15 @@ export default class AddressesController {
 
     const params = (request.params as unknown) as { address: string };
 
+    const addressRegex = new RegExp(
+      /0x[a-fA-F0-9]{40}|(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/,
+    );
+
     const schemaValidation = Joi.object({
-      address: Joi.string().required(),
+      address: Joi.string()
+        .regex(addressRegex)
+        .message('Address is invalid')
+        .required(),
     });
 
     try {

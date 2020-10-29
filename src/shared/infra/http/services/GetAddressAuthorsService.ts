@@ -15,7 +15,6 @@ export default class GetAddressAuthorsService {
       child_boards,
       after_date,
       before_date,
-      order,
     } = query || {};
 
     const must = [];
@@ -93,7 +92,6 @@ export default class GetAddressAuthorsService {
             },
           },
         },
-        sort: [{ date: { order: order || 'DESC' } }],
       },
     });
 
