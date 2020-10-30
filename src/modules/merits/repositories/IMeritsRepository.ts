@@ -7,5 +7,5 @@ export default interface IMeritsRepository {
   save(merit: Merit): Promise<Merit>;
   findOne(merit: FindMeritDTO): Promise<Merit | null>;
   getLatestUncheckedMerits(limit: number): Promise<Merit[]>;
-  getAmountByUserOnPeriod(username: string): Promise<any>;
+  getAmountByUserOnPeriod(author_uid: number): Promise<any>;
 }

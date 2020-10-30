@@ -4,6 +4,10 @@ import Merit from '../infra/typeorm/entities/Merit';
 
 import IMeritsRepository from '../repositories/IMeritsRepository';
 
+interface Params {
+  author_uid: number;
+}
+
 @injectable()
 export default class GetUserMeritCountOnPeriodService {
   constructor(
@@ -11,7 +15,7 @@ export default class GetUserMeritCountOnPeriodService {
     private meritsRepository: IMeritsRepository,
   ) {}
 
-  public async execute({ username }: { username: string }): Promise<Merit[]> {
-    return this.meritsRepository.getAmountByUserOnPeriod(username);
+  public async execute({ author_uid }: Params): Promise<Merit[]> {
+    return this.meritsRepository.getAmountByUserOnPeriod(author_uid);
   }
 }

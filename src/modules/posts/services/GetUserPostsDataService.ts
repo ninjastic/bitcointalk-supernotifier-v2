@@ -5,10 +5,9 @@ import esClient from '../../../shared/services/elastic';
 
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
-import GetAuthorInfoService from '../../../shared/infra/http/services/GetAuthorInfoService';
 
 interface Params {
-  username: string;
+  author_uid: number;
   from: string;
   to: string;
 }
@@ -26,21 +25,17 @@ interface Data {
 }
 
 export default class GetUserPostsDataService {
-  public async execute({ username, from, to }: Params): Promise<Data> {
+  public async execute({ author_uid, from, to }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
-    const getAuthorInfo = container.resolve(GetAuthorInfoService);
 
     const cachedData = await getCache.execute<Data>(
-      `userPostsData:${username}:${from}:${to}`,
+      `userPostsData:${author_uid}:${from}:${to}`,
     );
 
     if (cachedData) {
       return cachedData;
     }
-
-    const authorInfo = await getAuthorInfo.execute({ username });
-
     const results = await esClient.search({
       index: 'posts',
       scroll: '1m',
@@ -52,7 +47,7 @@ export default class GetUserPostsDataService {
             must: [
               {
                 match: {
-                  author_uid: authorInfo.author_uid,
+                  author_uid,
                 },
               },
               {
@@ -85,14 +80,30 @@ export default class GetUserPostsDataService {
 
     const boards = await Promise.all(
       boardsData.map(async board => {
+        const cachedBoardsData = await getCache.execute(
+          `boardsRecursive:${board.key}`,
+        );
+
+        if (cachedBoardsData) {
+          return cachedBoardsData;
+        }
+
         const query = await getManager().query(
           'WITH RECURSIVE child_board AS (SELECT board_id, name, parent_id FROM boards where board_id = $1 UNION SELECT b.board_id, b.name, b.parent_id FROM boards b INNER JOIN child_board c ON b.parent_id = c.board_id ) SELECT * FROM child_board',
           [board.key],
         );
 
         const { name } = query[0];
+        const data = { name, key: board.key, count: board.doc_count };
 
-        return { name, key: board.key, count: board.doc_count };
+        await saveCache.execute(
+          `boardsRecursive:${board.key}`,
+          data,
+          'EX',
+          604800,
+        );
+
+        return data;
       }),
     );
 
@@ -125,7 +136,7 @@ export default class GetUserPostsDataService {
     } as unknown) as Data;
 
     await saveCache.execute(
-      `userPostsData:${username}:${from}:${to}`,
+      `userPostsData:${author_uid}:${from}:${to}`,
       data,
       'EX',
       180,

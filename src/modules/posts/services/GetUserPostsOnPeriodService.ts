@@ -4,10 +4,9 @@ import esClient from '../../../shared/services/elastic';
 
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
-import GetAuthorInfoService from '../../../shared/infra/http/services/GetAuthorInfoService';
 
 interface Params {
-  username: string;
+  author_uid: number;
   from: string;
   to: string;
   interval: string;
@@ -21,24 +20,21 @@ interface Data {
 
 export default class GetUserPostsOnPeriodService {
   public async execute({
-    username,
+    author_uid,
     from,
     to,
     interval,
   }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
-    const getAuthorInfo = container.resolve(GetAuthorInfoService);
 
     const cachedData = await getCache.execute<Data>(
-      `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
+      `userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`,
     );
 
     if (cachedData) {
       return cachedData;
     }
-
-    const authorInfo = await getAuthorInfo.execute({ username });
 
     const results = await esClient.search({
       index: 'posts',
@@ -53,7 +49,7 @@ export default class GetUserPostsOnPeriodService {
             must: [
               {
                 match: {
-                  author_uid: authorInfo.author_uid,
+                  author_uid,
                 },
               },
               {
@@ -90,7 +86,7 @@ export default class GetUserPostsOnPeriodService {
     const data = results.body.aggregations.date.buckets;
 
     await saveCache.execute(
-      `userPostsOnPeriod:${username}:${from}-${to}-${interval}`,
+      `userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`,
       data,
       'EX',
       180,

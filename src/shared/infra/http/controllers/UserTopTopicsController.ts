@@ -1,43 +1,40 @@
-import { Request, Response } from 'express';
-import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
+import { Request as ExpressRequest, Response } from 'express';
+import { sub, endOfHour, addMinutes } from 'date-fns';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
 import GetUserTopTopicsService from '../services/GetUserTopTopicsService';
 
+interface Request extends ExpressRequest {
+  query: {
+    from: string;
+    to: string;
+  };
+}
+
 export default class UserTopTopicsController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getUserTopTopics = new GetUserTopTopicsService();
-
-    const params = (request.params as unknown) as {
-      username: string;
-    };
-
-    const query = (request.query as unknown) as {
-      from: string;
-      to: string;
-    };
-
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
 
     const defaultTo = endOfHour(sub(dateUTC, { hours: 1 })).toISOString();
 
     const schemaValidation = Joi.object({
-      username: Joi.string().required(),
+      author_uid: Joi.number().required(),
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
     });
 
-    const settings = {
-      username: params.username,
-      from: query.from || null,
-      to: query.to || defaultTo,
+    const query = {
+      author_uid: request.author_uid,
+      from: request.query.from || null,
+      to: request.query.to || defaultTo,
     };
 
     try {
-      await schemaValidation.validateAsync(settings);
+      await schemaValidation.validateAsync(query);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -47,7 +44,7 @@ export default class UserTopTopicsController {
     }
 
     try {
-      const data = await getUserTopTopics.execute(settings);
+      const data = await getUserTopTopics.execute(query);
 
       const result = {
         result: 'success',

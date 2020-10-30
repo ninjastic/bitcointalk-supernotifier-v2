@@ -1,10 +1,10 @@
 import { container } from 'tsyringe';
 
-import esClient from '../../../shared/services/elastic';
+import esClient from '../../../services/elastic';
 
-import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
-import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
-import GetAuthorInfoService from '../../../shared/infra/http/services/GetAuthorInfoService';
+import GetCacheService from '../../../container/providers/services/GetCacheService';
+import SaveCacheService from '../../../container/providers/services/SaveCacheService';
+import GetAuthorBaseDataService from './GetAuthorBaseDataService';
 
 interface Data {
   author: string;
@@ -13,19 +13,27 @@ interface Data {
   other_usernames: string[];
 }
 
-export default class GetUserInfoService {
-  public async execute({ username }: { username: string }): Promise<Data> {
+interface Params {
+  author_uid: number;
+}
+
+export default class GetUserDataService {
+  public async execute({ author_uid }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
-    const getAuthorInfo = container.resolve(GetAuthorInfoService);
+    const getAuthorBaseData = container.resolve(GetAuthorBaseDataService);
 
-    const cachedData = await getCache.execute<Data>(`userInfo:${username}`);
+    const cachedData = await getCache.execute<Data>(`userData:${author_uid}`);
 
     if (cachedData) {
       return cachedData;
     }
 
-    const authorInfo = await getAuthorInfo.execute({ username });
+    const authorInfo = await getAuthorBaseData.execute({ author_uid });
+
+    if (!authorInfo) {
+      return null;
+    }
 
     const results = await esClient.search({
       index: 'posts',
@@ -56,10 +64,11 @@ export default class GetUserInfoService {
 
     const data = {
       ...authorInfo,
+      ...results.body.hits.hits[0]?._source,
       posts_count: results.body.hits.total.value,
     };
 
-    await saveCache.execute(`userInfo:${username}`, data, 'EX', 180);
+    await saveCache.execute(`userData:${author_uid}`, data, 'EX', 180);
 
     return data;
   }

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 import { sub, addMinutes, startOfDay, endOfDay } from 'date-fns';
 import Joi from 'joi';
 
@@ -6,22 +6,20 @@ import logger from '../../../services/logger';
 
 import GetUserPostsOnPeriodService from '../../../../modules/posts/services/GetUserPostsOnPeriodService';
 
+interface Request extends ExpressRequest {
+  query: {
+    from: string;
+    to: string;
+    interval: string;
+  };
+}
+
 export default class UserPostsPeriodsController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getUserPostsOnPeriod = new GetUserPostsOnPeriodService();
 
-    const params = (request.params as unknown) as {
-      username: string;
-    };
-
-    const query = (request.query as unknown) as {
-      from: string;
-      to: string;
-      interval: string;
-    };
-
     const schemaValidation = Joi.object({
-      username: Joi.string().required(),
+      author_uid: Joi.number().required(),
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
       interval: Joi.string()
@@ -35,15 +33,15 @@ export default class UserPostsPeriodsController {
     const defaultFrom = sub(startOfDay(dateUTC), { days: 6 }).toISOString();
     const defaultTo = endOfDay(dateUTC).toISOString();
 
-    const settings = {
-      username: params.username,
-      from: query.from || defaultFrom,
-      to: query.to || defaultTo,
-      interval: query.interval || '1d',
+    const query = {
+      author_uid: request.author_uid,
+      from: request.query.from || defaultFrom,
+      to: request.query.to || defaultTo,
+      interval: request.query.interval || '1d',
     };
 
     try {
-      await schemaValidation.validateAsync(settings);
+      await schemaValidation.validateAsync(query);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -53,7 +51,7 @@ export default class UserPostsPeriodsController {
     }
 
     try {
-      const data = await getUserPostsOnPeriod.execute(settings);
+      const data = await getUserPostsOnPeriod.execute(query);
 
       const result = {
         result: 'success',
@@ -63,10 +61,11 @@ export default class UserPostsPeriodsController {
 
       return response.json(result);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on UserPostsPeriodsController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'UserPostsPeriodsController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

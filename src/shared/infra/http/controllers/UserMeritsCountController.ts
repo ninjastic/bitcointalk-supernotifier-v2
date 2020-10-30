@@ -13,7 +13,7 @@ export default class UserMeritsCountController {
     );
 
     const schemaValidation = Joi.object({
-      username: Joi.string().required(),
+      author_uid: Joi.number().required(),
     });
 
     try {
@@ -28,7 +28,7 @@ export default class UserMeritsCountController {
 
     try {
       const data = await getUserMeritCountOnPeriod.execute({
-        username: request.params.username,
+        author_uid: request.author_uid,
       });
 
       const result = {

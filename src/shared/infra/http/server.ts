@@ -19,7 +19,6 @@ class Server {
     this.app = express();
     this.middlewares();
     this.app.use(routes);
-    this.exceptionHandler();
     this.app.listen(3333);
   }
 
@@ -32,13 +31,6 @@ class Server {
     if (process.env.NODE_ENV !== 'development') {
       this.app.use(loggerHttp);
     }
-  }
-
-  exceptionHandler() {
-    this.app.use((error, req, res, next) => {
-      console.log('abc');
-      return res.status(500).json({ error: error.toString() });
-    });
   }
 }
 

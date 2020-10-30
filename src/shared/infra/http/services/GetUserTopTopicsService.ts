@@ -3,10 +3,9 @@ import esClient from '../../../services/elastic';
 
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
-import GetAuthorInfoService from './GetAuthorInfoService';
 
 interface Params {
-  username: string;
+  author_uid: number;
   from?: string;
   to?: string;
 }
@@ -18,20 +17,17 @@ interface Response {
 }
 
 export default class GetUserTopTopicsService {
-  public async execute({ username, from, to }: Params): Promise<Response[]> {
+  public async execute({ author_uid, from, to }: Params): Promise<Response[]> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
-    const getAuthorInfo = container.resolve(GetAuthorInfoService);
 
     const cachedData = await getCache.execute<Response[]>(
-      `userTopTopics:${username}:${from}:${to}`,
+      `userTopTopics:${author_uid}:${from}:${to}`,
     );
 
     if (cachedData) {
       return cachedData;
     }
-
-    const authorInfo = await getAuthorInfo.execute({ username });
 
     const dataRaw = await esClient.search({
       index: 'posts',
@@ -44,7 +40,7 @@ export default class GetUserTopTopicsService {
               {
                 term: {
                   author_uid: {
-                    value: authorInfo.author_uid,
+                    value: author_uid,
                   },
                 },
               },
@@ -89,7 +85,7 @@ export default class GetUserTopTopicsService {
     });
 
     await saveCache.execute(
-      `userTopTopics:${username}:${from}:${to}`,
+      `userTopTopics:${author_uid}:${from}:${to}`,
       data,
       'EX',
       240,
