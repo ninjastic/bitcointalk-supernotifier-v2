@@ -17,7 +17,7 @@ export default class AddressesAuthorsController {
       post_id: Joi.number(),
       topic_id: Joi.number(),
       board: Joi.number(),
-      child_boards: Joi.number().allow('1', '0'),
+      child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       limit: Joi.number(),
     });
 

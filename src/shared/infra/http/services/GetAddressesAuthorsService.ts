@@ -78,7 +78,7 @@ export default class GetAddressesAuthorsService {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: Math.min(limit || 1000, 1000),
+              size: Math.min(limit || 1000, 2000),
             },
             aggs: {
               author_uid: {

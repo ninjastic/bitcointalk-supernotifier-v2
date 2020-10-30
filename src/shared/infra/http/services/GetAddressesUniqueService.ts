@@ -16,8 +16,16 @@ interface Data {
 
 export default class GetAddressesUniqueService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
-    const { address, author, coin, post_id, topic_id, board, child_boards } =
-      conditions || {};
+    const {
+      address,
+      author,
+      coin,
+      post_id,
+      topic_id,
+      board,
+      child_boards,
+      limit,
+    } = conditions || {};
 
     const must = [];
 
@@ -66,7 +74,7 @@ export default class GetAddressesUniqueService {
           addresses: {
             terms: {
               field: 'address.keyword',
-              size: 1000,
+              size: Math.min(limit || 1000, 2000),
             },
             aggs: {
               coin: {
