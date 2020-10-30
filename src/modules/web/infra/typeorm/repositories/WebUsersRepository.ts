@@ -3,6 +3,7 @@ import { getRepository, Repository } from 'typeorm';
 import WebUser from '../entities/WebUser';
 
 import ICreateWebUserDTO from '../../../dtos/ICreateWebUserDTO';
+import IFindWebUsersDTO from '../../../dtos/IFindWebUsersDTO';
 
 import IWebUsersRepository from '../../../repositories/IWebUsersRepository';
 
@@ -21,12 +22,14 @@ export default class WebUsersRepository implements IWebUsersRepository {
     return this.ormRepository.save(webUser);
   }
 
-  public async findOneByUsername(
-    username: string,
-  ): Promise<WebUser | undefined> {
+  public async findOne({
+    username,
+    user_id,
+  }: IFindWebUsersDTO): Promise<WebUser | undefined> {
     return this.ormRepository.findOne({
       where: {
         username: username.toLowerCase(),
+        user_id,
       },
     });
   }

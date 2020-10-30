@@ -3,6 +3,11 @@ import { inject, injectable } from 'tsyringe';
 import WebUser from '../infra/typeorm/entities/WebUser';
 import IWebUsersRepository from '../repositories/IWebUsersRepository';
 
+interface Params {
+  username: string;
+  user_id: number;
+}
+
 @injectable()
 export default class GetWebUserService {
   constructor(
@@ -10,8 +15,8 @@ export default class GetWebUserService {
     private webUsersRepository: IWebUsersRepository,
   ) {}
 
-  public async execute(username: string): Promise<WebUser | undefined> {
-    const webUser = this.webUsersRepository.findOneByUsername(username);
+  public async execute(conditions: Params): Promise<WebUser | undefined> {
+    const webUser = this.webUsersRepository.findOne(conditions);
 
     return webUser;
   }

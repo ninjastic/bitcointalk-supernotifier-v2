@@ -59,7 +59,10 @@ export default class WebUsersRepository {
 
     try {
       const getWebUserService = container.resolve(GetWebUserService);
-      const existentWebUser = await getWebUserService.execute(username);
+      const existentWebUser = await getWebUserService.execute({
+        username,
+        user_id,
+      });
 
       if (existentWebUser) {
         return response.json({
