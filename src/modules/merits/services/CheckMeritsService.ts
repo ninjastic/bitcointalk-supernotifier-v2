@@ -5,9 +5,11 @@ import cacheConfig from '../../../config/cache';
 
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
+import IWebUsersRepository from '../../web/repositories/IWebUsersRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import SetMeritCheckedService from './SetMeritCheckedService';
+import CreateWebNotificationService from '../../web/services/CreateWebNotificationService';
 
 @injectable()
 export default class CheckMeritsService {
@@ -18,15 +20,22 @@ export default class CheckMeritsService {
     @inject('UsersRepository')
     private usersRepository: IUsersRepository,
 
+    @inject('WebUsersRepository')
+    private webUsersRepository: IWebUsersRepository,
+
     @inject('CacheRepository')
     private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute(): Promise<void> {
     const merits = await this.meritsRepository.getLatestUncheckedMerits(20);
+    const webUsers = await this.webUsersRepository.findAll();
     const users = await this.usersRepository.getUsersWithMerits();
 
     const setMeritChecked = container.resolve(SetMeritCheckedService);
+    const createWebNotification = container.resolve(
+      CreateWebNotificationService,
+    );
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
@@ -39,12 +48,15 @@ export default class CheckMeritsService {
 
     await Promise.all(
       merits.map(async merit => {
+        await setMeritChecked.execute({
+          amount: merit.amount,
+          date: merit.date,
+          post_id: merit.post_id,
+        });
+
         Promise.all(
           users.map(async user => {
-            if (
-              merit.receiver_uid !== user.user_id &&
-              merit.receiver !== user.username
-            ) {
+            if (merit.receiver_uid !== user.user_id) {
               return Promise.resolve();
             }
 
@@ -70,12 +82,23 @@ export default class CheckMeritsService {
             return queue.add('sendMeritNotification', { merit, user });
           }),
         );
+      }),
+    );
 
-        return setMeritChecked.execute({
-          amount: merit.amount,
-          date: merit.date,
-          post_id: merit.post_id,
-        });
+    await Promise.all(
+      merits.map(async merit => {
+        await Promise.all(
+          webUsers.map(async webUser => {
+            if (merit.receiver_uid !== webUser.user_id) {
+              return Promise.resolve();
+            }
+
+            return createWebNotification.execute({
+              user_id: webUser.id,
+              merit_id: merit.id,
+            });
+          }),
+        );
       }),
     );
 

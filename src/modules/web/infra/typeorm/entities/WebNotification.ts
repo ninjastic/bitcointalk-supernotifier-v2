@@ -25,7 +25,7 @@ class WebNotification {
   @JoinColumn({ name: 'post_id', referencedColumnName: 'post_id' })
   post: Post;
 
-  @OneToOne(() => Post)
+  @OneToOne(() => Merit)
   @JoinColumn({ name: 'merit_id', referencedColumnName: 'id' })
   merit: Merit;
 

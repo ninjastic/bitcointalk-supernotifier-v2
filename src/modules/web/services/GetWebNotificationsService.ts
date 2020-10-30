@@ -41,6 +41,14 @@ export default class GetWebUserService {
         delete merit.notified;
         delete merit.notified_to;
         delete merit.checked;
+
+        if (merit.post) {
+          delete merit.post.boards;
+          delete merit.post.notified;
+          delete merit.post.notified_to;
+          delete merit.post.checked;
+          delete merit.post.archive;
+        }
       }
 
       return {

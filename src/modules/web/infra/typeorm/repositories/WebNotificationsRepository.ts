@@ -46,7 +46,7 @@ export default class WebNotificationsRepository
       where: {
         user_id,
       },
-      relations: ['post', 'merit'],
+      relations: ['post', 'merit', 'merit.post'],
       order: {
         created_at: 'DESC',
       },
