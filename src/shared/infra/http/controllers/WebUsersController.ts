@@ -67,6 +67,7 @@ export default class WebUsersRepository {
       if (existentWebUser) {
         return response.json({
           result: 'success',
+          message: null,
           data: existentWebUser,
         });
       }
