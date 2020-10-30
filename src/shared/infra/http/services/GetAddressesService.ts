@@ -20,17 +20,6 @@ interface Address {
   board_name: string;
 }
 
-interface SearchResponse<T> {
-  hits: {
-    total: {
-      value: number;
-    };
-    hits: Array<{
-      _source: T;
-    }>;
-  };
-}
-
 interface Data {
   total_results: number;
   addresses: Address[];
@@ -90,7 +79,7 @@ export default class GetAddressesService {
       must.push({ range: { post_id: { lt: last } } });
     }
 
-    const results = await esClient.search<SearchResponse<Address>>({
+    const results = await esClient.search({
       index: 'posts_addresses',
       track_total_hits: true,
       size: limit || 100,

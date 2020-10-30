@@ -1,5 +1,5 @@
 import { Request as ExpressRequest, Response } from 'express';
-import { sub, endOfHour, addMinutes } from 'date-fns';
+import { endOfHour, addMinutes } from 'date-fns';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
@@ -20,7 +20,7 @@ export default class UserTopicsUniqueController {
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
 
-    const defaultTo = endOfHour(sub(dateUTC, { hours: 1 })).toISOString();
+    const defaultTo = endOfHour(dateUTC).toISOString();
 
     const schemaValidation = Joi.object({
       author_uid: Joi.number().required(),
@@ -30,7 +30,7 @@ export default class UserTopicsUniqueController {
 
     const query = {
       author_uid: request.author_uid,
-      from: request.query.from || null,
+      from: request.query.from || undefined,
       to: request.query.to || defaultTo,
     };
 

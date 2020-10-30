@@ -9,34 +9,6 @@ interface Address {
   count: number;
 }
 
-interface SearchResponse<T> {
-  hits: {
-    total: {
-      value: number;
-    };
-    hits: Array<{
-      _source: T;
-    }>;
-  };
-  aggregations: {
-    addresses: {
-      buckets: Array<{
-        key: string;
-        doc_count: number;
-        coin: {
-          hits: {
-            hits: Array<{
-              _source: {
-                coin: string;
-              };
-            }>;
-          };
-        };
-      }>;
-    };
-  };
-}
-
 interface Data {
   total_results: number;
   addresses: Address[];
@@ -80,7 +52,7 @@ export default class GetAddressesUniqueService {
       }
     }
 
-    const results = await esClient.search<SearchResponse<Address>>({
+    const results = await esClient.search({
       index: 'posts_addresses',
       track_total_hits: true,
       size: 0,

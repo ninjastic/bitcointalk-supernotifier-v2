@@ -4,8 +4,19 @@ import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsCo
 
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 
+interface Author {
+  author: string;
+  author_uid: number;
+  count: number;
+}
+
+interface Data {
+  total_results: number;
+  authors: Author[];
+}
+
 export default class GetAddressAuthorsService {
-  public async execute(query: IFindPostsConditionsDTO): Promise<any> {
+  public async execute(query: IFindPostsConditionsDTO): Promise<Data> {
     const {
       author,
       author_uid,

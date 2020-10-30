@@ -1,7 +1,13 @@
 import esClient from '../../../services/elastic';
 
+interface Data {
+  author: string;
+  author_uid: number;
+  count: number;
+}
+
 export default class GetAuthorsFromTopicIdService {
-  public async execute({ topic_id }: { topic_id: number }): Promise<any> {
+  public async execute({ topic_id }: { topic_id: number }): Promise<Data[]> {
     const dataRaw = await esClient.search({
       index: 'posts',
       size: 0,

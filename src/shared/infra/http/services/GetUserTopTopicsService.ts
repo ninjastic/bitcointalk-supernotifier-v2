@@ -8,6 +8,7 @@ interface Params {
   author_uid: number;
   from?: string;
   to?: string;
+  limit?: number;
 }
 
 interface Response {
@@ -17,12 +18,19 @@ interface Response {
 }
 
 export default class GetUserTopTopicsService {
-  public async execute({ author_uid, from, to }: Params): Promise<Response[]> {
+  public async execute({
+    author_uid,
+    from,
+    to,
+    limit,
+  }: Params): Promise<Response[]> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
+    const actualLimit = Math.min(limit || 5, 10);
+
     const cachedData = await getCache.execute<Response[]>(
-      `userTopTopics:${author_uid}:${from}:${to}`,
+      `userTopTopics:${author_uid}:${from}:${to}:${actualLimit}`,
     );
 
     if (cachedData) {
@@ -59,7 +67,7 @@ export default class GetUserTopTopicsService {
           topics: {
             terms: {
               field: 'topic_id',
-              size: 5,
+              size: actualLimit,
             },
             aggs: {
               data: {
@@ -85,7 +93,7 @@ export default class GetUserTopTopicsService {
     });
 
     await saveCache.execute(
-      `userTopTopics:${author_uid}:${from}:${to}`,
+      `userTopTopics:${author_uid}:${from}:${to}:${actualLimit}`,
       data,
       'EX',
       240,

@@ -4,8 +4,19 @@ import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddre
 
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 
+interface Author {
+  author: string;
+  author_uid: number;
+  count: number;
+}
+
+interface Data {
+  total_results: number;
+  authors: Author[];
+}
+
 export default class GetAddressesAuthorsService {
-  public async execute(query: IFindPostAddressesDTO): Promise<any> {
+  public async execute(query: IFindPostAddressesDTO): Promise<Data> {
     const {
       address,
       author,
@@ -90,7 +101,7 @@ export default class GetAddressesAuthorsService {
     });
 
     const response = {
-      total_results: results.body.hits.total.value,
+      total_results: authors.length,
       authors,
     };
 

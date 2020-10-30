@@ -4,8 +4,6 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
-
 import GetAddressesAuthorsService from '../services/GetAddressesAuthorsService';
 
 export default class AddressesAuthorsController {
