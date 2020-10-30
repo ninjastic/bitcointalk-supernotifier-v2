@@ -1,0 +1,83 @@
+import { container } from 'tsyringe';
+
+import esClient from '../../../services/elastic';
+
+import GetCacheService from '../../../container/providers/services/GetCacheService';
+import SaveCacheService from '../../../container/providers/services/SaveCacheService';
+
+interface SearchResponse {
+  aggregations: {
+    unique_topics: {
+      value: number;
+    };
+  };
+}
+
+interface Data {
+  unique_topics: number;
+}
+
+interface Params {
+  author_uid: number;
+  from?: string;
+  to?: string;
+}
+
+export default class GetAddressesUniqueService {
+  public async execute({ author_uid, from, to }: Params): Promise<Data> {
+    const getCache = container.resolve(GetCacheService);
+    const saveCache = container.resolve(SaveCacheService);
+
+    const cachedData = await getCache.execute<Data>(
+      `users:AddressesUnique:${author_uid}:${from}:${to}`,
+    );
+
+    if (cachedData) {
+      return cachedData;
+    }
+
+    const results = await esClient.search<SearchResponse>({
+      index: 'posts',
+      track_total_hits: true,
+      size: 0,
+      body: {
+        query: {
+          bool: {
+            must: [
+              {
+                match: {
+                  author_uid,
+                },
+              },
+              {
+                range: {
+                  date: { gte: from || null, lte: to || null },
+                },
+              },
+            ],
+          },
+        },
+        aggs: {
+          unique_topics: {
+            cardinality: {
+              field: 'topic_id',
+            },
+          },
+        },
+      },
+    });
+
+    const data = {
+      unique_topics: results.body.aggregations.unique_topics.value,
+    };
+
+    await saveCache.execute(
+      `users:AddressesUnique:${author_uid}:${from}:${to}`,
+      cachedData,
+      'EX',
+      240,
+    );
+
+    return data;
+  }
+}
