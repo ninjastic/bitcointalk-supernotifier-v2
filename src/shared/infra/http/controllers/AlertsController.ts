@@ -54,10 +54,11 @@ export default class AlertsController {
 
       return response.json(data);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on AlertsController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'AlertsController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

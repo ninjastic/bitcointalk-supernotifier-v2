@@ -54,10 +54,11 @@ export default class PostsHistoryController {
         },
       });
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on PostsHistoryController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'PostsHistoryController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

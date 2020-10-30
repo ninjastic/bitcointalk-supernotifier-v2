@@ -61,8 +61,12 @@ export default class PostsBoardsPeriodController {
       return response.json(result);
     } catch (error) {
       logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on PostsBoardsPeriodController',
+        {
+          error: error.message,
+          stack: error.stack,
+          controller: 'PostsBoardsPeriodController',
+        },
+        'Error on ',
       );
       return response
         .status(500)

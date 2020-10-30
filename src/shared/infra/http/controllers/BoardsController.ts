@@ -67,10 +67,11 @@ export default class AddressesController {
 
       return response.json(result);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on BoardsController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'BoardsController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

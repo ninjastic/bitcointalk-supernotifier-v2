@@ -4,14 +4,28 @@ import esClient from '../../../services/elastic';
 
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
+interface Address {
+  address: string;
+  coin: 'BTC' | 'ETH';
+  post_id: number;
+  topic_id: number;
+  author: string;
+  author_uid: number;
+  title: string;
+  content: string;
+  date: string;
+  board_id: number;
+  board_name: string;
+}
+
 export default class GetAddressService {
-  public async execute({ address }: { address: string }): Promise<any> {
+  public async execute({ address }: { address: string }): Promise<Address[]> {
     const getBoardsList = container.resolve(GetBoardsListService);
 
     const results = await esClient.search({
       index: 'posts_addresses',
       track_total_hits: true,
-      size: 1,
+      size: 100,
       body: {
         query: {
           match: {

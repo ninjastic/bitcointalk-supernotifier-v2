@@ -47,10 +47,11 @@ export default class AddressesAuthorsController {
 
       return response.json(result);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on AddressesAuthorsController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'AddressesAuthorsController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

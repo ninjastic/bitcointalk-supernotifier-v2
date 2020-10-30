@@ -45,10 +45,11 @@ export default class AddressesController {
 
       return response.json(result);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on AddressesController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'AddressesController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

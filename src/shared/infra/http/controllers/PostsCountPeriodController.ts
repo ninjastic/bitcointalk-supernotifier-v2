@@ -54,10 +54,11 @@ export default class PostsCountPeriodController {
 
       return response.json(result);
     } catch (error) {
-      logger.error(
-        { error: error.message, stack: error.stack },
-        'Error on PostsCountPeriodController',
-      );
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'PostsCountPeriodController',
+      });
       return response
         .status(500)
         .json({ result: 'fail', message: 'Something went wrong', data: null });

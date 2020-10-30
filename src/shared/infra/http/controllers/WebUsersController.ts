@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { container } from 'tsyringe';
 import Joi from 'joi';
 
+import logger from '../../../services/logger';
+
 import GetWebUserService from '../../../../modules/web/services/GetWebUserService';
 import GetWebNotificationsService from '../../../../modules/web/services/GetWebNotificationsService';
 import CreateWebUserService from '../../../../modules/web/services/CreateWebUserService';
@@ -55,25 +57,36 @@ export default class WebUsersRepository {
       });
     }
 
-    const getWebUserService = container.resolve(GetWebUserService);
-    const existentWebUser = await getWebUserService.execute(username);
+    try {
+      const getWebUserService = container.resolve(GetWebUserService);
+      const existentWebUser = await getWebUserService.execute(username);
 
-    if (existentWebUser) {
+      if (existentWebUser) {
+        return response.json({
+          result: 'success',
+          data: existentWebUser,
+        });
+      }
+
+      const createdWebUser = await createWebUser.execute({
+        user_id,
+        username: username.toLowerCase(),
+      });
+
       return response.json({
         result: 'success',
-        data: existentWebUser,
+        message: null,
+        data: createdWebUser,
       });
+    } catch (error) {
+      logger.error({
+        error: error.message,
+        stack: error.stack,
+        controller: 'WebUsersController',
+      });
+      return response
+        .status(500)
+        .json({ result: 'fail', message: 'Something went wrong', data: null });
     }
-
-    const createdWebUser = await createWebUser.execute({
-      user_id,
-      username: username.toLowerCase(),
-    });
-
-    return response.json({
-      result: 'success',
-      message: null,
-      data: createdWebUser,
-    });
   }
 }
