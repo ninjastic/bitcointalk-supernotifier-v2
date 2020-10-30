@@ -6,8 +6,16 @@ import GetBoardChildrensFromIdService from '../../../../modules/posts/services/G
 
 export default class GetAddressesAuthorsService {
   public async execute(query: IFindPostAddressesDTO): Promise<any> {
-    const { address, author, coin, post_id, topic_id, board, child_boards } =
-      query || {};
+    const {
+      address,
+      author,
+      coin,
+      post_id,
+      topic_id,
+      board,
+      child_boards,
+      limit,
+    } = query || {};
 
     const must = [];
 
@@ -59,7 +67,7 @@ export default class GetAddressesAuthorsService {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: 1000,
+              size: Math.min(limit || 1000, 1000),
             },
             aggs: {
               author_uid: {

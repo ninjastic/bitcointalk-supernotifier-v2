@@ -36,9 +36,10 @@ export default class GetUserPostsDataService {
     if (cachedData) {
       return cachedData;
     }
+
     const results = await esClient.search({
       index: 'posts',
-      scroll: '1m',
+      track_total_hits: true,
       _source: ['author', 'author_uid'],
       size: 1,
       body: {
@@ -81,7 +82,7 @@ export default class GetUserPostsDataService {
     const boards = await Promise.all(
       boardsData.map(async board => {
         const cachedBoardsData = await getCache.execute(
-          `boardsRecursive:${board.key}`,
+          `boardsRecursive:${board.key}:${author_uid}:${from}:${to}`,
         );
 
         if (cachedBoardsData) {
@@ -97,7 +98,7 @@ export default class GetUserPostsDataService {
         const data = { name, key: board.key, count: board.doc_count };
 
         await saveCache.execute(
-          `boardsRecursive:${board.key}`,
+          `boardsRecursive:${board.key}:${author_uid}:${from}:${to}`,
           data,
           'EX',
           604800,

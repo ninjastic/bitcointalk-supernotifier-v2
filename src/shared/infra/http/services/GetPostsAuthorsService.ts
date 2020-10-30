@@ -17,6 +17,7 @@ export default class GetPostsAuthorsService {
       after,
       after_date,
       before_date,
+      limit,
     } = query || {};
 
     const must = [];
@@ -97,7 +98,7 @@ export default class GetPostsAuthorsService {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: 1000,
+              size: Math.min(limit || 1000, 1000),
             },
             aggs: {
               author_uid: {

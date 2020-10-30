@@ -4,8 +4,6 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
-
 import GetPostsAuthorsService from '../services/GetPostsAuthorsService';
 
 export default class PostsAuthorsController {
@@ -13,19 +11,18 @@ export default class PostsAuthorsController {
     const getPostsAuthors = container.resolve(GetPostsAuthorsService);
 
     const schemaValidation = Joi.object({
-      author: Joi.string().allow('', null),
-      content: Joi.string().allow('', null),
-      topic_id: Joi.number().allow('', null),
-      board: Joi.number().allow('', null),
+      author: Joi.string(),
+      content: Joi.string(),
+      topic_id: Joi.number(),
+      board: Joi.number(),
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
-      after_date: Joi.string().isoDate().allow('', null),
-      before_date: Joi.string().isoDate().allow('', null),
+      after_date: Joi.string().isoDate(),
+      before_date: Joi.string().isoDate(),
+      limit: Joi.number(),
     });
 
-    const query = request.query as unknown;
-
     try {
-      await schemaValidation.validateAsync(query);
+      await schemaValidation.validateAsync(request.query);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -35,9 +32,7 @@ export default class PostsAuthorsController {
     }
 
     try {
-      const data = await getPostsAuthors.execute(
-        query as IFindPostsConditionsDTO,
-      );
+      const data = await getPostsAuthors.execute(request.query);
 
       const result = {
         result: 'success',

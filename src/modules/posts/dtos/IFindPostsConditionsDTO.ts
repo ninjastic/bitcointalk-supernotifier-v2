@@ -9,6 +9,6 @@ export default interface IFindPostsConditionsDTO {
   after?: number;
   after_date?: string;
   before_date?: string;
-  limit: number;
+  limit?: number;
   order?: 'ASC' | 'DESC';
 }

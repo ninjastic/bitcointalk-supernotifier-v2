@@ -20,12 +20,11 @@ export default class AddressesAuthorsController {
       topic_id: Joi.number(),
       board: Joi.number(),
       child_boards: Joi.number().allow('1', '0'),
+      limit: Joi.number(),
     });
 
-    const query = request.query as unknown;
-
     try {
-      await schemaValidation.validateAsync(query);
+      await schemaValidation.validateAsync(request.query);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -35,9 +34,7 @@ export default class AddressesAuthorsController {
     }
 
     try {
-      const data = await getAddressesAuthors.execute(
-        query as IFindPostAddressesDTO,
-      );
+      const data = await getAddressesAuthors.execute(request.query);
 
       const result = {
         result: 'success',
