@@ -4,8 +4,9 @@ import WebUser from '../infra/typeorm/entities/WebUser';
 import IWebUsersRepository from '../repositories/IWebUsersRepository';
 
 interface Params {
-  username: string;
-  user_id: number;
+  id?: string;
+  username?: string;
+  user_id?: number;
 }
 
 @injectable()

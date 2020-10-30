@@ -5,21 +5,18 @@ import Joi from 'joi';
 import logger from '../../../services/logger';
 
 import GetWebUserService from '../../../../modules/web/services/GetWebUserService';
-import CreateWebUserService from '../../../../modules/web/services/CreateWebUserService';
+import GetWebNotificationsService from '../../../../modules/web/services/GetWebNotificationsService';
 
 export default class WebUsersRepository {
-  public async create(request: Request, response: Response): Promise<Response> {
-    const createWebUser = container.resolve(CreateWebUserService);
-
-    const { user_id, username } = request.body;
+  public async index(request: Request, response: Response): Promise<Response> {
+    const getWebNotifications = container.resolve(GetWebNotificationsService);
 
     const schemaValidation = Joi.object({
-      user_id: Joi.number().required(),
-      username: Joi.string().required(),
+      user_id: Joi.string().uuid().required(),
     });
 
     try {
-      await schemaValidation.validateAsync({ user_id, username });
+      await schemaValidation.validateAsync({ user_id: request.params.user_id });
     } catch (error) {
       return response.json({
         result: 'error',
@@ -31,33 +28,29 @@ export default class WebUsersRepository {
     try {
       const getWebUserService = container.resolve(GetWebUserService);
       const existentWebUser = await getWebUserService.execute({
-        username: username.toLowerCase(),
-        user_id,
+        id: request.params.user_id,
       });
 
-      if (existentWebUser) {
+      if (!existentWebUser) {
         return response.json({
           result: 'success',
-          message: null,
-          data: existentWebUser,
+          message: 'User not found',
+          data: null,
         });
       }
 
-      const createdWebUser = await createWebUser.execute({
-        user_id,
-        username: username.toLowerCase(),
-      });
+      const data = await getWebNotifications.execute(request.params.user_id);
 
       return response.json({
         result: 'success',
         message: null,
-        data: createdWebUser,
+        data,
       });
     } catch (error) {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'WebUsersController',
+        controller: 'WebNotificationsController',
       });
       return response
         .status(500)

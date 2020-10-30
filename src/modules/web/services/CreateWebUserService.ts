@@ -14,7 +14,6 @@ export default class CreateWebUserService {
 
   public async execute(data: ICreateWebUserDTO): Promise<WebUser> {
     const webUser = this.webUsersRepository.create(data);
-
     await this.webUsersRepository.save(webUser);
 
     return webUser;

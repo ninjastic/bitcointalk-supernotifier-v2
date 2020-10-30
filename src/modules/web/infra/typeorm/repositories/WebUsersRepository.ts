@@ -22,15 +22,11 @@ export default class WebUsersRepository implements IWebUsersRepository {
     return this.ormRepository.save(webUser);
   }
 
-  public async findOne({
-    username,
-    user_id,
-  }: IFindWebUsersDTO): Promise<WebUser | undefined> {
+  public async findOne(
+    conditions: IFindWebUsersDTO,
+  ): Promise<WebUser | undefined> {
     return this.ormRepository.findOne({
-      where: {
-        username: username.toLowerCase(),
-        user_id,
-      },
+      where: conditions,
     });
   }
 
