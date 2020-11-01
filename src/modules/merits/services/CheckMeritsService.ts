@@ -54,7 +54,7 @@ export default class CheckMeritsService {
           post_id: merit.post_id,
         });
 
-        Promise.all(
+        await Promise.all(
           users.map(async user => {
             if (merit.receiver_uid !== user.user_id) {
               return Promise.resolve();

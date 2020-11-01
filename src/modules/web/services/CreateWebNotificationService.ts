@@ -16,7 +16,6 @@ export default class CreateWebNotificationService {
     data: ICreateWebNotificationDTO,
   ): Promise<WebNotification> {
     const webNotification = this.webNotificationsRepository.create(data);
-
     await this.webNotificationsRepository.save(webNotification);
 
     return webNotification;
