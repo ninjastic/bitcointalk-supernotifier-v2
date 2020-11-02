@@ -8,5 +8,6 @@ export default interface IFindPostAddressesDTO {
   child_boards?: string;
   last?: number;
   order?: 'ASC' | 'DESC';
+  after?: string;
   limit?: number;
 }

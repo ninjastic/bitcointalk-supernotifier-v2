@@ -10,11 +10,11 @@ interface Address {
 }
 
 interface Data {
-  after_key: string;
+  total_results: number;
   addresses: Address[];
 }
 
-export default class GetAddressesUniqueService {
+export default class GetAddressesTopUniqueService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
     const {
       address,
@@ -24,7 +24,6 @@ export default class GetAddressesUniqueService {
       topic_id,
       board,
       child_boards,
-      last,
       limit,
     } = conditions || {};
 
@@ -61,8 +60,6 @@ export default class GetAddressesUniqueService {
       }
     }
 
-    const actual_limit = Math.min(limit || 10, 50);
-
     const results = await esClient.search({
       index: 'posts_addresses',
       track_total_hits: true,
@@ -75,26 +72,17 @@ export default class GetAddressesUniqueService {
         },
         aggs: {
           addresses: {
-            composite: {
-              size: actual_limit,
-              sources: [
-                {
-                  address: {
-                    terms: {
-                      field: 'address.keyword',
-                    },
-                  },
-                },
-              ],
-              after: {
-                address: last || '',
-              },
+            terms: {
+              field: 'address.keyword',
+              size: Math.min(limit || 10, 100),
             },
             aggs: {
               coin: {
                 top_hits: {
                   size: 1,
-                  _source: ['coin'],
+                  _source: {
+                    includes: ['coin'],
+                  },
                 },
               },
             },
@@ -106,7 +94,7 @@ export default class GetAddressesUniqueService {
     const addresses = results.body.aggregations.addresses.buckets.map(
       record => {
         return {
-          address: record.key.address,
+          address: record.key,
           coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
           count: record.doc_count,
         };
@@ -114,10 +102,7 @@ export default class GetAddressesUniqueService {
     );
 
     const data = {
-      after_key:
-        addresses.length < actual_limit
-          ? null
-          : results.body.aggregations.addresses.after_key.address,
+      total_results: addresses.length,
       addresses,
     };
 

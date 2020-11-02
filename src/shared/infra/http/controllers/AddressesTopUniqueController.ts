@@ -6,11 +6,13 @@ import logger from '../../../services/logger';
 
 import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
-import GetAddressesUniqueService from '../services/GetAddressesUniqueService';
+import GetAddressesTopUniqueService from '../services/GetAddressesTopUniqueService';
 
-export default class AddressesUniqueController {
+export default class AddressesTopUniqueController {
   public async index(request: Request, response: Response): Promise<Response> {
-    const getAddressesUnique = container.resolve(GetAddressesUniqueService);
+    const getAddressesTopUnique = container.resolve(
+      GetAddressesTopUniqueService,
+    );
 
     const schemaValidation = Joi.object({
       address: Joi.string(),
@@ -20,7 +22,6 @@ export default class AddressesUniqueController {
       topic_id: Joi.number(),
       board: Joi.number(),
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
-      last: Joi.string(),
       limit: Joi.number(),
     });
 
@@ -37,7 +38,7 @@ export default class AddressesUniqueController {
     }
 
     try {
-      const data = await getAddressesUnique.execute(
+      const data = await getAddressesTopUnique.execute(
         query as IFindPostAddressesDTO,
       );
 
@@ -52,7 +53,7 @@ export default class AddressesUniqueController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'AddressesUniqueController',
+        controller: 'AddressesTopUniqueController',
       });
       return response
         .status(500)
