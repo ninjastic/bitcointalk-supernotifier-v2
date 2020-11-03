@@ -7,6 +7,7 @@ import webUsersRouter from './webUsersRouter';
 import alertsRouter from './alertsRouter';
 import boardsRouter from './boardsRouter';
 import notFoundRouter from './notFoundRouter';
+import bpipRouter from './bpipRouter';
 
 const routes = Router();
 
@@ -16,6 +17,7 @@ routes.use('/users', usersRouter);
 routes.use('/webUsers', webUsersRouter);
 routes.use('/boards', boardsRouter);
 routes.use('/alerts', alertsRouter);
+routes.use('/bpip', bpipRouter);
 
 routes.use(notFoundRouter);
 

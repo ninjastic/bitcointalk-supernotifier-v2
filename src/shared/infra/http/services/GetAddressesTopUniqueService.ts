@@ -1,6 +1,10 @@
+import { container } from 'tsyringe';
 import esClient from '../../../services/elastic';
 
 import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
+
+import GetCacheService from '../../../container/providers/services/GetCacheService';
+import SaveCacheService from '../../../container/providers/services/SaveCacheService';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 
 interface Address {
@@ -16,9 +20,13 @@ interface Data {
 
 export default class GetAddressesTopUniqueService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
+    const getCache = container.resolve(GetCacheService);
+    const saveCache = container.resolve(SaveCacheService);
+
     const {
       address,
       author,
+      author_uid,
       coin,
       post_id,
       topic_id,
@@ -26,6 +34,14 @@ export default class GetAddressesTopUniqueService {
       child_boards,
       limit,
     } = conditions || {};
+
+    const cachedData = await getCache.execute<Data>(
+      `users:AddressesTopUnique:${JSON.stringify(conditions)}`,
+    );
+
+    if (cachedData) {
+      return cachedData;
+    }
 
     const must = [];
 
@@ -47,6 +63,10 @@ export default class GetAddressesTopUniqueService {
 
     if (author) {
       must.push({ match: { author } });
+    }
+
+    if (author_uid) {
+      must.push({ match: { author_uid } });
     }
 
     if (board) {
@@ -105,6 +125,13 @@ export default class GetAddressesTopUniqueService {
       total_results: addresses.length,
       addresses,
     };
+
+    await saveCache.execute(
+      `users:AddressesTopUnique:${JSON.stringify(conditions)}`,
+      data,
+      'EX',
+      300,
+    );
 
     return data;
   }

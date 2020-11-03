@@ -23,13 +23,13 @@ interface Params {
   to?: string;
 }
 
-export default class GetAddressesUniqueService {
+export default class GetTopicsUniqueService {
   public async execute({ author_uid, from, to }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
     const cachedData = await getCache.execute<Data>(
-      `users:AddressesUnique:${author_uid}:${from}:${to}`,
+      `users:Topics:${author_uid}:${from}:${to}`,
     );
 
     if (cachedData) {
@@ -72,10 +72,10 @@ export default class GetAddressesUniqueService {
     };
 
     await saveCache.execute(
-      `users:AddressesUnique:${author_uid}:${from}:${to}`,
-      cachedData,
+      `users:Topics:${author_uid}:${from}:${to}`,
+      data,
       'EX',
-      240,
+      300,
     );
 
     return data;
