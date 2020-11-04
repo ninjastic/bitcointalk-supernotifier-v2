@@ -130,7 +130,7 @@ export default class GetAddressesTopUniqueService {
       `users:AddressesTopUnique:${JSON.stringify(conditions)}`,
       data,
       'EX',
-      300,
+      600,
     );
 
     return data;

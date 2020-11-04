@@ -75,7 +75,7 @@ export default class GetTopicsUniqueService {
       `users:Topics:${author_uid}:${from}:${to}`,
       data,
       'EX',
-      300,
+      600,
     );
 
     return data;

@@ -96,7 +96,7 @@ export default class GetUserTopTopicsService {
       `userTopTopics:${author_uid}:${from}:${to}:${actualLimit}`,
       data,
       'EX',
-      240,
+      600,
     );
 
     return data;
