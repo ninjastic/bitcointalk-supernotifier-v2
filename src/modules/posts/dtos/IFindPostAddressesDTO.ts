@@ -1,5 +1,6 @@
 export default interface IFindPostAddressesDTO {
   address?: string;
+  addresses?: Array<string>;
   coin?: string;
   post_id?: number;
   topic_id?: number;

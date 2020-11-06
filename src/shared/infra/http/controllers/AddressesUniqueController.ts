@@ -14,6 +14,7 @@ export default class AddressesUniqueController {
 
     const schemaValidation = Joi.object({
       address: Joi.string(),
+      addresses: Joi.array().items(Joi.string()),
       author: Joi.string(),
       coin: Joi.string().valid('BTC', 'ETH').insensitive(),
       post_id: Joi.number(),
@@ -24,10 +25,8 @@ export default class AddressesUniqueController {
       limit: Joi.number(),
     });
 
-    const query = request.query as unknown;
-
     try {
-      await schemaValidation.validateAsync(query);
+      await schemaValidation.validateAsync(request.query);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -38,7 +37,7 @@ export default class AddressesUniqueController {
 
     try {
       const data = await getAddressesUnique.execute(
-        query as IFindPostAddressesDTO,
+        request.query as IFindPostAddressesDTO,
       );
 
       const result = {
