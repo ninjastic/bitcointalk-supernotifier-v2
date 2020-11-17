@@ -50,7 +50,11 @@ export default class GetAddressesUniqueService {
     }
 
     if (author) {
-      must.push({ match: { author } });
+      must.push({
+        term: {
+          author: author.toLowerCase(),
+        },
+      });
     }
 
     if (board) {

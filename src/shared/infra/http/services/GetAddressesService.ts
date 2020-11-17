@@ -61,7 +61,11 @@ export default class GetAddressesService {
     }
 
     if (author) {
-      must.push({ match: { author } });
+      must.push({
+        term: {
+          author: author.toLowerCase(),
+        },
+      });
     }
 
     if (board) {

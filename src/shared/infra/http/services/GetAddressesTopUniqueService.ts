@@ -62,7 +62,11 @@ export default class GetAddressesTopUniqueService {
     }
 
     if (author) {
-      must.push({ match: { author } });
+      must.push({
+        term: {
+          author: author.toLowerCase(),
+        },
+      });
     }
 
     if (author_uid) {

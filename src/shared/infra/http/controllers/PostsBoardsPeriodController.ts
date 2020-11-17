@@ -23,15 +23,19 @@ export default class PostsBoardsPeriodController {
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
+      interval: Joi.string(),
+      limit: Joi.number().allow('', null),
     });
 
-    const settings = {
+    const query = {
       from: (request.query.from || defaultFrom) as string,
       to: (request.query.to || defaultTo) as string,
+      interval: (request.query.interval || '1h') as string,
+      limit: Number(request.query.limit) || null,
     };
 
     try {
-      await schemaValidation.validateAsync(settings);
+      await schemaValidation.validateAsync(query);
     } catch (error) {
       return response.status(400).json({
         result: 'fail',
@@ -41,7 +45,7 @@ export default class PostsBoardsPeriodController {
     }
 
     try {
-      const results = await getPostsBoardsPeriod.execute(settings);
+      const results = await getPostsBoardsPeriod.execute(query);
       const boards = await getBoardsListService.execute(true);
 
       const data = results.map(result => {

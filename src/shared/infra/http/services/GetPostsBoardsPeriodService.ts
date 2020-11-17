@@ -3,6 +3,8 @@ import esClient from '../../../services/elastic';
 interface Params {
   from?: string;
   to?: string;
+  interval?: string;
+  limit?: number;
 }
 
 interface Data {
@@ -15,7 +17,7 @@ interface Data {
 }
 
 export default class GetPostsBoardsPeriodService {
-  public async execute({ from, to }: Params): Promise<Data[]> {
+  public async execute({ from, to, interval, limit }: Params): Promise<Data[]> {
     const dataRaw = await esClient.search({
       index: 'posts',
       size: 0,
@@ -39,13 +41,13 @@ export default class GetPostsBoardsPeriodService {
           boards: {
             terms: {
               field: 'board_id',
-              size: 10,
+              size: Math.min(limit || 10, 20),
             },
             aggs: {
               date: {
                 date_histogram: {
                   field: 'date',
-                  fixed_interval: '1h',
+                  fixed_interval: interval,
                   extended_bounds: {
                     min: from,
                     max: to,

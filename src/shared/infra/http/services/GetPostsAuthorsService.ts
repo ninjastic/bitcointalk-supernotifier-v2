@@ -35,8 +35,8 @@ export default class GetPostsAuthorsService {
 
     if (author) {
       must.push({
-        match: {
-          author,
+        term: {
+          author: author.toLowerCase(),
         },
       });
     }

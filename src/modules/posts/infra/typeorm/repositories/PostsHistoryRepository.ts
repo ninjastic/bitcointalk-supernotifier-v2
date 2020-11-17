@@ -62,8 +62,8 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
 
     if (author) {
       must.push({
-        match: {
-          author,
+        term: {
+          author: author.toLowerCase(),
         },
       });
     }
