@@ -33,7 +33,7 @@ export default class GetAuthorUIDFromUsernameService {
       size: 1,
       body: {
         query: {
-          match: {
+          match_phrase: {
             author: username,
           },
         },

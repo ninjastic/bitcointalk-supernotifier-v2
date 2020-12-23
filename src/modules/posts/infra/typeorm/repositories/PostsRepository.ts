@@ -108,7 +108,7 @@ export default class PostsRepository implements IPostsRepository {
 
     if (author) {
       must.push({
-        match: {
+        match_phrase: {
           author: author.toLowerCase(),
         },
       });

@@ -48,7 +48,7 @@ export default class GetAddressesAuthorsService {
 
     if (author) {
       must.push({
-        term: {
+        match_phrase: {
           author: author.toLowerCase(),
         },
       });
