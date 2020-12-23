@@ -124,11 +124,10 @@ export default class PostsRepository implements IPostsRepository {
 
     if (content) {
       must.push({
-        match: {
-          content: {
-            query: content,
-            minimum_should_match: '100%',
-          },
+        simple_query_string: {
+          fields: ['content'],
+          query: content,
+          default_operator: 'AND',
         },
       });
     }
