@@ -23,7 +23,7 @@ export default class UserPostsPeriodsController {
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
       interval: Joi.string()
-        .regex(/^\d{0,3}(d|h|m)$/)
+        .regex(/^\d{0,3}(m|h|d|w|M)$/)
         .allow('', null),
     });
 
