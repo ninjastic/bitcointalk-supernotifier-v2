@@ -46,7 +46,7 @@ export default class GetPostsTopicsPeriodService {
               date: {
                 date_histogram: {
                   field: 'date',
-                  fixed_interval: '1h',
+                  calendar_interval: '1h',
                   extended_bounds: {
                     min: from,
                     max: to,

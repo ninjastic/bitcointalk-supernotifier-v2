@@ -22,7 +22,7 @@ export default class PostsCountPeriodController {
     const query = {
       from: from || startOfHour(sub(dateUTC, { days: 1 })).toISOString(),
       to: to || endOfHour(sub(dateUTC, { hours: 1 })).toISOString(),
-      interval: interval || '30m',
+      interval: interval || '1h',
     };
 
     const schemaValidation = Joi.object({

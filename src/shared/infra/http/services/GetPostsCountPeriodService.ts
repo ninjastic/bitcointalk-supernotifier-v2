@@ -53,7 +53,7 @@ export default class GetPostsCountPeriodService {
           date: {
             date_histogram: {
               field: 'date',
-              fixed_interval: interval,
+              calendar_interval: interval,
               extended_bounds: {
                 min: from,
                 max: to,
