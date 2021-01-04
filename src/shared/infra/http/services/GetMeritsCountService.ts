@@ -17,13 +17,13 @@ interface Data {
   doc_count: number;
 }
 
-export default class GetPostsCountPeriodService {
+export default class GetMeritsCountService {
   public async execute({ from, to, interval }: Params): Promise<Data[]> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
     const cachedData = await getCache.execute<Data[]>(
-      `postsCountPeriod:${from}-${to}-${interval}`,
+      `meritsCountPeriod:${from}-${to}-${interval}`,
     );
 
     if (cachedData) {
@@ -31,10 +31,11 @@ export default class GetPostsCountPeriodService {
     }
 
     const results = await esClient.search({
-      index: 'posts',
+      index: 'merits',
       track_total_hits: true,
       size: 0,
       body: {
+        size: 0,
         query: {
           range: {
             date: {
@@ -46,7 +47,7 @@ export default class GetPostsCountPeriodService {
         aggs: {
           posts: {
             value_count: {
-              field: 'post_id',
+              field: '_id',
             },
           },
           date: {
@@ -66,7 +67,7 @@ export default class GetPostsCountPeriodService {
     const data = results.body.aggregations.date.buckets;
 
     await saveCache.execute(
-      `postsCountPeriod:${from}-${to}-${interval}`,
+      `meritsCountPeriod:${from}-${to}-${interval}`,
       data,
       'EX',
       180,
