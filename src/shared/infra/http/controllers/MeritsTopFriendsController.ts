@@ -3,11 +3,11 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetMeritsTopFriendsService from '../services/GetMeritsTopFriendsService';
+import GetMeritsTopFansService from '../services/GetMeritsTopFansService';
 
 export default class MeritsTopFriendsController {
   public async index(request: Request, response: Response): Promise<Response> {
-    const getMeritsTopFriends = new GetMeritsTopFriendsService();
+    const getMeritsTopFans = new GetMeritsTopFansService();
 
     const schemaValidation = Joi.object({
       post_id: Joi.number(),
@@ -35,7 +35,7 @@ export default class MeritsTopFriendsController {
     }
 
     try {
-      const data = await getMeritsTopFriends.execute(request.query);
+      const data = await getMeritsTopFans.execute(request.query);
 
       const result = {
         result: 'success',

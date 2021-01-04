@@ -9,6 +9,6 @@ const meritsTopFriendsController = new MeritsTopFriendsController();
 const meritsRouter = Router();
 
 meritsRouter.get('/', meritsController.index);
-meritsRouter.get('/friends', meritsTopFriendsController.index);
+meritsRouter.get('/fans', meritsTopFriendsController.index);
 
 export default meritsRouter;

@@ -22,8 +22,8 @@ interface Data {
   count: number;
 }
 
-export default class GetMeritsTopFriendsService {
-  public async execute(query: IFindMeritsService): Promise<any> {
+export default class GetMeritsTopFansService {
+  public async execute(query: IFindMeritsService): Promise<Data[]> {
     const queryBuilder = bodybuilder();
 
     Object.keys(query).forEach(key => {
@@ -46,6 +46,8 @@ export default class GetMeritsTopFriendsService {
           });
         case 'board_id':
           return queryBuilder.query('terms', key, query[key]);
+        case 'limit':
+          return null;
         default:
           return queryBuilder.addQuery('match', key, query[key]);
       }
@@ -56,7 +58,7 @@ export default class GetMeritsTopFriendsService {
     queryBuilder.aggregation(
       'terms',
       'sender.keyword',
-      { order: { count: 'desc' } },
+      { order: { count: 'desc' }, size: query.limit || 10 },
       'friends',
       a => {
         return a.aggregation('sum', 'amount', 'count');
