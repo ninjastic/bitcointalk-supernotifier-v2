@@ -20,6 +20,8 @@ export default class MeritsController {
       board_id: Joi.number(),
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
+      order: Joi.string().allow('asc', 'desc').insensitive(),
+      limit: Joi.number(),
     });
 
     try {

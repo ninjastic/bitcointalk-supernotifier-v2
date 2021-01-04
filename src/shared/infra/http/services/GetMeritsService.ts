@@ -16,6 +16,8 @@ export interface IFindMeritsService {
   board_id?: number;
   after_date?: string;
   before_date?: string;
+  order?: string;
+  limit?: number;
 }
 
 interface Merit {
@@ -63,10 +65,14 @@ export default class GetMeritsService {
           });
         case 'board_id':
           return queryBuilder.query('terms', key, query[key]);
+        case 'limit':
+          return queryBuilder.size(Math.max(query[key], 200));
         default:
           return queryBuilder.addQuery('match', key, query[key]);
       }
     });
+
+    queryBuilder.sort('date', query.order || 'DESC');
 
     const body = queryBuilder.build();
 
