@@ -872,6 +872,13 @@ body-parser@1.19.0, body-parser@^1.19.0:
     raw-body "2.4.0"
     type-is "~1.6.17"
 
+bodybuilder@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/bodybuilder/-/bodybuilder-2.3.0.tgz#9e83d1ba01a776da29aa96d40498948a3c97df74"
+  integrity sha512-7x+jHxjDYdfoeld7UlJpuwF5XPByYuXCbsZ4F2yqFetiMyQaZaG5ar4UnC+BqTpDdTFFu5rr75MdFKf7qszTiA==
+  dependencies:
+    lodash "^4.17.11"
+
 boolbase@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/boolbase/-/boolbase-1.0.0.tgz#68dff5fbe60c51eb37725ea9e3ed310dcc1e776e"
@@ -3068,7 +3075,7 @@ lodash.templatesettings@^4.0.0:
   dependencies:
     lodash._reinterpolate "^3.0.0"
 
-lodash@4, lodash@^4.15.0, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19:
+lodash@4, lodash@^4.15.0, lodash@^4.17.11, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19:
   version "4.17.20"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.20.tgz#b44a9b6297bcb698f1c51a3545a2b3b368d59c52"
   integrity sha512-PlhdFcillOINfeV7Ni6oF1TAEayyZBoZ8bcshTHqOYJYlrqzRK5hagpagky5o4HfCzzd1TRkXPMFq6cKk9rGmA==

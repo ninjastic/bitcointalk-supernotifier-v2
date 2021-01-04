@@ -38,8 +38,8 @@ export default class GetUserPostsOnPeriodService {
 
     const results = await esClient.search({
       index: 'posts',
-      scroll: '1m',
       _source: ['author', 'author_uid'],
+      track_total_hits: true,
       size: 1,
       body: {
         size: 1,
