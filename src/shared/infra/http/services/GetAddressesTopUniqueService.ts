@@ -74,7 +74,10 @@ export default class GetAddressesTopUniqueService {
     }
 
     if (board) {
-      if (child_boards && Number(child_boards) === 1) {
+      if (
+        child_boards &&
+        (child_boards === '1' || child_boards.toLowerCase() === 'true')
+      ) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
 

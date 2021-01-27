@@ -57,7 +57,7 @@ export default class GetMeritsTopFansService {
 
     queryBuilder.aggregation(
       'terms',
-      'sender.keyword',
+      query.receiver ? 'sender.keyword' : 'receiver.keyword',
       { order: { count: 'desc' }, size: query.limit || 10 },
       'friends',
       a => {
