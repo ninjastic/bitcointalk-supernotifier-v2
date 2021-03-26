@@ -156,12 +156,21 @@ export default class CheckPostsService {
               ? new RegExp(`\\b${user.alternative_usernames[0]}\\b`, 'gi')
               : null;
 
-            if (!post.content.match(usernameRegex)) {
-              if (!altUsernameRegex) {
-                return Promise.resolve();
-              }
+            const regexBackupAtSign = new RegExp(`@${user.username}`, 'gi');
+            const regexBackupQuoted = new RegExp(
+              `Quote from: ${user.username} on`,
+              'gi',
+            );
 
-              if (!post.content.match(altUsernameRegex)) {
+            if (!post.content.match(usernameRegex)) {
+              const foundAltUsername =
+                altUsernameRegex && post.content.match(altUsernameRegex);
+
+              const foundBackupRegex =
+                post.content.match(regexBackupAtSign) ||
+                post.content.match(regexBackupQuoted);
+
+              if (!foundAltUsername && !foundBackupRegex) {
                 return Promise.resolve();
               }
             }

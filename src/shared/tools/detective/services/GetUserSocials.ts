@@ -23,13 +23,14 @@ class GetUserSocials {
     const queryBuilder = bodybuilder();
 
     queryBuilder.query('match', 'author_uid', authorUid);
-    queryBuilder.query('match', 'board_id', 238); // bounty board
+    queryBuilder.query('terms', 'board_id', [238, 52]); // bounty, services board
 
     const body = queryBuilder.build();
 
     const response = await esClient.search({
       index: 'posts',
-      size: 5000,
+      track_total_hits: true,
+      size: 10000,
       body,
     });
 
@@ -44,10 +45,10 @@ class GetUserSocials {
 
         const contentWithoutQuotes = postContent.html();
 
-        const telegram = contentWithoutQuotes.match(/telegram \w+: @(\w+)/i);
+        const telegram = contentWithoutQuotes.match(/telegram .*: @(\w+)/i);
         const twitter = contentWithoutQuotes.match(/twitter\.com\/(\w+)/i);
         const facebook = contentWithoutQuotes.match(
-          /facebook \w+: (.*)|facebook\.com\/(\w+)\//i,
+          /facebook\.com\/(?=(\w+))(?!story)/i,
         );
 
         if (!twitter && !telegram && !facebook) {

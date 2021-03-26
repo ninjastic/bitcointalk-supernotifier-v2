@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import 'dotenv/config';
 import 'reflect-metadata';
 import cheerio from 'cheerio';

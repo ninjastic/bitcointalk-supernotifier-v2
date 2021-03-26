@@ -1,10 +1,12 @@
 import 'dotenv/config';
+import { exist } from 'joi';
 
 import GetUserAddresses from './GetUserAddresses';
 import GetUserSocials from './GetUserSocials';
 
 interface Data {
   addresses: any;
+  socials: any;
 }
 
 class CompareUsersService {
@@ -29,16 +31,8 @@ class CompareUsersService {
 
     const addressesMatches = [];
 
-    [
-      ...firstAddresses.addresses.direct_only,
-      ...firstAddresses.specified_topics.direct_only,
-      ...firstAddresses.specified_boards.direct_only,
-    ].forEach(firstResult => {
-      [
-        ...secondAddresses.addresses.direct_only,
-        ...secondAddresses.specified_topics.direct_only,
-        ...secondAddresses.specified_boards.direct_only,
-      ].forEach(secondResult => {
+    firstAddresses.addresses.direct_only.forEach(firstResult => {
+      secondAddresses.addresses.direct_only.forEach(secondResult => {
         if (firstResult.address === secondResult.address) {
           const addressExistsIndex = addressesMatches.findIndex(
             a => a.address === secondResult.address,
@@ -47,6 +41,7 @@ class CompareUsersService {
           if (addressExistsIndex === -1) {
             addressesMatches.push({
               address: secondResult.address,
+              coin: secondResult.coin,
               first: [firstResult],
               second: [secondResult],
             });
@@ -58,10 +53,16 @@ class CompareUsersService {
               addressExistsIndex
             ].second.find(second => second.post_id === secondResult.post_id);
 
-            if (!firstExists) {
+            if (
+              !firstExists &&
+              addressesMatches[addressExistsIndex].first.length < 10
+            ) {
               addressesMatches[addressExistsIndex].first.push(firstResult);
             }
-            if (!secondExists) {
+            if (
+              !secondExists &&
+              addressesMatches[addressExistsIndex].second.length < 10
+            ) {
               addressesMatches[addressExistsIndex].second.push(secondResult);
             }
           }
@@ -106,11 +107,11 @@ class CompareUsersService {
               second => second.post_id === secondSocial.post.post_id,
             );
 
-            if (!firstExists) {
+            if (!firstExists && socialMatches.telegram.first < 10) {
               socialMatches.telegram.first.push(firstSocial.post);
             }
-            if (!secondExists) {
-              socialMatches.telegram.first.push(secondSocial.post);
+            if (!secondExists && socialMatches.telegram.second < 10) {
+              socialMatches.telegram.second.push(secondSocial.post);
             }
           }
         }
@@ -133,11 +134,11 @@ class CompareUsersService {
               second => second.post_id === secondSocial.post.post_id,
             );
 
-            if (!firstExists) {
+            if (!firstExists && socialMatches.twitter.first < 10) {
               socialMatches.twitter.first.push(firstSocial.post);
             }
-            if (!secondExists) {
-              socialMatches.twitter.first.push(secondSocial.post);
+            if (!secondExists && socialMatches.twitter.second < 10) {
+              socialMatches.twitter.second.push(secondSocial.post);
             }
           }
         }
@@ -160,22 +161,89 @@ class CompareUsersService {
               second => second.post_id === secondSocial.post.post_id,
             );
 
-            if (!firstExists) {
+            if (!firstExists && socialMatches.facebook.first < 10) {
               socialMatches.facebook.first.push(firstSocial.post);
             }
-            if (!secondExists) {
-              socialMatches.facebook.first.push(secondSocial.post);
+            if (!secondExists && socialMatches.facebook.second < 10) {
+              socialMatches.facebook.second.push(secondSocial.post);
             }
           }
         }
       });
     });
 
+    const socialsPostsOrganize = socialsArray => {
+      const resultsObject = {};
+
+      socialsArray.forEach(occurrence => {
+        Object.keys(occurrence.socials).forEach(socialType => {
+          if (!occurrence.socials[socialType]) return;
+
+          if (!resultsObject[socialType]) {
+            resultsObject[socialType] = [];
+          }
+
+          const socialIndex = resultsObject[socialType].findIndex(
+            s =>
+              s.name.toLowerCase() ===
+              occurrence.socials[socialType].toLowerCase(),
+          );
+
+          if (socialIndex === -1) {
+            resultsObject[socialType].push({
+              name: occurrence.socials[socialType],
+              posts: [occurrence.post],
+            });
+            return;
+          }
+
+          const postIndex = resultsObject[socialType][
+            socialIndex
+          ].posts.findIndex(p => p.post_id === occurrence.post.post_id);
+
+          if (postIndex === -1) {
+            resultsObject[socialType][socialIndex].posts.push(occurrence.post);
+          }
+        });
+      });
+
+      return resultsObject;
+    };
+
+    const firstSocialsPosts = socialsPostsOrganize(firstSocials);
+    const secondSocialsPosts = socialsPostsOrganize(secondSocials);
+
+    // const secondTelegram = secondSocials.reduce((prev, curr) => {
+    //   if (!curr) return prev;
+    //   Object.keys(curr.socials).map(social => {
+    //     if (!curr.socials[social]) return prev;
+    //     const existIndex = prev.findIndex(
+    //       p => p[social]?.name === curr.socials[social],
+    //     );
+
+    //     if (existIndex === -1) {
+    //       if (!prev[social]) {
+    //         prev[social] = {};
+    //       }
+    //       prev[social].push({ name: curr.socials[social], posts: [curr.post] });
+    //       return prev;
+    //     }
+
+    //     prev[social][existIndex].posts.push(curr.post);
+    //     return prev;
+    //   });
+    //   return prev;
+    // }, []);
+
     //
 
     const data = {
       addresses: addressesMatches,
       socials: socialMatches,
+      all_socials: {
+        first: firstSocialsPosts,
+        second: secondSocialsPosts,
+      },
     };
 
     return data;

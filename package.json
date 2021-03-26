@@ -16,7 +16,8 @@
       "dev:checker": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/bull/workers/checker.ts | pino-pretty",
       "postinstall": "typesync",
       "typeorm": "ts-node-dev ./node_modules/typeorm/cli.js",
-      "migrate": "typeorm migration:run"
+      "migrate": "typeorm migration:run",
+      "add:post": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/manual-post.ts"
    },
    "husky": {
       "hooks": {
@@ -81,6 +82,7 @@
       "decompress-tarbz2": "^4.1.1",
       "del": "^5.1.0",
       "dotenv": "^8.2.0",
+      "enquirer": "^2.3.6",
       "escape-html": "^1.0.3",
       "express": "^4.17.1",
       "express-rate-limit": "^5.1.3",
