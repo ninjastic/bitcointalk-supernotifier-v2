@@ -1,8 +1,8 @@
 import { Repository, getRepository, MoreThanOrEqual } from 'typeorm';
 import { sub } from 'date-fns';
 
-import FindModLogDTO from 'modules/modlog/dtos/FindModLogDTO';
-import FindUncheckedTypeDTO from 'modules/modlog/dtos/FindUncheckedTypeDTO';
+import FindModLogDTO from '../../../dtos/FindModLogDTO';
+import FindUncheckedTypeDTO from '../../../dtos/FindUncheckedTypeDTO';
 import IModLogRepository from '../../../repositories/IModLogRepository';
 import CreateModLogDTO from '../../../dtos/CreateModLogDTO';
 

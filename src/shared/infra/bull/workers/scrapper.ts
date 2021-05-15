@@ -8,7 +8,6 @@ import '../../../container';
 
 import cacheConfig from '../../../../config/cache';
 import loggerHandler from '../handlers/loggerHandler';
-import uptimeConfig from '../../../../../.uptime.config.json';
 
 import { uptimeApi } from '../../../services/api';
 
@@ -83,14 +82,14 @@ interface ScrapeTopicJob extends Job {
     const scrapePostsRepository = container.resolve(ScrapePostsRepository);
 
     await scrapePostsRepository.scrapeRecent();
-    uptimeApi.get(`/heartbeat/${uptimeConfig.scrapers.posts}`);
+    uptimeApi.get(process.env.HEARTBEAT_POSTS);
   });
 
   mainQueue.process('scrapeMerits', async () => {
     const scrapeMeritsRepository = container.resolve(ScrapeMeritsRepository);
     
     await scrapeMeritsRepository.scrapeMerits();
-    uptimeApi.get(`/heartbeat/${uptimeConfig.scrapers.merits}`);
+    uptimeApi.get(process.env.HEARTBEAT_MERITS);
   });
 
   mainQueue.process('scrapeModLog', async () => {

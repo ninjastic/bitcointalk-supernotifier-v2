@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
 
-import Address from 'modules/posts/infra/typeorm/entities/Address';
+import Address from '../../../../modules/posts/infra/typeorm/entities/Address';
 import IAddressesRepository from '../../../../modules/posts/repositories/IAddressesRepository';
 
 @injectable()

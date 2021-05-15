@@ -1,6 +1,6 @@
 import { Repository, getRepository } from 'typeorm';
 
-import IFindAddressesByAuthorDTO from 'modules/posts/dtos/IFindAddressesByAuthorDTO';
+import IFindAddressesByAuthorDTO from '../../../dtos/IFindAddressesByAuthorDTO';
 import ICreateAddressDTO from '../../../dtos/ICreateAddressDTO';
 import IAddressesRepository from '../../../repositories/IAddressesRepository';
 

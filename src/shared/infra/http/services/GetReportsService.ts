@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
 
-import Report from 'modules/reports/infra/typeorm/entities/Report';
+import Report from '../../../../modules/reports/infra/typeorm/entities/Report';
 import IReportRepository from '../../../../modules/reports/repositories/IReportRepository';
 
 interface Options {

@@ -1,7 +1,7 @@
 import cheerio from 'cheerio';
 import { inject, injectable } from 'tsyringe';
 
-import Post from 'modules/posts/infra/typeorm/entities/Post';
+import Post from '../../posts/infra/typeorm/entities/Post';
 import ScrapePostJob from '../../posts/infra/jobs/ScrapePostJob';
 
 import Merit from '../infra/typeorm/entities/Merit';

@@ -1,6 +1,6 @@
 import { injectable, inject } from 'tsyringe';
 
-import PostHistory from 'modules/posts/infra/typeorm/entities/PostHistory';
+import PostHistory from '../infra/typeorm/entities/PostHistory';
 
 import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 
