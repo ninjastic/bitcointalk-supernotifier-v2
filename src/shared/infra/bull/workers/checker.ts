@@ -27,7 +27,9 @@ import CheckPostsRescraperForChangesService from '../../../../modules/posts/serv
   await queue.removeRepeatable('checkMerits', { every: 5000 });
   await queue.removeRepeatable('checkModLogs', { every: 300000 });
   await queue.removeRepeatable('checkPostsAddresses', { every: 20000 });
-  await queue.removeRepeatable('checkPostsRescraperForChanges', { every: 20000 });
+  await queue.removeRepeatable('checkPostsRescraperForChanges', {
+    every: 20000,
+  });
 
   await queue.add('checkPosts', null, {
     repeat: { every: 5000 },
@@ -79,7 +81,9 @@ import CheckPostsRescraperForChangesService from '../../../../modules/posts/serv
   });
 
   queue.process('checkPostsRescraperForChanges', async () => {
-    const checkPostsRescraperForChanges = container.resolve(CheckPostsRescraperForChangesService);
+    const checkPostsRescraperForChanges = container.resolve(
+      CheckPostsRescraperForChangesService,
+    );
     await checkPostsRescraperForChanges.execute();
   });
 

@@ -8,7 +8,7 @@ let PENDING_REQUESTS = 0;
 let WAITING = false;
 let LAST_REQUEST = null;
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: 'https://bitcointalk.org',
   timeout: 5000,
   headers: {
@@ -17,6 +17,10 @@ const api = axios.create({
   },
   responseType: 'arraybuffer',
 });
+
+export const uptimeApi = axios.create({
+  baseURL: 'https://betteruptime.com/api/v1'
+})
 
 api.interceptors.request.use(config => {
   return new Promise(resolve => {
