@@ -81,21 +81,26 @@ interface ScrapeTopicJob extends Job {
   mainQueue.process('scrapeRecentPosts', async () => {
     const scrapePostsRepository = container.resolve(ScrapePostsRepository);
 
-    await scrapePostsRepository.scrapeRecent();
+    const result = await scrapePostsRepository.scrapeRecent();
     uptimeApi.get(process.env.HEARTBEAT_POSTS);
+
+    return result;
   });
 
   mainQueue.process('scrapeMerits', async () => {
     const scrapeMeritsRepository = container.resolve(ScrapeMeritsRepository);
     
-    await scrapeMeritsRepository.scrapeMerits();
+    const result = await scrapeMeritsRepository.scrapeMerits();
     uptimeApi.get(process.env.HEARTBEAT_MERITS);
+
+    return result;
   });
 
   mainQueue.process('scrapeModLog', async () => {
     const scrapeModLog = new ScrapeModLogService();
 
-    await scrapeModLog.execute();
+    const result = await scrapeModLog.execute();
+    return result;
   });
 
   sideQueue.process('scrapePost', async (job: ScrapePostJob) => {
@@ -107,7 +112,8 @@ interface ScrapeTopicJob extends Job {
       post_id: job.data.post_id,
     });
 
-    await savePostService.execute(post);
+    const result = await savePostService.execute(post);
+    return result;
   });
 
   sideQueue.process(
@@ -115,14 +121,16 @@ interface ScrapeTopicJob extends Job {
     async (job: ScrapeUserMeritCountJob) => {
       const scrapeUserMeritCount = new ScrapeUserMeritCountService();
 
-      await scrapeUserMeritCount.execute(job.data.uid);
+      const result = await scrapeUserMeritCount.execute(job.data.uid);
+      return result;
     },
   );
 
   sideQueue.process('scrapeTopic', async (job: ScrapeTopicJob) => {
     const scrapeTopic = container.resolve(ScrapeTopicService);
 
-    await scrapeTopic.execute(job.data.topic_id);
+    const result = await scrapeTopic.execute(job.data.topic_id);
+    return result;
   });
 
   lowPrioritySideQueue.process('scrapePostForChanges', async (job: ScrapePostJob) => {
@@ -130,7 +138,8 @@ interface ScrapeTopicJob extends Job {
 
     const scrapePostForEdits = container.resolve(ScrapePostForEditsService);
 
-    await scrapePostForEdits.execute({ topic_id, post_id });
+    const result = await scrapePostForEdits.execute({ topic_id, post_id });
+    return result;
   });
 
   loggerHandler(mainQueue);
