@@ -93,6 +93,7 @@ export default class PostsRepository implements IPostsRepository {
       author,
       author_uid,
       content,
+      title,
       topic_id,
       board,
       child_boards,
@@ -127,6 +128,16 @@ export default class PostsRepository implements IPostsRepository {
         simple_query_string: {
           fields: ['content'],
           query: content,
+          default_operator: 'AND',
+        },
+      });
+    }
+
+    if (title) {
+      must.push({
+        simple_query_string: {
+          fields: ['title'],
+          query: title,
           default_operator: 'AND',
         },
       });

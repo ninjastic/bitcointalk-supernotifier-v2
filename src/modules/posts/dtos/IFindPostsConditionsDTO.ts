@@ -2,6 +2,7 @@ export default interface IFindPostsConditionsDTO {
   author?: string;
   author_uid?: number;
   content?: string;
+  title?: string;
   topic_id?: number;
   board?: number;
   child_boards?: string;

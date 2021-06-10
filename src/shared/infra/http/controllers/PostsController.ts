@@ -48,6 +48,7 @@ export default class PostsController {
     const schemaValidation = Joi.object({
       author: Joi.string().allow('', null),
       content: Joi.string().allow('', null),
+      title: Joi.string().allow('', null),
       topic_id: Joi.number().allow('', null),
       board: Joi.number().allow('', null),
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
