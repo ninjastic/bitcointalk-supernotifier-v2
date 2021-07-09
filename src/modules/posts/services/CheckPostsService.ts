@@ -62,6 +62,85 @@ export default class CheckPostsService {
         await setPostChecked.execute(post.post_id);
 
         await Promise.all(
+          users.map(async user => {
+            if (post.author.toLowerCase() === user.username.toLowerCase()) {
+              return Promise.resolve();
+            }
+
+            const usernameRegex = new RegExp(`\\b${user.username}\\b`, 'gi');
+            const altUsernameRegex = user.alternative_usernames.length
+              ? new RegExp(`\\b${user.alternative_usernames[0]}\\b`, 'gi')
+              : null;
+
+            const regexBackupAtSign = new RegExp(`@${user.username}`, 'gi');
+            const regexBackupQuoted = new RegExp(
+              `Quote from: ${user.username} on`,
+              'gi',
+            );
+
+            if (!post.content.match(usernameRegex)) {
+              const foundAltUsername =
+                altUsernameRegex && post.content.match(altUsernameRegex);
+
+              const foundBackupRegex =
+                post.content.match(regexBackupAtSign) ||
+                post.content.match(regexBackupQuoted);
+
+              if (!foundAltUsername && !foundBackupRegex) {
+                return Promise.resolve();
+              }
+            }
+
+            if (post.notified_to.includes(user.telegram_id)) {
+              return Promise.resolve();
+            }
+
+            const foundIgnoredUser = ignoredUsers.find(
+              ignoredUser => ignoredUser.username === post.author.toLowerCase(),
+            );
+
+            if (
+              foundIgnoredUser &&
+              foundIgnoredUser.ignoring.includes(user.telegram_id)
+            ) {
+              return Promise.resolve();
+            }
+
+            const foundIgnoredTopic = ignoredTopics.find(
+              ignoredTopic => ignoredTopic.topic_id === post.topic_id,
+            );
+
+            if (
+              foundIgnoredTopic &&
+              foundIgnoredTopic.ignoring.includes(user.telegram_id)
+            ) {
+              return Promise.resolve();
+            }
+
+            const postNotified = await this.cacheProvider.recover<boolean>(
+              `notified:${post.post_id}:${user.telegram_id}`,
+            );
+
+            if (postNotified) {
+              return Promise.resolve();
+            }
+
+            await this.cacheProvider.save(
+              `notified:${post.post_id}:${user.telegram_id}`,
+              true,
+              'EX',
+              900,
+            );
+
+            return queue.add('sendMentionNotification', { post, user });
+          }),
+        );
+      }),
+    );
+
+    await Promise.all(
+      posts.map(async post => {
+        await Promise.all(
           trackedTopics.map(async trackedTopic => {
             if (trackedTopic.topic_id !== post.topic_id) {
               return Promise.resolve();
@@ -138,85 +217,6 @@ export default class CheckPostsService {
                 });
               }),
             );
-          }),
-        );
-      }),
-    );
-
-    await Promise.all(
-      posts.map(async post => {
-        await Promise.all(
-          users.map(async user => {
-            if (post.author.toLowerCase() === user.username.toLowerCase()) {
-              return Promise.resolve();
-            }
-
-            const usernameRegex = new RegExp(`\\b${user.username}\\b`, 'gi');
-            const altUsernameRegex = user.alternative_usernames.length
-              ? new RegExp(`\\b${user.alternative_usernames[0]}\\b`, 'gi')
-              : null;
-
-            const regexBackupAtSign = new RegExp(`@${user.username}`, 'gi');
-            const regexBackupQuoted = new RegExp(
-              `Quote from: ${user.username} on`,
-              'gi',
-            );
-
-            if (!post.content.match(usernameRegex)) {
-              const foundAltUsername =
-                altUsernameRegex && post.content.match(altUsernameRegex);
-
-              const foundBackupRegex =
-                post.content.match(regexBackupAtSign) ||
-                post.content.match(regexBackupQuoted);
-
-              if (!foundAltUsername && !foundBackupRegex) {
-                return Promise.resolve();
-              }
-            }
-
-            if (post.notified_to.includes(user.telegram_id)) {
-              return Promise.resolve();
-            }
-
-            const foundIgnoredUser = ignoredUsers.find(
-              ignoredUser => ignoredUser.username === post.author.toLowerCase(),
-            );
-
-            if (
-              foundIgnoredUser &&
-              foundIgnoredUser.ignoring.includes(user.telegram_id)
-            ) {
-              return Promise.resolve();
-            }
-
-            const foundIgnoredTopic = ignoredTopics.find(
-              ignoredTopic => ignoredTopic.topic_id === post.topic_id,
-            );
-
-            if (
-              foundIgnoredTopic &&
-              foundIgnoredTopic.ignoring.includes(user.telegram_id)
-            ) {
-              return Promise.resolve();
-            }
-
-            const postNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${post.post_id}:${user.telegram_id}`,
-            );
-
-            if (postNotified) {
-              return Promise.resolve();
-            }
-
-            await this.cacheProvider.save(
-              `notified:${post.post_id}:${user.telegram_id}`,
-              true,
-              'EX',
-              900,
-            );
-
-            return queue.add('sendMentionNotification', { post, user });
           }),
         );
       }),
