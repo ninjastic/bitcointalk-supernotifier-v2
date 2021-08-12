@@ -73,7 +73,8 @@ const modlogsEnabled = (ctx: MenuContext) => {
 };
 
 notificationsMenu.interact(
-  ctx => (mentionsEnabled(ctx) ? '❌ Disable Mentions' : '✅ Enable Mentions'),
+  ctx =>
+    mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '❌ Mentions Disabled',
   'mentions',
   {
     do: async ctx => {
@@ -87,7 +88,7 @@ notificationsMenu.interact(
 );
 
 notificationsMenu.interact(
-  ctx => (meritsEnabled(ctx) ? '❌ Disable Merits' : '✅ Enable Merits'),
+  ctx => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '❌ Merits Disabled'),
   'merits',
   {
     do: async ctx => {
@@ -101,7 +102,10 @@ notificationsMenu.interact(
 );
 
 notificationsMenu.interact(
-  ctx => (modlogsEnabled(ctx) ? '❌ Disable ModLogs' : '✅ Enable ModLogs'),
+  ctx =>
+    modlogsEnabled(ctx)
+      ? '✅ Deleted Posts Enabled '
+      : '❌ Deleted Posts Disabled',
   'modlogs',
   {
     do: async ctx => {
