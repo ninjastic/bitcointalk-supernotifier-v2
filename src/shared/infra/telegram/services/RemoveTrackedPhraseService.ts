@@ -16,11 +16,11 @@ export default class RemoveTrackedPhraseService {
   ) {}
 
   public async execute(
-    phrase: string,
+    id: string,
     telegram_id?: number,
   ): Promise<TrackedPhrase> {
     const phraseExists = await this.trackedPhrasesRepository.findOne({
-      phrase,
+      id,
       telegram_id,
     });
 

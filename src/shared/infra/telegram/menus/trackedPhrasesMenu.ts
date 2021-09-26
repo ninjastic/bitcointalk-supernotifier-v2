@@ -12,6 +12,7 @@ import CreateTrackedPhraseService from '../services/CreateTrackedPhraseService';
 import RemoveTrackedPhraseService from '../services/RemoveTrackedPhraseService';
 
 import { trackedPhrasesMenuMiddleware } from './index';
+import FindTrackedPhrasesByIdService from '../services/FindTrackedPhrasesByIdService';
 
 interface MenuContext extends Context {
   session: ISession;
@@ -25,7 +26,13 @@ const trackedPhrasesMenu = new MenuTemplate<MenuContext>(() => {
 });
 
 const trackedPhraseInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
-  const phrase = ctx.match[1];
+  const phraseId = ctx.match[1];
+
+  const findTrackedPhrasesById = container.resolve(
+    FindTrackedPhrasesByIdService,
+  );
+
+  const { phrase } = await findTrackedPhrasesById.execute(phraseId);
 
   let message = '';
   message += `<b>Selected Phrase:</b>\n\n`;
@@ -39,7 +46,13 @@ const trackedPhraseInfoMenu = new MenuTemplate<MenuContext>(async ctx => {
 
 const confirmRemoveTrackedPhraseMenu = new MenuTemplate<MenuContext>(
   async ctx => {
-    const phrase = ctx.match[1];
+    const phraseId = ctx.match[1];
+
+    const findTrackedPhrasesById = container.resolve(
+      FindTrackedPhrasesByIdService,
+    );
+
+    const { phrase } = await findTrackedPhrasesById.execute(phraseId);
 
     return {
       text: `Are you sure you want to remove the tracked phrase: <b>${phrase}</b>?`,
@@ -109,7 +122,7 @@ const addTrackedPhraseLinkQuestion = new TelegrafStatelessQuestion(
       }
 
       logger.error(
-        { telegram_id: ctx.chat.id, error },
+        { telegram_id: ctx.chat.id, error: error.message },
         'Error while adding Tracked Phrase.',
       );
 
@@ -130,7 +143,7 @@ const getTrackedPhrasesList = async (ctx: MenuContext) => {
   const formatted = {};
 
   choices.forEach(choice => {
-    formatted[choice.phrase] = choice.phrase;
+    formatted[choice.id] = choice.phrase;
   });
 
   return formatted;
