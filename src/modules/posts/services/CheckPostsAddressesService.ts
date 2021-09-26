@@ -33,7 +33,7 @@ export default class CheckPostsService {
       const last = await this.postsAddressesRepository.findOne({
         order: 'DESC',
       });
-      lastId = last.post_id;
+      lastId = last?.post_id;
     }
 
     const posts = await this.postsRepository.findPosts({

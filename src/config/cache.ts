@@ -3,7 +3,7 @@ export default {
   config: {
     redis: {
       host: 'localhost',
-      port: 6379,
+      port: Number(process.env.REDIS_PORT) || 6379,
       password: process.env.REDIS_PASSWORD,
     },
   },

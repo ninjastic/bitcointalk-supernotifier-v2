@@ -1,7 +1,17 @@
-# Awesome Project Build with TypeORM
+* Install the dependencies
 
-Steps to run this project:
+`yarn`
 
-1. Run `npm i` command
-2. Setup database settings inside `ormconfig.json` file
-3. Run `npm start` command
+* Copy the `.env.example` file to `.env`
+
+* Configure the Postgres and Redis variables on the `.env` file
+
+* Deploy Postgres and Redis through Docker (using Docker Compose)
+
+`docker compose up -d`
+
+* Copy the `.ormconfig.js.example` to `.ormconfig.js`
+
+* Run the database migrations
+
+`yarn migrate`

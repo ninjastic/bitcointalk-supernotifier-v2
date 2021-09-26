@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 services:
   postgres:
     image: postgres
@@ -13,7 +13,7 @@ services:
       - ${PWD}/docker/postgres/data:/var/lib/postgresql/data
       - ${PWD}/docker/postgres/backups:/root/backups
     ports:
-      - "5432:5432"
+      - ${POSTGRES_PORT}:5432
     networks:
       - supernotifier
   redis:
@@ -26,7 +26,7 @@ services:
     volumes:
       - ${PWD}/docker/redis/data:/data
     ports:
-      - "6379:6379"
+      - ${REDIS_PORT}:6379
     networks:
       - supernotifier
 networks:

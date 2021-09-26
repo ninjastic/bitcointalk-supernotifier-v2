@@ -4,6 +4,7 @@ import { MenuTemplate } from 'telegraf-inline-menu';
 import ISession from '../@types/ISession';
 
 import trackedTopicsMenu from './trackedTopicsMenu';
+import trackedPhrasesMenu from './trackedPhrasesMenu';
 import ignoredUsersMenu from './ignoredUsersMenu';
 import ignoredTopicsMenu from './ignoredTopicsMenu';
 import notificationsMenu from './notificationsMenu';
@@ -21,6 +22,9 @@ const mainMenu = new MenuTemplate<MenuContext>(async (ctx: MenuContext) => {
 });
 
 mainMenu.submenu('📗 Tracked Topics', 'tt', trackedTopicsMenu);
+mainMenu.submenu('💬 Tracked Phrases', 'tp', trackedPhrasesMenu, {
+  joinLastRow: true,
+});
 mainMenu.submenu('🚫 Ignored Topics', 'it', ignoredTopicsMenu);
 mainMenu.submenu('🚫 Ignored Users', 'iu', ignoredUsersMenu, {
   joinLastRow: true,

@@ -7,6 +7,7 @@ import loggerHandler from '../handlers/loggerHandler';
 import SendMentionNotificationService from '../../telegram/services/SendMentionNotificationService';
 import SendMeritNotificationService from '../../telegram/services/SendMeritNotificationService';
 import SendTopicTrackingNotificationService from '../../telegram/services/SendTopicTrackingNotificationService';
+import SendPhraseTrackingNotificationService from '../../telegram/services/SendPhraseTrackingNotificationService';
 import SendRemovedTopicNotificationService from '../../telegram/services/SendRemovedTopicNotificationService';
 
 class TelegramQueue {
@@ -59,6 +60,17 @@ class TelegramQueue {
         user.telegram_id,
         postsDeleted,
         modLog,
+      );
+    });
+
+    this.instance.process('sendPhraseTrackingNotification', async job => {
+      const sendPhraseTrackingNotification = new SendPhraseTrackingNotificationService();
+
+      const { post, user, trackedPhrase } = job.data;
+      await sendPhraseTrackingNotification.execute(
+        user.telegram_id,
+        post,
+        trackedPhrase?.phrase,
       );
     });
 

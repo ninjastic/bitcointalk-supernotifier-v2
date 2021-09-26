@@ -16,7 +16,8 @@
       "dev:checker": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/bull/workers/checker.ts | pino-pretty",
       "postinstall": "typesync",
       "typeorm": "ts-node-dev ./node_modules/typeorm/cli.js",
-      "migrate": "typeorm migration:run",
+      "migrate": "cross-env NODE_ENV=production typeorm migration:run",
+      "dev:migrate": "cross-env NODE_ENV=development ts-node-dev ./node_modules/typeorm/cli.js migration:run",
       "add:post": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/manual-post.ts"
    },
    "husky": {
