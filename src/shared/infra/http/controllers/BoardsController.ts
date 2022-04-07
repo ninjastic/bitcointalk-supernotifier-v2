@@ -8,7 +8,7 @@ import GetCacheService from '../../../container/providers/services/GetCacheServi
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
-export default class AddressesController {
+export default class BoardsController {
   public async index(request: Request, response: Response): Promise<Response> {
     const getBoardsList = container.resolve(GetBoardsListService);
     const getCache = container.resolve(GetCacheService);

@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from 'express';
 import GetAuthorUIDFromUsernameService from '../services/GetAuthorUIDFromUsernameService';
 
 const getAuthorUid = async (
-  request: Request,
+  request: any,
   response: Response,
   next: NextFunction,
 ): Promise<Response | void> => {

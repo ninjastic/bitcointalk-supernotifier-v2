@@ -64,11 +64,10 @@ const scrapeBoards = async (
     const boardsArray = [];
 
     $(boardsList).each(async (boardIndex, boardElement) => {
-      const { length } = boards;
       const boardName = $(boardElement).text();
       const boardLink = $(boardElement).find('a').attr('href');
 
-      if (boardIndex < length - 1 && boardIndex !== 0) {
+      if (boardIndex !== 0) {
         const boardIdRegEx = new RegExp('board=(\\d+)');
 
         const match = boardLink.match(boardIdRegEx);
@@ -98,12 +97,14 @@ const scrapeBoards = async (
       finalBoardsArray.push(...boardsArray);
     }
 
-    await createQueryBuilder()
-      .insert()
-      .into('boards')
-      .values(finalBoardsArray)
-      .onConflict('("board_id") DO NOTHING')
-      .execute();
+    if (finalBoardsArray.length) {
+      await createQueryBuilder()
+        .insert()
+        .into('boards')
+        .values(finalBoardsArray)
+        .onConflict('("board_id") DO NOTHING')
+        .execute();
+    }
   }
 };
 
@@ -113,15 +114,9 @@ const scrapeBoards = async (
   const existent = await getExistentBoardsInDatabase(boards);
 
   const missingBoards = boards.filter(board => {
-    let exists = false;
-
-    existent.forEach(existentBoard => {
-      if (existentBoard.board_id === board.id) {
-        exists = true;
-      }
+    return !existent.find(existentBoard => {
+      return existentBoard.board_id === board.id;
     });
-
-    return !exists;
   });
 
   await scrapeBoards(missingBoards);

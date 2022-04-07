@@ -19,8 +19,8 @@ export const api = axios.create({
 });
 
 export const uptimeApi = axios.create({
-  baseURL: 'https://betteruptime.com/api/v1'
-})
+  baseURL: 'https://betteruptime.com/api/v1',
+});
 
 api.interceptors.request.use(config => {
   return new Promise(resolve => {
