@@ -8,6 +8,7 @@ import SaveCacheService from '../../../shared/container/providers/services/SaveC
 interface Params {
   from?: string;
   to?: string;
+  limit?: number;
 }
 
 interface Board {
@@ -23,7 +24,7 @@ interface Data {
 }
 
 export default class GetPostsBoardsPeriodTotalService {
-  public async execute({ from, to }: Params): Promise<Data> {
+  public async execute({ from, to, limit }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
@@ -55,6 +56,7 @@ export default class GetPostsBoardsPeriodTotalService {
           boards: {
             terms: {
               field: 'board_id',
+              size: limit || 10,
             },
           },
         },
@@ -104,8 +106,8 @@ export default class GetPostsBoardsPeriodTotalService {
     };
 
     const posts_count = organized.body.aggregations.boards.buckets.reduce(
-      (accum: number, curr: { doc_count: number }) => {
-        return accum + curr.doc_count;
+      (accum: number, curr: { count: number }) => {
+        return accum + curr.count;
       },
       0,
     );

@@ -21,11 +21,13 @@ export default class PostsBoardsPeriodTotalController {
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
+      limit: Joi.number().allow('', null),
     });
 
     const query = {
       from: (request.query.from || defaultFrom) as string,
       to: (request.query.to || defaultTo) as string,
+      limit: Number(request.query.limit) || null,
     };
 
     try {
