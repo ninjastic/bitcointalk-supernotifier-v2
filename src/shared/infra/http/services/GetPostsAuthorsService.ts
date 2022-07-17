@@ -109,7 +109,7 @@ export default class GetPostsAuthorsService {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: Math.min(limit || 1000, 10000),
+              size: Math.min(limit || 1000, 10000000),
             },
             aggs: {
               author_uid: {

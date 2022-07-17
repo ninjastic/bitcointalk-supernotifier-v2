@@ -57,7 +57,7 @@ interface ScrapeTopicJob extends Job {
     redis: cacheConfig.config.redis,
     limiter: {
       max: 1,
-      duration: 1000
+      duration: 1000,
     },
     defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
   });
@@ -89,7 +89,7 @@ interface ScrapeTopicJob extends Job {
 
   mainQueue.process('scrapeMerits', async () => {
     const scrapeMeritsRepository = container.resolve(ScrapeMeritsRepository);
-    
+
     const result = await scrapeMeritsRepository.scrapeMerits();
     uptimeApi.get(process.env.HEARTBEAT_MERITS);
 
@@ -133,14 +133,17 @@ interface ScrapeTopicJob extends Job {
     return result;
   });
 
-  lowPrioritySideQueue.process('scrapePostForChanges', async (job: ScrapePostJob) => {
-    const { topic_id, post_id } = job.data;
+  lowPrioritySideQueue.process(
+    'scrapePostForChanges',
+    async (job: ScrapePostJob) => {
+      const { topic_id, post_id } = job.data;
 
-    const scrapePostForEdits = container.resolve(ScrapePostForEditsService);
+      const scrapePostForEdits = container.resolve(ScrapePostForEditsService);
 
-    const result = await scrapePostForEdits.execute({ topic_id, post_id });
-    return result;
-  });
+      const result = await scrapePostForEdits.execute({ topic_id, post_id });
+      return result;
+    },
+  );
 
   loggerHandler(mainQueue);
   loggerHandler(sideQueue);
