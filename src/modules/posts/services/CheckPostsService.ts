@@ -55,8 +55,9 @@ export default class CheckPostsService {
     const createWebNotification = container.resolve(
       CreateWebNotificationService,
     );
-    
-    const scapeRegexText = (text: string) => text.replace(/([<>*()?])/g, "\\$1");
+
+    const scapeRegexText = (text: string) =>
+      text.replace(/([<>*()?])/g, '\\$1');
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
@@ -70,7 +71,7 @@ export default class CheckPostsService {
         await Promise.all(
           trackedPhrases.map(async trackedPhrase => {
             const phraseRegex = new RegExp(
-              `(?<!\w)${scapeRegexText(trackedPhrase.phrase)}(?!\w)`,
+              `(?<!\\w)${scapeRegexText(trackedPhrase.phrase)}(?!\\w)`,
               'gi',
             );
 
@@ -158,12 +159,23 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            const usernameRegex = new RegExp(`(?<!\w)${scapeRegexText(user.username)}(?!\w)`, 'gi');
+            const usernameRegex = new RegExp(
+              `(?<!\\w)${scapeRegexText(user.username)}(?!\\w)`,
+              'gi',
+            );
             const altUsernameRegex = user.alternative_usernames.length
-              ? new RegExp(`(?<!\w)${scapeRegexText(user.alternative_usernames[0])}(?!\w)`, 'gi')
+              ? new RegExp(
+                  `(?<!\\w)${scapeRegexText(
+                    user.alternative_usernames[0],
+                  )}(?!\\w)`,
+                  'gi',
+                )
               : null;
 
-            const regexBackupAtSign = new RegExp(`@${scapeRegexText(user.username)}`, 'gi');
+            const regexBackupAtSign = new RegExp(
+              `@${scapeRegexText(user.username)}`,
+              'gi',
+            );
             const regexBackupQuoted = new RegExp(
               `Quote from: ${scapeRegexText(user.username)} on`,
               'gi',
@@ -321,7 +333,10 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            const usernameRegex = new RegExp(`(?<!\w)${scapeRegexText(webUser.username)}(?!\w)`, 'gi');
+            const usernameRegex = new RegExp(
+              `(?<!\\w)${scapeRegexText(webUser.username)}(?!\\w)`,
+              'gi',
+            );
 
             if (!post.content.match(usernameRegex)) {
               return Promise.resolve();
