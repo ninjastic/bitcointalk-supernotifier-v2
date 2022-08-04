@@ -55,6 +55,8 @@ export default class CheckPostsService {
     const createWebNotification = container.resolve(
       CreateWebNotificationService,
     );
+    
+    const scapeRegexText = (text: string) => text.replace(/([<>*()?])/g, "\\$1");
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
@@ -68,7 +70,7 @@ export default class CheckPostsService {
         await Promise.all(
           trackedPhrases.map(async trackedPhrase => {
             const phraseRegex = new RegExp(
-              `\\b${trackedPhrase.phrase}\\b`,
+              `(?<!\w)${scapeRegexText(trackedPhrase.phrase)}(?!\w)`,
               'gi',
             );
 
@@ -156,14 +158,14 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            const usernameRegex = new RegExp(`\\b${user.username}\\b`, 'gi');
+            const usernameRegex = new RegExp(`(?<!\w)${scapeRegexText(user.username)}(?!\w)`, 'gi');
             const altUsernameRegex = user.alternative_usernames.length
-              ? new RegExp(`\\b${user.alternative_usernames[0]}\\b`, 'gi')
+              ? new RegExp(`(?<!\w)${scapeRegexText(user.alternative_usernames[0])}(?!\w)`, 'gi')
               : null;
 
-            const regexBackupAtSign = new RegExp(`@${user.username}`, 'gi');
+            const regexBackupAtSign = new RegExp(`@${scapeRegexText(user.username)}`, 'gi');
             const regexBackupQuoted = new RegExp(
-              `Quote from: ${user.username} on`,
+              `Quote from: ${scapeRegexText(user.username)} on`,
               'gi',
             );
 
@@ -319,7 +321,7 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            const usernameRegex = new RegExp(`\\b${webUser.username}\\b`, 'gi');
+            const usernameRegex = new RegExp(`(?<!\w)${scapeRegexText(webUser.username)}(?!\w)`, 'gi');
 
             if (!post.content.match(usernameRegex)) {
               return Promise.resolve();
