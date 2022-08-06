@@ -66,7 +66,7 @@ class TelegramBot {
     this.errorHandler();
 
     this.instance.launch();
-    // this.queue.run();
+    this.queue.run();
   }
 
   middlewares(): void {
