@@ -60,7 +60,7 @@ export default class CheckMeritsService {
               return Promise.resolve();
             }
 
-            if (merit.notified_to.includes(user.telegram_id)) {
+            if (merit.notified_to.includes(Number(user.telegram_id))) {
               return Promise.resolve();
             }
 

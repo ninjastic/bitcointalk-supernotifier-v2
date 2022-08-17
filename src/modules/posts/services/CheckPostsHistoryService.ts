@@ -75,8 +75,8 @@ export default class CheckPostsHistoryService {
             }
 
             if (
-              history.post.notified_to.includes(user.telegram_id) ||
-              history.notified_to.includes(user.telegram_id)
+              history.post.notified_to.includes(Number(user.telegram_id)) ||
+              history.notified_to.includes(Number(user.telegram_id))
             ) {
               return Promise.resolve();
             }
@@ -88,7 +88,7 @@ export default class CheckPostsHistoryService {
 
             if (
               foundIgnoredUser &&
-              foundIgnoredUser.ignoring.includes(user.telegram_id)
+              foundIgnoredUser.ignoring.includes(Number(user.telegram_id))
             ) {
               return Promise.resolve();
             }
@@ -99,7 +99,7 @@ export default class CheckPostsHistoryService {
 
             if (
               foundIgnoredTopic &&
-              foundIgnoredTopic.ignoring.includes(user.telegram_id)
+              foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))
             ) {
               return Promise.resolve();
             }

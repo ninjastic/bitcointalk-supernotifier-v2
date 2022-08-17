@@ -95,7 +95,7 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            if (post.notified_to.includes(user.telegram_id)) {
+            if (post.notified_to.includes(Number(user.telegram_id))) {
               return Promise.resolve();
             }
 
@@ -105,7 +105,7 @@ export default class CheckPostsService {
 
             if (
               foundIgnoredUser &&
-              foundIgnoredUser.ignoring.includes(user.telegram_id)
+              foundIgnoredUser.ignoring.includes(Number(user.telegram_id))
             ) {
               return Promise.resolve();
             }
@@ -116,7 +116,7 @@ export default class CheckPostsService {
 
             if (
               foundIgnoredTopic &&
-              foundIgnoredTopic.ignoring.includes(user.telegram_id)
+              foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))
             ) {
               return Promise.resolve();
             }
@@ -205,7 +205,7 @@ export default class CheckPostsService {
               }
             }
 
-            if (post.notified_to.includes(user.telegram_id)) {
+            if (post.notified_to.includes(Number(user.telegram_id))) {
               return Promise.resolve();
             }
 
@@ -215,7 +215,7 @@ export default class CheckPostsService {
 
             if (
               foundIgnoredUser &&
-              foundIgnoredUser.ignoring.includes(user.telegram_id)
+              foundIgnoredUser.ignoring.includes(Number(user.telegram_id))
             ) {
               return Promise.resolve();
             }
@@ -226,7 +226,7 @@ export default class CheckPostsService {
 
             if (
               foundIgnoredTopic &&
-              foundIgnoredTopic.ignoring.includes(user.telegram_id)
+              foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))
             ) {
               return Promise.resolve();
             }
@@ -278,7 +278,7 @@ export default class CheckPostsService {
                   return Promise.resolve();
                 }
 
-                if (post.notified_to.includes(user.telegram_id)) {
+                if (post.notified_to.includes(Number(user.telegram_id))) {
                   return Promise.resolve();
                 }
 
@@ -289,7 +289,7 @@ export default class CheckPostsService {
 
                 if (
                   foundIgnoredUser &&
-                  foundIgnoredUser.ignoring.includes(user.telegram_id)
+                  foundIgnoredUser.ignoring.includes(Number(user.telegram_id))
                 ) {
                   return Promise.resolve();
                 }
