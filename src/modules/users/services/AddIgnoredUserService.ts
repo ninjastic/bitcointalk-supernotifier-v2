@@ -36,8 +36,8 @@ export default class AddIgnoredUserService {
 
       await this.ignoredUserRepository.save(ignoredUserExists);
 
-      this.cacheRepository.invalidate(`ignoredUsers:${telegram_id}`);
-      this.cacheRepository.invalidate('ignoredUsers');
+      await this.cacheRepository.invalidate(`ignoredUsers:${telegram_id}`);
+      await this.cacheRepository.invalidate('ignoredUsers');
 
       return ignoredUserExists;
     }
@@ -49,8 +49,8 @@ export default class AddIgnoredUserService {
 
     await this.ignoredUserRepository.save(ignoredUser);
 
-    this.cacheRepository.invalidate(`ignoredUsers:${telegram_id}`);
-    this.cacheRepository.invalidate('ignoredUsers');
+    await this.cacheRepository.invalidate(`ignoredUsers:${telegram_id}`);
+    await this.cacheRepository.invalidate('ignoredUsers');
 
     return ignoredUser;
   }

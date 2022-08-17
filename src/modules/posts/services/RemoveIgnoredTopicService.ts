@@ -32,8 +32,8 @@ export default class RemoveIgnoredTopicService {
     if (index !== -1) {
       ignoredTopicExists.ignoring.splice(index, 1);
       await this.ignoredTopicsRepository.save(ignoredTopicExists);
-      this.cacheRepository.invalidate(`ignoredTopics:${telegram_id}`);
-      this.cacheRepository.invalidate('ignoredTopics');
+      await this.cacheRepository.invalidate(`ignoredTopics:${telegram_id}`);
+      await this.cacheRepository.invalidate('ignoredTopics');
     }
 
     return ignoredTopicExists;

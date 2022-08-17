@@ -40,8 +40,8 @@ export default class AddTrackedTopicService {
 
       await this.trackedTopicsRepository.save(topicExists);
 
-      this.cacheRepository.invalidate(`trackedTopics:${telegram_id}`);
-      this.cacheRepository.invalidate('trackedTopics');
+      await this.cacheRepository.invalidate(`trackedTopics:${telegram_id}`);
+      await this.cacheRepository.invalidate('trackedTopics');
 
       return topicExists;
     }
@@ -69,8 +69,8 @@ export default class AddTrackedTopicService {
 
     await queue.close();
 
-    this.cacheRepository.invalidate(`trackedTopics:${telegram_id}`);
-    this.cacheRepository.invalidate('trackedTopics');
+    await this.cacheRepository.invalidate(`trackedTopics:${telegram_id}`);
+    await this.cacheRepository.invalidate('trackedTopics');
 
     return trackedWithTopic;
   }

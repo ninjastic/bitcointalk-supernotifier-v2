@@ -40,8 +40,8 @@ export default class AddIgnoredTopicService {
 
       await this.ignoredTopicsRepository.save(ignoredTopicExists);
 
-      this.cacheRepository.invalidate(`ignoredTopics:${telegram_id}`);
-      this.cacheRepository.invalidate('ignoredTopics');
+      await this.cacheRepository.invalidate(`ignoredTopics:${telegram_id}`);
+      await this.cacheRepository.invalidate('ignoredTopics');
 
       return ignoredTopicExists;
     }
@@ -69,8 +69,8 @@ export default class AddIgnoredTopicService {
 
     await queue.close();
 
-    this.cacheRepository.invalidate(`ignoredTopics:${telegram_id}`);
-    this.cacheRepository.invalidate('ignoredTopics');
+    await this.cacheRepository.invalidate(`ignoredTopics:${telegram_id}`);
+    await this.cacheRepository.invalidate('ignoredTopics');
 
     return ignoredWithTopic;
   }

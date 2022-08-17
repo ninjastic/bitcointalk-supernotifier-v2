@@ -29,8 +29,8 @@ export default class RemoveTrackedPhraseService {
     }
 
     await this.trackedPhrasesRepository.delete(phraseExists);
-    this.cacheRepository.invalidate(`trackedPhrases:${telegram_id}`);
-    this.cacheRepository.invalidate('trackedPhrases');
+    await this.cacheRepository.invalidate(`trackedPhrases:${telegram_id}`);
+    await this.cacheRepository.invalidate('trackedPhrases');
 
     return phraseExists;
   }

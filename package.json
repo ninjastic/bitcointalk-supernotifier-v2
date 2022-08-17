@@ -14,6 +14,8 @@
     "dev:server": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/http/server.ts | pino-pretty",
     "dev:telegram": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/telegram/index.ts | pino-pretty",
     "dev:checker": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/bull/workers/checker.ts | pino-pretty",
+    "dev:es:upload:posts": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/elasticsearch/upload-posts.ts",
+    "dev:loyce:archive": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/loyce/scraper-archive.ts",
     "postinstall": "typesync",
     "typeorm": "ts-node-dev ./node_modules/typeorm/cli.js",
     "migrate": "cross-env NODE_ENV=production typeorm migration:run",

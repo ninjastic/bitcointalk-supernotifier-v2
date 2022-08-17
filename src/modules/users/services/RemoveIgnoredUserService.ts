@@ -32,8 +32,8 @@ export default class RemoveIgnoredUserService {
     if (index !== -1) {
       ignoredUserExists.ignoring.splice(index, 1);
       await this.ignoredUserRepository.save(ignoredUserExists);
-      this.cacheRepository.invalidate(`ignoredUsers:${telegram_id}`);
-      this.cacheRepository.invalidate('ignoredUsers');
+      await this.cacheRepository.invalidate(`ignoredUsers:${telegram_id}`);
+      await this.cacheRepository.invalidate('ignoredUsers');
     }
 
     return ignoredUserExists;

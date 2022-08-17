@@ -64,11 +64,11 @@ export default class CheckPostsService {
       defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
     });
 
-    await Promise.all(
+    await Promise.allSettled(
       posts.map(async post => {
         await setPostChecked.execute(post.post_id);
 
-        await Promise.all(
+        await Promise.allSettled(
           trackedPhrases.map(async trackedPhrase => {
             const phraseRegex = new RegExp(
               `(?<!\\w)${scapeRegexText(trackedPhrase.phrase)}(?!\\w)`,
@@ -106,6 +106,17 @@ export default class CheckPostsService {
             if (
               foundIgnoredUser &&
               foundIgnoredUser.ignoring.includes(user.telegram_id)
+            ) {
+              return Promise.resolve();
+            }
+
+            const foundIgnoredTopic = ignoredTopics.find(
+              ignoredTopic => ignoredTopic.topic_id === post.topic_id,
+            );
+
+            if (
+              foundIgnoredTopic &&
+              foundIgnoredTopic.ignoring.includes(user.telegram_id)
             ) {
               return Promise.resolve();
             }
@@ -151,9 +162,9 @@ export default class CheckPostsService {
       }),
     );
 
-    await Promise.all(
+    await Promise.allSettled(
       posts.map(async post => {
-        await Promise.all(
+        await Promise.allSettled(
           users.map(async user => {
             if (post.author.toLowerCase() === user.username.toLowerCase()) {
               return Promise.resolve();
@@ -241,15 +252,15 @@ export default class CheckPostsService {
       }),
     );
 
-    await Promise.all(
+    await Promise.allSettled(
       posts.map(async post => {
-        await Promise.all(
+        await Promise.allSettled(
           trackedTopics.map(async trackedTopic => {
             if (trackedTopic.topic_id !== post.topic_id) {
               return Promise.resolve();
             }
 
-            return Promise.all(
+            return Promise.allSettled(
               trackedTopic.tracking.map(async telegram_id => {
                 const user = await this.usersRepository.findByTelegramId(
                   telegram_id,
@@ -325,9 +336,9 @@ export default class CheckPostsService {
       }),
     );
 
-    await Promise.all(
+    await Promise.allSettled(
       posts.map(async post => {
-        await Promise.all(
+        await Promise.allSettled(
           webUsers.map(async webUser => {
             if (post.author.toLowerCase() === webUser.username.toLowerCase()) {
               return Promise.resolve();

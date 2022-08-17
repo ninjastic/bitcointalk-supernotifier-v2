@@ -10,15 +10,10 @@ import { sub } from 'date-fns';
 import '../../infra/typeorm';
 import '../../container';
 
+import { prompt } from 'enquirer';
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';
 
 import CreatePostService from '../../../modules/posts/services/CreatePostService';
-
-const from = process.argv[2];
-const to = process.argv[3];
-
-console.log(from);
-console.log(to);
 
 const sleep = ms => {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -86,12 +81,38 @@ const scrapePostFromBuffer = buffer => {
   return post;
 };
 
+type PromptResponse = {
+  from: string;
+  to: string;
+};
+
 createConnection().then(async () => {
   const manager = getManager();
   const createPost = container.resolve(CreatePostService);
 
-  const number = Number(to) - Number(from);
-  const loop = new Array(number);
+  const { from, to } = await prompt<PromptResponse>([
+    {
+      type: 'input',
+      name: 'from',
+      message: 'From Id',
+      validate: value => {
+        return !Number.isNaN(Number(value));
+      },
+    },
+    {
+      type: 'input',
+      name: 'to',
+      message: 'To Id',
+      validate: value => {
+        return !Number.isNaN(Number(value));
+      },
+    },
+  ]).catch(() => process.exit());
+
+  console.log(`Scraping range: ${from} ~ ${to}`);
+
+  const numberOfPosts = Number(to) - Number(from);
+  const loop = new Array(numberOfPosts);
 
   let operations = [];
   let sinceLastBatch = 0;

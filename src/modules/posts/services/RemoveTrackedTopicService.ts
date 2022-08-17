@@ -31,8 +31,8 @@ export default class RemoveTrackedTopicService {
     if (index !== -1) {
       topicExists.tracking.splice(index, 1);
       await this.trackedTopicsRepository.save(topicExists);
-      this.cacheRepository.invalidate(`trackedTopics:${telegram_id}`);
-      this.cacheRepository.invalidate('trackedTopics');
+      await this.cacheRepository.invalidate(`trackedTopics:${telegram_id}`);
+      await this.cacheRepository.invalidate('trackedTopics');
     }
 
     return topicExists;
