@@ -3,8 +3,6 @@ import esClient from '../../../services/elastic';
 interface Params {
   from?: string;
   to?: string;
-  board_id?: number;
-  limit?: number;
 }
 
 interface Data {
@@ -17,27 +15,8 @@ interface Data {
   }>;
 }
 
-export default class GetPostsTopicsPeriodService {
-  public async execute({ from, to, board_id, limit }: Params): Promise<Data[]> {
-    const matches = [
-      {
-        range: {
-          date: {
-            gte: from,
-            lte: to,
-          },
-        },
-      },
-    ] as any[];
-
-    if (board_id) {
-      matches.push({
-        match: {
-          board_id,
-        },
-      });
-    }
-
+export default class GetPostsTopTopicsPeriodService {
+  public async execute({ from, to }: Params): Promise<Data[]> {
     const dataRaw = await esClient.search({
       index: 'posts',
       size: 0,
@@ -45,16 +24,35 @@ export default class GetPostsTopicsPeriodService {
       body: {
         query: {
           bool: {
-            must: matches,
+            must: [
+              {
+                range: {
+                  date: {
+                    gte: from,
+                    lte: to,
+                  },
+                },
+              },
+            ],
           },
         },
         aggs: {
           topics: {
             terms: {
               field: 'topic_id',
-              size: Math.min(limit ?? 10, 1000),
+              size: 10,
             },
             aggs: {
+              date: {
+                date_histogram: {
+                  field: 'date',
+                  calendar_interval: '1h',
+                  extended_bounds: {
+                    min: from,
+                    max: to,
+                  },
+                },
+              },
               title: {
                 top_hits: {
                   size: 1,
@@ -73,6 +71,7 @@ export default class GetPostsTopicsPeriodService {
       return {
         title: topic.title.hits.hits[0]._source.title,
         topic_id: topic.key,
+        timestamps: topic.date.buckets,
       };
     });
 

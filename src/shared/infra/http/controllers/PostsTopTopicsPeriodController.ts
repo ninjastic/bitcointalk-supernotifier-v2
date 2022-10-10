@@ -4,11 +4,11 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetPostsTopicsPeriodService from '../services/GetPostsTopicsPeriodService';
+import GetPostsTopTopicsPeriodService from '../services/GetPostsTopTopicsPeriodService';
 
-export default class PostsTopicsPeriodController {
+export default class PostsTopTopicsPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getPostsTopicsPeriod = new GetPostsTopicsPeriodService();
+    const getPostsTopTopicsPeriod = new GetPostsTopTopicsPeriodService();
 
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
@@ -21,15 +21,11 @@ export default class PostsTopicsPeriodController {
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
-      board_id: Joi.number().allow('', null),
-      limit: Joi.number().allow('', null),
     });
 
     const query = {
       from: (request.query.from || defaultFrom) as string,
       to: (request.query.to || defaultTo) as string,
-      board_id: Number(request.query.board_id) || null,
-      limit: Number(request.query.limit) || null,
     };
 
     try {
@@ -43,7 +39,7 @@ export default class PostsTopicsPeriodController {
     }
 
     try {
-      const data = await getPostsTopicsPeriod.execute(query);
+      const data = await getPostsTopTopicsPeriod.execute(query);
 
       const result = {
         result: 'success',
@@ -56,7 +52,7 @@ export default class PostsTopicsPeriodController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'PostsTopicsPeriodController',
+        controller: 'PostsTopTopicsPeriodController',
       });
       return response
         .status(500)
