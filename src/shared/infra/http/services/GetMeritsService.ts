@@ -3,6 +3,7 @@ import bodybuilder from 'bodybuilder';
 
 import esClient from '../../../services/elastic';
 
+import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
 export interface IFindMeritsService {
@@ -13,7 +14,8 @@ export interface IFindMeritsService {
   sender?: number;
   sender_uid?: number;
   amount?: number;
-  board_id?: number;
+  board?: number;
+  child_boards?: string;
   after_date?: string;
   before_date?: string;
   order?: string;
@@ -45,32 +47,61 @@ export default class GetMeritsService {
   public async execute(query: IFindMeritsService): Promise<Data> {
     const queryBuilder = bodybuilder();
 
-    Object.keys(query).forEach(key => {
-      switch (key) {
-        case 'receiver':
-          return queryBuilder.addQuery('match_phrase', key, query[key]);
-        case 'sender':
-          return queryBuilder.addQuery('match_phrase', key, query[key]);
-        case 'after_date':
-          return queryBuilder.query('range', {
-            date: {
-              gte: query[key],
-            },
-          });
-        case 'before_date':
-          return queryBuilder.query('range', {
-            date: {
-              lte: query[key],
-            },
-          });
-        case 'board_id':
-          return queryBuilder.query('terms', key, query[key]);
-        case 'limit':
-          return queryBuilder.size(Math.max(query[key], 200));
-        default:
-          return queryBuilder.addQuery('match', key, query[key]);
+    if (query.receiver) {
+      queryBuilder.addQuery('match_phrase', 'receiver', query.receiver);
+    }
+
+    if (query.sender) {
+      queryBuilder.addQuery('match_phrase', 'sender', query.sender);
+    }
+
+    if (query.after_date) {
+      queryBuilder.query('range', {
+        date: {
+          gte: query.after_date,
+        },
+      });
+    }
+
+    if (query.before_date) {
+      queryBuilder.query('range', {
+        date: {
+          lte: query.before_date,
+        },
+      });
+    }
+
+    if (query.board) {
+      if (
+        query.child_boards === '1' ||
+        query.child_boards?.toLowerCase() === 'true'
+      ) {
+        const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
+        const boards = await getBoardChildrensFromId.execute(query.board);
+
+        queryBuilder.query('terms', 'board_id', boards);
+      } else {
+        queryBuilder.query('terms', 'board_id', [query.board]);
+      }
+    }
+
+    const simpleMatchParams = [
+      'post_id',
+      'topic_id',
+      'receiver_uid',
+      'sender_uid',
+      'amount',
+    ];
+
+    simpleMatchParams.forEach(param => {
+      if (query[param]) {
+        queryBuilder.addQuery('match', param, query[param]);
       }
     });
+
+    if (query.limit) {
+      queryBuilder.size(Math.min(query.limit, 1000));
+    }
 
     queryBuilder.sort('date', query.order || 'DESC');
 
@@ -95,6 +126,8 @@ export default class GetMeritsService {
       delete meritData['@timestamp'];
       delete meritData['@version'];
       delete meritData.notified_to;
+      delete meritData.checked;
+      delete meritData.notified;
 
       return meritData;
     });

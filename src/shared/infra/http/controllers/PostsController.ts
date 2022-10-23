@@ -13,7 +13,7 @@ export default class PostsController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getPostsFromList = container.resolve(GetPostsFromListService);
 
-    const params = (request.params as unknown) as { id_list: string };
+    const params = request.params as unknown as { id_list: string };
 
     const id_list = params.id_list.split(',').map(id => Number(id));
 
