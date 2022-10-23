@@ -97,22 +97,18 @@ export default class MeritsTopUsersController {
         queryBuilder.size(Math.min(Number(query.limit), 1000));
       }
 
-      queryBuilder.sort('date', query.order?.toString() || 'DESC');
-
       queryBuilder.aggregation(
-        'terms',
-        'sender_uid',
-        { size: 1000 },
-        senderAgg =>
-          senderAgg.aggregation(
-            'terms',
-            'receiver_uid',
-            { size: 1000 },
-            receiverAgg =>
-              receiverAgg
-                .aggregation('sum', 'amount', 'count')
-                .aggregation('top_hits', { size: 1 }, 'top_hit'),
-          ),
+        'multi_terms',
+        {
+          size: Math.min(Number(query.limit || 1000), 1000),
+          terms: [{ field: 'sender_uid' }, { field: 'receiver_uid' }],
+          order: { count: query.order?.toString() || 'DESC' },
+        },
+        'topUsers',
+        agg =>
+          agg
+            .aggregation('sum', 'amount', 'count')
+            .aggregation('top_hits', { size: 1 }, 'top_hit'),
       );
 
       const body = queryBuilder.build();
@@ -123,26 +119,16 @@ export default class MeritsTopUsersController {
         body,
       });
 
-      const data = [];
-
-      results.body.aggregations.agg_terms_sender_uid.buckets.forEach(
-        senderBucket => {
-          senderBucket.agg_terms_receiver_uid.buckets.forEach(
-            receiverBucket => {
-              data.push({
-                sender: receiverBucket.top_hit.hits.hits[0]._source.sender,
-                sender_uid: senderBucket.key,
-                receiver: receiverBucket.top_hit.hits.hits[0]._source.receiver,
-                receiver_uid: receiverBucket.key,
-                amount: receiverBucket.count.value,
-                num_transactions: receiverBucket.doc_count,
-              });
-            },
-          );
-        },
-      );
-
-      data.sort((a, b) => b.amount - a.amount);
+      const data = results.body.aggregations.topUsers.buckets.map(bucket => {
+        return {
+          sender: bucket.top_hit.hits.hits[0]._source.sender,
+          sender_uid: bucket.key[0],
+          receiver: bucket.top_hit.hits.hits[0]._source.receiver,
+          receiver_uid: bucket.key[1],
+          amount: bucket.count.value,
+          num_transactions: bucket.doc_count,
+        };
+      });
 
       const result = {
         result: 'success',
