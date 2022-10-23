@@ -33,7 +33,7 @@
     "@commitlint/config-conventional": "^9.1.2",
     "@types/body-parser": "^1.19.0",
     "@types/bull": "^3.14.0",
-    "@types/cheerio": "^0.22.21",
+    "@types/cheerio": "^0.22.31",
     "@types/cors": "^2.8.7",
     "@types/crypto-js": "^4.0.2",
     "@types/decompress": "^4.2.3",
@@ -69,7 +69,7 @@
     "standard-version": "^9.0.0",
     "ts-node": "3.3.0",
     "ts-node-dev": "^1.0.0-pre.56",
-    "typescript": "^3.9.5",
+    "typescript": "^4.8.4",
     "typesync": "^0.7.0"
   },
   "dependencies": {
@@ -86,7 +86,7 @@
     "decompress": "4.2.0",
     "decompress-tarbz2": "^4.1.1",
     "del": "^5.1.0",
-    "dotenv": "^8.2.0",
+    "dotenv": "^16.0.3",
     "enquirer": "^2.3.6",
     "escape-html": "^1.0.3",
     "express": "^4.17.1",

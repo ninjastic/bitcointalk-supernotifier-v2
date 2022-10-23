@@ -12,7 +12,7 @@ export default class ParseRecentPostElementService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public execute(element: CheerioElement): Post {
+  public execute(element: cheerio.Element): Post {
     const $ = cheerio.load(element, { decodeEntities: true });
 
     const fullTitleWithBoards = $(

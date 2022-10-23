@@ -76,7 +76,7 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
     await this.cacheRepository.saveMany(valuesToSet);
   }
 
-  public async parseMeritElement(element: CheerioElement): Promise<Merit> {
+  public async parseMeritElement(element: cheerio.Element): Promise<Merit> {
     const parseMeritElement = container.resolve(ParseMeritElementService);
     const merit = await parseMeritElement.execute(element);
 

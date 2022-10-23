@@ -13,7 +13,7 @@ interface MessageHandlerContext extends Context {
 
 const messageHandler = async (ctx: MessageHandlerContext): Promise<void> => {
   if (ctx.session.waitingForUsername) {
-    const username = ctx.update.message.text.trim();
+    const username = ctx.message.text.trim();
 
     if (!username) {
       await ctx.reply(`Sorry, can you say that again?`);
@@ -25,7 +25,7 @@ const messageHandler = async (ctx: MessageHandlerContext): Promise<void> => {
   }
 
   if (ctx.session.waitingForUserId) {
-    const input = ctx.update.message.text.trim();
+    const input = ctx.message.text.trim();
     const validRegex = new RegExp(/^(\d+)$/);
 
     if (!validRegex.test(input)) {

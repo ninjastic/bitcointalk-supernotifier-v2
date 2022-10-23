@@ -6,5 +6,5 @@ export default interface IScrapePostsRepository {
   scrapePost(data: ScrapePostDTO): Promise<Post | undefined>;
   scrapeTopic(topic_id: number): Promise<Post | undefined>;
   scrapeRecent(): Promise<void>;
-  parseRecentPostElement(element: CheerioElement): Post;
+  parseRecentPostElement(element: cheerio.Element): Post;
 }

@@ -23,7 +23,7 @@ export default class ParseRecentPostElementService {
     private cacheRepository: ICacheProvider,
   ) {}
 
-  public async execute(element: CheerioElement): Promise<Merit> {
+  public async execute(element: cheerio.Element): Promise<Merit> {
     const $ = cheerio.load(element, { decodeEntities: true });
 
     const amount = Number($.html().match(/: (\d*) from/)[1]);
