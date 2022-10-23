@@ -10,8 +10,19 @@ import GetBoardChildrensFromIdService from '../../../../modules/posts/services/G
 export default class MeritsTopUsersController {
   public async index(request: Request, response: Response): Promise<Response> {
     const schemaValidation = Joi.object({
-      board: Joi.number().required(),
+      post_id: Joi.number(),
+      topic_id: Joi.number(),
+      receiver: Joi.string(),
+      receiver_uid: Joi.number(),
+      sender: Joi.string(),
+      sender_uid: Joi.number(),
+      amount: Joi.number(),
+      board: Joi.number(),
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
+      after_date: Joi.string().isoDate(),
+      before_date: Joi.string().isoDate(),
+      order: Joi.string().allow('asc', 'desc').insensitive(),
+      limit: Joi.number(),
     });
 
     try {
@@ -28,19 +39,65 @@ export default class MeritsTopUsersController {
       const { query } = request;
       const queryBuilder = bodybuilder();
 
-      if (
-        query.child_boards === '1' ||
-        query.child_boards?.toString().toLowerCase() === 'true'
-      ) {
-        const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
-        const boards = await getBoardChildrensFromId.execute(
-          Number(query.board),
-        );
-
-        queryBuilder.query('terms', 'board_id', boards);
-      } else {
-        queryBuilder.query('terms', 'board_id', [query.board]);
+      if (query.receiver) {
+        queryBuilder.addQuery('match_phrase', 'receiver', query.receiver);
       }
+
+      if (query.sender) {
+        queryBuilder.addQuery('match_phrase', 'sender', query.sender);
+      }
+
+      if (query.after_date) {
+        queryBuilder.query('range', {
+          date: {
+            gte: query.after_date,
+          },
+        });
+      }
+
+      if (query.before_date) {
+        queryBuilder.query('range', {
+          date: {
+            lte: query.before_date,
+          },
+        });
+      }
+
+      if (query.board) {
+        if (
+          query.child_boards === '1' ||
+          query.child_boards?.toString().toLowerCase() === 'true'
+        ) {
+          const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
+          const boards = await getBoardChildrensFromId.execute(
+            Number(query.board),
+          );
+
+          queryBuilder.query('terms', 'board_id', boards);
+        } else {
+          queryBuilder.query('terms', 'board_id', [query.board]);
+        }
+      }
+
+      const simpleMatchParams = [
+        'post_id',
+        'topic_id',
+        'receiver_uid',
+        'sender_uid',
+        'amount',
+      ];
+
+      simpleMatchParams.forEach(param => {
+        if (query[param]) {
+          queryBuilder.addQuery('match', param, query[param]);
+        }
+      });
+
+      if (query.limit) {
+        queryBuilder.size(Math.min(Number(query.limit), 1000));
+      }
+
+      queryBuilder.sort('date', query.order?.toString() || 'DESC');
 
       queryBuilder.aggregation(
         'terms',
