@@ -1,5 +1,4 @@
 import { injectable, inject } from 'tsyringe';
-import { response } from 'express';
 import esClient from '../../../services/elastic';
 
 import ICacheProvider from '../../../container/providers/models/ICacheProvider';
@@ -35,7 +34,7 @@ export default class GetAuthorUIDFromUsernameService {
       body: {
         query: {
           match_phrase: {
-            author: username,
+            'author.keyword': username,
           },
         },
       },
