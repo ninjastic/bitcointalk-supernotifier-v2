@@ -21,7 +21,7 @@ export default class GetBoardNameFromIdService {
 
     const data = await getManager()
       .query('SELECT name FROM boards WHERE board_id = $1', [board_id])
-      .then(boards => boards.length ? boards[0].name : null);
+      .then(boards => (boards.length ? boards[0].name : null));
 
     await this.cacheRepository.save(`boardName:${board_id}`, data);
 

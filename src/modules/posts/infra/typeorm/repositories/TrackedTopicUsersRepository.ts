@@ -7,7 +7,8 @@ import ICreateTrackedTopicUserDTO from '../../../dtos/ICreateTrackedTopicUserDTO
 import IFindTrackedTopicUsersDTO from '../../../dtos/IFindTrackedTopicUserDTO';
 
 export default class TrackedTopicUsersRepository
-  implements ITrackedTopicUsersRepository {
+  implements ITrackedTopicUsersRepository
+{
   private ormRepository: Repository<TrackedTopicUser>;
 
   constructor() {

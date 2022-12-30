@@ -1,7 +1,8 @@
 import { MigrationInterface, QueryRunner, Table } from 'typeorm';
 
 export class CreateTrackedTopicsUsers1602616820977
-  implements MigrationInterface {
+  implements MigrationInterface
+{
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       'CREATE UNIQUE INDEX UQ_telegram_id ON users(telegram_id);',

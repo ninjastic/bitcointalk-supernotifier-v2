@@ -112,10 +112,10 @@ export default class GetPostsBoardsPeriodTotalService {
       0,
     );
 
-    const data = ({
+    const data = {
       total_results: posts_count,
       boards: organized.body.aggregations.boards.buckets,
-    } as unknown) as Data;
+    } as unknown as Data;
 
     return data;
   }

@@ -17,7 +17,7 @@ export default class PostsHistoryController {
       GetNextPostChangeCheckService,
     );
 
-    const params = (request.params as unknown) as { post_id: number };
+    const params = request.params as unknown as { post_id: number };
 
     const schemaValidation = Joi.object({
       post_id: Joi.number().required(),

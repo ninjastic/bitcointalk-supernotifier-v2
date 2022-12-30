@@ -63,9 +63,8 @@ export default class AddTrackedTopicService {
 
     await this.trackedTopicsRepository.save(trackedTopic);
 
-    const trackedWithTopic = await this.trackedTopicsRepository.findOneByTopicId(
-      topic_id,
-    );
+    const trackedWithTopic =
+      await this.trackedTopicsRepository.findOneByTopicId(topic_id);
 
     await queue.close();
 

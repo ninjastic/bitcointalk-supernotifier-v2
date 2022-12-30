@@ -109,7 +109,9 @@ const addIgnoredTopicLinkQuestion = new TelegrafStatelessQuestion(
         );
         await ctx.reply(
           'Hmm... are you sure this link is valid and from a BitcoinTalk topic?',
-          { reply_markup: { remove_keyboard: true } },
+          {
+            reply_markup: { remove_keyboard: true },
+          },
         );
 
         return;

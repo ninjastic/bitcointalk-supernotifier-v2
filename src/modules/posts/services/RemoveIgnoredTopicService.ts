@@ -19,9 +19,8 @@ export default class RemoveIgnoredTopicService {
     post_id: number,
     telegram_id?: number,
   ): Promise<IgnoredTopic> {
-    const ignoredTopicExists = await this.ignoredTopicsRepository.findOneByPostId(
-      post_id,
-    );
+    const ignoredTopicExists =
+      await this.ignoredTopicsRepository.findOneByPostId(post_id);
 
     if (!ignoredTopicExists) {
       throw new Error('Ignored topic does not exist.');

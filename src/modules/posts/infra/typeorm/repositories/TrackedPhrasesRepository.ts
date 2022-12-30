@@ -7,7 +7,8 @@ import TrackedPhrase from '../entities/TrackedPhrase';
 import ITrackedPhrasesRepository from '../../../repositories/ITrackedPhrasesRepository';
 
 export default class TrackedPhrasesRepository
-  implements ITrackedPhrasesRepository {
+  implements ITrackedPhrasesRepository
+{
   private ormRepository: Repository<TrackedPhrase>;
 
   constructor() {

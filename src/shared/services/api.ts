@@ -1,6 +1,7 @@
 import axios from 'axios';
 import iconv from 'iconv-lite';
 import { add, isBefore } from 'date-fns';
+import UserAgent from 'user-agents';
 
 const MAX_REQUESTS_COUNT = 1;
 const INTERVAL_MS = 900;
@@ -13,6 +14,7 @@ export const api = axios.create({
   timeout: 5000,
   headers: {
     Cookie: process.env.BITCOINTALK_COOKIE || '',
+    'User-Agent': new UserAgent().toString(),
     'Cache-Control': 'no-cache',
   },
   responseType: 'arraybuffer',

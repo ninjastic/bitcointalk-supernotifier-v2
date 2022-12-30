@@ -10,7 +10,7 @@ export default class PostsAuthorsPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getPostsAuthorsPeriod = new GetPostsAuthorsPeriodService();
 
-    const query = (request.query as unknown) as {
+    const query = request.query as unknown as {
       from: string;
       to: string;
     };

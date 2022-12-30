@@ -7,7 +7,8 @@ import ICreateWebNotificationDTO from '../../../dtos/ICreateWebNotificationDTO';
 import IWebNotificationsRepository from '../../../repositories/IWebNotificationsRepository';
 
 export default class WebNotificationsRepository
-  implements IWebNotificationsRepository {
+  implements IWebNotificationsRepository
+{
   private ormRepository: Repository<WebNotification>;
 
   constructor() {

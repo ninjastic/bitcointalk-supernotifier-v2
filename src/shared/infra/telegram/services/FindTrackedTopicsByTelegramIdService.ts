@@ -24,9 +24,8 @@ export default class FindUserByTelegramIdService {
       return cachedTrackedTopics;
     }
 
-    const trackedTopics = await this.trackedTopicsRepository.findAllByTelegramId(
-      telegram_id,
-    );
+    const trackedTopics =
+      await this.trackedTopicsRepository.findAllByTelegramId(telegram_id);
 
     await this.cacheRepository.save(
       `trackedTopics:${telegram_id}`,

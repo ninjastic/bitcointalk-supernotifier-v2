@@ -21,7 +21,8 @@
     "migrate": "cross-env NODE_ENV=production typeorm migration:run",
     "dev:migrate": "cross-env NODE_ENV=development ts-node-dev ./node_modules/typeorm/cli.js migration:run",
     "post:add": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/manual-post.ts",
-    "post:censor": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/censor-post.ts"
+    "post:censor": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/censor-post.ts",
+    "boards:scrape": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/boards.ts"
   },
   "husky": {
     "hooks": {
@@ -55,6 +56,7 @@
     "@types/socket.io": "^2.1.11",
     "@types/standard-version": "^7.0.0",
     "@types/underscore": "^1.10.22",
+    "@types/user-agents": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^3.7.1",
     "@typescript-eslint/parser": "^3.7.1",
     "eslint": "^7.5.0",
@@ -67,8 +69,8 @@
     "pino-pretty": "^4.1.0",
     "prettier": "^2.0.5",
     "standard-version": "^9.0.0",
-    "ts-node": "3.3.0",
-    "ts-node-dev": "^1.0.0-pre.56",
+    "ts-node": "^10.9.1",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^4.8.4",
     "typesync": "^0.7.0"
   },
@@ -108,6 +110,7 @@
     "telegraf-session-local": "^2.0.0",
     "telegraf-stateless-question": "^1.0.0",
     "tsyringe": "^4.3.0",
-    "typeorm": "0.2.25"
+    "typeorm": "0.2.25",
+    "user-agents": "^1.0.1245"
   }
 }

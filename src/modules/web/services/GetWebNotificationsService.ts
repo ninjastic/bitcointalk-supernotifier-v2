@@ -22,9 +22,8 @@ export default class GetWebUserService {
   ) {}
 
   public async execute(user_id: string): Promise<Data[]> {
-    const webNotifications = await this.webNotificationsRepository.findAllByUserId(
-      user_id,
-    );
+    const webNotifications =
+      await this.webNotificationsRepository.findAllByUserId(user_id);
 
     const data = webNotifications.map(webNotification => {
       const { post, merit } = webNotification;

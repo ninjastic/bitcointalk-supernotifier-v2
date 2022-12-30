@@ -9,7 +9,7 @@
       "module": "commonjs",
       "moduleResolution": "node",
       "resolveJsonModule": true,
-      "rootDir": "./src",
+      // "rootDir": "./src",
       "baseUrl": "./src",
       "outDir": "./dist",
       "strictPropertyInitialization": false,

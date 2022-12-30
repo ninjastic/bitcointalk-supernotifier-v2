@@ -14,7 +14,7 @@ export default class BoardsController {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const query = (request.query as unknown) as { raw: string };
+    const query = request.query as unknown as { raw: string };
 
     const schemaValidation = Joi.object({
       raw: Joi.valid('1', '0', 'true', 'false'),

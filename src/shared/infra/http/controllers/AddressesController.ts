@@ -11,7 +11,7 @@ export default class AddressesController {
   public async show(request: Request, response: Response): Promise<Response> {
     const getAddress = container.resolve(GetAddressService);
 
-    const params = (request.params as unknown) as { address: string };
+    const params = request.params as unknown as { address: string };
 
     const addressRegex = new RegExp(
       /0x[a-fA-F0-9]{40}|(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/,

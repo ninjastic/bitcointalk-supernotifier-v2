@@ -6,7 +6,8 @@ import TrackedTopic from '../entities/TrackedTopic';
 import ITrackedTopicsRepository from '../../../repositories/ITrackedTopicsRepository';
 
 export default class TrackedTopicsRepository
-  implements ITrackedTopicsRepository {
+  implements ITrackedTopicsRepository
+{
   private ormRepository: Repository<TrackedTopic>;
 
   constructor() {

@@ -23,9 +23,8 @@ export default class AddIgnoredTopicService {
     topic_id: number,
     telegram_id?: number,
   ): Promise<IgnoredTopic> {
-    const ignoredTopicExists = await this.ignoredTopicsRepository.findOneByTopicId(
-      topic_id,
-    );
+    const ignoredTopicExists =
+      await this.ignoredTopicsRepository.findOneByTopicId(topic_id);
 
     if (ignoredTopicExists) {
       if (!telegram_id) {
@@ -63,9 +62,8 @@ export default class AddIgnoredTopicService {
 
     await this.ignoredTopicsRepository.save(ignoredTopic);
 
-    const ignoredWithTopic = await this.ignoredTopicsRepository.findOneByTopicId(
-      topic_id,
-    );
+    const ignoredWithTopic =
+      await this.ignoredTopicsRepository.findOneByTopicId(topic_id);
 
     await queue.close();
 

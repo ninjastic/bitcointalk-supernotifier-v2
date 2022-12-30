@@ -11,6 +11,7 @@ import notFoundRouter from './notFoundRouter';
 import bpipRouter from './bpipRouter';
 
 import CompareUserController from '../controllers/CompareUserController';
+import metaRouter from './metaRouter';
 
 const compareUserController = new CompareUserController();
 
@@ -24,6 +25,7 @@ routes.use('/boards', boardsRouter);
 routes.use('/alerts', alertsRouter);
 routes.use('/merits', meritsRouter);
 routes.use('/bpip', bpipRouter);
+routes.use('/meta', metaRouter);
 routes.get('/compare', compareUserController.index);
 
 routes.use(notFoundRouter);

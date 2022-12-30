@@ -1,7 +1,8 @@
 import { MigrationInterface, QueryRunner, TableForeignKey } from 'typeorm';
 
 export class AddPostsRelationToMerits1597848082741
-  implements MigrationInterface {
+  implements MigrationInterface
+{
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createForeignKey(
       'merits',

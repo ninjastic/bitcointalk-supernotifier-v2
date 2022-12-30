@@ -19,9 +19,8 @@ export default class RemoveIgnoredUserService {
     username: string,
     telegram_id?: number,
   ): Promise<IgnoredUser> {
-    const ignoredUserExists = await this.ignoredUserRepository.findOneByUsername(
-      username,
-    );
+    const ignoredUserExists =
+      await this.ignoredUserRepository.findOneByUsername(username);
 
     if (!ignoredUserExists) {
       throw new Error('Ignored user does not exist.');

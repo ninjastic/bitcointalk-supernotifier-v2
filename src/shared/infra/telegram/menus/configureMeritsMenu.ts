@@ -63,13 +63,8 @@ export const handleConfigureMeritsAnswer = async (
 
   const createUser = container.resolve(CreateUserService);
 
-  const {
-    userId,
-    username,
-    alternative_usernames,
-    mentions,
-    merits,
-  } = ctx.session;
+  const { userId, username, alternative_usernames, mentions, merits } =
+    ctx.session;
 
   const findUserByTelegramId = container.resolve(FindUserByTelegramIdService);
   const updateUserByTelegramId = container.resolve(

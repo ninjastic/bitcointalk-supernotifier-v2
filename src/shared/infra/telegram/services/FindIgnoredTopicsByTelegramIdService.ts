@@ -24,9 +24,8 @@ export default class FindIgnoredTopicsByTelegramIdService {
       return cachedIgnoredTopics;
     }
 
-    const ignoredTopics = await this.ignoredTopicsRepository.findAllByTelegramId(
-      telegram_id,
-    );
+    const ignoredTopics =
+      await this.ignoredTopicsRepository.findAllByTelegramId(telegram_id);
 
     await this.cacheRepository.save(
       `ignoredTopics:${telegram_id}`,

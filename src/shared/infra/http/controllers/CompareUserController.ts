@@ -9,7 +9,7 @@ export default class CompareUserController {
   public async index(request: Request, response: Response): Promise<Response> {
     const compareUsersService = new CompareUsersService();
 
-    const { firstAuthorUid, secondAuthorUid } = (request.query as unknown) as {
+    const { firstAuthorUid, secondAuthorUid } = request.query as unknown as {
       firstAuthorUid: number;
       secondAuthorUid: number;
     };

@@ -8,7 +8,8 @@ import IFindPostAddressesDTO from '../../../dtos/IFindPostAddressesDTO';
 import ICreatePostAddressDTO from '../../../dtos/ICreatePostAddressDTO';
 
 export default class PostsAddressesRepository
-  implements IPostsAddressesRepository {
+  implements IPostsAddressesRepository
+{
   private ormRepository: Repository<PostAddress>;
 
   constructor() {

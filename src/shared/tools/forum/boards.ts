@@ -1,16 +1,20 @@
 import 'dotenv/config.js';
 import cheerio from 'cheerio';
 import { createQueryBuilder } from 'typeorm';
+import { container } from 'tsyringe';
 
 import '../../infra/typeorm';
+import '../../container';
 
 import api from '../../services/api';
+import logger from '../../services/logger';
+import ICacheProvider from '../../container/providers/models/ICacheProvider';
 
 api.defaults.timeout = 10000;
 
 const requestBoardsUrl = async () => {
+  logger.info('Getting forum boards');
   const response = await api.get('/sitemap.php?t=b');
-
   const $ = cheerio.load(response.data);
 
   const boards = $('loc');
@@ -32,6 +36,7 @@ const getExistentBoardsInDatabase = async (
     url: string;
   }>,
 ) => {
+  logger.info('Getting boards in database');
   const ids = boards.map(board => {
     return board.id;
   });
@@ -53,6 +58,7 @@ const scrapeBoards = async (
     url: string;
   }>,
 ) => {
+  logger.info(`Scraping missing boards (${boards.length})`);
   for await (const board of boards) {
     const response = await api.get(board.url);
 
@@ -109,6 +115,7 @@ const scrapeBoards = async (
 };
 
 (async () => {
+  const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
   const boards = await requestBoardsUrl();
 
   const existent = await getExistentBoardsInDatabase(boards);
@@ -119,5 +126,10 @@ const scrapeBoards = async (
     });
   });
 
-  await scrapeBoards(missingBoards);
+  if (missingBoards.length) {
+    await scrapeBoards(missingBoards);
+    await cacheRepository.invalidateByPrefix('boards:*');
+  } else {
+    logger.info('No new boards to scrape');
+  }
 })();

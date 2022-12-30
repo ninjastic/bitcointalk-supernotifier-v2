@@ -6,7 +6,8 @@ import IgnoredTopic from '../entities/IgnoredTopic';
 import IIgnoredTopicsRepository from '../../../repositories/IIgnoredTopicsRepository';
 
 export default class IgnoredTopicsRepository
-  implements IIgnoredTopicsRepository {
+  implements IIgnoredTopicsRepository
+{
   private ormRepository: Repository<IgnoredTopic>;
 
   constructor() {

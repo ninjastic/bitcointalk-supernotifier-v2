@@ -116,20 +116,21 @@ export default class GetPostsBoardsService {
       },
     };
 
-    const posts_count_with_boards = organized.body.aggregations.boards.buckets.reduce(
-      (accum: number, curr: { count: number }) => {
-        return accum + curr.count;
-      },
-      0,
-    );
+    const posts_count_with_boards =
+      organized.body.aggregations.boards.buckets.reduce(
+        (accum: number, curr: { count: number }) => {
+          return accum + curr.count;
+        },
+        0,
+      );
 
-    const data = ({
+    const data = {
       total_results: organized.body.hits.total.value,
       total_results_with_board:
         posts_count_with_boards +
         organized.body.aggregations.boards.sum_other_doc_count,
       boards: organized.body.aggregations.boards.buckets,
-    } as unknown) as Data;
+    } as unknown as Data;
 
     await saveCache.execute(`postsBoardsData:${from}:${to}`, data, 'EX', 180);
 

@@ -53,9 +53,8 @@ export default class GetUserMeritCountOnPeriodService {
             must: [
               {
                 match: {
-                  [type === 'receiver'
-                    ? 'receiver_uid'
-                    : 'sender_uid']: author_uid,
+                  [type === 'receiver' ? 'receiver_uid' : 'sender_uid']:
+                    author_uid,
                 },
               },
               {

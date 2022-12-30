@@ -46,14 +46,16 @@ class TelegramQueue {
     });
 
     this.instance.process('sendTopicTrackingNotification', async job => {
-      const sendTopicTrackingNotification = new SendTopicTrackingNotificationService();
+      const sendTopicTrackingNotification =
+        new SendTopicTrackingNotificationService();
 
       const { post, user } = job.data;
       await sendTopicTrackingNotification.execute(user.telegram_id, post);
     });
 
     this.instance.process('sendRemovedTopicNotification', async job => {
-      const sendRemovedTopicNotification = new SendRemovedTopicNotificationService();
+      const sendRemovedTopicNotification =
+        new SendRemovedTopicNotificationService();
 
       const { postsDeleted, user, modLog } = job.data;
       await sendRemovedTopicNotification.execute(
@@ -64,7 +66,8 @@ class TelegramQueue {
     });
 
     this.instance.process('sendPhraseTrackingNotification', async job => {
-      const sendPhraseTrackingNotification = new SendPhraseTrackingNotificationService();
+      const sendPhraseTrackingNotification =
+        new SendPhraseTrackingNotificationService();
 
       const { post, user, trackedPhrase } = job.data;
       await sendPhraseTrackingNotification.execute(
