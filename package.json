@@ -1,7 +1,6 @@
 {
   "name": "supernotifier2",
   "version": "1.0.0",
-  "main": "index.js",
   "license": "MIT",
   "scripts": {
     "build": "tsc",
@@ -20,9 +19,8 @@
     "typeorm": "ts-node-dev ./node_modules/typeorm/cli.js",
     "migrate": "cross-env NODE_ENV=production typeorm migration:run",
     "dev:migrate": "cross-env NODE_ENV=development ts-node-dev ./node_modules/typeorm/cli.js migration:run",
-    "post:add": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/manual-post.ts",
-    "post:censor": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/censor-post.ts",
-    "boards:scrape": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/forum/boards.ts"
+    "cli": "cross-env NODE_ENV=production ts-node dist/shared/tools/cli.js",
+    "dev:cli": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/cli.ts"
   },
   "husky": {
     "hooks": {
@@ -45,6 +43,7 @@
     "@types/express-rate-limit": "^5.1.0",
     "@types/fs-extra": "^9.0.1",
     "@types/helmet": "^0.0.48",
+    "@types/inquirer": "^9.0.3",
     "@types/ioredis": "^4.17.2",
     "@types/node": "^8.0.29",
     "@types/node-fetch": "^2.5.7",
@@ -81,6 +80,7 @@
     "body-parser": "^1.19.0",
     "bodybuilder": "^2.3.0",
     "bull": "^3.18.0",
+    "chalk": "^2",
     "cheerio": "^1.0.0-rc.3",
     "cors": "^2.8.5",
     "cross-env": "^7.0.2",
@@ -89,7 +89,6 @@
     "decompress-tarbz2": "^4.1.1",
     "del": "^5.1.0",
     "dotenv": "^16.0.3",
-    "enquirer": "^2.3.6",
     "escape-html": "^1.0.3",
     "express": "^4.17.1",
     "express-rate-limit": "^5.1.3",
@@ -97,9 +96,11 @@
     "fs-extra": "^9.0.1",
     "helmet": "^4.1.0",
     "iconv-lite": "^0.6.2",
+    "inquirer": "^8",
     "ioredis": "^4.17.3",
     "joi": "^17.2.1",
     "node-fetch": "^2.6.1",
+    "ora": "5.4.1",
     "pg": "^8.3.0",
     "pino": "^6.5.1",
     "pino-http": "^5.2.0",

@@ -2,18 +2,18 @@ import 'dotenv/config.js';
 import cheerio from 'cheerio';
 import { createQueryBuilder } from 'typeorm';
 import { container } from 'tsyringe';
+import ora from 'ora';
 
 import '../../infra/typeorm';
 import '../../container';
 
 import api from '../../services/api';
-import logger from '../../services/logger';
 import ICacheProvider from '../../container/providers/models/ICacheProvider';
 
-api.defaults.timeout = 10000;
+const spinner = ora();
 
 const requestBoardsUrl = async () => {
-  logger.info('Getting forum boards');
+  spinner.text = 'Getting forum boards';
   const response = await api.get('/sitemap.php?t=b');
   const $ = cheerio.load(response.data);
 
@@ -36,7 +36,7 @@ const getExistentBoardsInDatabase = async (
     url: string;
   }>,
 ) => {
-  logger.info('Getting boards in database');
+  spinner.text = 'Getting boards in database';
   const ids = boards.map(board => {
     return board.id;
   });
@@ -58,7 +58,7 @@ const scrapeBoards = async (
     url: string;
   }>,
 ) => {
-  logger.info(`Scraping missing boards (${boards.length})`);
+  spinner.text = `Scraping missing boards (${boards.length})`;
   for await (const board of boards) {
     const response = await api.get(board.url);
 
@@ -114,8 +114,10 @@ const scrapeBoards = async (
   }
 };
 
-(async () => {
+export const syncBoards = async (): Promise<void> => {
   const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
+
+  spinner.start();
   const boards = await requestBoardsUrl();
 
   const existent = await getExistentBoardsInDatabase(boards);
@@ -129,7 +131,8 @@ const scrapeBoards = async (
   if (missingBoards.length) {
     await scrapeBoards(missingBoards);
     await cacheRepository.invalidateByPrefix('boards:*');
+    spinner.succeed('Synced!');
   } else {
-    logger.info('No new boards to scrape');
+    spinner.succeed('Boards are already synced');
   }
-})();
+};
