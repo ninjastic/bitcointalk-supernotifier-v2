@@ -30,13 +30,7 @@ export default class ScrapeMeritsService {
 
     const scrapingPromises = merits
       .toArray()
-      .filter((_, index) => {
-        if (index >= 20) {
-          return false;
-        }
-
-        return true;
-      })
+      .splice(0, 100)
       .map(element => this.parseMeritElement.execute(element))
       .filter(result => result);
 

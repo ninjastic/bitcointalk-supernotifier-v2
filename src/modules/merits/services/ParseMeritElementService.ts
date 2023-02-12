@@ -27,14 +27,11 @@ export default class ParseRecentPostElementService {
     const $ = cheerio.load(element, { decodeEntities: true });
 
     const amount = Number($.html().match(/: (\d*) from/)[1]);
-
     const sender = $.html().match(/">(.*)<\/a> for/)[1];
-
     const sender_uid = Number($.html().match(/u=(\d*)"/)[1]);
 
     const d = new Date();
     const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
-
     const withFixedDate = $.html().replace('<b>Today</b> at', today);
     const date = new Date(withFixedDate.match(/>(.*): \d* from <a/i)[1]);
 
