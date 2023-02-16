@@ -60,7 +60,7 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
       .into(Merit)
       .values(operations)
       .returning('*')
-      .onConflict('("date", "amount", "post_id") DO NOTHING')
+      .onConflict('("date", "amount", "post_id", "sender_uid") DO NOTHING')
       .execute();
 
     const valuesToSet = [];
