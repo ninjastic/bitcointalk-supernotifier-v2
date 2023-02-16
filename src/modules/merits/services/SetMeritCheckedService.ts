@@ -15,6 +15,7 @@ export default class SetMeritCheckedService {
       amount: data.amount,
       date: data.date,
       post_id: data.post_id,
+      sender_uid: data.sender_uid,
     });
 
     merit.checked = true;

@@ -17,7 +17,7 @@ export default class SaveMeritService {
 
   public async execute(merit: Merit): Promise<Merit> {
     const cachedMerit = await this.cacheRepository.recover<Merit>(
-      `merit:${merit.date}-${merit.amount}-${merit.post_id}`,
+      `merit:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
     );
 
     if (cachedMerit) {
@@ -28,6 +28,7 @@ export default class SaveMeritService {
       amount: merit.amount,
       date: merit.date,
       post_id: merit.post_id,
+      sender_uid: merit.sender_uid,
     });
 
     if (foundMerit) {
@@ -38,7 +39,7 @@ export default class SaveMeritService {
     const savedMerit = await this.meritsRepository.save(createdMerit);
 
     await this.cacheRepository.save(
-      `merit:${merit.date}-${merit.amount}-${merit.post_id}`,
+      `merit:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
       savedMerit,
       'EX',
       300,

@@ -17,6 +17,7 @@ export default class GetMeritService {
       amount: data.amount,
       date: data.date,
       post_id: data.post_id,
+      sender_uid: data.sender_uid,
     });
 
     return merit;

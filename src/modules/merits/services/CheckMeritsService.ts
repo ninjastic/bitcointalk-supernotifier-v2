@@ -52,6 +52,7 @@ export default class CheckMeritsService {
           amount: merit.amount,
           date: merit.date,
           post_id: merit.post_id,
+          sender_uid: merit.sender_uid,
         });
 
         await Promise.all(
@@ -65,7 +66,7 @@ export default class CheckMeritsService {
             }
 
             const meritNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${merit.date}-${merit.amount}-${merit.post_id}`,
+              `notified:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
             );
 
             if (meritNotified) {
@@ -73,7 +74,7 @@ export default class CheckMeritsService {
             }
 
             await this.cacheProvider.save(
-              `notified:${merit.date}-${merit.amount}-${merit.post_id}`,
+              `notified:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
               true,
               'EX',
               180,

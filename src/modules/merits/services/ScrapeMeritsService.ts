@@ -18,11 +18,10 @@ export default class ScrapeMeritsService {
     const response = await api.get('index.php?action=merit;stats=recent');
     const $ = cheerio.load(response.data, { decodeEntities: true });
 
-    const logged = $('#hellomember');
+    const isLogged = !!$('#hellomember').length;
 
-    if (!logged.length) {
+    if (!isLogged) {
       const forumLogin = new ForumLoginService();
-
       await forumLogin.execute();
     }
 

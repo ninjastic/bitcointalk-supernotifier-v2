@@ -31,6 +31,7 @@ export default class MeritsRepository implements IMeritsRepository {
       date: new Date(data.date),
       amount: data.amount,
       post_id: data.post_id,
+      sender_uid: data.sender_uid,
     });
 
     return merit;

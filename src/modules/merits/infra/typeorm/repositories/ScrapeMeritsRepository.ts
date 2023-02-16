@@ -22,7 +22,9 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
     const merits = await scrapeMerits.execute();
 
     const valuesToRecover = merits.map(merit => {
-      return `merit:${new Date(merit.date)}-${merit.amount}-${merit.post_id}`;
+      return `merit:${new Date(merit.date)}_${merit.amount}_${merit.post_id}_${
+        merit.sender_uid
+      }`;
     });
 
     const cached = await this.cacheRepository.recoverMany<Merit>(
@@ -39,7 +41,8 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
           cache &&
           Date.parse(String(cache.date)) === Date.parse(String(merit.date)) &&
           cache.amount === merit.amount &&
-          cache.post_id === merit.post_id,
+          cache.post_id === merit.post_id &&
+          cache.sender_uid === merit.sender_uid,
       );
 
       if (!found) {
@@ -66,7 +69,9 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
       if (!merit.post_id) return;
 
       valuesToSet.push({
-        key: `merit:${new Date(merit.date)}-${merit.amount}-${merit.post_id}`,
+        key: `merit:${new Date(merit.date)}-${merit.amount}-${merit.post_id}-${
+          merit.sender_uid
+        }`,
         value: merit,
         arg: 'EX',
         time: 900,
