@@ -10,9 +10,7 @@ export default class ScrapeRecentPostsService {
   private parseRecentPostElement: ParseRecentPostElementService;
 
   constructor() {
-    this.parseRecentPostElement = container.resolve(
-      ParseRecentPostElementService,
-    );
+    this.parseRecentPostElement = container.resolve(ParseRecentPostElementService);
   }
 
   public async execute(): Promise<Post[]> {
@@ -21,9 +19,7 @@ export default class ScrapeRecentPostsService {
 
     const recentPosts = $('div#bodyarea table[cellpadding="4"] > tbody');
 
-    const scrappedPosts = recentPosts.toArray().map(element => {
-      return this.parseRecentPostElement.execute(element);
-    });
+    const scrappedPosts = recentPosts.toArray().map(element => this.parseRecentPostElement.execute(element));
 
     return scrappedPosts;
   }

@@ -12,19 +12,18 @@ export default class FindTrackedPhrasesByIdService {
     private trackedPhrasesRepository: ITrackedTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(id: string): Promise<TrackedPhrase> {
-    const cachedTrackedPhrases =
-      await this.cacheRepository.recover<TrackedPhrase>(`trackedPhrases:${id}`);
+    const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase>(`trackedPhrases:${id}`);
 
     if (cachedTrackedPhrases) {
       return cachedTrackedPhrases;
     }
 
     const trackedPhrases = await this.trackedPhrasesRepository.findOne({
-      id,
+      id
     });
 
     await this.cacheRepository.save(`trackedPhrases:${id}`, trackedPhrases);

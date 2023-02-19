@@ -31,10 +31,10 @@ export const censorPostsMenu = async (): Promise<void> => {
             body: {
               query: {
                 match: {
-                  post_id: value,
-                },
-              },
-            },
+                  post_id: value
+                }
+              }
+            }
           });
 
           if (!search.body.hits.hits.length) {
@@ -43,13 +43,13 @@ export const censorPostsMenu = async (): Promise<void> => {
 
           [post] = search.body.hits.hits;
           return post !== null;
-        },
+        }
       },
       {
         type: 'input',
         name: 'newContent',
-        default: defaultNewContent,
-      },
+        default: defaultNewContent
+      }
     ])
     .catch(err => {
       logger.error(err);
@@ -67,7 +67,7 @@ export const censorPostsMenu = async (): Promise<void> => {
       type: 'confirm',
       name: 'choice',
       message: 'Edit into database?',
-      default: false,
+      default: false
     })
     .catch(() => process.exit())) as { choice: boolean };
 
@@ -77,9 +77,9 @@ export const censorPostsMenu = async (): Promise<void> => {
       id: post._id,
       body: {
         doc: {
-          content: newContent,
-        },
-      },
+          content: newContent
+        }
+      }
     });
   } else {
     console.log('Canceled!');

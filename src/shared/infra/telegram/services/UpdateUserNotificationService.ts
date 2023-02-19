@@ -9,14 +9,10 @@ type NotificationType = 'mentions' | 'merits' | 'modlogs';
 export default class UpdateUserNotificationService {
   constructor(
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository,
+    private usersRepository: IUsersRepository
   ) {}
 
-  public async execute(
-    telegram_id: number,
-    type: NotificationType,
-    value: boolean,
-  ): Promise<User> {
+  public async execute(telegram_id: number, type: NotificationType, value: boolean): Promise<User> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
 
     if (type === 'mentions') {

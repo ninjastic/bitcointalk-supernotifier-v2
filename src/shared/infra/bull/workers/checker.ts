@@ -19,7 +19,7 @@ import CheckPostsRescraperForChangesService from '../../../../modules/posts/serv
 (async () => {
   const queue = new Queue('CheckerQueue', {
     redis: cacheConfig.config.redis,
-    defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+    defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
   });
 
   await queue.removeRepeatable('checkPosts', { every: 5000 });
@@ -28,31 +28,31 @@ import CheckPostsRescraperForChangesService from '../../../../modules/posts/serv
   await queue.removeRepeatable('checkModLogs', { every: 300000 });
   await queue.removeRepeatable('checkPostsAddresses', { every: 20000 });
   await queue.removeRepeatable('checkPostsRescraperForChanges', {
-    every: 20000,
+    every: 20000
   });
 
   await queue.add('checkPosts', null, {
-    repeat: { every: 5000 },
+    repeat: { every: 5000 }
   });
 
   await queue.add('checkPostsHistory', null, {
-    repeat: { every: 120000 },
+    repeat: { every: 120000 }
   });
 
   await queue.add('checkMerits', null, {
-    repeat: { every: 5000 },
+    repeat: { every: 5000 }
   });
 
   await queue.add('checkModLogs', null, {
-    repeat: { every: 300000 },
+    repeat: { every: 300000 }
   });
 
   await queue.add('checkPostsAddresses', null, {
-    repeat: { every: 20000 },
+    repeat: { every: 20000 }
   });
 
   await queue.add('checkPostsRescraperForChanges', null, {
-    repeat: { every: 30000 },
+    repeat: { every: 30000 }
   });
 
   queue.process('checkPosts', async () => {
@@ -81,9 +81,7 @@ import CheckPostsRescraperForChangesService from '../../../../modules/posts/serv
   });
 
   queue.process('checkPostsRescraperForChanges', async () => {
-    const checkPostsRescraperForChanges = container.resolve(
-      CheckPostsRescraperForChangesService,
-    );
+    const checkPostsRescraperForChanges = container.resolve(CheckPostsRescraperForChangesService);
     await checkPostsRescraperForChanges.execute();
   });
 

@@ -16,16 +16,11 @@ export default class AddTrackedTopicService {
     private trackedTopicsRepository: ITrackedTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(
-    topic_id: number,
-    telegram_id?: number,
-  ): Promise<TrackedTopic> {
-    const topicExists = await this.trackedTopicsRepository.findOneByTopicId(
-      topic_id,
-    );
+  public async execute(topic_id: number, telegram_id?: number): Promise<TrackedTopic> {
+    const topicExists = await this.trackedTopicsRepository.findOneByTopicId(topic_id);
 
     if (topicExists) {
       if (!telegram_id) {
@@ -48,7 +43,7 @@ export default class AddTrackedTopicService {
 
     const queue = new Queue('ForumScrapperSideQueue', {
       redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
     });
 
     const job = await queue.add('scrapeTopic', { topic_id }, { priority: 1 });
@@ -58,13 +53,12 @@ export default class AddTrackedTopicService {
     const trackedTopic = this.trackedTopicsRepository.create({
       post_id: topicPost.post_id,
       topic_id: topicPost.topic_id,
-      tracking: telegram_id ? [telegram_id] : [],
+      tracking: telegram_id ? [telegram_id] : []
     });
 
     await this.trackedTopicsRepository.save(trackedTopic);
 
-    const trackedWithTopic =
-      await this.trackedTopicsRepository.findOneByTopicId(topic_id);
+    const trackedWithTopic = await this.trackedTopicsRepository.findOneByTopicId(topic_id);
 
     await queue.close();
 

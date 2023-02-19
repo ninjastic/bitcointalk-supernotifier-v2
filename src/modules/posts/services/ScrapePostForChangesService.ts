@@ -12,7 +12,7 @@ import GetPostService from './GetPostService';
 export default class ScrapePostForChangesService {
   constructor(
     @inject('PostsHistoryRepository')
-    private postsHistoryRepository: IPostsHistoryRepository,
+    private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
   public async execute({ topic_id, post_id }: ScrapePostDTO): Promise<void> {
@@ -29,16 +29,13 @@ export default class ScrapePostForChangesService {
       const postHistory = this.postsHistoryRepository.create({
         ...savedPost,
         deleted: true,
-        version: 1,
+        version: 1
       });
       await this.postsHistoryRepository.save(postHistory);
       return;
     }
 
-    if (
-      currentPost.content !== savedPost.content ||
-      currentPost.title !== savedPost.title
-    ) {
+    if (currentPost.content !== savedPost.content || currentPost.title !== savedPost.title) {
       const currentDate = new Date();
 
       const postHistory = this.postsHistoryRepository.create({
@@ -46,7 +43,7 @@ export default class ScrapePostForChangesService {
         date: isValid(currentPost.edited)
           ? currentPost.edited
           : addMinutes(currentDate, currentDate.getTimezoneOffset()),
-        version: 1,
+        version: 1
       });
       await this.postsHistoryRepository.save(postHistory);
     }

@@ -13,11 +13,7 @@ import SetModLogNotifiedService from '../../../../modules/modlog/services/SetMod
 import SetUserBlockedService from './SetUserBlockedService';
 
 export default class SendRemovedTopicNotificationService {
-  public async execute(
-    telegram_id: number,
-    posts: Post[],
-    modLog: ModLog,
-  ): Promise<void> {
+  public async execute(telegram_id: number, posts: Post[], modLog: ModLog): Promise<void> {
     const setModLogNotified = container.resolve(SetModLogNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
 
@@ -31,38 +27,34 @@ export default class SendRemovedTopicNotificationService {
     message += `${escape(modLog.title)}`;
     message += `</a>`;
 
-    await bot.instance.telegram
+    await bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
-        logger.info(
-          { telegram_id, message },
-          'Removed Topic notification was sent',
-        );
+        logger.info({ telegram_id, message }, 'Removed Topic notification was sent');
         await setModLogNotified.execute(modLog, telegram_id);
       })
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error, telegram_id, modLog, posts, message },
-            'Error while sending Removed Topic Notification telegram message',
+            { error: error.message, telegram_id, modLog, posts, message },
+            'Error while sending Removed Topic Notification telegram message'
           );
 
           return;
         }
         if (
-          error.response.description ===
-            'Forbidden: bot was blocked by the user' ||
+          error.response.description === 'Forbidden: bot was blocked by the user' ||
           error.response.description === 'Forbidden: user is deactivated'
         ) {
           logger.info(
             { error: error.response, telegram_id, modLog, posts, message },
-            'Telegram user marked as blocked',
+            'Telegram user marked as blocked'
           );
           await setUserBlocked.execute(telegram_id);
         } else {
           logger.error(
             { error: error.response, telegram_id, modLog, posts, message },
-            'Error while sending Removed Topic Notification telegram message',
+            'Error while sending Removed Topic Notification telegram message'
           );
         }
       });

@@ -48,79 +48,34 @@ import WebNotificationsRepository from '../../modules/web/infra/typeorm/reposito
 import ICacheRepository from './providers/models/ICacheProvider';
 import RedisProvider from './providers/implementations/RedisProvider';
 
-container.registerSingleton<IUsersRepository>(
-  'UsersRepository',
-  UsersRepository,
-);
+container.registerSingleton<IUsersRepository>('UsersRepository', UsersRepository);
 
-container.registerSingleton<IIgnoredUserRepository>(
-  'IgnoredUserRepository',
-  IgnoredUserRepository,
-);
+container.registerSingleton<IIgnoredUserRepository>('IgnoredUserRepository', IgnoredUserRepository);
 
-container.registerSingleton<IPostsRepository>(
-  'PostsRepository',
-  PostsRepository,
-);
+container.registerSingleton<IPostsRepository>('PostsRepository', PostsRepository);
 
-container.registerSingleton<ITrackedTopicsRepository>(
-  'TrackedTopicsRepository',
-  TrackedTopicsRepository,
-);
+container.registerSingleton<ITrackedTopicsRepository>('TrackedTopicsRepository', TrackedTopicsRepository);
 
-container.registerSingleton<ITrackedTopicUsersRepository>(
-  'TrackedTopicUsersRepository',
-  TrackedTopicUsersRepository,
-);
+container.registerSingleton<ITrackedTopicUsersRepository>('TrackedTopicUsersRepository', TrackedTopicUsersRepository);
 
-container.registerSingleton<ITrackedPhrasesRepository>(
-  'TrackedPhrasesRepository',
-  TrackedPhrasesRepository,
-);
+container.registerSingleton<ITrackedPhrasesRepository>('TrackedPhrasesRepository', TrackedPhrasesRepository);
 
-container.registerSingleton<IIgnoredTopicsRepository>(
-  'IgnoredTopicsRepository',
-  IgnoredTopicsRepository,
-);
+container.registerSingleton<IIgnoredTopicsRepository>('IgnoredTopicsRepository', IgnoredTopicsRepository);
 
-container.registerSingleton<IMeritsRepository>(
-  'MeritsRepository',
-  MeritsRepository,
-);
+container.registerSingleton<IMeritsRepository>('MeritsRepository', MeritsRepository);
 
-container.registerSingleton<IModLogRepository>(
-  'ModLogRepository',
-  ModLogRepository,
-);
+container.registerSingleton<IModLogRepository>('ModLogRepository', ModLogRepository);
 
-container.registerSingleton<IReportRepository>(
-  'ReportRepository',
-  ReportRepository,
-);
+container.registerSingleton<IReportRepository>('ReportRepository', ReportRepository);
 
-container.registerSingleton<IAddressesRepository>(
-  'AddressesRepository',
-  AddressesRepository,
-);
+container.registerSingleton<IAddressesRepository>('AddressesRepository', AddressesRepository);
 
-container.registerSingleton<IPostsAddressesRepository>(
-  'PostsAddressesRepository',
-  PostsAddressesRepository,
-);
+container.registerSingleton<IPostsAddressesRepository>('PostsAddressesRepository', PostsAddressesRepository);
 
-container.registerSingleton<IPostsHistoryRepository>(
-  'PostsHistoryRepository',
-  PostsHistoryRepository,
-);
+container.registerSingleton<IPostsHistoryRepository>('PostsHistoryRepository', PostsHistoryRepository);
 
-container.registerSingleton<IWebUsersRepository>(
-  'WebUsersRepository',
-  WebUsersRepository,
-);
+container.registerSingleton<IWebUsersRepository>('WebUsersRepository', WebUsersRepository);
 
-container.registerSingleton<IWebNotificationsRepository>(
-  'WebNotificationsRepository',
-  WebNotificationsRepository,
-);
+container.registerSingleton<IWebNotificationsRepository>('WebNotificationsRepository', WebNotificationsRepository);
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);

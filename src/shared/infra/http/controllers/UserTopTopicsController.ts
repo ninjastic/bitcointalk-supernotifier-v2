@@ -27,14 +27,14 @@ export default class UserTopTopicsController {
       author_uid: Joi.number().required(),
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
-      limit: Joi.number(),
+      limit: Joi.number()
     });
 
     const query = {
       author_uid: request.author_uid,
       from: request.query.from || undefined,
       to: request.query.to || defaultTo,
-      limit: request.query.limit ? Number(request.query.limit) : undefined,
+      limit: request.query.limit ? Number(request.query.limit) : undefined
     };
 
     try {
@@ -43,7 +43,7 @@ export default class UserTopTopicsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -53,7 +53,7 @@ export default class UserTopTopicsController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -61,11 +61,9 @@ export default class UserTopTopicsController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'UserTopTopicsController',
+        controller: 'UserTopTopicsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

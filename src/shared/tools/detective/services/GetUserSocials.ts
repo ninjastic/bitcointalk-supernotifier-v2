@@ -31,7 +31,7 @@ class GetUserSocials {
       index: 'posts',
       track_total_hits: true,
       size: 10000,
-      body,
+      body
     });
 
     const posts = response.body.hits.hits.map(raw => raw._source);
@@ -47,9 +47,7 @@ class GetUserSocials {
 
         const telegram = contentWithoutQuotes.match(/telegram .*: @(\w+)/i);
         const twitter = contentWithoutQuotes.match(/twitter\.com\/(\w+)/i);
-        const facebook = contentWithoutQuotes.match(
-          /facebook\.com\/(?=(\w+))(?!story)/i,
-        );
+        const facebook = contentWithoutQuotes.match(/facebook\.com\/(?=(\w+))(?!story)/i);
 
         if (!twitter && !telegram && !facebook) {
           return null;
@@ -60,9 +58,8 @@ class GetUserSocials {
           socials: {
             telegram: (telegram && telegram[1]) || null,
             twitter: (twitter && twitter[1]) || null,
-            facebook:
-              (facebook && facebook[1]) || (facebook && facebook[2]) || null,
-          },
+            facebook: (facebook && facebook[1]) || (facebook && facebook[2]) || null
+          }
         };
       })
       .filter(e => e);

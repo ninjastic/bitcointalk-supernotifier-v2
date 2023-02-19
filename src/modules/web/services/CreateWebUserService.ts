@@ -9,7 +9,7 @@ import IWebUsersRepository from '../repositories/IWebUsersRepository';
 export default class CreateWebUserService {
   constructor(
     @inject('WebUsersRepository')
-    private webUsersRepository: IWebUsersRepository,
+    private webUsersRepository: IWebUsersRepository
   ) {}
 
   public async execute(data: ICreateWebUserDTO): Promise<WebUser> {

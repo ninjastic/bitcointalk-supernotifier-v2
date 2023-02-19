@@ -19,7 +19,7 @@ export default class UsersController {
       return response.json({
         result: 'fail',
         message: error.message || 'Something went wrong',
-        data: null,
+        data: null
       });
     }
   }

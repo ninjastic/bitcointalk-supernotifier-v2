@@ -16,25 +16,19 @@ export default class FindPostByTrackedTopicService {
     private postsRepository: IPostsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute({ topic_id }: { topic_id: number }): Promise<Post> {
-    const cachedPost = await this.cacheRepository.recover<Post>(
-      `trackedTopics:topicId:${topic_id}`,
-    );
+    const cachedPost = await this.cacheRepository.recover<Post>(`trackedTopics:topicId:${topic_id}`);
 
     if (cachedPost) {
       return cachedPost;
     }
 
-    const trackedTopic = await this.trackedTopicsRepository.findOneByTopicId(
-      topic_id,
-    );
+    const trackedTopic = await this.trackedTopicsRepository.findOneByTopicId(topic_id);
 
-    const post = await this.postsRepository.findOneByPostId(
-      trackedTopic.post_id,
-    );
+    const post = await this.postsRepository.findOneByPostId(trackedTopic.post_id);
 
     await this.cacheRepository.save(`trackedTopics:topicId:${topic_id}`, post);
 

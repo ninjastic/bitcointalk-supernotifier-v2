@@ -11,35 +11,35 @@ export class CreateTrackedPhrases1632606755682 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid',
+            generationStrategy: 'uuid'
           },
           {
             name: 'phrase',
-            type: 'varchar',
+            type: 'varchar'
           },
           {
             name: 'telegram_id',
-            type: 'integer',
+            type: 'integer'
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()',
+            default: 'now()'
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()',
-          },
+            default: 'now()'
+          }
         ],
         foreignKeys: [
           {
             columnNames: ['telegram_id'],
             referencedTableName: 'users',
-            referencedColumnNames: ['telegram_id'],
-          },
-        ],
-      }),
+            referencedColumnNames: ['telegram_id']
+          }
+        ]
+      })
     );
 
     await queryRunner.query('CREATE INDEX ON tracked_phrases(telegram_id)');

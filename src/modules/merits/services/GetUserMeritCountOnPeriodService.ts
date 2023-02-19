@@ -26,18 +26,12 @@ interface Data {
 }
 
 export default class GetUserMeritCountOnPeriodService {
-  public async execute({
-    author_uid,
-    from,
-    to,
-    type,
-    interval,
-  }: Params): Promise<Data> {
+  public async execute({ author_uid, from, to, type, interval }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
     const cachedData = await getCache.execute<Data>(
-      `meritsCountPeriod:${author_uid}:${from}-${to}-${type}-${interval}`,
+      `meritsCountPeriod:${author_uid}:${from}-${to}-${type}-${interval}`
     );
 
     if (cachedData) {
@@ -53,26 +47,25 @@ export default class GetUserMeritCountOnPeriodService {
             must: [
               {
                 match: {
-                  [type === 'receiver' ? 'receiver_uid' : 'sender_uid']:
-                    author_uid,
-                },
+                  [type === 'receiver' ? 'receiver_uid' : 'sender_uid']: author_uid
+                }
               },
               {
                 range: {
                   date: {
                     from,
-                    to,
-                  },
-                },
-              },
-            ],
-          },
+                    to
+                  }
+                }
+              }
+            ]
+          }
         },
         aggs: {
           merits: {
             value_count: {
-              field: 'id.keyword',
-            },
+              field: 'id.keyword'
+            }
           },
           date: {
             date_histogram: {
@@ -80,44 +73,37 @@ export default class GetUserMeritCountOnPeriodService {
               calendar_interval: interval,
               extended_bounds: {
                 min: from,
-                max: to,
-              },
+                max: to
+              }
             },
             aggs: {
               count: {
                 sum: {
-                  field: 'amount',
-                },
-              },
-            },
+                  field: 'amount'
+                }
+              }
+            }
           },
           total_sum_merits: {
             sum_bucket: {
-              buckets_path: 'date.count',
-            },
-          },
-        },
-      },
+              buckets_path: 'date.count'
+            }
+          }
+        }
+      }
     });
 
     const data = {
       total_transactions: results.body.aggregations.merits.value,
       total_sum_merits: results.body.aggregations.total_sum_merits.value,
-      dates: results.body.aggregations.date.buckets.map(b => {
-        return {
-          key: b.key,
-          transactions: b.doc_count,
-          total_sum: b.count.value,
-        };
-      }),
+      dates: results.body.aggregations.date.buckets.map(b => ({
+        key: b.key,
+        transactions: b.doc_count,
+        total_sum: b.count.value
+      }))
     };
 
-    await saveCache.execute(
-      `meritsCountPeriod:${author_uid}:${from}-${to}-${type}-${interval}`,
-      data,
-      'EX',
-      180,
-    );
+    await saveCache.execute(`meritsCountPeriod:${author_uid}:${from}-${to}-${type}-${interval}`, data, 'EX', 180);
 
     return data;
   }

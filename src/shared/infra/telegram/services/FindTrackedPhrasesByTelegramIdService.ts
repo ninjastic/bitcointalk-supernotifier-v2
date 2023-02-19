@@ -12,26 +12,21 @@ export default class FindTrackedPhrasesByTelegramIdService {
     private trackedPhrasesRepository: ITrackedTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(telegram_id: number): Promise<TrackedPhrase[]> {
-    const cachedTrackedPhrases = await this.cacheRepository.recover<
-      TrackedPhrase[]
-    >(`trackedPhrases:${telegram_id}`);
+    const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase[]>(`trackedPhrases:${telegram_id}`);
 
     if (cachedTrackedPhrases) {
       return cachedTrackedPhrases;
     }
 
     const trackedPhrases = await this.trackedPhrasesRepository.find({
-      telegram_id,
+      telegram_id
     });
 
-    await this.cacheRepository.save(
-      `trackedPhrases:${telegram_id}`,
-      trackedPhrases,
-    );
+    await this.cacheRepository.save(`trackedPhrases:${telegram_id}`, trackedPhrases);
 
     return trackedPhrases;
   }

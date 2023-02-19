@@ -9,7 +9,7 @@ import ICreateAddressDTO from '../dtos/ICreateAddressDTO';
 export default class CreateAddressService {
   constructor(
     @inject('AddressesRepository')
-    private addressesRepository: IAddressesRepository,
+    private addressesRepository: IAddressesRepository
   ) {}
 
   public execute(address: ICreateAddressDTO): Address {

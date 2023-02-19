@@ -8,12 +8,7 @@ export default class ScrapeUserMeritCountService {
     const $ = cheerio.load(response.data, { decodeEntities: true });
 
     const meritsCount = Number(
-      $("b > a[href*='/index.php?action=merit;u=']")
-        .parent()
-        .parent()
-        .parent()
-        .find('td:nth-child(2)')
-        .text(),
+      $("b > a[href*='/index.php?action=merit;u=']").parent().parent().parent().find('td:nth-child(2)').text()
     );
 
     return meritsCount;

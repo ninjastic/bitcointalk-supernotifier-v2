@@ -12,15 +12,9 @@ import SetPostHistoryNotifiedService from '../../../../modules/posts/services/Se
 import SetUserBlockedService from './SetUserBlockedService';
 
 export default class SendMentionNotificationService {
-  public async execute(
-    telegram_id: number,
-    post: Post,
-    history?: boolean,
-  ): Promise<void> {
+  public async execute(telegram_id: number, post: Post, history?: boolean): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
-    const setPostHistoryNotified = container.resolve(
-      SetPostHistoryNotifiedService,
-    );
+    const setPostHistoryNotified = container.resolve(SetPostHistoryNotifiedService);
 
     const setUserBlocked = container.resolve(SetUserBlockedService);
 
@@ -33,13 +27,12 @@ export default class SendMentionNotificationService {
     data.find('br').replaceWith('&nbsp;');
     const contentFiltered = data.text().replace(/\s\s+/g, ' ').trim();
 
-    const titleWithBoards = boards.length
-      ? `${boards[boards.length - 1]} / ${title}`
-      : title;
+    const titleWithBoards = boards.length ? `${boards[boards.length - 1]} / ${title}` : title;
+    const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
 
     let message = '';
     message += `You have been mentioned by <b>${escape(author)}</b> `;
-    message += `in <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
+    message += `in <a href="${postUrl}">`;
     message += `${escape(titleWithBoards)}`;
     message += `</a>\n`;
     message += `<pre>`;
@@ -47,7 +40,7 @@ export default class SendMentionNotificationService {
     message += `${contentFiltered.length > 150 ? '...' : ''}`;
     message += `</pre>`;
 
-    await bot.instance.telegram
+    await bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
         logger.info({ telegram_id, message }, 'Mention notification was sent');
@@ -61,26 +54,25 @@ export default class SendMentionNotificationService {
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error, telegram_id, post: post.id, message },
-            'Error while sending Mention Notification telegram message',
+            { error: error.message, telegram_id, post: post.id, message },
+            'Error while sending Mention Notification telegram message'
           );
 
           return;
         }
         if (
-          error.response.description ===
-            'Forbidden: bot was blocked by the user' ||
+          error.response.description === 'Forbidden: bot was blocked by the user' ||
           error.response.description === 'Forbidden: user is deactivated'
         ) {
           logger.info(
             { error: error.response, telegram_id, post: post.id, message },
-            'Telegram user marked as blocked',
+            'Telegram user marked as blocked'
           );
           await setUserBlocked.execute(telegram_id);
         } else {
           logger.error(
             { error: error.response, telegram_id, post: post.id, message },
-            'Error while sending Mention Notification telegram message',
+            'Error while sending Mention Notification telegram message'
           );
         }
       });

@@ -6,31 +6,25 @@ import TrackedTopic from '../../../../modules/posts/infra/typeorm/entities/Track
 import ITrackedTopicsRepository from '../../../../modules/posts/repositories/ITrackedTopicsRepository';
 
 @injectable()
-export default class FindUserByTelegramIdService {
+export default class FindTrackedTopicsByTelegramIdService {
   constructor(
     @inject('TrackedTopicsRepository')
     private trackedTopicsRepository: ITrackedTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(telegram_id: number): Promise<TrackedTopic[]> {
-    const cachedTrackedTopics = await this.cacheRepository.recover<
-      TrackedTopic[]
-    >(`trackedTopics:${telegram_id}`);
+    const cachedTrackedTopics = await this.cacheRepository.recover<TrackedTopic[]>(`trackedTopics:${telegram_id}`);
 
     if (cachedTrackedTopics) {
       return cachedTrackedTopics;
     }
 
-    const trackedTopics =
-      await this.trackedTopicsRepository.findAllByTelegramId(telegram_id);
+    const trackedTopics = await this.trackedTopicsRepository.findAllByTelegramId(telegram_id);
 
-    await this.cacheRepository.save(
-      `trackedTopics:${telegram_id}`,
-      trackedTopics,
-    );
+    await this.cacheRepository.save(`trackedTopics:${telegram_id}`, trackedTopics);
 
     return trackedTopics;
   }

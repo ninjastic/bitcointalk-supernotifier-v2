@@ -11,15 +11,13 @@ import IAddressesRepository from '../repositories/IAddressesRepository';
 export default class ParsePostAddressesService {
   constructor(
     @inject('AddressesRepository')
-    private addressesRepository: IAddressesRepository,
+    private addressesRepository: IAddressesRepository
   ) {}
 
   public execute(post: Post): Address[] {
-    const bitcoinRegex = new RegExp(
-      '(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})',
-      'g',
-    );
-    const ethereumRegex = new RegExp('0x[a-fA-F0-9]{40}', 'g');
+    const bitcoinRegex =
+      /(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/g;
+    const ethereumRegex = /0x[a-fA-F0-9]{40}/g;
 
     const $ = cheerio.load(post.content);
     const data = $('body');
@@ -41,15 +39,11 @@ export default class ParsePostAddressesService {
           return;
         }
 
-        if (
-          addresses.findIndex(
-            m => m.post_id === post.post_id && m.address === address,
-          ) === -1
-        ) {
+        if (addresses.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
           addresses.push({
             post_id: post.post_id,
             coin: 'BTC',
-            address,
+            address
           });
         }
       });
@@ -57,15 +51,11 @@ export default class ParsePostAddressesService {
 
     if (ethereumAddresses) {
       ethereumAddresses.forEach(address => {
-        if (
-          addresses.findIndex(
-            m => m.post_id === post.post_id && m.address === address,
-          ) === -1
-        ) {
+        if (addresses.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
           addresses.push({
             post_id: post.post_id,
             coin: 'ETH',
-            address,
+            address
           });
         }
       });

@@ -12,7 +12,7 @@ export default class WebUsersRepository {
     const getWebNotifications = container.resolve(GetWebNotificationsService);
 
     const schemaValidation = Joi.object({
-      user_id: Joi.string().uuid().required(),
+      user_id: Joi.string().uuid().required()
     });
 
     try {
@@ -21,21 +21,21 @@ export default class WebUsersRepository {
       return response.json({
         result: 'error',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
     try {
       const getWebUserService = container.resolve(GetWebUserService);
       const existentWebUser = await getWebUserService.execute({
-        id: request.params.user_id,
+        id: request.params.user_id
       });
 
       if (!existentWebUser) {
         return response.json({
           result: 'success',
           message: 'User not found',
-          data: null,
+          data: null
         });
       }
 
@@ -44,17 +44,15 @@ export default class WebUsersRepository {
       return response.json({
         result: 'success',
         message: null,
-        data,
+        data
       });
     } catch (error) {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'WebNotificationsController',
+        controller: 'WebNotificationsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

@@ -29,10 +29,10 @@ export default class GetAddressService {
       body: {
         query: {
           match: {
-            address,
-          },
-        },
-      },
+            address
+          }
+        }
+      }
     });
 
     const boards = await getBoardsList.execute(true);
@@ -51,7 +51,7 @@ export default class GetAddressService {
         content: e.content,
         date: e.date,
         board_id: e.board_id,
-        board_name: boards.find(b => b.board_id === e.board_id)?.name || null,
+        board_name: boards.find(b => b.board_id === e.board_id)?.name || null
       };
     });
 

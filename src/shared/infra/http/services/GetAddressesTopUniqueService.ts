@@ -23,21 +23,9 @@ export default class GetAddressesTopUniqueService {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const {
-      address,
-      author,
-      author_uid,
-      coin,
-      post_id,
-      topic_id,
-      board,
-      child_boards,
-      limit,
-    } = conditions || {};
+    const { address, author, author_uid, coin, post_id, topic_id, board, child_boards, limit } = conditions || {};
 
-    const cachedData = await getCache.execute<Data>(
-      `users:AddressesTopUnique:${JSON.stringify(conditions)}`,
-    );
+    const cachedData = await getCache.execute<Data>(`users:AddressesTopUnique:${JSON.stringify(conditions)}`);
 
     if (cachedData) {
       return cachedData;
@@ -64,8 +52,8 @@ export default class GetAddressesTopUniqueService {
     if (author) {
       must.push({
         match_phrase: {
-          author: author.toLowerCase(),
-        },
+          author: author.toLowerCase()
+        }
       });
     }
 
@@ -74,10 +62,7 @@ export default class GetAddressesTopUniqueService {
     }
 
     if (board) {
-      if (
-        child_boards &&
-        (child_boards === '1' || child_boards.toLowerCase() === 'true')
-      ) {
+      if (child_boards && (child_boards === '1' || child_boards.toLowerCase() === 'true')) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
 
@@ -94,51 +79,42 @@ export default class GetAddressesTopUniqueService {
       body: {
         query: {
           bool: {
-            must,
-          },
+            must
+          }
         },
         aggs: {
           addresses: {
             terms: {
               field: 'address.keyword',
-              size: Math.min(limit || 10, 100),
+              size: Math.min(limit || 10, 100)
             },
             aggs: {
               coin: {
                 top_hits: {
                   size: 1,
                   _source: {
-                    includes: ['coin'],
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+                    includes: ['coin']
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
-    const addresses = results.body.aggregations.addresses.buckets.map(
-      record => {
-        return {
-          address: record.key,
-          coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
-          count: record.doc_count,
-        };
-      },
-    );
+    const addresses = results.body.aggregations.addresses.buckets.map(record => ({
+      address: record.key,
+      coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
+      count: record.doc_count
+    }));
 
     const data = {
       total_results: addresses.length,
-      addresses,
+      addresses
     };
 
-    await saveCache.execute(
-      `users:AddressesTopUnique:${JSON.stringify(conditions)}`,
-      data,
-      'EX',
-      600,
-    );
+    await saveCache.execute(`users:AddressesTopUnique:${JSON.stringify(conditions)}`, data, 'EX', 600);
 
     return data;
   }

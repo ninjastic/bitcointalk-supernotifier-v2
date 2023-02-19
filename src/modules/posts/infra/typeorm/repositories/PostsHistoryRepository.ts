@@ -27,10 +27,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     return this.ormRepository.save(post);
   }
 
-  public async findOne({
-    post_id,
-    version,
-  }: IFindOnePostHistoryDTO): Promise<PostHistory | undefined> {
+  public async findOne({ post_id, version }: IFindOnePostHistoryDTO): Promise<PostHistory | undefined> {
     return this.ormRepository.findOne({ post_id, version });
   }
 
@@ -38,33 +35,24 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     return this.ormRepository.find({
       where: {
         checked: false,
-        deleted: false,
+        deleted: false
       },
       order: { post_id: 'DESC' },
       take: limit,
-      relations: ['post'],
+      relations: ['post']
     });
   }
 
   public async findAll(conditions: IFindAllPostsHistoryDTO): Promise<any> {
-    const {
-      author,
-      topic_id,
-      deleted,
-      board,
-      after_date,
-      before_date,
-      last,
-      limit,
-    } = conditions;
+    const { author, topic_id, deleted, board, after_date, before_date, last, limit } = conditions;
 
     const must = [];
 
     if (author) {
       must.push({
         match_phrase: {
-          author: author.toLowerCase(),
-        },
+          author: author.toLowerCase()
+        }
       });
     }
 
@@ -82,7 +70,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
 
     if (after_date || before_date) {
       must.push({
-        range: { date: { gte: after_date || null, lte: before_date || null } },
+        range: { date: { gte: after_date || null, lte: before_date || null } }
       });
     }
 
@@ -100,11 +88,11 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       body: {
         query: {
           bool: {
-            must,
-          },
+            must
+          }
         },
-        sort: [{ date: { order: 'DESC' } }],
-      },
+        sort: [{ date: { order: 'DESC' } }]
+      }
     });
 
     const posts_history = results.body.hits.hits.map(post => {
@@ -121,13 +109,13 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
         board_id: postData.board_id,
         deleted: postData.deleted,
         created_at: postData.created_at,
-        updated_at: postData.updated_at,
+        updated_at: postData.updated_at
       };
     });
 
     const data = {
       total_results: results.body.hits.total.value,
-      posts_history,
+      posts_history
     };
 
     return data;

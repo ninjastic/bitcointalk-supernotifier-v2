@@ -6,7 +6,7 @@ import IPostsRepository from '../repositories/IPostsRepository';
 export default class SetPostNotifiedService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository,
+    private postsRepository: IPostsRepository
   ) {}
 
   public async execute(post_id: number, telegram_id: number): Promise<void> {

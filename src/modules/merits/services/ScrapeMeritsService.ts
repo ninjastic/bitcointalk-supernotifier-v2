@@ -33,9 +33,7 @@ export default class ScrapeMeritsService {
       .map(element => this.parseMeritElement.execute(element))
       .filter(result => result);
 
-    const scrapeResults = await Promise.all(scrapingPromises).then(results => {
-      return results;
-    });
+    const scrapeResults = await Promise.all(scrapingPromises).then(results => results);
 
     return scrapeResults as Merit[];
   }

@@ -22,7 +22,7 @@ export default class AddressesUniqueController {
       board: Joi.number(),
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       last: Joi.string(),
-      limit: Joi.number(),
+      limit: Joi.number()
     });
 
     try {
@@ -31,19 +31,17 @@ export default class AddressesUniqueController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
     try {
-      const data = await getAddressesUnique.execute(
-        request.query as IFindPostAddressesDTO,
-      );
+      const data = await getAddressesUnique.execute(request.query as IFindPostAddressesDTO);
 
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -51,11 +49,9 @@ export default class AddressesUniqueController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'AddressesUniqueController',
+        controller: 'AddressesUniqueController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

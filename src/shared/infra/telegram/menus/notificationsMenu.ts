@@ -1,128 +1,84 @@
-import { Context } from 'telegraf';
-import { MenuTemplate } from 'telegraf-inline-menu';
 import { container } from 'tsyringe';
+import { MenuTemplate } from 'grammy-inline-menu';
 
-import ISession from '../@types/ISession';
-
-import bot from '../index';
-
+import IMenuContext from '../@types/IMenuContext';
 import UpdateUserNotificationService from '../services/UpdateUserNotificationService';
 
-interface MenuContext extends Context {
-  session: ISession;
-}
+const notificationsMenu = new MenuTemplate<IMenuContext>(() => ({
+  text: `<b>Notifications</b>\n\nEnable or disable specific notifications.`,
+  parse_mode: 'HTML'
+}));
 
-const notificationsMenu = new MenuTemplate<MenuContext>(() => {
-  return {
-    text: `<b>Notifications</b>\n\nEnable or disable specific notifications.`,
-    parse_mode: 'HTML',
-  };
-});
+const handleNotificationToggle = async (ctx: IMenuContext) => {
+  const updateUserNotification = container.resolve(UpdateUserNotificationService);
 
-const handleNotificationToggle = async (ctx: MenuContext) => {
-  const updateUserNotification = container.resolve(
-    UpdateUserNotificationService,
-  );
-
-  if (ctx.update.callback_query.data === '/main/notifications/merits') {
+  if (ctx.update.callback_query.data === '/notifications/merits') {
     ctx.session.merits = !ctx.session.merits;
-    await bot.session.saveSession(bot.session.getSessionKey(ctx), ctx.session);
 
-    await updateUserNotification.execute(
-      ctx.update.callback_query.from.id,
-      'merits',
-      ctx.session.merits,
-    );
+    await updateUserNotification.execute(ctx.update.callback_query.from.id, 'merits', ctx.session.merits);
   }
 
-  if (ctx.update.callback_query.data === '/main/notifications/mentions') {
+  if (ctx.update.callback_query.data === '/notifications/mentions') {
     ctx.session.mentions = !ctx.session.mentions;
-    await bot.session.saveSession(bot.session.getSessionKey(ctx), ctx.session);
 
-    await updateUserNotification.execute(
-      ctx.update.callback_query.from.id,
-      'mentions',
-      ctx.session.mentions,
-    );
+    await updateUserNotification.execute(ctx.update.callback_query.from.id, 'mentions', ctx.session.mentions);
   }
 
-  if (ctx.update.callback_query.data === '/main/notifications/modlogs') {
+  if (ctx.update.callback_query.data === '/notifications/modlogs') {
     ctx.session.modlogs = !ctx.session.modlogs;
-    await bot.session.saveSession(bot.session.getSessionKey(ctx), ctx.session);
 
-    await updateUserNotification.execute(
-      ctx.update.callback_query.from.id,
-      'modlogs',
-      ctx.session.modlogs,
-    );
+    await updateUserNotification.execute(ctx.update.callback_query.from.id, 'modlogs', ctx.session.modlogs);
   }
 
-  await ctx.answerCbQuery();
+  await ctx.answerCallbackQuery();
 };
 
-const mentionsEnabled = (ctx: MenuContext) => {
-  return ctx.session.mentions;
-};
+const mentionsEnabled = (ctx: IMenuContext) => ctx.session.mentions;
 
-const meritsEnabled = (ctx: MenuContext) => {
-  return ctx.session.merits;
-};
+const meritsEnabled = (ctx: IMenuContext) => ctx.session.merits;
 
-const modlogsEnabled = (ctx: MenuContext) => {
-  return ctx.session.modlogs;
-};
+const modlogsEnabled = (ctx: IMenuContext) => ctx.session.modlogs;
 
 notificationsMenu.interact(
-  ctx =>
-    mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '❌ Mentions Disabled',
+  ctx => (mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '❌ Mentions Disabled'),
   'mentions',
   {
     do: async ctx => {
-      await ctx.answerCbQuery();
-
-      handleNotificationToggle(ctx);
-
-      return true;
-    },
-  },
-);
-
-notificationsMenu.interact(
-  ctx => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '❌ Merits Disabled'),
-  'merits',
-  {
-    do: async ctx => {
-      await ctx.answerCbQuery();
-
-      handleNotificationToggle(ctx);
+      await ctx.answerCallbackQuery();
+      await handleNotificationToggle(ctx);
 
       return true;
-    },
-  },
+    }
+  }
 );
 
+notificationsMenu.interact(ctx => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '❌ Merits Disabled'), 'merits', {
+  do: async ctx => {
+    await ctx.answerCallbackQuery();
+    await handleNotificationToggle(ctx);
+
+    return true;
+  }
+});
+
 notificationsMenu.interact(
-  ctx =>
-    modlogsEnabled(ctx)
-      ? '✅ Deleted Posts Enabled '
-      : '❌ Deleted Posts Disabled',
+  ctx => (modlogsEnabled(ctx) ? '✅ Deleted Posts Enabled ' : '❌ Deleted Posts Disabled'),
   'modlogs',
   {
     do: async ctx => {
-      await ctx.answerCbQuery();
-
-      handleNotificationToggle(ctx);
+      await ctx.answerCallbackQuery();
+      await handleNotificationToggle(ctx);
 
       return true;
-    },
-  },
+    }
+  }
 );
 
 notificationsMenu.interact('↩ Go Back', 'back', {
   do: async ctx => {
-    await ctx.answerCbQuery();
-    return '/main/';
-  },
+    await ctx.answerCallbackQuery();
+    return '/';
+  }
 });
 
 export default notificationsMenu;

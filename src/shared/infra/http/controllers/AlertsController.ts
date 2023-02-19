@@ -16,7 +16,7 @@ export default class AlertsController {
     const data = {
       result: 'success',
       message: null,
-      data: alert,
+      data: alert
     };
 
     return response.json(data);
@@ -30,7 +30,7 @@ export default class AlertsController {
     };
 
     const schemaValidation = Joi.object({
-      message: Joi.string().allow('', null),
+      message: Joi.string().allow('', null)
     });
 
     try {
@@ -39,7 +39,7 @@ export default class AlertsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -49,7 +49,7 @@ export default class AlertsController {
       const data = {
         result: 'success',
         message: null,
-        data: body.message,
+        data: body.message
       };
 
       return response.json(data);
@@ -57,11 +57,9 @@ export default class AlertsController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'AlertsController',
+        controller: 'AlertsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

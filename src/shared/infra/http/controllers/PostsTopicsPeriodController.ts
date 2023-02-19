@@ -13,23 +13,21 @@ export default class PostsTopicsPeriodController {
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
 
-    const defaultFrom = startOfHour(
-      sub(dateUTC, { days: 1, hours: 1 }),
-    ).toISOString();
+    const defaultFrom = startOfHour(sub(dateUTC, { days: 1, hours: 1 })).toISOString();
     const defaultTo = endOfHour(sub(dateUTC, { hours: 1 })).toISOString();
 
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
       board_id: Joi.number().allow('', null),
-      limit: Joi.number().allow('', null),
+      limit: Joi.number().allow('', null)
     });
 
     const query = {
       from: (request.query.from || defaultFrom) as string,
       to: (request.query.to || defaultTo) as string,
       board_id: Number(request.query.board_id) || null,
-      limit: Number(request.query.limit) || null,
+      limit: Number(request.query.limit) || null
     };
 
     try {
@@ -38,7 +36,7 @@ export default class PostsTopicsPeriodController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -48,7 +46,7 @@ export default class PostsTopicsPeriodController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -56,11 +54,9 @@ export default class PostsTopicsPeriodController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'PostsTopicsPeriodController',
+        controller: 'PostsTopicsPeriodController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

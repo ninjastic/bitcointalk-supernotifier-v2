@@ -30,18 +30,18 @@ export default class GetPostsBoardsPeriodService {
                 range: {
                   date: {
                     gte: from,
-                    lte: to,
-                  },
-                },
-              },
-            ],
-          },
+                    lte: to
+                  }
+                }
+              }
+            ]
+          }
         },
         aggs: {
           boards: {
             terms: {
               field: 'board_id',
-              size: Math.min(limit || 10, 20),
+              size: Math.min(limit || 10, 20)
             },
             aggs: {
               date: {
@@ -50,22 +50,20 @@ export default class GetPostsBoardsPeriodService {
                   calendar_interval: interval,
                   extended_bounds: {
                     min: from,
-                    max: to,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+                    max: to
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
-    const data = dataRaw.body.aggregations.boards.buckets.map(board => {
-      return {
-        board_id: board.key,
-        timestamps: board.date.buckets,
-      };
-    });
+    const data = dataRaw.body.aggregations.boards.buckets.map(board => ({
+      board_id: board.key,
+      timestamps: board.date.buckets
+    }));
 
     return data;
   }

@@ -19,30 +19,20 @@ export default class GetAddressDetailsService {
         throw new Error('Route is missing');
       }
 
-      const cachedData = await getCache.execute(
-        `addressDetails:${address}:${route}`,
-      );
+      const cachedData = await getCache.execute(`addressDetails:${address}:${route}`);
 
       if (cachedData) {
         return cachedData;
       }
 
-      const { data } = await axios.get(
-        `https://api.ethplorer.io/${route}/${address}`,
-        {
-          params: {
-            apiKey: process.env.ETHPLORER_APIKEY,
-            type: 'transfer',
-          },
-        },
-      );
+      const { data } = await axios.get(`https://api.ethplorer.io/${route}/${address}`, {
+        params: {
+          apiKey: process.env.ETHPLORER_APIKEY,
+          type: 'transfer'
+        }
+      });
 
-      await saveCache.execute(
-        `addressDetails:${address}:${route}`,
-        data,
-        'EX',
-        300,
-      );
+      await saveCache.execute(`addressDetails:${address}:${route}`, data, 'EX', 300);
 
       return data;
     }
@@ -53,9 +43,7 @@ export default class GetAddressDetailsService {
       return cachedData;
     }
 
-    const { data } = await axios.get(
-      `https://www.sochain.com/api/v2/get_address_balance/bitcoin/${address}`,
-    );
+    const { data } = await axios.get(`https://www.sochain.com/api/v2/get_address_balance/bitcoin/${address}`);
 
     await saveCache.execute(`addressDetails:${address}`, data, 'EX', 300);
 

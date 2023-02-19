@@ -11,13 +11,10 @@ import CreateUserDTO from '../../../../modules/users/dtos/CreateUserDTO';
 export default class UpdateUserByTelegramIdService {
   constructor(
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository,
+    private usersRepository: IUsersRepository
   ) {}
 
-  public async execute(
-    telegram_id: number,
-    data: CreateUserDTO,
-  ): Promise<User> {
+  public async execute(telegram_id: number, data: CreateUserDTO): Promise<User> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
 
     logger.info({ user, data }, 'Updating user');

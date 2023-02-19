@@ -12,15 +12,11 @@ export default class AddIgnoredUserService {
     private ignoredUserRepository: IIgnoredUserRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(
-    username: string,
-    telegram_id?: number,
-  ): Promise<IgnoredUser> {
-    const ignoredUserExists =
-      await this.ignoredUserRepository.findOneByUsername(username);
+  public async execute(username: string, telegram_id?: number): Promise<IgnoredUser> {
+    const ignoredUserExists = await this.ignoredUserRepository.findOneByUsername(username);
 
     if (ignoredUserExists) {
       if (!telegram_id) {
@@ -43,7 +39,7 @@ export default class AddIgnoredUserService {
 
     const ignoredUser = this.ignoredUserRepository.create({
       username,
-      ignoring: telegram_id ? [telegram_id] : [],
+      ignoring: telegram_id ? [telegram_id] : []
     });
 
     await this.ignoredUserRepository.save(ignoredUser);

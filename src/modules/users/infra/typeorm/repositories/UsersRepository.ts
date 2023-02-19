@@ -30,9 +30,7 @@ export default class UsersRepository implements IUsersRepository {
     return user;
   }
 
-  public async findByTelegramId(
-    telegram_id: number,
-  ): Promise<User | undefined> {
+  public async findByTelegramId(telegram_id: number): Promise<User | undefined> {
     const user = await this.ormRepository.findOne({ telegram_id });
 
     return user;
@@ -40,7 +38,7 @@ export default class UsersRepository implements IUsersRepository {
 
   public async getUsersWithMentions(): Promise<User[]> {
     const users = await this.ormRepository.find({
-      where: { enable_mentions: true, blocked: false },
+      where: { enable_mentions: true, blocked: false }
     });
 
     return users;
@@ -48,7 +46,7 @@ export default class UsersRepository implements IUsersRepository {
 
   public async getUsersWithMerits(): Promise<User[]> {
     const users = await this.ormRepository.find({
-      where: { enable_merits: true, blocked: false },
+      where: { enable_merits: true, blocked: false }
     });
 
     return users;
@@ -56,7 +54,7 @@ export default class UsersRepository implements IUsersRepository {
 
   public async getUsersWithModlogs(): Promise<User[]> {
     const users = await this.ormRepository.find({
-      where: { enable_modlogs: true, blocked: false },
+      where: { enable_modlogs: true, blocked: false }
     });
 
     return users;

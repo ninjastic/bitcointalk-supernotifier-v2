@@ -5,7 +5,7 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
   OneToOne,
-  JoinColumn,
+  JoinColumn
 } from 'typeorm';
 
 import TrackedTopic from './TrackedTopic';

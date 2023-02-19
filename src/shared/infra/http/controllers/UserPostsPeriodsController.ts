@@ -24,7 +24,7 @@ export default class UserPostsPeriodsController {
       to: Joi.string().isoDate().allow('', null),
       interval: Joi.string()
         .regex(/^\d{0,3}(m|h|d|w|M)$/)
-        .allow('', null),
+        .allow('', null)
     });
 
     const date = new Date();
@@ -37,7 +37,7 @@ export default class UserPostsPeriodsController {
       author_uid: request.author_uid,
       from: request.query.from || defaultFrom,
       to: request.query.to || defaultTo,
-      interval: request.query.interval || '1d',
+      interval: request.query.interval || '1d'
     };
 
     try {
@@ -46,7 +46,7 @@ export default class UserPostsPeriodsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -56,7 +56,7 @@ export default class UserPostsPeriodsController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -64,11 +64,9 @@ export default class UserPostsPeriodsController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'UserPostsPeriodsController',
+        controller: 'UserPostsPeriodsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

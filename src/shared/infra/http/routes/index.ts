@@ -9,9 +9,9 @@ import boardsRouter from './boardsRouter';
 import meritsRouter from './meritsRouter';
 import notFoundRouter from './notFoundRouter';
 import bpipRouter from './bpipRouter';
+import metaRouter from './metaRouter';
 
 import CompareUserController from '../controllers/CompareUserController';
-import metaRouter from './metaRouter';
 
 const compareUserController = new CompareUserController();
 

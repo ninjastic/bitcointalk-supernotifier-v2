@@ -58,24 +58,21 @@ export default class GetMeritsService {
     if (query.after_date) {
       queryBuilder.query('range', {
         date: {
-          gte: query.after_date,
-        },
+          gte: query.after_date
+        }
       });
     }
 
     if (query.before_date) {
       queryBuilder.query('range', {
         date: {
-          lte: query.before_date,
-        },
+          lte: query.before_date
+        }
       });
     }
 
     if (query.board) {
-      if (
-        query.child_boards === '1' ||
-        query.child_boards?.toLowerCase() === 'true'
-      ) {
+      if (query.child_boards === '1' || query.child_boards?.toLowerCase() === 'true') {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(query.board);
 
@@ -85,13 +82,7 @@ export default class GetMeritsService {
       }
     }
 
-    const simpleMatchParams = [
-      'post_id',
-      'topic_id',
-      'receiver_uid',
-      'sender_uid',
-      'amount',
-    ];
+    const simpleMatchParams = ['post_id', 'topic_id', 'receiver_uid', 'sender_uid', 'amount'];
 
     simpleMatchParams.forEach(param => {
       if (query[param]) {
@@ -110,16 +101,14 @@ export default class GetMeritsService {
     const results = await esClient.search({
       index: 'merits',
       track_total_hits: true,
-      body,
+      body
     });
 
     const getBoardsList = container.resolve(GetBoardsListService);
     const boards = await getBoardsList.execute(true);
 
     const data = results.body.hits.hits.map(merit => {
-      const boardName = boards.find(
-        board => board.board_id === merit._source.board_id,
-      )?.name;
+      const boardName = boards.find(board => board.board_id === merit._source.board_id)?.name;
 
       const meritData = { ...merit._source, board_name: boardName };
 
@@ -134,7 +123,7 @@ export default class GetMeritsService {
 
     const response = {
       total_results: results.body.hits.total.value,
-      merits: data,
+      merits: data
     };
 
     return response;

@@ -12,7 +12,7 @@ export default class UpdatePostService {
     private postsRepository: IPostsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(post: Post): Promise<Post> {

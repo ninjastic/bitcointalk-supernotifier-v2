@@ -15,7 +15,7 @@ export default class WebUsersRepository {
 
     const schemaValidation = Joi.object({
       user_id: Joi.number().required(),
-      username: Joi.string().required(),
+      username: Joi.string().required()
     });
 
     try {
@@ -24,7 +24,7 @@ export default class WebUsersRepository {
       return response.json({
         result: 'error',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -32,36 +32,34 @@ export default class WebUsersRepository {
       const getWebUserService = container.resolve(GetWebUserService);
       const existentWebUser = await getWebUserService.execute({
         username: username.toLowerCase(),
-        user_id,
+        user_id
       });
 
       if (existentWebUser) {
         return response.json({
           result: 'success',
           message: null,
-          data: existentWebUser,
+          data: existentWebUser
         });
       }
 
       const createdWebUser = await createWebUser.execute({
         user_id,
-        username: username.toLowerCase(),
+        username: username.toLowerCase()
       });
 
       return response.json({
         result: 'success',
         message: null,
-        data: createdWebUser,
+        data: createdWebUser
       });
     } catch (error) {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'WebUsersController',
+        controller: 'WebUsersController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

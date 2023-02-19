@@ -12,12 +12,12 @@ export default class SaveModLogService {
     private modLogRepository: IModLogRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(modLog: ModLog): Promise<ModLog> {
     const cachedModLog = await this.cacheRepository.recover<ModLog>(
-      `modLog:${modLog.type}-${modLog.user_id}-${modLog.topic_id}`,
+      `modLog:${modLog.type}-${modLog.user_id}-${modLog.topic_id}`
     );
 
     if (cachedModLog) {
@@ -37,7 +37,7 @@ export default class SaveModLogService {
       `modLog:${modLog.type}-${modLog.user_id}-${modLog.topic_id}`,
       savedModLog,
       'EX',
-      300,
+      300
     );
 
     return savedModLog;

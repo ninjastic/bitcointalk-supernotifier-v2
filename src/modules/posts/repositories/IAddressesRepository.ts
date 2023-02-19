@@ -9,10 +9,7 @@ export default interface IAddressesRepository {
   findOneByAddress(address: string): Promise<Address | undefined>;
   findByPostId(post_id: number): Promise<Address[] | undefined>;
   findLatestPostId(): Promise<number | undefined>;
-  findAddresses(
-    conditions: IFindAddressesConditionsDTO,
-    limit: number,
-  ): Promise<Address[]>;
+  findAddresses(conditions: IFindAddressesConditionsDTO, limit: number): Promise<Address[]>;
   findAuthorsByAddress(address: string): Promise<string[]>;
   findAddressesByAuthor(params: IFindAddressesByAuthorDTO): Promise<string[]>;
 }

@@ -19,7 +19,7 @@ const requestBoardsUrl = async () => {
 
   const boards = $('loc');
 
-  const boardIdRegEx = new RegExp('board=(\\d+)');
+  const boardIdRegEx = /board=(\d+)/;
 
   return boards.toArray().map(e => {
     const url = $(e).text();
@@ -34,18 +34,16 @@ const getExistentBoardsInDatabase = async (
   boards: Array<{
     id: number;
     url: string;
-  }>,
+  }>
 ) => {
   spinner.text = 'Getting boards in database';
-  const ids = boards.map(board => {
-    return board.id;
-  });
+  const ids = boards.map(board => board.id);
 
   const results = await createQueryBuilder()
     .select('board_id')
     .from('boards', 'boards')
     .where('board_id = any(:board_ids)', {
-      board_ids: ids,
+      board_ids: ids
     })
     .getRawMany();
 
@@ -56,7 +54,7 @@ const scrapeBoards = async (
   boards: Array<{
     id: number;
     url: string;
-  }>,
+  }>
 ) => {
   spinner.text = `Scraping missing boards (${boards.length})`;
   for await (const board of boards) {
@@ -74,7 +72,7 @@ const scrapeBoards = async (
       const boardLink = $(boardElement).find('a').attr('href');
 
       if (boardIndex !== 0) {
-        const boardIdRegEx = new RegExp('board=(\\d+)');
+        const boardIdRegEx = /board=(\d+)/;
 
         const match = boardLink.match(boardIdRegEx);
 
@@ -87,17 +85,11 @@ const scrapeBoards = async (
     const finalBoardsArray = [];
 
     if (boardsArray.length >= 2) {
-      const baordsWithRelation = boardsArray
-        .reverse()
-        .map((originalBoard, index) => {
-          return {
-            id: () => 'uuid_generate_v4()',
-            ...originalBoard,
-            parent_id: boardsArray.reverse()[index + 1]
-              ? boardsArray.reverse()[index + 1].board_id
-              : null,
-          };
-        });
+      const baordsWithRelation = boardsArray.reverse().map((originalBoard, index) => ({
+        id: () => 'uuid_generate_v4()',
+        ...originalBoard,
+        parent_id: boardsArray.reverse()[index + 1] ? boardsArray.reverse()[index + 1].board_id : null
+      }));
       finalBoardsArray.push(...baordsWithRelation);
     } else {
       finalBoardsArray.push(...boardsArray);
@@ -122,11 +114,7 @@ export const syncBoards = async (): Promise<void> => {
 
   const existent = await getExistentBoardsInDatabase(boards);
 
-  const missingBoards = boards.filter(board => {
-    return !existent.find(existentBoard => {
-      return existentBoard.board_id === board.id;
-    });
-  });
+  const missingBoards = boards.filter(board => !existent.find(existentBoard => existentBoard.board_id === board.id));
 
   if (missingBoards.length) {
     await scrapeBoards(missingBoards);

@@ -6,9 +6,7 @@ import TrackedPhrase from '../entities/TrackedPhrase';
 
 import ITrackedPhrasesRepository from '../../../repositories/ITrackedPhrasesRepository';
 
-export default class TrackedPhrasesRepository
-  implements ITrackedPhrasesRepository
-{
+export default class TrackedPhrasesRepository implements ITrackedPhrasesRepository {
   private ormRepository: Repository<TrackedPhrase>;
 
   constructor() {
@@ -23,11 +21,9 @@ export default class TrackedPhrasesRepository
     return this.ormRepository.save(trackedPhrase);
   }
 
-  public async find(
-    conditions: IFindTrackedPhraseDTO,
-  ): Promise<TrackedPhrase[]> {
+  public async find(conditions: IFindTrackedPhraseDTO): Promise<TrackedPhrase[]> {
     return this.ormRepository.find({
-      where: conditions,
+      where: conditions
     });
   }
 
@@ -35,11 +31,9 @@ export default class TrackedPhrasesRepository
     return this.ormRepository.find();
   }
 
-  public async findOne(
-    conditions: IFindTrackedPhraseDTO,
-  ): Promise<TrackedPhrase> {
+  public async findOne(conditions: IFindTrackedPhraseDTO): Promise<TrackedPhrase> {
     return this.ormRepository.findOne({
-      where: conditions,
+      where: conditions
     });
   }
 

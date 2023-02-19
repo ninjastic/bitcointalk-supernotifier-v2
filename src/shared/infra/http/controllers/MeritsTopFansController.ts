@@ -21,7 +21,7 @@ export default class MeritsTopFriendsController {
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
       order: Joi.string().allow('asc', 'desc').insensitive(),
-      limit: Joi.number(),
+      limit: Joi.number()
     });
 
     try {
@@ -30,7 +30,7 @@ export default class MeritsTopFriendsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -40,7 +40,7 @@ export default class MeritsTopFriendsController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -48,11 +48,9 @@ export default class MeritsTopFriendsController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'MeritsTopFriendsController',
+        controller: 'MeritsTopFriendsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

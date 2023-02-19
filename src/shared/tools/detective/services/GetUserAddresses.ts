@@ -23,11 +23,7 @@ interface Params {
 }
 
 class GetUserAddresses {
-  public async execute({
-    authorUid,
-    boards = [],
-    topics = [5273824],
-  }: Params): Promise<Data> {
+  public async execute({ authorUid, boards = [], topics = [5273824] }: Params): Promise<Data> {
     const queryBuilder = bodybuilder();
 
     queryBuilder.query('match', 'author_uid', authorUid);
@@ -36,16 +32,12 @@ class GetUserAddresses {
     const response = await esClient.search({
       index: 'posts_addresses',
       size: 5000,
-      body,
+      body
     });
 
     const addresses = response.body.hits.hits.map(raw => raw._source);
-    const specified_topics = addresses.filter(entry =>
-      topics.includes(entry.topic_id),
-    );
-    const specified_boards = addresses.filter(entry =>
-      boards.includes(entry.board_id),
-    );
+    const specified_topics = addresses.filter(entry => topics.includes(entry.topic_id));
+    const specified_boards = addresses.filter(entry => boards.includes(entry.board_id));
 
     const data = {
       addresses: {
@@ -62,7 +54,7 @@ class GetUserAddresses {
             return true;
           }
           return false;
-        }),
+        })
       },
       specified_topics: {
         all: specified_topics,
@@ -78,7 +70,7 @@ class GetUserAddresses {
             return true;
           }
           return false;
-        }),
+        })
       },
       specified_boards: {
         all: specified_boards,
@@ -94,8 +86,8 @@ class GetUserAddresses {
             return true;
           }
           return false;
-        }),
-      },
+        })
+      }
     };
 
     return data;

@@ -12,13 +12,11 @@ export default class SavePostService {
     private postsRepository: IPostsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(post: Post): Promise<Post> {
-    const cachedPost = await this.cacheRepository.recover<Post>(
-      `post:${post.post_id}`,
-    );
+    const cachedPost = await this.cacheRepository.recover<Post>(`post:${post.post_id}`);
 
     if (cachedPost) {
       return cachedPost;
@@ -32,12 +30,7 @@ export default class SavePostService {
 
     const savedPost = await this.postsRepository.save(post);
 
-    await this.cacheRepository.save(
-      `post:${post.post_id}`,
-      savedPost,
-      'EX',
-      300,
-    );
+    await this.cacheRepository.save(`post:${post.post_id}`, savedPost, 'EX', 300);
 
     return savedPost;
   }

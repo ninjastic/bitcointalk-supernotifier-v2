@@ -20,7 +20,7 @@ export default class ParseRecentPostElementService {
     private postsRepository: IPostsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(element: cheerio.Element): Promise<Merit> {
@@ -38,9 +38,7 @@ export default class ParseRecentPostElementService {
     const post_id = Number($.html().match(/#msg(\d*)/)[1]);
     const topic_id = Number($.html().match(/topic=(\d*)/)[1]);
 
-    let postExists = await this.cacheRepository.recover<Post>(
-      `post:${post_id}`,
-    );
+    let postExists = await this.cacheRepository.recover<Post>(`post:${post_id}`);
 
     let receiver: string;
     let receiver_uid: number;
@@ -52,12 +50,7 @@ export default class ParseRecentPostElementService {
         receiver = postExists.author;
         receiver_uid = postExists.author_uid;
 
-        await this.cacheRepository.save(
-          `post:${postExists.post_id}`,
-          postExists,
-          'EX',
-          600,
-        );
+        await this.cacheRepository.save(`post:${postExists.post_id}`, postExists, 'EX', 600);
       } else {
         const scrapePostJob = new ScrapePostJob();
         const post = await scrapePostJob.start({ topic_id, post_id });
@@ -65,12 +58,7 @@ export default class ParseRecentPostElementService {
         receiver = post.author;
         receiver_uid = post.author_uid;
 
-        await this.cacheRepository.save(
-          `post:${post.post_id}`,
-          post,
-          'EX',
-          600,
-        );
+        await this.cacheRepository.save(`post:${post.post_id}`, post, 'EX', 600);
       }
     } else {
       receiver = postExists.author;
@@ -88,7 +76,7 @@ export default class ParseRecentPostElementService {
       topic_id,
       notified: false,
       notified_to: [],
-      checked: false,
+      checked: false
     });
 
     return merit;

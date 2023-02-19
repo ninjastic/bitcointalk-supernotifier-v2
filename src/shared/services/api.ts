@@ -4,7 +4,7 @@ import { add, isBefore } from 'date-fns';
 import UserAgent from 'user-agents';
 
 const MAX_REQUESTS_COUNT = 1;
-const INTERVAL_MS = 900;
+const INTERVAL_MS = 1000;
 let PENDING_REQUESTS = 0;
 let WAITING = false;
 let LAST_REQUEST = null;
@@ -15,42 +15,40 @@ export const api = axios.create({
   headers: {
     Cookie: process.env.BITCOINTALK_COOKIE || '',
     'User-Agent': new UserAgent().toString(),
-    'Cache-Control': 'no-cache',
+    'Cache-Control': 'no-cache'
   },
-  responseType: 'arraybuffer',
+  responseType: 'arraybuffer'
 });
 
 export const uptimeApi = axios.create({
-  baseURL: 'https://betteruptime.com/api/v1',
+  baseURL: 'https://betteruptime.com/api/v1'
 });
 
-api.interceptors.request.use(config => {
-  return new Promise(resolve => {
-    const interval = setInterval(() => {
-      const NEXT_ALLOWED_REQUEST = add(LAST_REQUEST, {
-        seconds: INTERVAL_MS / 1000,
-      });
+api.interceptors.request.use(
+  config =>
+    new Promise(resolve => {
+      const interval = setInterval(() => {
+        const NEXT_ALLOWED_REQUEST = add(LAST_REQUEST, {
+          seconds: INTERVAL_MS / 1000
+        });
 
-      if (
-        config.url === 'index.php?action=recent' &&
-        isBefore(NEXT_ALLOWED_REQUEST, LAST_REQUEST)
-      ) {
-        WAITING = true;
-        PENDING_REQUESTS += 1;
-        LAST_REQUEST = new Date();
+        if (config.url === 'index.php?action=recent' && isBefore(NEXT_ALLOWED_REQUEST, LAST_REQUEST)) {
+          WAITING = true;
+          PENDING_REQUESTS += 1;
+          LAST_REQUEST = new Date();
 
-        clearInterval(interval);
-        resolve(config);
-      } else if (PENDING_REQUESTS < MAX_REQUESTS_COUNT && !WAITING) {
-        PENDING_REQUESTS += 1;
-        LAST_REQUEST = new Date();
+          clearInterval(interval);
+          resolve(config);
+        } else if (PENDING_REQUESTS < MAX_REQUESTS_COUNT && !WAITING) {
+          PENDING_REQUESTS += 1;
+          LAST_REQUEST = new Date();
 
-        clearInterval(interval);
-        resolve(config);
-      }
-    }, INTERVAL_MS);
-  });
-});
+          clearInterval(interval);
+          resolve(config);
+        }
+      }, INTERVAL_MS);
+    })
+);
 
 api.interceptors.response.use(
   response => {
@@ -71,7 +69,7 @@ api.interceptors.response.use(
     WAITING = false;
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export default api;

@@ -21,57 +21,49 @@ export const createPostMenu = async (): Promise<void> =>
         name: 'title',
         message: `Title of the post`,
         initial: 'This is a post',
-        validate: value => value,
+        validate: value => value
       },
       {
         type: 'input',
         name: 'content',
         message: 'Content of the post',
         initial: 'Hello @TryNinja!',
-        validate: value => value,
+        validate: value => value
       },
       {
         type: 'input',
         name: 'author',
         message: 'Author of the post',
         initial: 'satoshi',
-        validate: value => value,
+        validate: value => value
       },
       {
         type: 'input',
         name: 'author_uid',
         message: 'Author UID of the post',
         initial: '3',
-        validate: value => {
-          return value && !Number.isNaN(Number(value));
-        },
+        validate: value => value && !Number.isNaN(Number(value))
       },
       {
         type: 'input',
         name: 'board_id',
         message: 'Board ID of the post',
         initial: '24',
-        validate: value => {
-          return value && !Number.isNaN(Number(value));
-        },
+        validate: value => value && !Number.isNaN(Number(value))
       },
       {
         type: 'input',
         name: 'post_id',
         message: 'ID of the post (optional)',
-        validate: value => {
-          return !Number.isNaN(Number(value));
-        },
+        validate: value => !Number.isNaN(Number(value))
       },
       {
         type: 'input',
         name: 'topic_id',
         message: 'Topic ID of the post',
         initial: '5248878',
-        validate: value => {
-          return value && !Number.isNaN(Number(value));
-        },
-      },
+        validate: value => value && !Number.isNaN(Number(value))
+      }
     ])
     .then(async response => {
       const randomId = Math.floor(Math.random() * Math.floor(10000));
@@ -85,7 +77,7 @@ export const createPostMenu = async (): Promise<void> =>
         notified_to: [],
         checked: false,
         boards: [],
-        archive: false,
+        archive: false
       } as Post;
 
       const createdPost = createPost.execute(post);
@@ -99,7 +91,7 @@ export const createPostMenu = async (): Promise<void> =>
           type: 'confirm',
           name: 'choice',
           message: 'Insert into database?',
-          default: false,
+          default: false
         })
         .catch(() => process.exit())) as { choice: boolean };
 

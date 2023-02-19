@@ -2,9 +2,7 @@ import { getManager } from 'typeorm';
 
 export default class GetBoardsListService {
   public async execute(raw = false): Promise<any[]> {
-    const boards = await getManager().query(
-      'select board_id, name, parent_id from boards;',
-    );
+    const boards = await getManager().query('select board_id, name, parent_id from boards;');
 
     if (raw) {
       return boards;
@@ -13,16 +11,14 @@ export default class GetBoardsListService {
     const organizedBoards = [];
 
     const findAndInsertIntoChildren = (boardsArr, boardToInsert) => {
-      let parentIndex = boardsArr.findIndex(
-        organized => organized.value === boardToInsert.parent_id,
-      );
+      let parentIndex = boardsArr.findIndex(organized => organized.value === boardToInsert.parent_id);
 
       if (parentIndex !== -1) {
         boardsArr[parentIndex].children.push({
           title: boardToInsert.name,
           value: boardToInsert.board_id,
           parent: boardToInsert.parent_id,
-          children: [],
+          children: []
         });
         return;
       }
@@ -32,9 +28,7 @@ export default class GetBoardsListService {
           return false;
         }
 
-        return organized.children.find(child => {
-          return child.parent_id === boardToInsert.board_id;
-        });
+        return organized.children.find(child => child.parent_id === boardToInsert.board_id);
       });
 
       if (parentIndex !== -1) {
@@ -42,7 +36,7 @@ export default class GetBoardsListService {
           title: boardToInsert.name,
           value: boardToInsert.board_id,
           parent: boardToInsert.parent_id,
-          children: [],
+          children: []
         });
       }
 
@@ -59,7 +53,7 @@ export default class GetBoardsListService {
           title: board.name,
           value: board.board_id,
           parent_id: board.parent_id,
-          children: [],
+          children: []
         });
       }
 

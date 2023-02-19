@@ -9,12 +9,10 @@ import IAddressesRepository from '../repositories/IAddressesRepository';
 export default class GetAddressService {
   constructor(
     @inject('AddressesRepository')
-    private addressesRepository: IAddressesRepository,
+    private addressesRepository: IAddressesRepository
   ) {}
 
-  public async execute(
-    conditions: IFindAddressesConditionsDTO,
-  ): Promise<Address[]> {
+  public async execute(conditions: IFindAddressesConditionsDTO): Promise<Address[]> {
     const limit = Math.min(conditions.limit || 20, 200);
 
     return this.addressesRepository.findAddresses(conditions, limit);

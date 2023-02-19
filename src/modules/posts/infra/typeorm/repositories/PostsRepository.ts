@@ -39,10 +39,10 @@ export default class PostsRepository implements IPostsRepository {
       where: {
         checked: false,
         archive: false,
-        date: MoreThanOrEqual(sub(new Date(), { minutes: 30 })),
+        date: MoreThanOrEqual(sub(new Date(), { minutes: 30 }))
       },
       order: { post_id: 'DESC' },
-      take: limit,
+      take: limit
     });
   }
 
@@ -53,20 +53,17 @@ export default class PostsRepository implements IPostsRepository {
       body: {
         query: {
           match: {
-            topic_id,
-          },
+            topic_id
+          }
         },
-        sort: [{ date: { order: 'DESC' } }],
-      },
+        sort: [{ date: { order: 'DESC' } }]
+      }
     });
 
     return results;
   }
 
-  public async findPostsByAuthor(
-    author: string,
-    limit: number,
-  ): Promise<ApiResponse> {
+  public async findPostsByAuthor(author: string, limit: number): Promise<ApiResponse> {
     const actual_limit = Math.min(limit || 20, 200);
 
     const results = await esClient.search<Post>({
@@ -76,19 +73,17 @@ export default class PostsRepository implements IPostsRepository {
       body: {
         query: {
           match: {
-            author,
-          },
+            author
+          }
         },
-        sort: [{ date: { order: 'DESC' } }],
-      },
+        sort: [{ date: { order: 'DESC' } }]
+      }
     });
 
     return results;
   }
 
-  public async findPostsES(
-    conditions: IFindPostsConditionsDTO,
-  ): Promise<ApiResponse<Post>> {
+  public async findPostsES(conditions: IFindPostsConditionsDTO): Promise<ApiResponse<Post>> {
     const {
       author,
       author_uid,
@@ -102,7 +97,7 @@ export default class PostsRepository implements IPostsRepository {
       after_date,
       before_date,
       limit,
-      order,
+      order
     } = conditions;
 
     const must = [];
@@ -110,16 +105,16 @@ export default class PostsRepository implements IPostsRepository {
     if (author) {
       must.push({
         match_phrase: {
-          author: author.toLowerCase(),
-        },
+          author: author.toLowerCase()
+        }
       });
     }
 
     if (author_uid) {
       must.push({
         match: {
-          author_uid,
-        },
+          author_uid
+        }
       });
     }
 
@@ -128,8 +123,8 @@ export default class PostsRepository implements IPostsRepository {
         simple_query_string: {
           fields: ['content'],
           query: content,
-          default_operator: 'AND',
-        },
+          default_operator: 'AND'
+        }
       });
     }
 
@@ -138,8 +133,8 @@ export default class PostsRepository implements IPostsRepository {
         simple_query_string: {
           fields: ['title'],
           query: title,
-          default_operator: 'AND',
-        },
+          default_operator: 'AND'
+        }
       });
     }
 
@@ -152,23 +147,20 @@ export default class PostsRepository implements IPostsRepository {
         range: {
           post_id: {
             gt: Number(after) ? after : null,
-            lt: Number(last) ? last : null,
-          },
-        },
+            lt: Number(last) ? last : null
+          }
+        }
       });
     }
 
     if (after_date || before_date) {
       must.push({
-        range: { date: { gte: after_date || null, lte: before_date || null } },
+        range: { date: { gte: after_date || null, lte: before_date || null } }
       });
     }
 
     if (board) {
-      if (
-        child_boards &&
-        (child_boards === '1' || child_boards.toLowerCase() === 'true')
-      ) {
+      if (child_boards && (child_boards === '1' || child_boards.toLowerCase() === 'true')) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
 
@@ -185,27 +177,18 @@ export default class PostsRepository implements IPostsRepository {
       body: {
         query: {
           bool: {
-            must,
-          },
+            must
+          }
         },
-        sort: [{ date: { order: order || 'DESC' } }],
-      },
+        sort: [{ date: { order: order || 'DESC' } }]
+      }
     });
 
     return results;
   }
 
   public async findPosts(conditions: IFindPostsConditionsDTO): Promise<Post[]> {
-    const {
-      author,
-      topic_id,
-      last,
-      after,
-      after_date,
-      before_date,
-      limit,
-      order,
-    } = conditions;
+    const { author, topic_id, last, after, after_date, before_date, limit, order } = conditions;
 
     return this.ormRepository
       .createQueryBuilder('posts')
@@ -218,23 +201,23 @@ export default class PostsRepository implements IPostsRepository {
         'posts.content',
         'posts.date',
         'posts.boards',
-        'posts.archive',
+        'posts.archive'
       ])
       .where(author ? `lower(author) = :author` : '1=1', {
-        author: author ? author.toLowerCase() : undefined,
+        author: author ? author.toLowerCase() : undefined
       })
       .andWhere(last ? `post_id < :last` : '1=1', {
-        last,
+        last
       })
       .andWhere(after ? `post_id > :after` : '1=1', {
-        after,
+        after
       })
       .andWhere(topic_id ? `topic_id = :topic_id` : '1=1', { topic_id })
       .andWhere(after_date ? `date >= :after_date` : '1=1', {
-        after_date,
+        after_date
       })
       .andWhere(before_date ? `date <= :before_date` : '1=1', {
-        before_date,
+        before_date
       })
       .addOrderBy('post_id', order || 'DESC')
       .limit(limit)
@@ -256,7 +239,7 @@ export default class PostsRepository implements IPostsRepository {
       .createQueryBuilder('posts')
       .select(['*'])
       .where(`posts.post_id = any(:ids::int4[])`, {
-        ids: `{${ids}}`,
+        ids: `{${ids}}`
       })
       .execute();
   }
@@ -269,11 +252,11 @@ export default class PostsRepository implements IPostsRepository {
       body: {
         query: {
           terms: {
-            post_id: ids,
-          },
+            post_id: ids
+          }
         },
-        sort: [{ date: { order: 'DESC' } }],
-      },
+        sort: [{ date: { order: 'DESC' } }]
+      }
     });
 
     const data = results.body.hits.hits.map(post => {
@@ -290,7 +273,7 @@ export default class PostsRepository implements IPostsRepository {
         board_id: postData.board_id,
         archive: postData.archive,
         created_at: postData.created_at,
-        updated_at: postData.updated_at,
+        updated_at: postData.updated_at
       };
     });
 

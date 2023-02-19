@@ -18,13 +18,10 @@ import ParseRecentPostElementService from '../../../services/ParseRecentPostElem
 export default class ScrapePostsRepository implements IScrapePostsRepository {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async scrapePost({
-    topic_id,
-    post_id,
-  }: ScrapePostDTO): Promise<Post | undefined> {
+  public async scrapePost({ topic_id, post_id }: ScrapePostDTO): Promise<Post | undefined> {
     const scrapePostService = container.resolve(ScrapePostService);
 
     const post = await scrapePostService.execute({ topic_id, post_id });
@@ -45,13 +42,9 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
 
     const posts = await scrapeRecent.execute();
 
-    const valuesToRecover = posts.map(post => {
-      return `post:${post.post_id}`;
-    });
+    const valuesToRecover = posts.map(post => `post:${post.post_id}`);
 
-    const cached = await this.cacheRepository.recoverMany<Post>(
-      valuesToRecover,
-    );
+    const cached = await this.cacheRepository.recoverMany<Post>(valuesToRecover);
 
     const operations = [];
 
@@ -85,7 +78,7 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
         key: `post:${post.post_id}`,
         value: post,
         arg: 'EX',
-        time: 300,
+        time: 300
       });
     });
 
@@ -103,12 +96,12 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
             value: {
               time: date,
               topic_id: post.topic_id,
-              post_id: post.post_id,
+              post_id: post.post_id
             },
             arg: 'EX',
-            time: '1800',
+            time: '1800'
           });
-        }),
+        })
       );
 
       await this.cacheRepository.saveMany(scrapeForChangesJobs);
@@ -116,9 +109,7 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
   }
 
   public parseRecentPostElement(element: cheerio.Element): Post {
-    const parseRecentPostElement = container.resolve(
-      ParseRecentPostElementService,
-    );
+    const parseRecentPostElement = container.resolve(ParseRecentPostElementService);
 
     const post = parseRecentPostElement.execute(element);
 

@@ -17,35 +17,24 @@ interface Data {
 
 export default class GetPostsAuthorsService {
   public async execute(query: IFindPostsConditionsDTO): Promise<Data> {
-    const {
-      author,
-      author_uid,
-      content,
-      topic_id,
-      board,
-      child_boards,
-      last,
-      after,
-      after_date,
-      before_date,
-      limit,
-    } = query || {};
+    const { author, author_uid, content, topic_id, board, child_boards, last, after, after_date, before_date, limit } =
+      query || {};
 
     const must = [];
 
     if (author) {
       must.push({
         match_phrase: {
-          author: author.toLowerCase(),
-        },
+          author: author.toLowerCase()
+        }
       });
     }
 
     if (author_uid) {
       must.push({
         match: {
-          author_uid,
-        },
+          author_uid
+        }
       });
     }
 
@@ -54,9 +43,9 @@ export default class GetPostsAuthorsService {
         match: {
           content: {
             query: content,
-            minimum_should_match: '100%',
-          },
-        },
+            minimum_should_match: '100%'
+          }
+        }
       });
     }
 
@@ -69,23 +58,20 @@ export default class GetPostsAuthorsService {
         range: {
           post_id: {
             gt: Number(after) ? after : null,
-            lt: Number(last) ? last : null,
-          },
-        },
+            lt: Number(last) ? last : null
+          }
+        }
       });
     }
 
     if (after_date || before_date) {
       must.push({
-        range: { date: { gte: after_date || null, lte: before_date || null } },
+        range: { date: { gte: after_date || null, lte: before_date || null } }
       });
     }
 
     if (board) {
-      if (
-        child_boards &&
-        (child_boards === '1' || child_boards.toLowerCase() === 'true')
-      ) {
+      if (child_boards && (child_boards === '1' || child_boards.toLowerCase() === 'true')) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
 
@@ -102,38 +88,36 @@ export default class GetPostsAuthorsService {
       body: {
         query: {
           bool: {
-            must,
-          },
+            must
+          }
         },
         aggs: {
           authors: {
             terms: {
               field: 'author.keyword',
-              size: Math.min(limit || 1000, 10000000),
+              size: Math.min(limit || 1000, 10000000)
             },
             aggs: {
               author_uid: {
                 terms: {
-                  field: 'author_uid',
-                },
-              },
-            },
-          },
-        },
-      },
+                  field: 'author_uid'
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
-    const authors = results.body.aggregations.authors.buckets.map(record => {
-      return {
-        author: record.key,
-        author_uid: record.author_uid.buckets[0].key,
-        count: record.doc_count,
-      };
-    });
+    const authors = results.body.aggregations.authors.buckets.map(record => ({
+      author: record.key,
+      author_uid: record.author_uid.buckets[0].key,
+      count: record.doc_count
+    }));
 
     const response = {
       total_results: authors.length,
-      authors,
+      authors
     };
 
     return response;

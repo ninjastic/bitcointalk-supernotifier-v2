@@ -1,8 +1,6 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class AddAuthorsColumnToAddresses1600170928562
-  implements MigrationInterface
-{
+export class AddAuthorsColumnToAddresses1600170928562 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.addColumn(
       'addresses',
@@ -10,8 +8,8 @@ export class AddAuthorsColumnToAddresses1600170928562
         name: 'authors',
         type: 'varchar',
         isArray: true,
-        isNullable: true,
-      }),
+        isNullable: true
+      })
     );
 
     await queryRunner.addColumn(
@@ -20,8 +18,8 @@ export class AddAuthorsColumnToAddresses1600170928562
         name: 'authors_uid',
         type: 'integer',
         isArray: true,
-        isNullable: true,
-      }),
+        isNullable: true
+      })
     );
 
     await queryRunner.query(`
@@ -34,11 +32,11 @@ export class AddAuthorsColumnToAddresses1600170928562
     language sql IMMUTABLE;`);
 
     await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS addresses_authors_idx on addresses USING GIN(array_lowercase(authors));`,
+      `CREATE INDEX IF NOT EXISTS addresses_authors_idx on addresses USING GIN(array_lowercase(authors));`
     );
 
     await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS addresses_authors_uid_idx on addresses USING GIN(authors_uid);`,
+      `CREATE INDEX IF NOT EXISTS addresses_authors_uid_idx on addresses USING GIN(authors_uid);`
     );
   }
 

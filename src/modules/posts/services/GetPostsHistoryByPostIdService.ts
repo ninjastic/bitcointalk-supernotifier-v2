@@ -8,7 +8,7 @@ import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 export default class GetPostsHistoryByPostIdService {
   constructor(
     @inject('PostsHistoryRepository')
-    private postsHistoryRepository: IPostsHistoryRepository,
+    private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
   public async execute({ post_id }: { post_id: number }): Promise<PostHistory> {

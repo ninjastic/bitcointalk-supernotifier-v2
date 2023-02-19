@@ -12,15 +12,11 @@ export default class RemoveIgnoredUserService {
     private ignoredUserRepository: IIgnoredUserRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(
-    username: string,
-    telegram_id?: number,
-  ): Promise<IgnoredUser> {
-    const ignoredUserExists =
-      await this.ignoredUserRepository.findOneByUsername(username);
+  public async execute(username: string, telegram_id?: number): Promise<IgnoredUser> {
+    const ignoredUserExists = await this.ignoredUserRepository.findOneByUsername(username);
 
     if (!ignoredUserExists) {
       throw new Error('Ignored user does not exist.');

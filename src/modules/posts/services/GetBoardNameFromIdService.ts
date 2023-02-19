@@ -7,13 +7,11 @@ import ICacheProvider from '../../../shared/container/providers/models/ICachePro
 export default class GetBoardNameFromIdService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(board_id: number): Promise<string | undefined> {
-    const cachedData = await this.cacheRepository.recover<string>(
-      `boardName:${board_id}`,
-    );
+    const cachedData = await this.cacheRepository.recover<string>(`boardName:${board_id}`);
 
     if (cachedData) {
       return cachedData;

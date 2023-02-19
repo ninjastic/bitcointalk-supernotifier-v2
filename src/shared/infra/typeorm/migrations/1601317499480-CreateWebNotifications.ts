@@ -11,48 +11,48 @@ export class CreateWebNotifications1601317499480 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid',
+            generationStrategy: 'uuid'
           },
           {
             name: 'user_id',
-            type: 'uuid',
+            type: 'uuid'
           },
           {
             name: 'post_id',
             type: 'integer',
-            isNullable: true,
+            isNullable: true
           },
           {
             name: 'merit_id',
             type: 'uuid',
-            isNullable: true,
+            isNullable: true
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()',
+            default: 'now()'
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()',
-          },
+            default: 'now()'
+          }
         ],
         foreignKeys: [
           {
             columnNames: ['post_id'],
             referencedTableName: 'posts',
             referencedColumnNames: ['post_id'],
-            onUpdate: 'CASCADE',
+            onUpdate: 'CASCADE'
           },
           {
             columnNames: ['merit_id'],
             referencedTableName: 'merits',
             referencedColumnNames: ['id'],
-            onUpdate: 'CASCADE',
-          },
-        ],
-      }),
+            onUpdate: 'CASCADE'
+          }
+        ]
+      })
     );
   }
 

@@ -12,13 +12,11 @@ export default class GetTrackedTopicsService {
     private trackedTopicsRepository: ITrackedTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(): Promise<TrackedTopic[]> {
-    const cachedTrackedTopics = await this.cacheRepository.recover<
-      TrackedTopic[]
-    >('trackedTopics');
+    const cachedTrackedTopics = await this.cacheRepository.recover<TrackedTopic[]>('trackedTopics');
 
     if (cachedTrackedTopics) {
       return cachedTrackedTopics;

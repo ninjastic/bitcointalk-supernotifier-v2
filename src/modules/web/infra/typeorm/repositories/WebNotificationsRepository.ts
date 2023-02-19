@@ -6,9 +6,7 @@ import ICreateWebNotificationDTO from '../../../dtos/ICreateWebNotificationDTO';
 
 import IWebNotificationsRepository from '../../../repositories/IWebNotificationsRepository';
 
-export default class WebNotificationsRepository
-  implements IWebNotificationsRepository
-{
+export default class WebNotificationsRepository implements IWebNotificationsRepository {
   private ormRepository: Repository<WebNotification>;
 
   constructor() {
@@ -19,38 +17,34 @@ export default class WebNotificationsRepository
     return this.ormRepository.create(data);
   }
 
-  public async save(
-    webNotification: WebNotification,
-  ): Promise<WebNotification> {
+  public async save(webNotification: WebNotification): Promise<WebNotification> {
     return this.ormRepository.save(webNotification);
   }
 
-  public async findOneByUsername(
-    username: string,
-  ): Promise<WebNotification | undefined> {
+  public async findOneByUsername(username: string): Promise<WebNotification | undefined> {
     return this.ormRepository.findOne({
       where: {
-        username: username.toLowerCase(),
+        username: username.toLowerCase()
       },
-      relations: ['post', 'merit'],
+      relations: ['post', 'merit']
     });
   }
 
   public async findAll(): Promise<WebNotification[]> {
     return this.ormRepository.find({
-      relations: ['post', 'merit'],
+      relations: ['post', 'merit']
     });
   }
 
   public async findAllByUserId(user_id: string): Promise<WebNotification[]> {
     return this.ormRepository.find({
       where: {
-        user_id,
+        user_id
       },
       relations: ['post', 'merit', 'merit.post'],
       order: {
-        created_at: 'DESC',
-      },
+        created_at: 'DESC'
+      }
     });
   }
 }

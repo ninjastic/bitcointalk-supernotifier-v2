@@ -13,15 +13,11 @@ export default class AddressesController {
 
     const params = request.params as unknown as { address: string };
 
-    const addressRegex = new RegExp(
-      /0x[a-fA-F0-9]{40}|(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/,
-    );
+    const addressRegex =
+      /0x[a-fA-F0-9]{40}|(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/;
 
     const schemaValidation = Joi.object({
-      address: Joi.string()
-        .regex(addressRegex)
-        .message('Address is invalid')
-        .required(),
+      address: Joi.string().regex(addressRegex).message('Address is invalid').required()
     });
 
     try {
@@ -30,7 +26,7 @@ export default class AddressesController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -40,7 +36,7 @@ export default class AddressesController {
       const result = {
         result: 'success',
         message: null,
-        data: data || null,
+        data: data || null
       };
 
       return response.json(result);
@@ -48,11 +44,9 @@ export default class AddressesController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'AddressesController',
+        controller: 'AddressesController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 
@@ -71,7 +65,7 @@ export default class AddressesController {
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       last: Joi.number(),
       order: Joi.string().valid('ASC', 'DESC').insensitive(),
-      limit: Joi.number(),
+      limit: Joi.number()
     });
 
     try {
@@ -80,7 +74,7 @@ export default class AddressesController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -90,7 +84,7 @@ export default class AddressesController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -98,11 +92,9 @@ export default class AddressesController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'AddressesController',
+        controller: 'AddressesController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

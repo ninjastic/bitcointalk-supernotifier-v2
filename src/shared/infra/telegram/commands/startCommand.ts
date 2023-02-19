@@ -1,20 +1,12 @@
-import { Context } from 'telegraf/typings';
+import { ConversationFlavor } from '@grammyjs/conversations';
+import { CommandContext } from 'grammy';
 
-import bot from '../index';
+import IMenuContext from '../@types/IMenuContext';
 
-import ISession from '../@types/ISession';
+const startCommand = async (ctx: ConversationFlavor & CommandContext<IMenuContext>): Promise<void> => {
+  await ctx.reply('Hello! Welcome to the BitcoinTalk SuperNotifier V2!');
 
-interface StartContext extends Context {
-  session: ISession;
-}
-
-const startCommand = async (ctx: StartContext): Promise<void> => {
-  await ctx.reply(`Hello! Welcome to the BitcoinTalk SuperNotifier V2!`);
-  await ctx.reply('What is your BitcoinTalk username?');
-
-  ctx.session.waitingForUsername = true;
-  ctx.session.waitingForUserId = false;
-  await bot.session.saveSession(bot.session.getSessionKey(ctx), ctx.session);
+  await ctx.conversation.enter('setup', { overwrite: true });
 };
 
 export default startCommand;

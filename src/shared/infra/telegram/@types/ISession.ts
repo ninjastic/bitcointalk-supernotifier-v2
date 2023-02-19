@@ -1,14 +1,12 @@
-import { TelegrafContext } from 'telegraf/typings/context';
+import { Context } from 'grammy';
 
-export default interface ISession extends TelegrafContext {
-  waitingForUsername: boolean;
-  waitingForUserId: boolean;
+export default interface ISession extends Context {
   username: string;
   userId: number;
   mentions: boolean;
   merits: boolean;
   modlogs: boolean;
   alternative_usernames: Array<string>;
-  page: number;
   addTrackedTopicUserTopicId: number;
+  page: number;
 }

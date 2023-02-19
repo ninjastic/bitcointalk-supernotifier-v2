@@ -6,9 +6,7 @@ import ITrackedTopicUsersRepository from '../../../repositories/ITrackedTopicUse
 import ICreateTrackedTopicUserDTO from '../../../dtos/ICreateTrackedTopicUserDTO';
 import IFindTrackedTopicUsersDTO from '../../../dtos/IFindTrackedTopicUserDTO';
 
-export default class TrackedTopicUsersRepository
-  implements ITrackedTopicUsersRepository
-{
+export default class TrackedTopicUsersRepository implements ITrackedTopicUsersRepository {
   private ormRepository: Repository<TrackedTopicUser>;
 
   constructor() {
@@ -19,31 +17,23 @@ export default class TrackedTopicUsersRepository
     return this.ormRepository.create(data);
   }
 
-  public async save(
-    trackedTopicUser: TrackedTopicUser,
-  ): Promise<TrackedTopicUser> {
+  public async save(trackedTopicUser: TrackedTopicUser): Promise<TrackedTopicUser> {
     return this.ormRepository.save(trackedTopicUser);
   }
 
-  public async find(
-    conditions: IFindTrackedTopicUsersDTO,
-  ): Promise<TrackedTopicUser[]> {
+  public async find(conditions: IFindTrackedTopicUsersDTO): Promise<TrackedTopicUser[]> {
     return this.ormRepository.find({
-      where: conditions,
+      where: conditions
     });
   }
 
-  public async findOne(
-    conditions: IFindTrackedTopicUsersDTO,
-  ): Promise<TrackedTopicUser> {
+  public async findOne(conditions: IFindTrackedTopicUsersDTO): Promise<TrackedTopicUser> {
     return this.ormRepository.findOne({
-      where: conditions,
+      where: conditions
     });
   }
 
-  public async delete(
-    trackedTopicUser: TrackedTopicUser,
-  ): Promise<DeleteResult> {
+  public async delete(trackedTopicUser: TrackedTopicUser): Promise<DeleteResult> {
     return this.ormRepository.delete({ id: trackedTopicUser.id });
   }
 }

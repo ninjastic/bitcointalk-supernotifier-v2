@@ -6,13 +6,13 @@ import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 export default class SetPostHistoryNotifiedService {
   constructor(
     @inject('PostsHistoryRepository')
-    private postsHistoryRepository: IPostsHistoryRepository,
+    private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
   public async execute(post_id: number, telegram_id: number): Promise<void> {
     const postHistory = await this.postsHistoryRepository.findOne({
       post_id,
-      version: 1,
+      version: 1
     });
 
     postHistory.notified = true;

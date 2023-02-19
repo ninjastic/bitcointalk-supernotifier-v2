@@ -16,7 +16,7 @@ export default class CompareUserController {
 
     const schemaValidation = Joi.object({
       firstAuthorUid: Joi.number().required(),
-      secondAuthorUid: Joi.number().required(),
+      secondAuthorUid: Joi.number().required()
     });
 
     try {
@@ -25,14 +25,11 @@ export default class CompareUserController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
-    const data = await compareUsersService.execute(
-      firstAuthorUid,
-      secondAuthorUid,
-    );
+    const data = await compareUsersService.execute(firstAuthorUid, secondAuthorUid);
 
     return response.send(data);
   }

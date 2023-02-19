@@ -19,18 +19,11 @@ interface Data {
 }
 
 export default class GetUserPostsOnPeriodService {
-  public async execute({
-    author_uid,
-    from,
-    to,
-    interval,
-  }: Params): Promise<Data> {
+  public async execute({ author_uid, from, to, interval }: Params): Promise<Data> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute<Data>(
-      `userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`,
-    );
+    const cachedData = await getCache.execute<Data>(`userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`);
 
     if (cachedData) {
       return cachedData;
@@ -49,25 +42,25 @@ export default class GetUserPostsOnPeriodService {
             must: [
               {
                 match: {
-                  author_uid,
-                },
+                  author_uid
+                }
               },
               {
                 range: {
                   date: {
                     from,
-                    to,
-                  },
-                },
-              },
-            ],
-          },
+                    to
+                  }
+                }
+              }
+            ]
+          }
         },
         aggs: {
           posts: {
             value_count: {
-              field: 'post_id',
-            },
+              field: 'post_id'
+            }
           },
           date: {
             date_histogram: {
@@ -75,22 +68,17 @@ export default class GetUserPostsOnPeriodService {
               calendar_interval: interval,
               extended_bounds: {
                 min: from,
-                max: to,
-              },
-            },
-          },
-        },
-      },
+                max: to
+              }
+            }
+          }
+        }
+      }
     });
 
     const data = results.body.aggregations.date.buckets;
 
-    await saveCache.execute(
-      `userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`,
-      data,
-      'EX',
-      180,
-    );
+    await saveCache.execute(`userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`, data, 'EX', 180);
 
     return data;
   }

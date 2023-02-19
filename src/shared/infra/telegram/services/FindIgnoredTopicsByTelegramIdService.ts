@@ -12,25 +12,19 @@ export default class FindIgnoredTopicsByTelegramIdService {
     private ignoredTopicsRepository: IIgnoredTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(telegram_id: number): Promise<IgnoredTopic[]> {
-    const cachedIgnoredTopics = await this.cacheRepository.recover<
-      IgnoredTopic[]
-    >(`ignoredTopics:${telegram_id}`);
+    const cachedIgnoredTopics = await this.cacheRepository.recover<IgnoredTopic[]>(`ignoredTopics:${telegram_id}`);
 
     if (cachedIgnoredTopics) {
       return cachedIgnoredTopics;
     }
 
-    const ignoredTopics =
-      await this.ignoredTopicsRepository.findAllByTelegramId(telegram_id);
+    const ignoredTopics = await this.ignoredTopicsRepository.findAllByTelegramId(telegram_id);
 
-    await this.cacheRepository.save(
-      `ignoredTopics:${telegram_id}`,
-      ignoredTopics,
-    );
+    await this.cacheRepository.save(`ignoredTopics:${telegram_id}`, ignoredTopics);
 
     return ignoredTopics;
   }

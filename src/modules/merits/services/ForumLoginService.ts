@@ -17,7 +17,7 @@ export default class LoginService {
 
     const response = await fetch(
       `https://bitcointalk.org/index.php?action=login2;ccode=${process.env.BITCOINTALK_BYPASS_CAPTCHA_CODE}`,
-      { method: 'POST', body: bodyFormData, redirect: 'manual' },
+      { method: 'POST', body: bodyFormData, redirect: 'manual' }
     );
 
     const cookies = response.headers.raw()['set-cookie'];

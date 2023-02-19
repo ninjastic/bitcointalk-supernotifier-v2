@@ -12,13 +12,13 @@ export default class CreateTrackedTopicUserService {
     private trackedTopicUsersRepository: ITrackedTopicUsersRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute({
     username,
     telegram_id,
-    topic_id,
+    topic_id
   }: {
     username: string;
     telegram_id: number;
@@ -27,7 +27,7 @@ export default class CreateTrackedTopicUserService {
     const exists = await this.trackedTopicUsersRepository.findOne({
       telegram_id,
       tracked_topic_id: topic_id,
-      username,
+      username
     });
 
     if (exists) {
@@ -37,14 +37,12 @@ export default class CreateTrackedTopicUserService {
     const trackedTopicUser = this.trackedTopicUsersRepository.create({
       telegram_id,
       tracked_topic_id: topic_id,
-      username,
+      username
     });
 
     await this.trackedTopicUsersRepository.save(trackedTopicUser);
 
-    await this.cacheRepository.invalidateByPrefix(
-      `trackedTopics:${telegram_id}:*`,
-    );
+    await this.cacheRepository.invalidateByPrefix(`trackedTopics:${telegram_id}:*`);
 
     return trackedTopicUser;
   }

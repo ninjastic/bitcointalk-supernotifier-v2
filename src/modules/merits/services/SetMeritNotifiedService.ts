@@ -7,7 +7,7 @@ import FindMeritDTO from '../dtos/FindMeritDTO';
 export default class SetMeritNotifiedService {
   constructor(
     @inject('MeritsRepository')
-    private meritsRepository: IMeritsRepository,
+    private meritsRepository: IMeritsRepository
   ) {}
 
   public async execute(data: FindMeritDTO, telegram_id: number): Promise<void> {

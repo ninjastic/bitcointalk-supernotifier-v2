@@ -28,9 +28,7 @@ export default class GetTopicsUniqueService {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute<Data>(
-      `users:Topics:${author_uid}:${from}:${to}`,
-    );
+    const cachedData = await getCache.execute<Data>(`users:Topics:${author_uid}:${from}:${to}`);
 
     if (cachedData) {
       return cachedData;
@@ -46,37 +44,32 @@ export default class GetTopicsUniqueService {
             must: [
               {
                 match: {
-                  author_uid,
-                },
+                  author_uid
+                }
               },
               {
                 range: {
-                  date: { gte: from || null, lte: to || null },
-                },
-              },
-            ],
-          },
+                  date: { gte: from || null, lte: to || null }
+                }
+              }
+            ]
+          }
         },
         aggs: {
           unique_topics: {
             cardinality: {
-              field: 'topic_id',
-            },
-          },
-        },
-      },
+              field: 'topic_id'
+            }
+          }
+        }
+      }
     });
 
     const data = {
-      unique_topics: results.body.aggregations.unique_topics.value,
+      unique_topics: results.body.aggregations.unique_topics.value
     };
 
-    await saveCache.execute(
-      `users:Topics:${author_uid}:${from}:${to}`,
-      data,
-      'EX',
-      600,
-    );
+    await saveCache.execute(`users:Topics:${author_uid}:${from}:${to}`, data, 'EX', 600);
 
     return data;
   }

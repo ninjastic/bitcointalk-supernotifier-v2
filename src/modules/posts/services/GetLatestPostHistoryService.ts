@@ -9,7 +9,7 @@ import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 export default class GetLatestPostHistoryService {
   constructor(
     @inject('PostsHistoryRepository')
-    private postsHistoryRepository: IPostsHistoryRepository,
+    private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
   public async execute(query: IFindAllPostsHistoryDTO): Promise<ApiResponse> {
@@ -17,7 +17,7 @@ export default class GetLatestPostHistoryService {
 
     return this.postsHistoryRepository.findAll({
       ...query,
-      limit,
+      limit
     });
   }
 }

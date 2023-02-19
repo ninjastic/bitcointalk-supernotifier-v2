@@ -9,7 +9,7 @@ import CreatePostDTO from '../dtos/CreatePostDTO';
 export default class CreatePostService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository,
+    private postsRepository: IPostsRepository
   ) {}
 
   public execute(post: CreatePostDTO): Post {

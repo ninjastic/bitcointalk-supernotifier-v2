@@ -7,9 +7,7 @@ import IPostsAddressesRepository from '../../../repositories/IPostsAddressesRepo
 import IFindPostAddressesDTO from '../../../dtos/IFindPostAddressesDTO';
 import ICreatePostAddressDTO from '../../../dtos/ICreatePostAddressDTO';
 
-export default class PostsAddressesRepository
-  implements IPostsAddressesRepository
-{
+export default class PostsAddressesRepository implements IPostsAddressesRepository {
   private ormRepository: Repository<PostAddress>;
 
   constructor() {
@@ -31,21 +29,19 @@ export default class PostsAddressesRepository
       where: rest,
       take: limit || 100,
       order: {
-        post_id: order,
-      },
+        post_id: order
+      }
     });
   }
 
-  public async findOne(
-    conditions: IFindPostAddressesDTO,
-  ): Promise<PostAddress | undefined> {
+  public async findOne(conditions: IFindPostAddressesDTO): Promise<PostAddress | undefined> {
     const { order, ...rest } = conditions || {};
 
     return this.ormRepository.findOne({
       where: rest,
       order: {
-        post_id: order,
-      },
+        post_id: order
+      }
     });
   }
 }

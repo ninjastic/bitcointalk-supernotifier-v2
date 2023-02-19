@@ -7,7 +7,5 @@ export default interface IModLogRepository {
   save(modlog: ModLog): Promise<ModLog>;
   findOne(data: FindModLogDTO): Promise<ModLog | undefined>;
   findOneRemoveTopicByTopicId(topic_id: number): Promise<ModLog | undefined>;
-  findUnchecked(
-    type?: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user',
-  ): Promise<ModLog[]>;
+  findUnchecked(type?: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user'): Promise<ModLog[]>;
 }

@@ -22,7 +22,7 @@ export default class MeritsTopUsersController {
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
       order: Joi.string().allow('asc', 'desc').insensitive(),
-      limit: Joi.number(),
+      limit: Joi.number()
     });
 
     try {
@@ -31,7 +31,7 @@ export default class MeritsTopUsersController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -50,28 +50,23 @@ export default class MeritsTopUsersController {
       if (query.after_date) {
         queryBuilder.query('range', {
           date: {
-            gte: query.after_date,
-          },
+            gte: query.after_date
+          }
         });
       }
 
       if (query.before_date) {
         queryBuilder.query('range', {
           date: {
-            lte: query.before_date,
-          },
+            lte: query.before_date
+          }
         });
       }
 
       if (query.board) {
-        if (
-          query.child_boards === '1' ||
-          query.child_boards?.toString().toLowerCase() === 'true'
-        ) {
+        if (query.child_boards === '1' || query.child_boards?.toString().toLowerCase() === 'true') {
           const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
-          const boards = await getBoardChildrensFromId.execute(
-            Number(query.board),
-          );
+          const boards = await getBoardChildrensFromId.execute(Number(query.board));
 
           queryBuilder.query('terms', 'board_id', boards);
         } else {
@@ -79,13 +74,7 @@ export default class MeritsTopUsersController {
         }
       }
 
-      const simpleMatchParams = [
-        'post_id',
-        'topic_id',
-        'receiver_uid',
-        'sender_uid',
-        'amount',
-      ];
+      const simpleMatchParams = ['post_id', 'topic_id', 'receiver_uid', 'sender_uid', 'amount'];
 
       simpleMatchParams.forEach(param => {
         if (query[param]) {
@@ -102,13 +91,10 @@ export default class MeritsTopUsersController {
         {
           size: Math.min(Number(query.limit || 1000), 1000),
           terms: [{ field: 'sender_uid' }, { field: 'receiver_uid' }],
-          order: { count: query.order?.toString() || 'DESC' },
+          order: { count: query.order?.toString() || 'DESC' }
         },
         'topUsers',
-        agg =>
-          agg
-            .aggregation('sum', 'amount', 'count')
-            .aggregation('top_hits', { size: 1 }, 'top_hit'),
+        agg => agg.aggregation('sum', 'amount', 'count').aggregation('top_hits', { size: 1 }, 'top_hit')
       );
 
       const body = queryBuilder.build();
@@ -116,24 +102,22 @@ export default class MeritsTopUsersController {
       const results = await esClient.search({
         index: 'merits',
         track_total_hits: true,
-        body,
+        body
       });
 
-      const data = results.body.aggregations.topUsers.buckets.map(bucket => {
-        return {
-          sender: bucket.top_hit.hits.hits[0]._source.sender,
-          sender_uid: bucket.key[0],
-          receiver: bucket.top_hit.hits.hits[0]._source.receiver,
-          receiver_uid: bucket.key[1],
-          amount: bucket.count.value,
-          num_transactions: bucket.doc_count,
-        };
-      });
+      const data = results.body.aggregations.topUsers.buckets.map(bucket => ({
+        sender: bucket.top_hit.hits.hits[0]._source.sender,
+        sender_uid: bucket.key[0],
+        receiver: bucket.top_hit.hits.hits[0]._source.receiver,
+        receiver_uid: bucket.key[1],
+        amount: bucket.count.value,
+        num_transactions: bucket.doc_count
+      }));
 
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -141,11 +125,9 @@ export default class MeritsTopUsersController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'MeritsTopUsersController',
+        controller: 'MeritsTopUsersController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

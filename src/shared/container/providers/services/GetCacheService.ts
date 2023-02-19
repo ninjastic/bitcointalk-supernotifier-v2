@@ -6,7 +6,7 @@ import ICacheProvider from '../models/ICacheProvider';
 export default class GetCacheService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute<T>(key: string): Promise<T | null> {

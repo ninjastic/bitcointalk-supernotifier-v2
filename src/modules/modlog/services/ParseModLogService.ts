@@ -11,7 +11,7 @@ import CreateModLogDTO from '../dtos/CreateModLogDTO';
 export default class ParseModLogService {
   constructor(
     @inject('ModLogRepository')
-    private modLogRepository: IModLogRepository,
+    private modLogRepository: IModLogRepository
   ) {}
 
   public execute(element: cheerio.Element): ModLog | false {
@@ -52,7 +52,7 @@ export default class ParseModLogService {
       title,
       notified: false,
       notified_to: [],
-      checked: false,
+      checked: false
     } as CreateModLogDTO;
 
     const modLog = this.modLogRepository.create(log);

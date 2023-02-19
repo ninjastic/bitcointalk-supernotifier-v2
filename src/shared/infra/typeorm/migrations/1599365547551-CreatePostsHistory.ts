@@ -11,63 +11,63 @@ export class CreatePostsHistory1599365547551 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid',
+            generationStrategy: 'uuid'
           },
           {
             name: 'post_id',
-            type: 'integer',
+            type: 'integer'
           },
           {
             name: 'title',
-            type: 'varchar',
+            type: 'varchar'
           },
           {
             name: 'content',
-            type: 'varchar',
+            type: 'varchar'
           },
           {
             name: 'boards',
             type: 'varchar',
-            isArray: true,
+            isArray: true
           },
           {
             name: 'date',
-            type: 'timestamp with time zone',
+            type: 'timestamp with time zone'
           },
           {
             name: 'version',
-            type: 'integer',
+            type: 'integer'
           },
           {
             name: 'notified',
             type: 'boolean',
-            default: false,
+            default: false
           },
           {
             name: 'notified_to',
             type: 'integer',
-            isArray: true,
+            isArray: true
           },
           {
             name: 'checked',
             type: 'boolean',
-            default: false,
+            default: false
           },
           {
             name: 'deleted',
             type: 'boolean',
-            default: false,
+            default: false
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()',
+            default: 'now()'
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()',
-          },
+            default: 'now()'
+          }
         ],
         foreignKeys: [
           {
@@ -75,24 +75,24 @@ export class CreatePostsHistory1599365547551 implements MigrationInterface {
             referencedTableName: 'posts',
             referencedColumnNames: ['post_id'],
             onUpdate: 'CASCADE',
-            onDelete: 'CASCADE',
-          },
+            onDelete: 'CASCADE'
+          }
         ],
         indices: [
           {
-            columnNames: ['post_id'],
+            columnNames: ['post_id']
           },
           {
-            columnNames: ['checked'],
+            columnNames: ['checked']
           },
           {
-            columnNames: ['notified_to'],
+            columnNames: ['notified_to']
           },
           {
-            columnNames: ['date'],
-          },
-        ],
-      }),
+            columnNames: ['date']
+          }
+        ]
+      })
     );
   }
 

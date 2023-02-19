@@ -10,7 +10,7 @@ import logger from '../../../shared/services/logger';
 export default class CreateUserService {
   constructor(
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository,
+    private usersRepository: IUsersRepository
   ) {}
 
   public async execute(data: CreateUserDTO): Promise<User> {

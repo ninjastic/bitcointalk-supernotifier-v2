@@ -21,7 +21,7 @@ export default class CheckModLogsService {
     private modLogRepository: IModLogRepository,
 
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository,
+    private usersRepository: IUsersRepository
   ) {}
 
   public async execute(): Promise<void> {
@@ -32,14 +32,12 @@ export default class CheckModLogsService {
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
     });
 
     await Promise.all(
       modLogs.map(async modLog => {
-        const topicPosts = await this.postsRepository.findPostsByTopicId(
-          modLog.topic_id,
-        );
+        const topicPosts = await this.postsRepository.findPostsByTopicId(modLog.topic_id);
 
         await Promise.all(
           users.map(async user => {
@@ -62,13 +60,13 @@ export default class CheckModLogsService {
             return queue.add('sendRemovedTopicNotification', {
               user,
               postsDeleted,
-              modLog,
+              modLog
             });
-          }),
+          })
         );
 
         await setModLogChecked.execute(modLog);
-      }),
+      })
     );
 
     await queue.close();

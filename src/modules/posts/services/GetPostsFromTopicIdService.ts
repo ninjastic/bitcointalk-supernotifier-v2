@@ -6,7 +6,7 @@ import IPostsRepository from '../repositories/IPostsRepository';
 export default class GetPostsFromTopicIdService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository,
+    private postsRepository: IPostsRepository
   ) {}
 
   public async execute({ topic_id }: { topic_id: number }): Promise<any> {
@@ -26,7 +26,7 @@ export default class GetPostsFromTopicIdService {
         board_id: postData.board_id,
         archive: postData.archive,
         created_at: postData.created_at,
-        updated_at: postData.updated_at,
+        updated_at: postData.updated_at
       };
     });
 

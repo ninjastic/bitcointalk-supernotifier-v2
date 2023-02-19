@@ -10,9 +10,7 @@ import GetAddressesTopUniqueService from '../services/GetAddressesTopUniqueServi
 
 export default class AddressesTopUniqueController {
   public async index(request: Request, response: Response): Promise<Response> {
-    const getAddressesTopUnique = container.resolve(
-      GetAddressesTopUniqueService,
-    );
+    const getAddressesTopUnique = container.resolve(GetAddressesTopUniqueService);
 
     const schemaValidation = Joi.object({
       address: Joi.string(),
@@ -22,7 +20,7 @@ export default class AddressesTopUniqueController {
       topic_id: Joi.number(),
       board: Joi.number(),
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
-      limit: Joi.number(),
+      limit: Joi.number()
     });
 
     const query = request.query as unknown;
@@ -33,19 +31,17 @@ export default class AddressesTopUniqueController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
     try {
-      const data = await getAddressesTopUnique.execute(
-        query as IFindPostAddressesDTO,
-      );
+      const data = await getAddressesTopUnique.execute(query as IFindPostAddressesDTO);
 
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -53,11 +49,9 @@ export default class AddressesTopUniqueController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'AddressesTopUniqueController',
+        controller: 'AddressesTopUniqueController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

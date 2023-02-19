@@ -11,16 +11,11 @@ export default class RemoveTrackedTopicService {
     private trackedTopicsRepository: ITrackedTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(
-    topic_id: number,
-    telegram_id?: number,
-  ): Promise<TrackedTopic> {
-    const topicExists = await this.trackedTopicsRepository.findOneByTopicId(
-      topic_id,
-    );
+  public async execute(topic_id: number, telegram_id?: number): Promise<TrackedTopic> {
+    const topicExists = await this.trackedTopicsRepository.findOneByTopicId(topic_id);
 
     if (!topicExists) {
       throw new Error('Tracked topic does not exist.');

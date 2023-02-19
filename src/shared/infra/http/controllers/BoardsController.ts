@@ -17,7 +17,7 @@ export default class BoardsController {
     const query = request.query as unknown as { raw: string };
 
     const schemaValidation = Joi.object({
-      raw: Joi.valid('1', '0', 'true', 'false'),
+      raw: Joi.valid('1', '0', 'true', 'false')
     });
 
     try {
@@ -26,16 +26,14 @@ export default class BoardsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
     const raw = query.raw === '1' || String(query.raw).toLowerCase() === 'true';
 
     try {
-      const savedCache = await getCache.execute(
-        `boards:${raw ? 'raw' : 'organized'}`,
-      );
+      const savedCache = await getCache.execute(`boards:${raw ? 'raw' : 'organized'}`);
 
       if (savedCache) {
         return response.json(savedCache);
@@ -47,7 +45,7 @@ export default class BoardsController {
         const result = {
           result: 'success',
           message: null,
-          data,
+          data
         };
 
         await saveCache.execute('boards:raw', result);
@@ -60,7 +58,7 @@ export default class BoardsController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       await saveCache.execute('boards:organized', result);
@@ -70,11 +68,9 @@ export default class BoardsController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'BoardsController',
+        controller: 'BoardsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

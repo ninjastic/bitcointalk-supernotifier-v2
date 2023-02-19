@@ -20,14 +20,10 @@ export default class IgnoredUserRepository implements IIgnoredUserRepository {
     return this.ormRepository.save(ignoredUser);
   }
 
-  public async findAllByTelegramId(
-    telegram_id: number,
-  ): Promise<IgnoredUser[]> {
+  public async findAllByTelegramId(telegram_id: number): Promise<IgnoredUser[]> {
     const ignoredUsers = await this.ormRepository.find();
 
-    const filteredIgnoredUsers = ignoredUsers.filter(user =>
-      user.ignoring.includes(telegram_id),
-    );
+    const filteredIgnoredUsers = ignoredUsers.filter(user => user.ignoring.includes(telegram_id));
 
     return filteredIgnoredUsers;
   }
@@ -39,9 +35,7 @@ export default class IgnoredUserRepository implements IIgnoredUserRepository {
   public async findAllWithUsers(): Promise<IgnoredUser[]> {
     const ignoredUsers = await this.ormRepository.find();
 
-    const filteredignoredUsers = ignoredUsers.filter(
-      user => user.ignoring.length,
-    );
+    const filteredignoredUsers = ignoredUsers.filter(user => user.ignoring.length);
 
     return filteredignoredUsers;
   }

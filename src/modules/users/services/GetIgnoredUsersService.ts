@@ -12,13 +12,11 @@ export default class GetIgnoredUsersService {
     private ignoredUserRepository: IIgnoredUserRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(): Promise<IgnoredUser[]> {
-    const cachedIgnoredUsers = await this.cacheRepository.recover<
-      IgnoredUser[]
-    >('ignoredUsers');
+    const cachedIgnoredUsers = await this.cacheRepository.recover<IgnoredUser[]>('ignoredUsers');
 
     if (cachedIgnoredUsers) {
       return cachedIgnoredUsers;

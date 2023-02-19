@@ -16,18 +16,7 @@ interface Data {
 
 export default class GetAddressesUniqueService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
-    const {
-      address,
-      addresses,
-      author,
-      coin,
-      post_id,
-      topic_id,
-      board,
-      child_boards,
-      last,
-      limit,
-    } = conditions || {};
+    const { address, addresses, author, coin, post_id, topic_id, board, child_boards, last, limit } = conditions || {};
 
     const must = [];
 
@@ -52,16 +41,13 @@ export default class GetAddressesUniqueService {
     if (author) {
       must.push({
         match_phrase: {
-          author: author.toLowerCase(),
-        },
+          author: author.toLowerCase()
+        }
       });
     }
 
     if (board) {
-      if (
-        child_boards &&
-        (child_boards === '1' || child_boards.toLowerCase() === 'true')
-      ) {
+      if (child_boards && (child_boards === '1' || child_boards.toLowerCase() === 'true')) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
 
@@ -80,8 +66,8 @@ export default class GetAddressesUniqueService {
       body: {
         query: {
           bool: {
-            must,
-          },
+            must
+          }
         },
         aggs: {
           addresses: {
@@ -91,51 +77,44 @@ export default class GetAddressesUniqueService {
                 {
                   address: {
                     terms: {
-                      field: 'address.keyword',
-                    },
-                  },
-                },
+                      field: 'address.keyword'
+                    }
+                  }
+                }
               ],
               after: {
-                address: last || '',
-              },
+                address: last || ''
+              }
             },
             aggs: {
               authors: {
                 terms: {
                   field: 'author.keyword',
-                  size: 100,
-                },
+                  size: 100
+                }
               },
               coin: {
                 top_hits: {
                   size: 1,
-                  _source: ['coin'],
-                },
-              },
-            },
-          },
-        },
-      },
+                  _source: ['coin']
+                }
+              }
+            }
+          }
+        }
+      }
     });
 
-    const data_addresses = results.body.aggregations.addresses.buckets.map(
-      record => {
-        return {
-          address: record.key.address,
-          coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
-          count: record.doc_count,
-          authors: record.authors.buckets,
-        };
-      },
-    );
+    const data_addresses = results.body.aggregations.addresses.buckets.map(record => ({
+      address: record.key.address,
+      coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
+      count: record.doc_count,
+      authors: record.authors.buckets
+    }));
 
     const data = {
-      after_key:
-        data_addresses.length < actual_limit
-          ? null
-          : results.body.aggregations.addresses.after_key.address,
-      addresses: data_addresses,
+      after_key: data_addresses.length < actual_limit ? null : results.body.aggregations.addresses.after_key.address,
+      addresses: data_addresses
     };
 
     return data;

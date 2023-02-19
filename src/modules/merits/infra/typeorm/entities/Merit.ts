@@ -6,7 +6,7 @@ import {
   Index,
   PrimaryGeneratedColumn,
   OneToOne,
-  JoinColumn,
+  JoinColumn
 } from 'typeorm';
 
 import Post from '../../../../posts/infra/typeorm/entities/Post';

@@ -7,7 +7,7 @@ import FindModLogDTO from '../dtos/FindModLogDTO';
 export default class SetModLogCheckedService {
   constructor(
     @inject('ModLogRepository')
-    private modLogRepository: IModLogRepository,
+    private modLogRepository: IModLogRepository
   ) {}
 
   public async execute(data: FindModLogDTO): Promise<void> {

@@ -20,19 +20,15 @@ createConnection().then(async () => {
   const saveCache = container.resolve(SaveCacheService);
   const getCache = container.resolve(GetCacheService);
 
-  const bitcoinRegex = new RegExp(
-    '(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})',
-    'g',
-  );
-  const ethereumRegex = new RegExp('0x[a-fA-F0-9]{40}', 'g');
+  const bitcoinRegex =
+    /(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/g;
+  const ethereumRegex = /0x[a-fA-F0-9]{40}/g;
 
   let stillHas = true;
   let emptyOperations = false;
 
   while (await stillHas) {
-    const lastPostId = await getCache.execute<number>(
-      'analysis:AddressesPostLastId',
-    );
+    const lastPostId = await getCache.execute<number>('analysis:AddressesPostLastId');
 
     const posts = await getPosts.execute({ last: lastPostId, limit: 100000 });
 
@@ -57,15 +53,11 @@ createConnection().then(async () => {
             return;
           }
 
-          if (
-            operations.findIndex(
-              m => m.post_id === post.post_id && m.address === address,
-            ) === -1
-          ) {
+          if (operations.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
             operations.push({
               post_id: post.post_id,
               coin: 'BTC',
-              address,
+              address
             });
           }
         });
@@ -73,15 +65,11 @@ createConnection().then(async () => {
 
       if (ethereumAddresses) {
         ethereumAddresses.forEach(address => {
-          if (
-            operations.findIndex(
-              m => m.post_id === post.post_id && m.address === address,
-            ) === -1
-          ) {
+          if (operations.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
             operations.push({
               post_id: post.post_id,
               coin: 'ETH',
-              address,
+              address
             });
           }
         });
@@ -116,9 +104,7 @@ createConnection().then(async () => {
 
     if (last && inserted) {
       await saveCache.execute('analysis:AddressesPostLastId', last.post_id);
-      console.log(
-        `Inserted ${inserted.raw.length}, first: ${first.post_id} last: ${last.post_id}`,
-      );
+      console.log(`Inserted ${inserted.raw.length}, first: ${first.post_id} last: ${last.post_id}`);
     } else {
       console.log('nothing happened...');
     }

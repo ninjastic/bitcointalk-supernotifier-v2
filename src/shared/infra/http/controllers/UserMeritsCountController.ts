@@ -18,9 +18,7 @@ interface Request extends ExpressRequest {
 
 export default class UserMeritsCountController {
   public async show(request: Request, response: Response): Promise<Response> {
-    const getUserMeritCountOnPeriod = container.resolve(
-      GetUserMeritCountOnPeriodService,
-    );
+    const getUserMeritCountOnPeriod = container.resolve(GetUserMeritCountOnPeriodService);
 
     const schemaValidation = Joi.object({
       author_uid: Joi.number().required(),
@@ -29,7 +27,7 @@ export default class UserMeritsCountController {
       type: Joi.string().allow('sender', 'receiver', null).insensitive(),
       interval: Joi.string()
         .regex(/^\d{0,3}(m|h|d|w|M)$/)
-        .allow('', null),
+        .allow('', null)
     });
 
     const date = new Date();
@@ -43,7 +41,7 @@ export default class UserMeritsCountController {
       from: request.query.from || defaultFrom,
       to: request.query.to || defaultTo,
       type: request.query.type || 'receiver',
-      interval: request.query.interval || '1d',
+      interval: request.query.interval || '1d'
     };
 
     try {
@@ -52,7 +50,7 @@ export default class UserMeritsCountController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -62,7 +60,7 @@ export default class UserMeritsCountController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -70,11 +68,9 @@ export default class UserMeritsCountController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'UserMeritsDataController',
+        controller: 'UserMeritsDataController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

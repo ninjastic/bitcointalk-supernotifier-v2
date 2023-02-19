@@ -17,12 +17,7 @@ export default class RedisProvider implements ICacheProvider {
     this.client = new Redis(cacheConfig.config.redis);
   }
 
-  public async save(
-    key: string,
-    value: any,
-    arg?: string,
-    time?: number,
-  ): Promise<void> {
+  public async save(key: string, value: any, arg?: string, time?: number): Promise<void> {
     if (arg) {
       await this.client.set(key, JSON.stringify(value), arg, time);
     } else {
@@ -34,12 +29,7 @@ export default class RedisProvider implements ICacheProvider {
     const pipeline = this.client.pipeline();
 
     values.forEach(value => {
-      pipeline.set(
-        value.key,
-        JSON.stringify(value.value),
-        value.arg,
-        value.time,
-      );
+      pipeline.set(value.key, JSON.stringify(value.value), value.arg, value.time);
     });
 
     await pipeline.exec();

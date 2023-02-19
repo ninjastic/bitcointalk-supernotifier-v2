@@ -10,7 +10,7 @@ export default class UserInfoController {
     const getAuthorData = new GetAuthorDataService();
 
     const schemaValidation = Joi.object({
-      author_uid: Joi.number().required(),
+      author_uid: Joi.number().required()
     });
 
     try {
@@ -19,19 +19,19 @@ export default class UserInfoController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
     try {
       const data = await getAuthorData.execute({
-        author_uid: request.author_uid,
+        author_uid: request.author_uid
       });
 
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -39,12 +39,12 @@ export default class UserInfoController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'UserInfoController',
+        controller: 'UserInfoController'
       });
       return response.status(500).json({
         result: 'fail',
         message: error.message || 'Something went wrong',
-        data: null,
+        data: null
       });
     }
   }

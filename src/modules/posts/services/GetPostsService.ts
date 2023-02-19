@@ -9,7 +9,7 @@ import IFindPostsConditionsDTO from '../dtos/IFindPostsConditionsDTO';
 export default class GetPostsService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository,
+    private postsRepository: IPostsRepository
   ) {}
 
   public async execute(conditions: IFindPostsConditionsDTO): Promise<Post[]> {

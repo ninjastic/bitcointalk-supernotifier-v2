@@ -12,12 +12,12 @@ export default class SaveMeritService {
     private meritsRepository: IMeritsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(merit: Merit): Promise<Merit> {
     const cachedMerit = await this.cacheRepository.recover<Merit>(
-      `merit:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
+      `merit:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`
     );
 
     if (cachedMerit) {
@@ -28,7 +28,7 @@ export default class SaveMeritService {
       amount: merit.amount,
       date: merit.date,
       post_id: merit.post_id,
-      sender_uid: merit.sender_uid,
+      sender_uid: merit.sender_uid
     });
 
     if (foundMerit) {
@@ -42,7 +42,7 @@ export default class SaveMeritService {
       `merit:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
       savedMerit,
       'EX',
-      300,
+      300
     );
 
     return savedMerit;

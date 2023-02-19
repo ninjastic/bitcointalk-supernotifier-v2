@@ -11,30 +11,30 @@ export class CreateIgnoredUsers1597876661841 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid',
+            generationStrategy: 'uuid'
           },
           {
             name: 'username',
             type: 'varchar',
-            isUnique: true,
+            isUnique: true
           },
           {
             name: 'ignoring',
             type: 'integer',
-            isArray: true,
+            isArray: true
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()',
+            default: 'now()'
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()',
-          },
-        ],
-      }),
+            default: 'now()'
+          }
+        ]
+      })
     );
   }
 

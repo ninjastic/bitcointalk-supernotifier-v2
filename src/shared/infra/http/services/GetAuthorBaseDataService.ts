@@ -16,13 +16,11 @@ interface Params {
 export default class GetAuthorBaseDataService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute({ author_uid }: Params): Promise<Response> {
-    const cachedData = await this.cacheRepository.recover<Response>(
-      `authorBaseData:${author_uid}`,
-    );
+    const cachedData = await this.cacheRepository.recover<Response>(`authorBaseData:${author_uid}`);
 
     if (cachedData) {
       return cachedData;
@@ -36,10 +34,10 @@ export default class GetAuthorBaseDataService {
       body: {
         query: {
           match: {
-            author_uid: Number(author_uid),
-          },
-        },
-      },
+            author_uid: Number(author_uid)
+          }
+        }
+      }
     });
 
     if (!results.body.hits.hits.length) {
@@ -48,15 +46,10 @@ export default class GetAuthorBaseDataService {
 
     const data = {
       author: results.body.hits.hits[0]._source.author.toLowerCase(),
-      author_uid: results.body.hits.hits[0]._source.author_uid,
+      author_uid: results.body.hits.hits[0]._source.author_uid
     };
 
-    await this.cacheRepository.save(
-      `authorBaseData:${author_uid}`,
-      data,
-      'EX',
-      604800,
-    );
+    await this.cacheRepository.save(`authorBaseData:${author_uid}`, data, 'EX', 604800);
 
     return data;
   }

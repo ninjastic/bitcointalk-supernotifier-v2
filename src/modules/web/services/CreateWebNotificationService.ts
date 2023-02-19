@@ -9,12 +9,10 @@ import IWebNotificationsRepository from '../repositories/IWebNotificationsReposi
 export default class CreateWebNotificationService {
   constructor(
     @inject('WebNotificationsRepository')
-    private webNotificationsRepository: IWebNotificationsRepository,
+    private webNotificationsRepository: IWebNotificationsRepository
   ) {}
 
-  public async execute(
-    data: ICreateWebNotificationDTO,
-  ): Promise<WebNotification> {
+  public async execute(data: ICreateWebNotificationDTO): Promise<WebNotification> {
     const webNotification = this.webNotificationsRepository.create(data);
     await this.webNotificationsRepository.save(webNotification);
 

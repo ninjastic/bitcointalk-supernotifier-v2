@@ -25,13 +25,13 @@ export default class UserTopicsUniqueController {
     const schemaValidation = Joi.object({
       author_uid: Joi.number().required(),
       from: Joi.string().isoDate().allow('', null),
-      to: Joi.string().isoDate().allow('', null),
+      to: Joi.string().isoDate().allow('', null)
     });
 
     const query = {
       author_uid: request.author_uid,
       from: request.query.from || undefined,
-      to: request.query.to || defaultTo,
+      to: request.query.to || defaultTo
     };
 
     try {
@@ -40,7 +40,7 @@ export default class UserTopicsUniqueController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -50,7 +50,7 @@ export default class UserTopicsUniqueController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -58,11 +58,9 @@ export default class UserTopicsUniqueController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'UserTopicsUniqueController',
+        controller: 'UserTopicsUniqueController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

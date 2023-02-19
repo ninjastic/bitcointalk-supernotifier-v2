@@ -12,13 +12,11 @@ export default class GetIgnoredUsersService {
     private ignoredTopicsRepository: IIgnoredTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(): Promise<IgnoredTopic[]> {
-    const cachedIgnoredTopics = await this.cacheRepository.recover<
-      IgnoredTopic[]
-    >('ignoredTopics');
+    const cachedIgnoredTopics = await this.cacheRepository.recover<IgnoredTopic[]>('ignoredTopics');
 
     if (cachedIgnoredTopics) {
       return cachedIgnoredTopics;

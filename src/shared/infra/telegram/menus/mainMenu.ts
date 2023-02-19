@@ -1,7 +1,6 @@
-import { Context } from 'telegraf';
-import { MenuTemplate } from 'telegraf-inline-menu';
+import { MenuMiddleware, MenuTemplate } from 'grammy-inline-menu';
 
-import ISession from '../@types/ISession';
+import IMenuContext from '../@types/IMenuContext';
 
 import trackedTopicsMenu from './trackedTopicsMenu';
 import trackedPhrasesMenu from './trackedPhrasesMenu';
@@ -10,26 +9,22 @@ import ignoredTopicsMenu from './ignoredTopicsMenu';
 import notificationsMenu from './notificationsMenu';
 import aboutMenu from './aboutMenu';
 
-interface MenuContext extends Context {
-  session: ISession;
-}
-
-const mainMenu = new MenuTemplate<MenuContext>(async (ctx: MenuContext) => {
-  return {
-    text: `Hello, <b>${ctx.session.username}</b>.\nNice to see you. What do you want to do now?`,
-    parse_mode: 'HTML',
-  };
-});
+const mainMenu = new MenuTemplate<IMenuContext>(async (ctx: IMenuContext) => ({
+  text: `Hello, <b>${ctx.session.username}</b>.\nNice to see you. What do you want to do now?`,
+  parse_mode: 'HTML'
+}));
 
 mainMenu.submenu('📗 Tracked Topics', 'tt', trackedTopicsMenu);
 mainMenu.submenu('💬 Tracked Phrases', 'tp', trackedPhrasesMenu, {
-  joinLastRow: true,
+  joinLastRow: true
 });
 mainMenu.submenu('🚫 Ignored Topics', 'it', ignoredTopicsMenu);
 mainMenu.submenu('🚫 Ignored Users', 'iu', ignoredUsersMenu, {
-  joinLastRow: true,
+  joinLastRow: true
 });
 mainMenu.submenu('🔔 Notifications', 'notifications', notificationsMenu);
 mainMenu.submenu('👋 About', 'about', aboutMenu, { joinLastRow: true });
 
-export default mainMenu;
+const mainMenuMiddleware = new MenuMiddleware('/', mainMenu);
+
+export { mainMenu, mainMenuMiddleware };

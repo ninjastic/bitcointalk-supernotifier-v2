@@ -24,9 +24,7 @@ export default class ParseTopicService {
       .find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr')
       .toArray()
       .forEach(e => {
-        const postHeader = $(e).find(
-          "td.td_headerandpost td > div[id*='subject'] > a",
-        );
+        const postHeader = $(e).find("td.td_headerandpost td > div[id*='subject'] > a");
 
         if (postHeader && postHeader.attr('href')) {
           if (!found) {
@@ -35,17 +33,12 @@ export default class ParseTopicService {
             const post_id = Number(
               $(postHeader)
                 .attr('href')
-                .match(/\d\.msg(\d+)#msg/i)[1],
+                .match(/\d\.msg(\d+)#msg/i)[1]
             );
             const title = postHeader.text().trim();
             const author = receiver.html();
             const authorUrl = receiver.attr('href');
-            const author_uid = Number(
-              authorUrl.replace(
-                'https://bitcointalk.org/index.php?action=profile;u=',
-                '',
-              ),
-            );
+            const author_uid = Number(authorUrl.replace('https://bitcointalk.org/index.php?action=profile;u=', ''));
 
             const titleBoard = $('#bodyarea > div > div > b').parent();
 
@@ -55,13 +48,10 @@ export default class ParseTopicService {
             $(boards).each(async (boardIndex, board) => {
               const { length } = boards;
 
-              const boardIdRegEx = new RegExp('board=(\\d+)');
+              const boardIdRegEx = /board=(\d+)/;
               const boardUrl = $(board).find('a').attr('href');
 
-              if (
-                !boardUrl.startsWith('https://bitcointalk.org/index.php?board=')
-              )
-                return;
+              if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) return;
 
               if (boardIndex < length - 1 && boardIndex !== 0) {
                 const boardId = boardUrl.match(boardIdRegEx)[1];
@@ -73,16 +63,14 @@ export default class ParseTopicService {
             const content = $(e).find('td.td_headerandpost div.post').html();
 
             const d = new Date();
-            const today = `${d.getFullYear()}/${
-              d.getMonth() + 1
-            }/${d.getDate()}`;
+            const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 
             const date = new Date(
               $(e)
                 .find('td.td_headerandpost table div:nth-child(2)')
                 .text()
                 .replace('Today at', today)
-                .replace(/Last edit:.*/, ''),
+                .replace(/Last edit:.*/, '')
             );
 
             post = createPost.execute({
@@ -97,7 +85,7 @@ export default class ParseTopicService {
               board_id: boardsArray[boardsArray.length - 1],
               checked: false,
               notified: false,
-              notified_to: [],
+              notified_to: []
             });
 
             found = true;

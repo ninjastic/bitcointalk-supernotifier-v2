@@ -23,7 +23,7 @@ export default class MeritsTopBoardsController {
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
       order: Joi.string().allow('asc', 'desc').insensitive(),
-      limit: Joi.number(),
+      limit: Joi.number()
     });
 
     try {
@@ -32,7 +32,7 @@ export default class MeritsTopBoardsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -40,18 +40,15 @@ export default class MeritsTopBoardsController {
       const results = await getMeritsTopBoards.execute(request.query);
       const boards = await getBoardsListService.execute(true);
 
-      const data = results.map(result => {
-        return {
-          board_name: boards.find(board => board.board_id === result.board_id)
-            ?.name,
-          ...result,
-        };
-      });
+      const data = results.map(result => ({
+        board_name: boards.find(board => board.board_id === result.board_id)?.name,
+        ...result
+      }));
 
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -59,11 +56,9 @@ export default class MeritsTopBoardsController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'MeritsTopBoardsController',
+        controller: 'MeritsTopBoardsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

@@ -12,19 +12,13 @@ export default class CreateTrackedPhraseService {
     private trackedPhrasesRepository: ITrackedPhrasesRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute({
-    telegram_id,
-    phrase,
-  }: {
-    telegram_id: number;
-    phrase: string;
-  }): Promise<TrackedPhrase> {
+  public async execute({ telegram_id, phrase }: { telegram_id: number; phrase: string }): Promise<TrackedPhrase> {
     const exists = await this.trackedPhrasesRepository.findOne({
       telegram_id,
-      phrase,
+      phrase
     });
 
     if (exists) {
@@ -33,7 +27,7 @@ export default class CreateTrackedPhraseService {
 
     const trackedTopicUser = this.trackedPhrasesRepository.create({
       telegram_id,
-      phrase,
+      phrase
     });
 
     await this.trackedPhrasesRepository.save(trackedTopicUser);

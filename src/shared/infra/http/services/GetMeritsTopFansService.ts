@@ -35,14 +35,14 @@ export default class GetMeritsTopFansService {
         case 'after_date':
           return queryBuilder.query('range', {
             date: {
-              gte: query[key],
-            },
+              gte: query[key]
+            }
           });
         case 'before_date':
           return queryBuilder.query('range', {
             date: {
-              lte: query[key],
-            },
+              lte: query[key]
+            }
           });
         case 'board_id':
           return queryBuilder.query('terms', key, query[key]);
@@ -60,9 +60,7 @@ export default class GetMeritsTopFansService {
       query.receiver ? 'sender.keyword' : 'receiver.keyword',
       { order: { count: 'desc' }, size: query.limit || 10 },
       'friends',
-      a => {
-        return a.aggregation('sum', 'amount', 'count');
-      },
+      a => a.aggregation('sum', 'amount', 'count')
     );
 
     const body = queryBuilder.build();
@@ -70,15 +68,13 @@ export default class GetMeritsTopFansService {
     const results = await esClient.search({
       index: 'merits',
       track_total_hits: true,
-      body,
+      body
     });
 
-    const data = results.body.aggregations.friends.buckets.map(b => {
-      return {
-        key: b.key,
-        count: b.count.value,
-      };
-    });
+    const data = results.body.aggregations.friends.buckets.map(b => ({
+      key: b.key,
+      count: b.count.value
+    }));
 
     return data;
   }

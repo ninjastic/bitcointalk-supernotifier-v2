@@ -37,10 +37,10 @@ export default class GetUsersDataService {
       await Promise.all(
         items.map(async item => {
           const { unique_topics } = await getTopicsUnique.execute({
-            author_uid: Number(item),
+            author_uid: Number(item)
           });
           data[item].unique_topics = unique_topics;
-        }),
+        })
       );
     }
 
@@ -49,11 +49,11 @@ export default class GetUsersDataService {
         items.map(async item => {
           const { addresses } = await getAddressesTopUnique.execute({
             author_uid: Number(item),
-            limit: 5,
+            limit: 5
           });
 
           data[item].addresses = addresses;
-        }),
+        })
       );
     }
 
@@ -63,11 +63,11 @@ export default class GetUsersDataService {
           const topics = await getUserTopTopics.execute({
             author_uid: Number(item),
             from: sub(dateUTC, { days: 120 }).toISOString(),
-            limit: 5,
+            limit: 5
           });
 
           data[item].topics = topics;
-        }),
+        })
       );
     }
 

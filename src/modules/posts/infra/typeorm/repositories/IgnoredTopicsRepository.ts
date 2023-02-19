@@ -5,9 +5,7 @@ import CreateIgnoredTopicDTO from '../../../dtos/CreateIgnoredTopicDTO';
 import IgnoredTopic from '../entities/IgnoredTopic';
 import IIgnoredTopicsRepository from '../../../repositories/IIgnoredTopicsRepository';
 
-export default class IgnoredTopicsRepository
-  implements IIgnoredTopicsRepository
-{
+export default class IgnoredTopicsRepository implements IIgnoredTopicsRepository {
   private ormRepository: Repository<IgnoredTopic>;
 
   constructor() {
@@ -25,31 +23,27 @@ export default class IgnoredTopicsRepository
   public async findOneByTopicId(topic_id: number): Promise<IgnoredTopic> {
     return this.ormRepository.findOne({
       where: { topic_id },
-      relations: ['post'],
+      relations: ['post']
     });
   }
 
   public async findOneByPostId(post_id: number): Promise<IgnoredTopic | null> {
     const ignoredTopic = await this.ormRepository.findOne({
       where: {
-        post_id,
+        post_id
       },
-      relations: ['post'],
+      relations: ['post']
     });
 
     return ignoredTopic;
   }
 
-  public async findAllByTelegramId(
-    telegram_id: number,
-  ): Promise<IgnoredTopic[]> {
+  public async findAllByTelegramId(telegram_id: number): Promise<IgnoredTopic[]> {
     const ignoredTopics = await this.ormRepository.find({
-      relations: ['post'],
+      relations: ['post']
     });
 
-    const filteredIgnoredTopics = ignoredTopics.filter(topic =>
-      topic.ignoring.includes(telegram_id),
-    );
+    const filteredIgnoredTopics = ignoredTopics.filter(topic => topic.ignoring.includes(telegram_id));
 
     return filteredIgnoredTopics;
   }
@@ -57,9 +51,7 @@ export default class IgnoredTopicsRepository
   public async findAllWithUsers(): Promise<IgnoredTopic[]> {
     const ignoredTopics = await this.ormRepository.find();
 
-    const filteredIgnoredTopics = ignoredTopics.filter(
-      topic => topic.ignoring.length,
-    );
+    const filteredIgnoredTopics = ignoredTopics.filter(topic => topic.ignoring.length);
 
     return filteredIgnoredTopics;
   }

@@ -35,14 +35,14 @@ export default class GetMeritsTopBoardsService {
         case 'after_date':
           return queryBuilder.query('range', {
             date: {
-              gte: query[key],
-            },
+              gte: query[key]
+            }
           });
         case 'before_date':
           return queryBuilder.query('range', {
             date: {
-              lte: query[key],
-            },
+              lte: query[key]
+            }
           });
         case 'board_id':
           return queryBuilder.query('terms', key, query[key]);
@@ -55,14 +55,8 @@ export default class GetMeritsTopBoardsService {
 
     queryBuilder.size(0);
 
-    queryBuilder.aggregation(
-      'terms',
-      'board_id',
-      { order: { count: 'desc' }, size: query.limit || 10 },
-      'boards',
-      a => {
-        return a.aggregation('sum', 'amount', 'count');
-      },
+    queryBuilder.aggregation('terms', 'board_id', { order: { count: 'desc' }, size: query.limit || 10 }, 'boards', a =>
+      a.aggregation('sum', 'amount', 'count')
     );
 
     const body = queryBuilder.build();
@@ -70,15 +64,13 @@ export default class GetMeritsTopBoardsService {
     const results = await esClient.search({
       index: 'merits',
       track_total_hits: true,
-      body,
+      body
     });
 
-    const data = results.body.aggregations.boards.buckets.map(b => {
-      return {
-        board_id: b.key,
-        count: b.count.value,
-      };
-    });
+    const data = results.body.aggregations.boards.buckets.map(b => ({
+      board_id: b.key,
+      count: b.count.value
+    }));
 
     return data;
   }

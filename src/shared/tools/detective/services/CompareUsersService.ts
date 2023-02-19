@@ -1,5 +1,4 @@
 import 'dotenv/config';
-import { exist } from 'joi';
 
 import GetUserAddresses from './GetUserAddresses';
 import GetUserSocials from './GetUserSocials';
@@ -10,23 +9,20 @@ interface Data {
 }
 
 class CompareUsersService {
-  public async execute(
-    firstAuthorUid: number,
-    secondAuthorUid: number,
-  ): Promise<Data> {
+  public async execute(firstAuthorUid: number, secondAuthorUid: number): Promise<Data> {
     // addresses
     const getUserAddresses = new GetUserAddresses();
 
     const firstAddresses = await getUserAddresses.execute({
       authorUid: firstAuthorUid,
       boards: [238],
-      topics: [996318],
+      topics: [996318]
     });
 
     const secondAddresses = await getUserAddresses.execute({
       authorUid: secondAuthorUid,
       boards: [238],
-      topics: [996318],
+      topics: [996318]
     });
 
     const addressesMatches = [];
@@ -34,35 +30,27 @@ class CompareUsersService {
     firstAddresses.addresses.direct_only.forEach(firstResult => {
       secondAddresses.addresses.direct_only.forEach(secondResult => {
         if (firstResult.address === secondResult.address) {
-          const addressExistsIndex = addressesMatches.findIndex(
-            a => a.address === secondResult.address,
-          );
+          const addressExistsIndex = addressesMatches.findIndex(a => a.address === secondResult.address);
 
           if (addressExistsIndex === -1) {
             addressesMatches.push({
               address: secondResult.address,
               coin: secondResult.coin,
               first: [firstResult],
-              second: [secondResult],
+              second: [secondResult]
             });
           } else {
             const firstExists = addressesMatches[addressExistsIndex].first.find(
-              first => first.post_id === firstResult.post_id,
+              first => first.post_id === firstResult.post_id
             );
-            const secondExists = addressesMatches[
-              addressExistsIndex
-            ].second.find(second => second.post_id === secondResult.post_id);
+            const secondExists = addressesMatches[addressExistsIndex].second.find(
+              second => second.post_id === secondResult.post_id
+            );
 
-            if (
-              !firstExists &&
-              addressesMatches[addressExistsIndex].first.length < 10
-            ) {
+            if (!firstExists && addressesMatches[addressExistsIndex].first.length < 10) {
               addressesMatches[addressExistsIndex].first.push(firstResult);
             }
-            if (
-              !secondExists &&
-              addressesMatches[addressExistsIndex].second.length < 10
-            ) {
+            if (!secondExists && addressesMatches[addressExistsIndex].second.length < 10) {
               addressesMatches[addressExistsIndex].second.push(secondResult);
             }
           }
@@ -75,36 +63,31 @@ class CompareUsersService {
     const getUserSocials = new GetUserSocials();
 
     const firstSocials = await getUserSocials.execute({
-      authorUid: firstAuthorUid,
+      authorUid: firstAuthorUid
     });
     const secondSocials = await getUserSocials.execute({
-      authorUid: secondAuthorUid,
+      authorUid: secondAuthorUid
     });
 
     const socialMatches = {
       telegram: null,
       twitter: null,
-      facebook: null,
+      facebook: null
     };
 
     firstSocials.forEach(firstSocial => {
       secondSocials.forEach(secondSocial => {
-        if (
-          firstSocial.socials.telegram &&
-          firstSocial.socials.telegram === secondSocial.socials.telegram
-        ) {
+        if (firstSocial.socials.telegram && firstSocial.socials.telegram === secondSocial.socials.telegram) {
           if (!socialMatches.telegram) {
             socialMatches.telegram = {
               name: firstSocial.socials.telegram,
               first: [firstSocial.post],
-              second: [secondSocial.post],
+              second: [secondSocial.post]
             };
           } else {
-            const firstExists = socialMatches.telegram.first.find(
-              first => first.post_id === firstSocial.post.post_id,
-            );
+            const firstExists = socialMatches.telegram.first.find(first => first.post_id === firstSocial.post.post_id);
             const secondExists = socialMatches.telegram.second.find(
-              second => second.post_id === secondSocial.post.post_id,
+              second => second.post_id === secondSocial.post.post_id
             );
 
             if (!firstExists && socialMatches.telegram.first < 10) {
@@ -116,22 +99,17 @@ class CompareUsersService {
           }
         }
 
-        if (
-          firstSocial.socials.twitter &&
-          firstSocial.socials.twitter === secondSocial.socials.twitter
-        ) {
+        if (firstSocial.socials.twitter && firstSocial.socials.twitter === secondSocial.socials.twitter) {
           if (!socialMatches.twitter) {
             socialMatches.twitter = {
               name: firstSocial.socials.twitter,
               first: [firstSocial.post],
-              second: [secondSocial.post],
+              second: [secondSocial.post]
             };
           } else {
-            const firstExists = socialMatches.twitter.first.find(
-              first => first.post_id === firstSocial.post.post_id,
-            );
+            const firstExists = socialMatches.twitter.first.find(first => first.post_id === firstSocial.post.post_id);
             const secondExists = socialMatches.twitter.second.find(
-              second => second.post_id === secondSocial.post.post_id,
+              second => second.post_id === secondSocial.post.post_id
             );
 
             if (!firstExists && socialMatches.twitter.first < 10) {
@@ -143,22 +121,17 @@ class CompareUsersService {
           }
         }
 
-        if (
-          firstSocial.socials.facebook &&
-          firstSocial.socials.facebook === secondSocial.socials.facebook
-        ) {
+        if (firstSocial.socials.facebook && firstSocial.socials.facebook === secondSocial.socials.facebook) {
           if (!socialMatches.facebook) {
             socialMatches.facebook = {
               name: firstSocial.socials.facebook,
               first: [firstSocial.post],
-              second: [secondSocial.post],
+              second: [secondSocial.post]
             };
           } else {
-            const firstExists = socialMatches.facebook.first.find(
-              first => first.post_id === firstSocial.post.post_id,
-            );
+            const firstExists = socialMatches.facebook.first.find(first => first.post_id === firstSocial.post.post_id);
             const secondExists = socialMatches.facebook.second.find(
-              second => second.post_id === secondSocial.post.post_id,
+              second => second.post_id === secondSocial.post.post_id
             );
 
             if (!firstExists && socialMatches.facebook.first < 10) {
@@ -184,22 +157,20 @@ class CompareUsersService {
           }
 
           const socialIndex = resultsObject[socialType].findIndex(
-            s =>
-              s.name.toLowerCase() ===
-              occurrence.socials[socialType].toLowerCase(),
+            s => s.name.toLowerCase() === occurrence.socials[socialType].toLowerCase()
           );
 
           if (socialIndex === -1) {
             resultsObject[socialType].push({
               name: occurrence.socials[socialType],
-              posts: [occurrence.post],
+              posts: [occurrence.post]
             });
             return;
           }
 
-          const postIndex = resultsObject[socialType][
-            socialIndex
-          ].posts.findIndex(p => p.post_id === occurrence.post.post_id);
+          const postIndex = resultsObject[socialType][socialIndex].posts.findIndex(
+            p => p.post_id === occurrence.post.post_id
+          );
 
           if (postIndex === -1) {
             resultsObject[socialType][socialIndex].posts.push(occurrence.post);
@@ -242,8 +213,8 @@ class CompareUsersService {
       socials: socialMatches,
       all_socials: {
         first: firstSocialsPosts,
-        second: secondSocialsPosts,
-      },
+        second: secondSocialsPosts
+      }
     };
 
     return data;

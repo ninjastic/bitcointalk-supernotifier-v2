@@ -12,21 +12,21 @@ export default class FindTrackedTopicUsersService {
     private trackedTopicUsersRepository: ITrackedTopicUsersRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute({
     telegram_id,
     topic_id,
-    username,
+    username
   }: {
     telegram_id?: number;
     topic_id?: number;
     username?: string;
   }): Promise<TrackedTopicUser[]> {
-    const cachedTrackedTopics = await this.cacheRepository.recover<
-      TrackedTopicUser[]
-    >(`trackedTopics:${telegram_id}:${topic_id}:${username}`);
+    const cachedTrackedTopics = await this.cacheRepository.recover<TrackedTopicUser[]>(
+      `trackedTopics:${telegram_id}:${topic_id}:${username}`
+    );
 
     if (cachedTrackedTopics) {
       return cachedTrackedTopics;
@@ -50,14 +50,9 @@ export default class FindTrackedTopicUsersService {
       conditions.username = username;
     }
 
-    const trackedTopicUsers = await this.trackedTopicUsersRepository.find(
-      conditions,
-    );
+    const trackedTopicUsers = await this.trackedTopicUsersRepository.find(conditions);
 
-    await this.cacheRepository.save(
-      `trackedTopics:${telegram_id}:${topic_id}:${username}`,
-      trackedTopicUsers,
-    );
+    await this.cacheRepository.save(`trackedTopics:${telegram_id}:${topic_id}:${username}`, trackedTopicUsers);
 
     return trackedTopicUsers;
   }

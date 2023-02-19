@@ -9,28 +9,26 @@ import Post from '../infra/typeorm/entities/Post';
 export default class ParseRecentPostElementService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository,
+    private postsRepository: IPostsRepository
   ) {}
 
   public execute(element: cheerio.Element): Post {
     const $ = cheerio.load(element, { decodeEntities: true });
 
-    const fullTitleWithBoards = $(
-      'tbody > tr.titlebg2 > td > div:nth-child(2)',
-    );
+    const fullTitleWithBoards = $('tbody > tr.titlebg2 > td > div:nth-child(2)');
 
     const post_id = Number(
       fullTitleWithBoards
         .find('b > a')
         .attr('href')
-        .match(/#msg(\d*)/)[1],
+        .match(/#msg(\d*)/)[1]
     );
 
     const topic_id = Number(
       fullTitleWithBoards
         .find('b > a')
         .attr('href')
-        .match(/topic=(\d*)/)[1],
+        .match(/topic=(\d*)/)[1]
     );
 
     const title = fullTitleWithBoards.find('b > a').text().trim();
@@ -40,7 +38,7 @@ export default class ParseRecentPostElementService {
     const author_uid = Number(
       $('tr:nth-child(2) > td > span > a:nth-child(2)')
         .attr('href')
-        .match(/u=(\d*)/)[1],
+        .match(/u=(\d*)/)[1]
     );
 
     const content = $('.post').html();
@@ -49,11 +47,7 @@ export default class ParseRecentPostElementService {
     const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 
     const date = new Date(
-      $(element)
-        .find('td.middletext > div:nth-child(3)')
-        .text()
-        .replace('on: Today at', today)
-        .trim(),
+      $(element).find('td.middletext > div:nth-child(3)').text().replace('on: Today at', today).trim()
     );
 
     const boards = $(fullTitleWithBoards).find('a');
@@ -61,11 +55,10 @@ export default class ParseRecentPostElementService {
 
     $(boards).each((boardIndex, board) => {
       const { length } = boards;
-      const boardIdRegEx = new RegExp('board=(\\d+)');
+      const boardIdRegEx = /board=(\d+)/;
       const boardUrl = $(board).attr('href');
 
-      if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board='))
-        return;
+      if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) return;
 
       if (boardIndex < length - 1) {
         const boardId = boardUrl.match(boardIdRegEx)[1];
@@ -86,7 +79,7 @@ export default class ParseRecentPostElementService {
       board_id: boardsArray[boardsArray.length - 1],
       checked: false,
       notified: false,
-      notified_to: [],
+      notified_to: []
     });
 
     return post;

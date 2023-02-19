@@ -15,16 +15,13 @@ export default class ScrapePostService {
     this.parsePostElement = container.resolve(ParsePostElementService);
   }
 
-  public async execute({
-    topic_id,
-    post_id,
-  }: ScrapePostDTO): Promise<Post | null> {
+  public async execute({ topic_id, post_id }: ScrapePostDTO): Promise<Post | null> {
     const response = await api.get(`index.php?topic=${topic_id}.msg${post_id}`);
 
     const post = this.parsePostElement.execute({
       html: response.data,
       topic_id,
-      post_id,
+      post_id
     });
 
     return post;

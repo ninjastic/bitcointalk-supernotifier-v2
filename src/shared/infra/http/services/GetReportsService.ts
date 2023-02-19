@@ -11,7 +11,7 @@ interface Options {
 export default class GetReportsService {
   constructor(
     @inject('ReportRepository')
-    private reportRepository: IReportRepository,
+    private reportRepository: IReportRepository
   ) {}
 
   public async execute(options?: Options): Promise<Report | Report[]> {

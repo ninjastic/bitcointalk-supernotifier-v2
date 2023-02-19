@@ -7,7 +7,7 @@ import IUsersRepository from '../../../../modules/users/repositories/IUsersRepos
 export default class SetUserAlternativeUsernameService {
   constructor(
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository,
+    private usersRepository: IUsersRepository
   ) {}
 
   public async execute(telegram_id: number, username: string): Promise<User> {

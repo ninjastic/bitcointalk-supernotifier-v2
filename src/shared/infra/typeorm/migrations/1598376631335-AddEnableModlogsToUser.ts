@@ -7,8 +7,8 @@ export class AddEnableModlogsToUser1598376631335 implements MigrationInterface {
       new TableColumn({
         name: 'enable_modlogs',
         type: 'boolean',
-        default: false,
-      }),
+        default: false
+      })
     );
   }
 

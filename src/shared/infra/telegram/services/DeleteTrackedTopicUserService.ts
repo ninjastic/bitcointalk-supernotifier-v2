@@ -12,17 +12,13 @@ export default class DeleteTrackedTopicUserService {
     private trackedTopicUsersRepository: ITrackedTopicUsersRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(
-    trackedTopicUser: TrackedTopicUser,
-  ): Promise<TrackedTopicUser> {
+  public async execute(trackedTopicUser: TrackedTopicUser): Promise<TrackedTopicUser> {
     await this.trackedTopicUsersRepository.delete(trackedTopicUser);
 
-    await this.cacheRepository.invalidateByPrefix(
-      `trackedTopics:${trackedTopicUser.telegram_id}:*`,
-    );
+    await this.cacheRepository.invalidateByPrefix(`trackedTopics:${trackedTopicUser.telegram_id}:*`);
 
     return trackedTopicUser;
   }

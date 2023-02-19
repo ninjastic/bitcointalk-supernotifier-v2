@@ -18,19 +18,17 @@ export default class PostsAuthorsPeriodController {
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
 
-    const defaultFrom = startOfHour(
-      sub(dateUTC, { days: 1, hours: 1 }),
-    ).toISOString();
+    const defaultFrom = startOfHour(sub(dateUTC, { days: 1, hours: 1 })).toISOString();
     const defaultTo = endOfHour(sub(dateUTC, { hours: 1 })).toISOString();
 
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
-      to: Joi.string().isoDate().allow('', null),
+      to: Joi.string().isoDate().allow('', null)
     });
 
     const settings = {
       from: query.from || defaultFrom,
-      to: query.to || defaultTo,
+      to: query.to || defaultTo
     };
 
     try {
@@ -39,7 +37,7 @@ export default class PostsAuthorsPeriodController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -49,7 +47,7 @@ export default class PostsAuthorsPeriodController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -57,11 +55,9 @@ export default class PostsAuthorsPeriodController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'PostsAuthorsPeriodController',
+        controller: 'PostsAuthorsPeriodController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

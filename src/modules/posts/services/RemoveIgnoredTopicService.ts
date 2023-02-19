@@ -12,15 +12,11 @@ export default class RemoveIgnoredTopicService {
     private ignoredTopicsRepository: IIgnoredTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(
-    post_id: number,
-    telegram_id?: number,
-  ): Promise<IgnoredTopic> {
-    const ignoredTopicExists =
-      await this.ignoredTopicsRepository.findOneByPostId(post_id);
+  public async execute(post_id: number, telegram_id?: number): Promise<IgnoredTopic> {
+    const ignoredTopicExists = await this.ignoredTopicsRepository.findOneByPostId(post_id);
 
     if (!ignoredTopicExists) {
       throw new Error('Ignored topic does not exist.');

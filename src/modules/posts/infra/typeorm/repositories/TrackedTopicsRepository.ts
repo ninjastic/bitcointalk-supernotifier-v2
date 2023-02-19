@@ -5,9 +5,7 @@ import CreateTrackedTopicDTO from '../../../dtos/CreateTrackedTopicDTO';
 import TrackedTopic from '../entities/TrackedTopic';
 import ITrackedTopicsRepository from '../../../repositories/ITrackedTopicsRepository';
 
-export default class TrackedTopicsRepository
-  implements ITrackedTopicsRepository
-{
+export default class TrackedTopicsRepository implements ITrackedTopicsRepository {
   private ormRepository: Repository<TrackedTopic>;
 
   constructor() {
@@ -26,14 +24,12 @@ export default class TrackedTopicsRepository
     return savedTrackedTopic;
   }
 
-  public async findOneByTopicId(
-    topic_id: number,
-  ): Promise<TrackedTopic | null> {
+  public async findOneByTopicId(topic_id: number): Promise<TrackedTopic | null> {
     const trackedTopic = await this.ormRepository.findOne({
       where: {
-        topic_id,
+        topic_id
       },
-      relations: ['post'],
+      relations: ['post']
     });
 
     return trackedTopic;
@@ -42,24 +38,20 @@ export default class TrackedTopicsRepository
   public async findOneByPostId(post_id: number): Promise<TrackedTopic | null> {
     const trackedTopic = await this.ormRepository.findOne({
       where: {
-        post_id,
+        post_id
       },
-      relations: ['post'],
+      relations: ['post']
     });
 
     return trackedTopic;
   }
 
-  public async findAllByTelegramId(
-    telegram_id: number,
-  ): Promise<TrackedTopic[]> {
+  public async findAllByTelegramId(telegram_id: number): Promise<TrackedTopic[]> {
     const trackedTopics = await this.ormRepository.find({
-      relations: ['post'],
+      relations: ['post']
     });
 
-    const filtered = trackedTopics.filter(topic =>
-      topic.tracking.includes(telegram_id),
-    );
+    const filtered = trackedTopics.filter(topic => topic.tracking.includes(telegram_id));
 
     return filtered;
   }
@@ -67,9 +59,7 @@ export default class TrackedTopicsRepository
   public async findAllWithUsers(): Promise<TrackedTopic[]> {
     const trackedTopics = await this.ormRepository.find();
 
-    const filteredTrackedTopics = trackedTopics.filter(
-      topic => topic.tracking.length,
-    );
+    const filteredTrackedTopics = trackedTopics.filter(topic => topic.tracking.length);
 
     return filteredTrackedTopics;
   }

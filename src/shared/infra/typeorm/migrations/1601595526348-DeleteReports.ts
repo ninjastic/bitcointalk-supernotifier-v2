@@ -25,22 +25,22 @@ export class DeleteReports1601595526348 implements MigrationInterface {
           {
             name: 'date',
             type: 'date',
-            isPrimary: true,
+            isPrimary: true
           },
           {
             name: 'posts',
-            type: 'integer',
+            type: 'integer'
           },
           {
             name: 'merits',
-            type: 'integer',
+            type: 'integer'
           },
           {
             name: 'users',
-            type: 'integer',
-          },
-        ],
-      }),
+            type: 'integer'
+          }
+        ]
+      })
     );
 
     await queryRunner.query(`

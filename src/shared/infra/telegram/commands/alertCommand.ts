@@ -1,19 +1,12 @@
-import { Context } from 'telegraf/typings';
+import { CommandContext } from 'grammy';
 import { container } from 'tsyringe';
 
-import ISession from '../@types/ISession';
-
+import IMenuContext from '../@types/IMenuContext';
 import SendGlobalNotificationService from '../services/SendGlobalNotificationService';
 
-interface MenuContext extends Context {
-  session: ISession;
-}
-
-const alertCommand = async (ctx: MenuContext): Promise<void> => {
+const alertCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
   if (ctx.from.id === 608520255) {
-    const sendGlobalNotification = container.resolve(
-      SendGlobalNotificationService,
-    );
+    const sendGlobalNotification = container.resolve(SendGlobalNotificationService);
 
     const message = ctx.message.text.replace('/alert ', '');
 

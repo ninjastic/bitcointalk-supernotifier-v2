@@ -24,7 +24,7 @@ export default class CheckMeritsService {
     private webUsersRepository: IWebUsersRepository,
 
     @inject('CacheRepository')
-    private cacheProvider: ICacheProvider,
+    private cacheProvider: ICacheProvider
   ) {}
 
   public async execute(): Promise<void> {
@@ -33,17 +33,15 @@ export default class CheckMeritsService {
     const users = await this.usersRepository.getUsersWithMerits();
 
     const setMeritChecked = container.resolve(SetMeritCheckedService);
-    const createWebNotification = container.resolve(
-      CreateWebNotificationService,
-    );
+    const createWebNotification = container.resolve(CreateWebNotificationService);
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
       defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
       limiter: {
         max: 1,
-        duration: 900,
-      },
+        duration: 900
+      }
     });
 
     await Promise.all(
@@ -52,7 +50,7 @@ export default class CheckMeritsService {
           amount: merit.amount,
           date: merit.date,
           post_id: merit.post_id,
-          sender_uid: merit.sender_uid,
+          sender_uid: merit.sender_uid
         });
 
         await Promise.all(
@@ -66,7 +64,7 @@ export default class CheckMeritsService {
             }
 
             const meritNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
+              `notified:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`
             );
 
             if (meritNotified) {
@@ -77,13 +75,13 @@ export default class CheckMeritsService {
               `notified:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
               true,
               'EX',
-              180,
+              180
             );
 
             return queue.add('sendMeritNotification', { merit, user });
-          }),
+          })
         );
-      }),
+      })
     );
 
     await Promise.all(
@@ -96,11 +94,11 @@ export default class CheckMeritsService {
 
             return createWebNotification.execute({
               user_id: webUser.id,
-              merit_id: merit.id,
+              merit_id: merit.id
             });
-          }),
+          })
         );
-      }),
+      })
     );
 
     await queue.close();

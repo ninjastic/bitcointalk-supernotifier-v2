@@ -18,13 +18,13 @@ class TelegramQueue {
       redis: cacheConfig.config.redis,
       limiter: {
         max: 1,
-        duration: 200,
+        duration: 200
       },
       defaultJobOptions: {
         attempts: 2,
         removeOnComplete: true,
-        removeOnFail: true,
-      },
+        removeOnFail: true
+      }
     });
   }
 
@@ -37,44 +37,31 @@ class TelegramQueue {
     });
 
     this.instance.process('sendMeritNotification', async job => {
-      const sendMeritNotification = container.resolve(
-        SendMeritNotificationService,
-      );
+      const sendMeritNotification = container.resolve(SendMeritNotificationService);
 
       const { merit, user } = job.data;
       await sendMeritNotification.execute(user.telegram_id, merit);
     });
 
     this.instance.process('sendTopicTrackingNotification', async job => {
-      const sendTopicTrackingNotification =
-        new SendTopicTrackingNotificationService();
+      const sendTopicTrackingNotification = new SendTopicTrackingNotificationService();
 
       const { post, user } = job.data;
       await sendTopicTrackingNotification.execute(user.telegram_id, post);
     });
 
     this.instance.process('sendRemovedTopicNotification', async job => {
-      const sendRemovedTopicNotification =
-        new SendRemovedTopicNotificationService();
+      const sendRemovedTopicNotification = new SendRemovedTopicNotificationService();
 
       const { postsDeleted, user, modLog } = job.data;
-      await sendRemovedTopicNotification.execute(
-        user.telegram_id,
-        postsDeleted,
-        modLog,
-      );
+      await sendRemovedTopicNotification.execute(user.telegram_id, postsDeleted, modLog);
     });
 
     this.instance.process('sendPhraseTrackingNotification', async job => {
-      const sendPhraseTrackingNotification =
-        new SendPhraseTrackingNotificationService();
+      const sendPhraseTrackingNotification = new SendPhraseTrackingNotificationService();
 
       const { post, user, trackedPhrase } = job.data;
-      await sendPhraseTrackingNotification.execute(
-        user.telegram_id,
-        post,
-        trackedPhrase?.phrase,
-      );
+      await sendPhraseTrackingNotification.execute(user.telegram_id, post, trackedPhrase?.phrase);
     });
 
     loggerHandler(this.instance);

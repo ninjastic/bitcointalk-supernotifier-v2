@@ -29,7 +29,7 @@ export default class CheckPostsService {
     private webUsersRepository: IWebUsersRepository,
 
     @inject('CacheRepository')
-    private cacheProvider: ICacheProvider,
+    private cacheProvider: ICacheProvider
   ) {}
 
   public async execute(): Promise<void> {
@@ -40,9 +40,7 @@ export default class CheckPostsService {
     const getTrackedPhrases = container.resolve(GetTrackedPhrasesService);
 
     const getTrackedTopics = container.resolve(GetTrackedTopicsService);
-    const findTrackedTopicUsers = container.resolve(
-      FindTrackedTopicUsersService,
-    );
+    const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
     const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
     const getIgnoredTopics = container.resolve(GetIgnoredTopicsService);
 
@@ -52,16 +50,13 @@ export default class CheckPostsService {
     const ignoredTopics = await getIgnoredTopics.execute();
 
     const setPostChecked = container.resolve(SetPostCheckedService);
-    const createWebNotification = container.resolve(
-      CreateWebNotificationService,
-    );
+    const createWebNotification = container.resolve(CreateWebNotificationService);
 
-    const scapeRegexText = (text: string) =>
-      text.replace(/([<>*()?])/g, '\\$1');
+    const scapeRegexText = (text: string) => text.replace(/([<>*()?])/g, '\\$1');
 
     const queue = new Queue('TelegramQueue', {
       redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
     });
 
     await Promise.allSettled(
@@ -70,18 +65,13 @@ export default class CheckPostsService {
 
         await Promise.allSettled(
           trackedPhrases.map(async trackedPhrase => {
-            const phraseRegex = new RegExp(
-              `(?<!\\w)${scapeRegexText(trackedPhrase.phrase)}(?!\\w)`,
-              'gi',
-            );
+            const phraseRegex = new RegExp(`(?<!\\w)${scapeRegexText(trackedPhrase.phrase)}(?!\\w)`, 'gi');
 
             if (!post.content.match(phraseRegex)) {
               return Promise.resolve();
             }
 
-            const user = await this.usersRepository.findByTelegramId(
-              trackedPhrase.telegram_id,
-            );
+            const user = await this.usersRepository.findByTelegramId(trackedPhrase.telegram_id);
 
             if (!user) {
               return Promise.resolve();
@@ -100,29 +90,21 @@ export default class CheckPostsService {
             }
 
             const foundIgnoredUser = ignoredUsers.find(
-              ignoredUser => ignoredUser.username === post.author.toLowerCase(),
+              ignoredUser => ignoredUser.username === post.author.toLowerCase()
             );
 
-            if (
-              foundIgnoredUser &&
-              foundIgnoredUser.ignoring.includes(Number(user.telegram_id))
-            ) {
+            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(Number(user.telegram_id))) {
               return Promise.resolve();
             }
 
-            const foundIgnoredTopic = ignoredTopics.find(
-              ignoredTopic => ignoredTopic.topic_id === post.topic_id,
-            );
+            const foundIgnoredTopic = ignoredTopics.find(ignoredTopic => ignoredTopic.topic_id === post.topic_id);
 
-            if (
-              foundIgnoredTopic &&
-              foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))
-            ) {
+            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))) {
               return Promise.resolve();
             }
 
             const postNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${post.post_id}:${user.telegram_id}`,
+              `notified:${post.post_id}:${user.telegram_id}`
             );
 
             if (postNotified) {
@@ -131,13 +113,12 @@ export default class CheckPostsService {
 
             const trackedTopicUsers = await findTrackedTopicUsers.execute({
               telegram_id: user.telegram_id,
-              topic_id: post.topic_id,
+              topic_id: post.topic_id
             });
 
             if (trackedTopicUsers.length) {
               const withlistedAuthor = trackedTopicUsers.findIndex(
-                trackedTopicUser =>
-                  trackedTopicUser.username === post.author.toLowerCase(),
+                trackedTopicUser => trackedTopicUser.username === post.author.toLowerCase()
               );
 
               if (withlistedAuthor === -1) {
@@ -145,21 +126,16 @@ export default class CheckPostsService {
               }
             }
 
-            await this.cacheProvider.save(
-              `notified:${post.post_id}:${user.telegram_id}`,
-              true,
-              'EX',
-              900,
-            );
+            await this.cacheProvider.save(`notified:${post.post_id}:${user.telegram_id}`, true, 'EX', 900);
 
             return queue.add('sendPhraseTrackingNotification', {
               post,
               user,
-              trackedPhrase,
+              trackedPhrase
             });
-          }),
+          })
         );
-      }),
+      })
     );
 
     await Promise.allSettled(
@@ -170,35 +146,18 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            const usernameRegex = new RegExp(
-              `(?<!\\w)${scapeRegexText(user.username)}(?!\\w)`,
-              'gi',
-            );
+            const usernameRegex = new RegExp(`(?<!\\w)${scapeRegexText(user.username)}(?!\\w)`, 'gi');
             const altUsernameRegex = user.alternative_usernames.length
-              ? new RegExp(
-                  `(?<!\\w)${scapeRegexText(
-                    user.alternative_usernames[0],
-                  )}(?!\\w)`,
-                  'gi',
-                )
+              ? new RegExp(`(?<!\\w)${scapeRegexText(user.alternative_usernames[0])}(?!\\w)`, 'gi')
               : null;
 
-            const regexBackupAtSign = new RegExp(
-              `@${scapeRegexText(user.username)}`,
-              'gi',
-            );
-            const regexBackupQuoted = new RegExp(
-              `Quote from: ${scapeRegexText(user.username)} on`,
-              'gi',
-            );
+            const regexBackupAtSign = new RegExp(`@${scapeRegexText(user.username)}`, 'gi');
+            const regexBackupQuoted = new RegExp(`Quote from: ${scapeRegexText(user.username)} on`, 'gi');
 
             if (!post.content.match(usernameRegex)) {
-              const foundAltUsername =
-                altUsernameRegex && post.content.match(altUsernameRegex);
+              const foundAltUsername = altUsernameRegex && post.content.match(altUsernameRegex);
 
-              const foundBackupRegex =
-                post.content.match(regexBackupAtSign) ||
-                post.content.match(regexBackupQuoted);
+              const foundBackupRegex = post.content.match(regexBackupAtSign) || post.content.match(regexBackupQuoted);
 
               if (!foundAltUsername && !foundBackupRegex) {
                 return Promise.resolve();
@@ -210,46 +169,33 @@ export default class CheckPostsService {
             }
 
             const foundIgnoredUser = ignoredUsers.find(
-              ignoredUser => ignoredUser.username === post.author.toLowerCase(),
+              ignoredUser => ignoredUser.username === post.author.toLowerCase()
             );
 
-            if (
-              foundIgnoredUser &&
-              foundIgnoredUser.ignoring.includes(Number(user.telegram_id))
-            ) {
+            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(Number(user.telegram_id))) {
               return Promise.resolve();
             }
 
-            const foundIgnoredTopic = ignoredTopics.find(
-              ignoredTopic => ignoredTopic.topic_id === post.topic_id,
-            );
+            const foundIgnoredTopic = ignoredTopics.find(ignoredTopic => ignoredTopic.topic_id === post.topic_id);
 
-            if (
-              foundIgnoredTopic &&
-              foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))
-            ) {
+            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))) {
               return Promise.resolve();
             }
 
             const postNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${post.post_id}:${user.telegram_id}`,
+              `notified:${post.post_id}:${user.telegram_id}`
             );
 
             if (postNotified) {
               return Promise.resolve();
             }
 
-            await this.cacheProvider.save(
-              `notified:${post.post_id}:${user.telegram_id}`,
-              true,
-              'EX',
-              900,
-            );
+            await this.cacheProvider.save(`notified:${post.post_id}:${user.telegram_id}`, true, 'EX', 900);
 
             return queue.add('sendMentionNotification', { post, user });
-          }),
+          })
         );
-      }),
+      })
     );
 
     await Promise.allSettled(
@@ -262,9 +208,7 @@ export default class CheckPostsService {
 
             return Promise.allSettled(
               trackedTopic.tracking.map(async telegram_id => {
-                const user = await this.usersRepository.findByTelegramId(
-                  telegram_id,
-                );
+                const user = await this.usersRepository.findByTelegramId(telegram_id);
 
                 if (!user) {
                   return Promise.resolve();
@@ -283,19 +227,15 @@ export default class CheckPostsService {
                 }
 
                 const foundIgnoredUser = ignoredUsers.find(
-                  ignoredUser =>
-                    ignoredUser.username === post.author.toLowerCase(),
+                  ignoredUser => ignoredUser.username === post.author.toLowerCase()
                 );
 
-                if (
-                  foundIgnoredUser &&
-                  foundIgnoredUser.ignoring.includes(Number(user.telegram_id))
-                ) {
+                if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(Number(user.telegram_id))) {
                   return Promise.resolve();
                 }
 
                 const postNotified = await this.cacheProvider.recover<boolean>(
-                  `notified:${post.post_id}:${user.telegram_id}`,
+                  `notified:${post.post_id}:${user.telegram_id}`
                 );
 
                 if (postNotified) {
@@ -304,13 +244,12 @@ export default class CheckPostsService {
 
                 const trackedTopicUsers = await findTrackedTopicUsers.execute({
                   telegram_id: user.telegram_id,
-                  topic_id: post.topic_id,
+                  topic_id: post.topic_id
                 });
 
                 if (trackedTopicUsers.length) {
                   const withlistedAuthor = trackedTopicUsers.findIndex(
-                    trackedTopicUser =>
-                      trackedTopicUser.username === post.author.toLowerCase(),
+                    trackedTopicUser => trackedTopicUser.username === post.author.toLowerCase()
                   );
 
                   if (withlistedAuthor === -1) {
@@ -318,22 +257,17 @@ export default class CheckPostsService {
                   }
                 }
 
-                await this.cacheProvider.save(
-                  `notified:${post.post_id}:${user.telegram_id}`,
-                  true,
-                  'EX',
-                  900,
-                );
+                await this.cacheProvider.save(`notified:${post.post_id}:${user.telegram_id}`, true, 'EX', 900);
 
                 return queue.add('sendTopicTrackingNotification', {
                   post,
-                  user,
+                  user
                 });
-              }),
+              })
             );
-          }),
+          })
         );
-      }),
+      })
     );
 
     await Promise.allSettled(
@@ -344,10 +278,7 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            const usernameRegex = new RegExp(
-              `(?<!\\w)${scapeRegexText(webUser.username)}(?!\\w)`,
-              'gi',
-            );
+            const usernameRegex = new RegExp(`(?<!\\w)${scapeRegexText(webUser.username)}(?!\\w)`, 'gi');
 
             if (!post.content.match(usernameRegex)) {
               return Promise.resolve();
@@ -355,11 +286,11 @@ export default class CheckPostsService {
 
             return createWebNotification.execute({
               user_id: webUser.id,
-              post_id: post.post_id,
+              post_id: post.post_id
             });
-          }),
+          })
         );
-      }),
+      })
     );
 
     await queue.close();

@@ -6,13 +6,13 @@ import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 export default class SetPostHistoryCheckedService {
   constructor(
     @inject('PostsHistoryRepository')
-    private postsHistoryRepository: IPostsHistoryRepository,
+    private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
   public async execute(post_id: number, version: number): Promise<void> {
     const postHistory = await this.postsHistoryRepository.findOne({
       post_id,
-      version,
+      version
     });
 
     postHistory.checked = true;

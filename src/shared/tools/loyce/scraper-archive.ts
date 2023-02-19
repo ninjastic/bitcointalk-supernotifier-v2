@@ -6,18 +6,19 @@ import { createConnection, getManager } from 'typeorm';
 import iconv from 'iconv-lite';
 import axios from 'axios';
 import { sub } from 'date-fns';
+import inquirer from 'inquirer';
 
 import '../../infra/typeorm';
 import '../../container';
 
-import { prompt } from 'enquirer';
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';
 
 import CreatePostService from '../../../modules/posts/services/CreatePostService';
 
-const sleep = ms => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
+const sleep = ms =>
+  new Promise(resolve => {
+    setTimeout(resolve, ms);
+  });
 
 const scrapePostFromBuffer = buffer => {
   const utf8String = iconv.decode(buffer, 'ISO-8859-1');
@@ -75,7 +76,7 @@ const scrapePostFromBuffer = buffer => {
     checked,
     notified,
     notified_to,
-    archive,
+    archive
   };
 
   return post;
@@ -90,24 +91,22 @@ createConnection().then(async () => {
   const manager = getManager();
   const createPost = container.resolve(CreatePostService);
 
-  const { from, to } = await prompt<PromptResponse>([
-    {
-      type: 'input',
-      name: 'from',
-      message: 'From Id',
-      validate: value => {
-        return !Number.isNaN(Number(value));
+  const { from, to } = await inquirer
+    .prompt<PromptResponse>([
+      {
+        type: 'input',
+        name: 'from',
+        message: 'From Id',
+        validate: value => !Number.isNaN(Number(value))
       },
-    },
-    {
-      type: 'input',
-      name: 'to',
-      message: 'To Id',
-      validate: value => {
-        return !Number.isNaN(Number(value));
-      },
-    },
-  ]).catch(() => process.exit());
+      {
+        type: 'input',
+        name: 'to',
+        message: 'To Id',
+        validate: value => !Number.isNaN(Number(value))
+      }
+    ])
+    .catch(() => process.exit());
 
   console.log(`Scraping range: ${from} ~ ${to}`);
 
@@ -121,17 +120,12 @@ createConnection().then(async () => {
     const currentId = Number(from) + Number(n);
     const currentIdFolder = currentId.toString().substring(0, 4);
 
-    const exists = await manager.query(
-      'SELECT post_id FROM posts WHERE post_id = $1',
-      [currentId],
-    );
+    const exists = await manager.query('SELECT post_id FROM posts WHERE post_id = $1', [currentId]);
 
     if (exists) {
       console.log('Exists', currentId);
     } else {
-      const response = await axios.get(
-        `https://loyce.club/archive/posts/${currentIdFolder}/${currentId}.html`,
-      );
+      const response = await axios.get(`https://loyce.club/archive/posts/${currentIdFolder}/${currentId}.html`);
 
       const post = scrapePostFromBuffer(response.data);
 

@@ -9,7 +9,7 @@ export default class ScrapePostJob {
   public async start({ topic_id, post_id }: ScrapePostDTO): Promise<Post> {
     const queue = new Queue('ForumScrapperSideQueue', {
       redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
     });
 
     const job = await queue.add('scrapePost', { topic_id, post_id });

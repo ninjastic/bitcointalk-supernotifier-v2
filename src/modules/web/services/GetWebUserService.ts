@@ -13,7 +13,7 @@ interface Params {
 export default class GetWebUserService {
   constructor(
     @inject('WebUsersRepository')
-    private webUsersRepository: IWebUsersRepository,
+    private webUsersRepository: IWebUsersRepository
   ) {}
 
   public async execute(conditions: Params): Promise<WebUser | undefined> {

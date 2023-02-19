@@ -26,20 +26,16 @@ export default class ScrapeModLogService {
 
     const parseModLog = container.resolve(ParseModLogService);
 
-    const scrapeResults = logsToScrape.map(modLogElement => {
-      return parseModLog.execute(modLogElement);
-    });
+    const scrapeResults = logsToScrape.map(modLogElement => parseModLog.execute(modLogElement));
 
-    const filteredScrapeResults = scrapeResults.filter(result => {
-      return result;
-    });
+    const filteredScrapeResults = scrapeResults.filter(result => result);
 
     const saveModLog = container.resolve(SaveModLogService);
 
     await Promise.all(
       filteredScrapeResults.map(async (modLog: ModLog) => {
         await saveModLog.execute(modLog);
-      }),
+      })
     );
   }
 }

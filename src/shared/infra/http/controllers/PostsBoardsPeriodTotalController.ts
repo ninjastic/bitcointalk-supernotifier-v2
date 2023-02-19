@@ -13,21 +13,19 @@ export default class PostsBoardsPeriodTotalController {
     const date = new Date();
     const dateUTC = addMinutes(date, date.getTimezoneOffset());
 
-    const defaultFrom = startOfHour(
-      sub(dateUTC, { days: 1, hours: 1 }),
-    ).toISOString();
+    const defaultFrom = startOfHour(sub(dateUTC, { days: 1, hours: 1 })).toISOString();
     const defaultTo = endOfHour(sub(dateUTC, { hours: 1 })).toISOString();
 
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
-      limit: Joi.number().allow('', null),
+      limit: Joi.number().allow('', null)
     });
 
     const query = {
       from: (request.query.from || defaultFrom) as string,
       to: (request.query.to || defaultTo) as string,
-      limit: Number(request.query.limit) || null,
+      limit: Number(request.query.limit) || null
     };
 
     try {
@@ -36,7 +34,7 @@ export default class PostsBoardsPeriodTotalController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -46,7 +44,7 @@ export default class PostsBoardsPeriodTotalController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -55,13 +53,11 @@ export default class PostsBoardsPeriodTotalController {
         {
           error: error.message,
           stack: error.stack,
-          controller: 'PostsBoardsPeriodTotalController',
+          controller: 'PostsBoardsPeriodTotalController'
         },
-        'Error on ',
+        'Error on '
       );
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

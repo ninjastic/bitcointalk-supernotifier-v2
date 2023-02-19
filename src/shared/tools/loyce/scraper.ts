@@ -4,8 +4,7 @@ import 'reflect-metadata';
 import cheerio from 'cheerio';
 import path from 'path';
 import fs from 'fs-extra';
-import decompress from 'decompress';
-import decompressTarbz from 'decompress-tarbz2';
+
 import { container } from 'tsyringe';
 import { createConnection, getManager } from 'typeorm';
 import del from 'del';
@@ -33,16 +32,6 @@ const readDir = async dir => {
   const files = await fs.readdir(dir);
 
   return files;
-};
-
-const decompressFile = async (file, dir) => {
-  if (!fs.pathExists(dir)) {
-    fs.mkdirSync(dir);
-  }
-
-  await decompress(file, dir, {
-    plugins: [decompressTarbz()],
-  });
 };
 
 const scrapePostFromBuffer = buffer => {
@@ -95,7 +84,7 @@ const scrapePostFromBuffer = buffer => {
     checked,
     notified,
     notified_to,
-    archive,
+    archive
   };
 
   return post;
@@ -118,9 +107,7 @@ createConnection().then(async () => {
     let sinceLastBatch = 0;
 
     for await (const file of files) {
-      const fileContent = await fs.readFile(
-        path.resolve(filesBasePath, folder, file),
-      );
+      const fileContent = await fs.readFile(path.resolve(filesBasePath, folder, file));
 
       const post = scrapePostFromBuffer(fileContent);
       const postCreated = createPost.execute(post);
@@ -154,23 +141,15 @@ createConnection().then(async () => {
         .execute();
     }
 
-    fs.appendFile(
-      path.resolve(filesBasePath, 'done.txt'),
-      `${folder},`,
-      err => {
-        if (err) throw err;
-      },
-    );
+    fs.appendFile(path.resolve(filesBasePath, 'done.txt'), `${folder},`, err => {
+      if (err) throw err;
+    });
 
     await del(folderFullDir, { force: true });
     await del(extractedFullPath, { force: true });
     console.log(`${new Date()}`);
     console.timeEnd(folder);
-    console.log(
-      `${Number(folder)} / ${foldersSorted.length} (${
-        (Number(folder) * 100) / foldersSorted.length
-      }%)`,
-    );
+    console.log(`${Number(folder)} / ${foldersSorted.length} (${(Number(folder) * 100) / foldersSorted.length}%)`);
     console.log('------------------------------');
   }
 

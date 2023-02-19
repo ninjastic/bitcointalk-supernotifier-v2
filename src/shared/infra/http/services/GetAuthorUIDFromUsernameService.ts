@@ -15,13 +15,11 @@ interface Params {
 export default class GetAuthorUIDFromUsernameService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute({ username }: Params): Promise<Response> {
-    const cachedData = await this.cacheRepository.recover<Response>(
-      `authorUID:${username}`,
-    );
+    const cachedData = await this.cacheRepository.recover<Response>(`authorUID:${username}`);
 
     if (cachedData) {
       return cachedData;
@@ -34,10 +32,10 @@ export default class GetAuthorUIDFromUsernameService {
       body: {
         query: {
           match_phrase: {
-            'author.keyword': username,
-          },
-        },
-      },
+            'author.keyword': username
+          }
+        }
+      }
     });
 
     if (!author.body.hits.hits.length) {
@@ -45,7 +43,7 @@ export default class GetAuthorUIDFromUsernameService {
     }
 
     const data = {
-      author_uid: author.body.hits.hits[0]?._source.author_uid,
+      author_uid: author.body.hits.hits[0]?._source.author_uid
     };
 
     await this.cacheRepository.save(`authorUID:${username}`, data);

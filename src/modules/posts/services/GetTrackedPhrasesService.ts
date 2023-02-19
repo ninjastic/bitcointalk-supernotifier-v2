@@ -12,13 +12,11 @@ export default class GetTrackedPhrasesService {
     private trackedPhrasesRepository: ITrackedPhrasesRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(): Promise<TrackedPhrase[]> {
-    const cachedTrackedPhrases = await this.cacheRepository.recover<
-      TrackedPhrase[]
-    >('trackedPhrases');
+    const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase[]>('trackedPhrases');
 
     if (cachedTrackedPhrases) {
       return cachedTrackedPhrases;

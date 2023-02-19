@@ -18,7 +18,7 @@ export default class PostsController {
     const id_list = params.id_list.split(',').map(id => Number(id));
 
     const schemaValidation = Joi.object({
-      id_list: Joi.array().items(Joi.number()),
+      id_list: Joi.array().items(Joi.number())
     });
 
     try {
@@ -27,7 +27,7 @@ export default class PostsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -36,7 +36,7 @@ export default class PostsController {
     const result = {
       result: 'success',
       message: null,
-      data,
+      data
     };
 
     return response.json(result);
@@ -57,7 +57,7 @@ export default class PostsController {
       after_date: Joi.string().isoDate().allow('', null),
       before_date: Joi.string().isoDate().allow('', null),
       limit: Joi.number().allow('', null),
-      order: Joi.string().valid('ASC', 'DESC').insensitive(),
+      order: Joi.string().valid('ASC', 'DESC').insensitive()
     });
 
     const query = request.query as unknown;
@@ -68,7 +68,7 @@ export default class PostsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -78,7 +78,7 @@ export default class PostsController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -86,11 +86,9 @@ export default class PostsController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'PostsController',
+        controller: 'PostsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

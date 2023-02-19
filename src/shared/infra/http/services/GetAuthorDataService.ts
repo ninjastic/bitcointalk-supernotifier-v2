@@ -43,29 +43,29 @@ export default class GetUserDataService {
       body: {
         query: {
           match: {
-            author_uid: authorInfo.author_uid,
-          },
+            author_uid: authorInfo.author_uid
+          }
         },
         aggs: {
           posts: {
             value_count: {
-              field: 'post_id',
-            },
+              field: 'post_id'
+            }
           },
           usernames: {
             terms: {
               field: 'author.keyword',
-              size: 10,
-            },
-          },
-        },
-      },
+              size: 10
+            }
+          }
+        }
+      }
     });
 
     const data = {
       ...authorInfo,
       ...results.body.hits.hits[0]?._source,
-      posts_count: results.body.hits.total.value,
+      posts_count: results.body.hits.total.value
     };
 
     await saveCache.execute(`userData:${author_uid}`, data, 'EX', 180);

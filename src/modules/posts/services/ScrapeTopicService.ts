@@ -12,7 +12,7 @@ import SavePostService from './SavePostService';
 export default class ScrapeTopicService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository,
+    private postsRepository: IPostsRepository
   ) {}
 
   public async execute(topic_id: number): Promise<Post | null> {
@@ -23,7 +23,7 @@ export default class ScrapeTopicService {
 
     const post = parseTopic.execute({
       html: response.data,
-      topic_id,
+      topic_id
     });
 
     const postExists = await this.postsRepository.findOneByPostId(post.post_id);

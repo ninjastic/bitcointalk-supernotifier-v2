@@ -18,7 +18,7 @@ export default class PostsAuthorsController {
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
-      limit: Joi.number(),
+      limit: Joi.number()
     });
 
     try {
@@ -27,7 +27,7 @@ export default class PostsAuthorsController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -37,7 +37,7 @@ export default class PostsAuthorsController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -45,11 +45,9 @@ export default class PostsAuthorsController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'PostsAuthorsController',
+        controller: 'PostsAuthorsController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

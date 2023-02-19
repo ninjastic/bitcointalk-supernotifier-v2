@@ -1,11 +1,4 @@
-import {
-  Entity,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  Index,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Entity, Column, CreateDateColumn, UpdateDateColumn, Index, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('posts')
 class Post {

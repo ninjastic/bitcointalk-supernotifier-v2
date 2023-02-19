@@ -22,7 +22,7 @@ export default class PostsCountPeriodController {
     const query = {
       from: from || startOfHour(sub(dateUTC, { days: 1 })).toISOString(),
       to: to || endOfHour(sub(dateUTC, { hours: 1 })).toISOString(),
-      interval: interval || '1h',
+      interval: interval || '1h'
     };
 
     const schemaValidation = Joi.object({
@@ -30,7 +30,7 @@ export default class PostsCountPeriodController {
       to: Joi.string().isoDate().allow('', null),
       interval: Joi.string()
         .regex(/^\d{0,3}(m|h|d|w|M)$/)
-        .allow('', null),
+        .allow('', null)
     });
 
     try {
@@ -39,7 +39,7 @@ export default class PostsCountPeriodController {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null,
+        data: null
       });
     }
 
@@ -49,7 +49,7 @@ export default class PostsCountPeriodController {
       const result = {
         result: 'success',
         message: null,
-        data,
+        data
       };
 
       return response.json(result);
@@ -57,11 +57,9 @@ export default class PostsCountPeriodController {
       logger.error({
         error: error.message,
         stack: error.stack,
-        controller: 'PostsCountPeriodController',
+        controller: 'PostsCountPeriodController'
       });
-      return response
-        .status(500)
-        .json({ result: 'fail', message: 'Something went wrong', data: null });
+      return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
   }
 }

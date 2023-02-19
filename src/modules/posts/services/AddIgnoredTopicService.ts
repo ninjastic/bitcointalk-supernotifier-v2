@@ -16,15 +16,11 @@ export default class AddIgnoredTopicService {
     private ignoredTopicsRepository: IIgnoredTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider,
+    private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(
-    topic_id: number,
-    telegram_id?: number,
-  ): Promise<IgnoredTopic> {
-    const ignoredTopicExists =
-      await this.ignoredTopicsRepository.findOneByTopicId(topic_id);
+  public async execute(topic_id: number, telegram_id?: number): Promise<IgnoredTopic> {
+    const ignoredTopicExists = await this.ignoredTopicsRepository.findOneByTopicId(topic_id);
 
     if (ignoredTopicExists) {
       if (!telegram_id) {
@@ -47,7 +43,7 @@ export default class AddIgnoredTopicService {
 
     const queue = new Queue('ForumScrapperSideQueue', {
       redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true },
+      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
     });
 
     const job = await queue.add('scrapeTopic', { topic_id }, { priority: 1 });
@@ -57,13 +53,12 @@ export default class AddIgnoredTopicService {
     const ignoredTopic = this.ignoredTopicsRepository.create({
       post_id: topicPost.post_id,
       topic_id: topicPost.topic_id,
-      ignoring: telegram_id ? [telegram_id] : [],
+      ignoring: telegram_id ? [telegram_id] : []
     });
 
     await this.ignoredTopicsRepository.save(ignoredTopic);
 
-    const ignoredWithTopic =
-      await this.ignoredTopicsRepository.findOneByTopicId(topic_id);
+    const ignoredWithTopic = await this.ignoredTopicsRepository.findOneByTopicId(topic_id);
 
     await queue.close();
 
