@@ -20,7 +20,7 @@ class ModLog {
   @Column({ default: false })
   notified: boolean;
 
-  @Column({ type: 'integer', array: true, default: [] })
+  @Column({ type: 'bigint', array: true, default: [] })
   notified_to: number[];
 
   @Column({ default: false })

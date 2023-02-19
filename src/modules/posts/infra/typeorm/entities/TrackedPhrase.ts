@@ -18,7 +18,7 @@ class TrackedPhrase {
   @Column()
   phrase: string;
 
-  @Column()
+  @Column({ type: 'bigint' })
   telegram_id: number;
 
   @OneToOne(() => User)

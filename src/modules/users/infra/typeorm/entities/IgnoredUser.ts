@@ -9,7 +9,7 @@ class IgnoredUser {
   @Index({ unique: true })
   username: string;
 
-  @Column({ type: 'integer', array: true, default: [] })
+  @Column({ type: 'bigint', array: true, default: [] })
   ignoring: number[];
 
   @CreateDateColumn()

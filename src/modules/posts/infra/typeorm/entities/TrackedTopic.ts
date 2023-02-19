@@ -27,7 +27,7 @@ class TrackedTopic {
   @JoinColumn({ name: 'post_id', referencedColumnName: 'post_id' })
   post: Post;
 
-  @Column({ type: 'integer', array: true, default: [] })
+  @Column({ type: 'bigint', array: true, default: [] })
   tracking: number[];
 
   @CreateDateColumn()
