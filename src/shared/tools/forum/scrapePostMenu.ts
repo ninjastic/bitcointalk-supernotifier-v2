@@ -28,6 +28,11 @@ export const scrapePostMenu = async (): Promise<void> => {
     .then(async ({ post_id, topic_id }) => {
       const post = await scrapePost.execute({ post_id, topic_id });
 
+      if (!post) {
+        console.info('Post not found!');
+        process.exit();
+      }
+
       Object.entries(post).forEach(([key, value]) => {
         console.info(chalk.green(`${key}: `), value);
       });
@@ -51,7 +56,11 @@ export const scrapePostMenu = async (): Promise<void> => {
           .values([post])
           .onConflict('("post_id") DO NOTHING')
           .execute()
-          .then(r => console.info(`Inserted with id ${r.identifiers[0].id}`));
+          .then(r =>
+            r.identifiers.length
+              ? console.info(`Inserted with id ${r.identifiers[0].id}`)
+              : console.log('Could not insert post')
+          );
       } else {
         console.info('Canceled!');
       }

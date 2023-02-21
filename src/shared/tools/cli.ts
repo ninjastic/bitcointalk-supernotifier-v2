@@ -6,7 +6,7 @@ import { syncBoards } from './forum/syncBoards';
 import { scrapeMeritDump } from './forum/scrapeMeritDump';
 
 type MainMenuOptions = 'Posts' | 'Boards' | 'Merits';
-type PostsMenuOptions = 'Create' | 'Censor' | 'Scrape';
+type PostsMenuOptions = 'Scrape' | 'Create' | 'Censor';
 type MeritsMenuOptions = 'Scrape Last Dump' | 'Scrape Loyce';
 type BoardsMenuOptions = 'Sync';
 
@@ -30,7 +30,7 @@ const mainMenu = async () =>
         name: 'postsMenu',
         message: 'What about it?',
         type: 'list',
-        choices: ['Create', 'Censor', 'Scrape'],
+        choices: ['Scrape', 'Create', 'Censor'],
         when(answers) {
           return answers.mainMenu === 'Posts';
         }
