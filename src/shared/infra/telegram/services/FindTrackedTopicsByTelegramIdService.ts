@@ -18,9 +18,9 @@ export default class FindTrackedTopicsByTelegramIdService {
   public async execute(telegram_id: string): Promise<TrackedTopic[]> {
     const cachedTrackedTopics = await this.cacheRepository.recover<TrackedTopic[]>(`trackedTopics:${telegram_id}`);
 
-    // if (cachedTrackedTopics) {
-    //   return cachedTrackedTopics;
-    // }
+    if (cachedTrackedTopics) {
+      return cachedTrackedTopics;
+    }
 
     const trackedTopics = await this.trackedTopicsRepository.findAllByTelegramId(telegram_id);
 
