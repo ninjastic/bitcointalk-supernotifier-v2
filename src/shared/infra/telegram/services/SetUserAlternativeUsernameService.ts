@@ -10,7 +10,7 @@ export default class SetUserAlternativeUsernameService {
     private usersRepository: IUsersRepository
   ) {}
 
-  public async execute(telegram_id: number, username: string): Promise<User> {
+  public async execute(telegram_id: string, username: string): Promise<User> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
 
     user.alternative_usernames = [username];

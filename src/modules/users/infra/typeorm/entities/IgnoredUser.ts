@@ -10,7 +10,7 @@ class IgnoredUser {
   username: string;
 
   @Column({ type: 'bigint', array: true, default: [] })
-  ignoring: number[];
+  ignoring: string[];
 
   @CreateDateColumn()
   created_at: Date;

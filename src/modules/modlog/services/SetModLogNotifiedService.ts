@@ -10,7 +10,7 @@ export default class SetModLogNotifiedService {
     private modLogRepository: IModLogRepository
   ) {}
 
-  public async execute(data: FindModLogDTO, telegram_id: number): Promise<void> {
+  public async execute(data: FindModLogDTO, telegram_id: string): Promise<void> {
     const modLog = await this.modLogRepository.findOne(data);
 
     modLog.notified = true;

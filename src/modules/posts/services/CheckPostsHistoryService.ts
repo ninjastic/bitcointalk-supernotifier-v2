@@ -68,10 +68,7 @@ export default class CheckPostsHistoryService {
               }
             }
 
-            if (
-              history.post.notified_to.includes(Number(user.telegram_id)) ||
-              history.notified_to.includes(Number(user.telegram_id))
-            ) {
+            if (history.post.notified_to.includes(user.telegram_id) || history.notified_to.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 
@@ -79,7 +76,7 @@ export default class CheckPostsHistoryService {
               ignoredUser => ignoredUser.username === history.post.author.toLowerCase()
             );
 
-            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(Number(user.telegram_id))) {
+            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 
@@ -87,7 +84,7 @@ export default class CheckPostsHistoryService {
               ignoredTopic => ignoredTopic.topic_id === history.post.topic_id
             );
 
-            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))) {
+            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 

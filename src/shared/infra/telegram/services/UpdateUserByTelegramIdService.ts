@@ -14,7 +14,7 @@ export default class UpdateUserByTelegramIdService {
     private usersRepository: IUsersRepository
   ) {}
 
-  public async execute(telegram_id: number, data: CreateUserDTO): Promise<User> {
+  public async execute(telegram_id: string, data: CreateUserDTO): Promise<User> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
 
     logger.info({ user, data }, 'Updating user');

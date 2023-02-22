@@ -20,7 +20,7 @@ class User {
   language: string;
 
   @Column({ default: null })
-  telegram_id: number;
+  telegram_id: string;
 
   @Column()
   enable_mentions: boolean;

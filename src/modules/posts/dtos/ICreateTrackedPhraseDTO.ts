@@ -1,4 +1,4 @@
 export default interface ICreateTrackedPhraseDTO {
-  telegram_id: number;
+  telegram_id: string;
   phrase: string;
 }

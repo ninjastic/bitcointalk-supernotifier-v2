@@ -15,19 +15,19 @@ const handleNotificationToggle = async (ctx: IMenuContext) => {
   if (ctx.update.callback_query.data === '/notifications/merits') {
     ctx.session.merits = !ctx.session.merits;
 
-    await updateUserNotification.execute(ctx.update.callback_query.from.id, 'merits', ctx.session.merits);
+    await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'merits', ctx.session.merits);
   }
 
   if (ctx.update.callback_query.data === '/notifications/mentions') {
     ctx.session.mentions = !ctx.session.mentions;
 
-    await updateUserNotification.execute(ctx.update.callback_query.from.id, 'mentions', ctx.session.mentions);
+    await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'mentions', ctx.session.mentions);
   }
 
   if (ctx.update.callback_query.data === '/notifications/modlogs') {
     ctx.session.modlogs = !ctx.session.modlogs;
 
-    await updateUserNotification.execute(ctx.update.callback_query.from.id, 'modlogs', ctx.session.modlogs);
+    await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'modlogs', ctx.session.modlogs);
   }
 
   await ctx.answerCallbackQuery();

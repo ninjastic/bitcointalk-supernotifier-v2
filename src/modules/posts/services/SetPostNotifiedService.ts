@@ -9,7 +9,7 @@ export default class SetPostNotifiedService {
     private postsRepository: IPostsRepository
   ) {}
 
-  public async execute(post_id: number, telegram_id: number): Promise<void> {
+  public async execute(post_id: number, telegram_id: string): Promise<void> {
     const post = await this.postsRepository.findOneByPostId(post_id);
 
     post.notified = true;

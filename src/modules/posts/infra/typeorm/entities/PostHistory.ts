@@ -46,7 +46,7 @@ class PostHistory {
   notified: boolean;
 
   @Column({ type: 'bigint', array: true, default: [] })
-  notified_to: number[];
+  notified_to: string[];
 
   @Column({ default: false })
   checked: boolean;

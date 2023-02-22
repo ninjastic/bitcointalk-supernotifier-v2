@@ -14,7 +14,7 @@ const altCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
   if (!value) {
     await ctx.reply('Are you sure you chose a valid username?');
   } else {
-    await setUserAlternativeUsername.execute(telegram_id, value);
+    await setUserAlternativeUsername.execute(String(telegram_id), value);
 
     await ctx.reply(`Done! Your alternative username is now: <b>${value}</b>`, {
       parse_mode: 'HTML'

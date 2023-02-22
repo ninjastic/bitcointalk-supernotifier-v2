@@ -86,7 +86,7 @@ class TelegramBot {
     this.instance.use(async (ctx, next) => {
       if (!ctx.session.username || !ctx.session.userId) {
         const findUserByTelegramId = container.resolve(FindUserByTelegramIdService);
-        const user = await findUserByTelegramId.execute(ctx.from.id);
+        const user = await findUserByTelegramId.execute(String(ctx.from.id));
         if (user) {
           ctx.session.username = user.username;
           ctx.session.userId = user.user_id;

@@ -11,7 +11,7 @@ import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNo
 import SetUserBlockedService from './SetUserBlockedService';
 
 export default class SendTopicTrackingNotificationService {
-  public async execute(telegram_id: number, post: Post): Promise<void> {
+  public async execute(telegram_id: string, post: Post): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
 

@@ -21,7 +21,7 @@ export default class CreateTrackedTopicUserService {
     topic_id
   }: {
     username: string;
-    telegram_id: number;
+    telegram_id: string;
     topic_id: number;
   }): Promise<TrackedTopicUser> {
     const exists = await this.trackedTopicUsersRepository.findOne({

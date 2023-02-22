@@ -46,7 +46,7 @@ export default class TrackedTopicsRepository implements ITrackedTopicsRepository
     return trackedTopic;
   }
 
-  public async findAllByTelegramId(telegram_id: number): Promise<TrackedTopic[]> {
+  public async findAllByTelegramId(telegram_id: string): Promise<TrackedTopic[]> {
     const trackedTopics = await this.ormRepository.find({
       relations: ['post']
     });
@@ -58,7 +58,6 @@ export default class TrackedTopicsRepository implements ITrackedTopicsRepository
 
   public async findAllWithUsers(): Promise<TrackedTopic[]> {
     const trackedTopics = await this.ormRepository.find();
-
     const filteredTrackedTopics = trackedTopics.filter(topic => topic.tracking.length);
 
     return filteredTrackedTopics;

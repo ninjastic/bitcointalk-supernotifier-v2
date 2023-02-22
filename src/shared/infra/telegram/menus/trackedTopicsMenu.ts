@@ -35,7 +35,7 @@ const trackedTopicInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
   const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
 
   const users = await findTrackedTopicUsers.execute({
-    telegram_id: ctx.chat.id,
+    telegram_id: String(ctx.chat.id),
     topic_id: Number(ctx.match[1])
   });
 
@@ -96,7 +96,7 @@ const getTrackedTopicUsersList = async (ctx: IMenuContext) => {
   const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
 
   const choices = await findTrackedTopicUsers.execute({
-    telegram_id: ctx.chat.id,
+    telegram_id: String(ctx.chat.id),
     topic_id: Number(ctx.match[1])
   });
 
@@ -139,7 +139,7 @@ confirmRemoveTrackedTopicUser.interact('Yes, do it!', 'yes', {
     const deleteTrackedTopicUser = container.resolve(DeleteTrackedTopicUserService);
 
     const trackedTopicUser = await findTrackedTopicUsers.execute({
-      telegram_id: ctx.chat.id,
+      telegram_id: String(ctx.chat.id),
       topic_id: Number(ctx.match[1]),
       username: ctx.match[2]
     });
@@ -170,7 +170,7 @@ const addTrackedTopicUserQuestion = new StatelessQuestion('addUser', async (ctx:
     try {
       await createTrackedTopicUser.execute({
         username: text,
-        telegram_id: ctx.message.chat.id,
+        telegram_id: String(ctx.message.chat.id),
         topic_id: ctx.session.addTrackedTopicUserTopicId
       });
 
@@ -244,7 +244,7 @@ confirmRemoveTrackedTopicMenu.interact('Yes, do it!', 'yes', {
   do: async ctx => {
     const removeTrackedTopic = container.resolve(RemoveTrackedTopicService);
 
-    await removeTrackedTopic.execute(Number(ctx.match[1]), ctx.chat.id);
+    await removeTrackedTopic.execute(Number(ctx.match[1]), String(ctx.chat.id));
 
     return '/tt/';
   }
@@ -286,7 +286,7 @@ const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx
         'We have added your request to the queue.\n\nThis will take a few seconds...'
       );
 
-      const trackedTopic = await addTrackedTopic.execute(Number(topic_id[1]), ctx.message.chat.id);
+      const trackedTopic = await addTrackedTopic.execute(Number(topic_id[1]), String(ctx.message.chat.id));
 
       await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id);
 
@@ -325,13 +325,12 @@ const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx
 
 const getTrackedTopicsList = async (ctx: IMenuContext) => {
   const findTrackedTopicsByTelegramId = container.resolve(FindTrackedTopicsByTelegramIdService);
-
-  const choices = await findTrackedTopicsByTelegramId.execute(ctx.chat.id);
-
   const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
 
+  const trackedTopics = await findTrackedTopicsByTelegramId.execute(String(ctx.chat.id));
+
   const trackedTopicUsers = await findTrackedTopicUsers.execute({
-    telegram_id: ctx.chat.id
+    telegram_id: String(ctx.chat.id)
   });
 
   const userTopicsWithWhitelist = [];
@@ -344,7 +343,7 @@ const getTrackedTopicsList = async (ctx: IMenuContext) => {
 
   const formatted = {};
 
-  choices.forEach(choice => {
+  trackedTopics.forEach(choice => {
     let formattedTitle = userTopicsWithWhitelist.includes(choice.topic_id) ? '* ' : '';
     formattedTitle += choice.post.title.substr(0, 35);
     formattedTitle += choice.post.title.length >= 35 ? '...' : '';

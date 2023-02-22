@@ -96,17 +96,17 @@ const setupConversation = async (
   const findUserByTelegramId = container.resolve(FindUserByTelegramIdService);
   const updateUserByTelegramId = container.resolve(UpdateUserByTelegramIdService);
 
-  const userExists = await findUserByTelegramId.execute(ctx.from.id);
+  const userExists = await findUserByTelegramId.execute(String(ctx.from.id));
 
   if (userExists) {
-    await updateUserByTelegramId.execute(ctx.from.id, {
+    await updateUserByTelegramId.execute(String(ctx.from.id), {
       user_id: userId,
       username,
       alternative_usernames: [],
       enable_mentions: mentionsEnabled,
       enable_merits: meritsEnabled,
       language: 'en',
-      telegram_id: ctx.from.id,
+      telegram_id: String(ctx.from.id),
       blocked: false
     });
   } else {
@@ -117,7 +117,7 @@ const setupConversation = async (
       enable_mentions: mentionsEnabled,
       enable_merits: meritsEnabled,
       language: 'en',
-      telegram_id: ctx.from.id,
+      telegram_id: String(ctx.from.id),
       blocked: false
     });
   }

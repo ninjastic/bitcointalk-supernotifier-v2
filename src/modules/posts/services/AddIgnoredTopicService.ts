@@ -19,7 +19,7 @@ export default class AddIgnoredTopicService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(topic_id: number, telegram_id?: number): Promise<IgnoredTopic> {
+  public async execute(topic_id: number, telegram_id?: string): Promise<IgnoredTopic> {
     const ignoredTopicExists = await this.ignoredTopicsRepository.findOneByTopicId(topic_id);
 
     if (ignoredTopicExists) {

@@ -52,7 +52,7 @@ class Merit {
   notified: boolean;
 
   @Column({ type: 'int', array: true, default: [] })
-  notified_to: number[];
+  notified_to: string[];
 
   @Column({ default: false })
   checked: boolean;

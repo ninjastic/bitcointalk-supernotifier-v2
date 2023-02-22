@@ -85,7 +85,7 @@ export default class CheckPostsService {
               return Promise.resolve();
             }
 
-            if (post.notified_to.includes(Number(user.telegram_id))) {
+            if (post.notified_to.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 
@@ -93,13 +93,13 @@ export default class CheckPostsService {
               ignoredUser => ignoredUser.username === post.author.toLowerCase()
             );
 
-            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(Number(user.telegram_id))) {
+            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 
             const foundIgnoredTopic = ignoredTopics.find(ignoredTopic => ignoredTopic.topic_id === post.topic_id);
 
-            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))) {
+            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 
@@ -164,7 +164,7 @@ export default class CheckPostsService {
               }
             }
 
-            if (post.notified_to.includes(Number(user.telegram_id))) {
+            if (post.notified_to.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 
@@ -172,13 +172,13 @@ export default class CheckPostsService {
               ignoredUser => ignoredUser.username === post.author.toLowerCase()
             );
 
-            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(Number(user.telegram_id))) {
+            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 
             const foundIgnoredTopic = ignoredTopics.find(ignoredTopic => ignoredTopic.topic_id === post.topic_id);
 
-            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(Number(user.telegram_id))) {
+            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(user.telegram_id)) {
               return Promise.resolve();
             }
 
@@ -222,7 +222,7 @@ export default class CheckPostsService {
                   return Promise.resolve();
                 }
 
-                if (post.notified_to.includes(Number(user.telegram_id))) {
+                if (post.notified_to.includes(user.telegram_id)) {
                   return Promise.resolve();
                 }
 
@@ -230,7 +230,7 @@ export default class CheckPostsService {
                   ignoredUser => ignoredUser.username === post.author.toLowerCase()
                 );
 
-                if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(Number(user.telegram_id))) {
+                if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(user.telegram_id)) {
                   return Promise.resolve();
                 }
 

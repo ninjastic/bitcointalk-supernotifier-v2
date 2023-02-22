@@ -30,7 +30,7 @@ export default class UsersRepository implements IUsersRepository {
     return user;
   }
 
-  public async findByTelegramId(telegram_id: number): Promise<User | undefined> {
+  public async findByTelegramId(telegram_id: string): Promise<User | undefined> {
     const user = await this.ormRepository.findOne({ telegram_id });
 
     return user;

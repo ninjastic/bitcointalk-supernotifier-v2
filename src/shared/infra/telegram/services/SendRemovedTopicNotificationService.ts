@@ -13,7 +13,7 @@ import SetModLogNotifiedService from '../../../../modules/modlog/services/SetMod
 import SetUserBlockedService from './SetUserBlockedService';
 
 export default class SendRemovedTopicNotificationService {
-  public async execute(telegram_id: number, posts: Post[], modLog: ModLog): Promise<void> {
+  public async execute(telegram_id: string, posts: Post[], modLog: ModLog): Promise<void> {
     const setModLogNotified = container.resolve(SetModLogNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
 

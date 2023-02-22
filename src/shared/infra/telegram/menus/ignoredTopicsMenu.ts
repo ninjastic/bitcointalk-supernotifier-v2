@@ -53,7 +53,7 @@ const confirmRemoveIgnoredTopicMenu = new MenuTemplate<IMenuContext>(async ctx =
 confirmRemoveIgnoredTopicMenu.interact('Yes, do it!', 'yes', {
   do: async ctx => {
     const removeIgnoredTopic = container.resolve(RemoveIgnoredTopicService);
-    await removeIgnoredTopic.execute(Number(ctx.match[1]), ctx.chat.id);
+    await removeIgnoredTopic.execute(Number(ctx.match[1]), String(ctx.chat.id));
 
     return '/ignoredTopics/';
   }
@@ -95,7 +95,7 @@ const addIgnoredTopicLinkQuestion = new StatelessQuestion('addIgnoredTopic', asy
         'We have added your request to the queue.\n\nThis will take a few seconds...'
       );
 
-      const ignoredTopic = await addIgnoredTopic.execute(Number(topic_id[1]), ctx.message.chat.id);
+      const ignoredTopic = await addIgnoredTopic.execute(Number(topic_id[1]), String(ctx.message.chat.id));
 
       await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id);
 
@@ -134,12 +134,11 @@ const addIgnoredTopicLinkQuestion = new StatelessQuestion('addIgnoredTopic', asy
 
 const getIgnoredTopics = async (ctx: IMenuContext) => {
   const findIgnoredTopicsByTelegramId = container.resolve(FindIgnoredTopicsByTelegramIdService);
-
-  const choices = await findIgnoredTopicsByTelegramId.execute(ctx.chat.id);
+  const ignoredTopics = await findIgnoredTopicsByTelegramId.execute(String(ctx.chat.id));
 
   const formatted = {};
 
-  choices.forEach(choice => {
+  ignoredTopics.forEach(choice => {
     let formattedTitle = '';
     formattedTitle += choice.post.title.substring(0, 35);
     formattedTitle += choice.post.title.length >= 35 ? '...' : '';

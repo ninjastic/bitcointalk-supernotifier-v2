@@ -10,7 +10,7 @@ export default class FindUserByTelegramIdService {
     private usersRepository: IUsersRepository
   ) {}
 
-  public async execute(telegram_id: number): Promise<User | undefined> {
+  public async execute(telegram_id: string): Promise<User | undefined> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
 
     return user;

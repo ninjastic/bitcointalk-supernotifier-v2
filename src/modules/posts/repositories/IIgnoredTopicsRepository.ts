@@ -6,6 +6,6 @@ export default interface IIgnoredUserRepository {
   save(user: IgnoredTopic): Promise<IgnoredTopic>;
   findOneByTopicId(topic_id: number): Promise<IgnoredTopic | undefined>;
   findOneByPostId(post_id: number): Promise<IgnoredTopic | undefined>;
-  findAllByTelegramId(telegram_id: number): Promise<IgnoredTopic[]>;
+  findAllByTelegramId(telegram_id: string): Promise<IgnoredTopic[]>;
   findAllWithUsers(): Promise<IgnoredTopic[]>;
 }

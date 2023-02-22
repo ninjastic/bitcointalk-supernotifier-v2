@@ -29,7 +29,7 @@ class IgnoredTopic {
   post: Post;
 
   @Column({ type: 'bigint', array: true, default: [] })
-  ignoring: number[];
+  ignoring: string[];
 
   @CreateDateColumn()
   created_at: Date;

@@ -9,7 +9,7 @@ export default class SetPostHistoryNotifiedService {
     private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
-  public async execute(post_id: number, telegram_id: number): Promise<void> {
+  public async execute(post_id: number, telegram_id: string): Promise<void> {
     const postHistory = await this.postsHistoryRepository.findOne({
       post_id,
       version: 1

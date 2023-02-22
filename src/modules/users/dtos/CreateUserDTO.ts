@@ -3,7 +3,7 @@ export default interface CreateUserDTO {
   username: string;
   alternative_usernames: Array<string>;
   language: string;
-  telegram_id: number;
+  telegram_id: string;
   enable_mentions: boolean;
   enable_merits: boolean;
   blocked: boolean;

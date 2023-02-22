@@ -15,7 +15,7 @@ export default class FindTrackedPhrasesByTelegramIdService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(telegram_id: number): Promise<TrackedPhrase[]> {
+  public async execute(telegram_id: string): Promise<TrackedPhrase[]> {
     const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase[]>(`trackedPhrases:${telegram_id}`);
 
     if (cachedTrackedPhrases) {

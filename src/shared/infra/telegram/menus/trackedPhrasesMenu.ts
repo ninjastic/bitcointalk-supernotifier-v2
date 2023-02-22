@@ -50,7 +50,7 @@ confirmRemoveTrackedPhraseMenu.interact('Yes, do it!', 'yes', {
   do: async ctx => {
     const removeTrackedPhrase = container.resolve(RemoveTrackedPhraseService);
 
-    await removeTrackedPhrase.execute(ctx.match[1], ctx.chat.id);
+    await removeTrackedPhrase.execute(ctx.match[1], String(ctx.chat.id));
 
     return '/tp/';
   }
@@ -73,7 +73,7 @@ const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (c
 
   try {
     const trackedPhrase = await createTrackedPhrase.execute({
-      telegram_id: ctx.chat.id,
+      telegram_id: String(ctx.chat.id),
       phrase: text
     });
 
@@ -107,7 +107,7 @@ const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (c
 const getTrackedPhrasesList = async (ctx: IMenuContext) => {
   const findTrackedPhrasesByTelegramId = container.resolve(FindTrackedPhrasesByTelegramIdService);
 
-  const choices = await findTrackedPhrasesByTelegramId.execute(ctx.chat.id);
+  const choices = await findTrackedPhrasesByTelegramId.execute(String(ctx.chat.id));
 
   const formatted = {};
 

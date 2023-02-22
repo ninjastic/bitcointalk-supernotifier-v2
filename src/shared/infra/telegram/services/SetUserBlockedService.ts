@@ -10,7 +10,7 @@ export default class SetUserBlockedService {
     private usersRepository: IUsersRepository
   ) {}
 
-  public async execute(telegram_id: number): Promise<User> {
+  public async execute(telegram_id: string): Promise<User> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
 
     user.blocked = true;

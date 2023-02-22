@@ -38,13 +38,12 @@ export default class IgnoredTopicsRepository implements IIgnoredTopicsRepository
     return ignoredTopic;
   }
 
-  public async findAllByTelegramId(telegram_id: number): Promise<IgnoredTopic[]> {
+  public async findAllByTelegramId(telegram_id: string): Promise<IgnoredTopic[]> {
     const ignoredTopics = await this.ormRepository.find({
       relations: ['post']
     });
 
     const filteredIgnoredTopics = ignoredTopics.filter(topic => topic.ignoring.includes(telegram_id));
-
     return filteredIgnoredTopics;
   }
 
@@ -52,7 +51,6 @@ export default class IgnoredTopicsRepository implements IIgnoredTopicsRepository
     const ignoredTopics = await this.ormRepository.find();
 
     const filteredIgnoredTopics = ignoredTopics.filter(topic => topic.ignoring.length);
-
     return filteredIgnoredTopics;
   }
 }

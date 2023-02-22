@@ -4,6 +4,6 @@ export default interface CreateModLogDTO {
   user_id: number;
   title?: string;
   notified: boolean;
-  notified_to: number[];
+  notified_to: string[];
   checked: boolean;
 }

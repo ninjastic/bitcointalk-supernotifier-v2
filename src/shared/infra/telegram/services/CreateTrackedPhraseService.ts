@@ -15,7 +15,7 @@ export default class CreateTrackedPhraseService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute({ telegram_id, phrase }: { telegram_id: number; phrase: string }): Promise<TrackedPhrase> {
+  public async execute({ telegram_id, phrase }: { telegram_id: string; phrase: string }): Promise<TrackedPhrase> {
     const exists = await this.trackedPhrasesRepository.findOne({
       telegram_id,
       phrase

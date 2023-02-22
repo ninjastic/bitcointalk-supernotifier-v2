@@ -15,7 +15,7 @@ export default class FindIgnoredUsersByTelegramIdService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(telegram_id: number): Promise<IgnoredUser[]> {
+  public async execute(telegram_id: string): Promise<IgnoredUser[]> {
     const cachedIgnoredUsers = await this.cacheRepository.recover<IgnoredUser[]>(`ignoredUsers:${telegram_id}`);
 
     if (cachedIgnoredUsers) {

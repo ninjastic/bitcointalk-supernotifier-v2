@@ -15,7 +15,7 @@ export default class AddIgnoredUserService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(username: string, telegram_id?: number): Promise<IgnoredUser> {
+  public async execute(username: string, telegram_id?: string): Promise<IgnoredUser> {
     const ignoredUserExists = await this.ignoredUserRepository.findOneByUsername(username);
 
     if (ignoredUserExists) {

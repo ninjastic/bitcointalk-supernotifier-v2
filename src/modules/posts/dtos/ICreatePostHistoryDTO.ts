@@ -8,5 +8,5 @@ export default interface ICreatePostHistoryDTO {
   checked: boolean;
   deleted?: boolean;
   notified: boolean;
-  notified_to: number[];
+  notified_to: string[];
 }

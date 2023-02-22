@@ -34,8 +34,7 @@ const confirmRemoveIgnoredUserMenu = new MenuTemplate<IMenuContext>(async ctx =>
 confirmRemoveIgnoredUserMenu.interact('Yes, do it!', 'yes', {
   do: async ctx => {
     const removeIgnoredUser = container.resolve(RemoveIgnoredUserService);
-
-    await removeIgnoredUser.execute(ctx.match[1], ctx.chat.id);
+    await removeIgnoredUser.execute(ctx.match[1], String(ctx.chat.id));
 
     return '/ignoredUsers/';
   }
@@ -58,7 +57,7 @@ const addIgnoredUserQuestion = new StatelessQuestion('addIgnoredUser', async (ct
     const addIgnoredUser = container.resolve(AddIgnoredUserService);
 
     try {
-      await addIgnoredUser.execute(text, ctx.message.chat.id);
+      await addIgnoredUser.execute(text, String(ctx.message.chat.id));
 
       let message = '';
       message += 'You are now ignoring the user: ';
@@ -94,7 +93,7 @@ const addIgnoredUserQuestion = new StatelessQuestion('addIgnoredUser', async (ct
 const getIgnoredUsers = async (ctx: IMenuContext) => {
   const findIgnoredUsersByTelegramId = container.resolve(FindIgnoredUsersByTelegramIdService);
 
-  const choices = await findIgnoredUsersByTelegramId.execute(ctx.chat.id);
+  const choices = await findIgnoredUsersByTelegramId.execute(String(ctx.chat.id));
 
   const formatted = {};
 

@@ -5,7 +5,7 @@ import IMenuContext from '../@types/IMenuContext';
 import SendGlobalNotificationService from '../services/SendGlobalNotificationService';
 
 const alertCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
-  if (ctx.from.id === 608520255) {
+  if (String(ctx.from.id) === '608520255') {
     const sendGlobalNotification = container.resolve(SendGlobalNotificationService);
 
     const message = ctx.message.text.replace('/alert ', '');

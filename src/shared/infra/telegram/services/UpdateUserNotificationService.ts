@@ -12,7 +12,7 @@ export default class UpdateUserNotificationService {
     private usersRepository: IUsersRepository
   ) {}
 
-  public async execute(telegram_id: number, type: NotificationType, value: boolean): Promise<User> {
+  public async execute(telegram_id: string, type: NotificationType, value: boolean): Promise<User> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
 
     if (type === 'mentions') {

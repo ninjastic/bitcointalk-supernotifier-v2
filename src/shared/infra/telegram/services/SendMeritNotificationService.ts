@@ -22,7 +22,7 @@ export default class SendMeritNotificationService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(telegram_id: number, merit: Merit): Promise<void> {
+  public async execute(telegram_id: string, merit: Merit): Promise<void> {
     const setMeritNotified = container.resolve(SetMeritNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
     const getPost = container.resolve(GetPostService);

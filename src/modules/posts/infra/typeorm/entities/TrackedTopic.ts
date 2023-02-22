@@ -28,7 +28,7 @@ class TrackedTopic {
   post: Post;
 
   @Column({ type: 'bigint', array: true, default: [] })
-  tracking: number[];
+  tracking: string[];
 
   @CreateDateColumn()
   created_at: Date;

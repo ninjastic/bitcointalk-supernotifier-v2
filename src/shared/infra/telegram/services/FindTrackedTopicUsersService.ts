@@ -20,7 +20,7 @@ export default class FindTrackedTopicUsersService {
     topic_id,
     username
   }: {
-    telegram_id?: number;
+    telegram_id?: string;
     topic_id?: number;
     username?: string;
   }): Promise<TrackedTopicUser[]> {
@@ -33,7 +33,7 @@ export default class FindTrackedTopicUsersService {
     }
 
     const conditions = {} as {
-      telegram_id: number;
+      telegram_id: string;
       tracked_topic_id: number;
       username: string;
     };

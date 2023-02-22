@@ -10,7 +10,7 @@ export default class SetMeritNotifiedService {
     private meritsRepository: IMeritsRepository
   ) {}
 
-  public async execute(data: FindMeritDTO, telegram_id: number): Promise<void> {
+  public async execute(data: FindMeritDTO, telegram_id: string): Promise<void> {
     const merit = await this.meritsRepository.findOne(data);
 
     merit.notified = true;

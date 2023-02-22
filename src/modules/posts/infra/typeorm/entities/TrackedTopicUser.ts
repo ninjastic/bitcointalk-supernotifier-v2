@@ -20,7 +20,7 @@ class TrackedTopicUser {
   tracked_topic_id: number;
 
   @Column({ type: 'bigint' })
-  telegram_id: number;
+  telegram_id: string;
 
   @OneToOne(() => TrackedTopic)
   @JoinColumn({ name: 'tracked_topic_id', referencedColumnName: 'topic_id' })

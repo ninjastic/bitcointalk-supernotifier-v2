@@ -12,7 +12,7 @@ import SetPostHistoryNotifiedService from '../../../../modules/posts/services/Se
 import SetUserBlockedService from './SetUserBlockedService';
 
 export default class SendMentionNotificationService {
-  public async execute(telegram_id: number, post: Post, history?: boolean): Promise<void> {
+  public async execute(telegram_id: string, post: Post, history?: boolean): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const setPostHistoryNotified = container.resolve(SetPostHistoryNotifiedService);
 

@@ -19,7 +19,7 @@ class TrackedPhrase {
   phrase: string;
 
   @Column({ type: 'bigint' })
-  telegram_id: number;
+  telegram_id: string;
 
   @OneToOne(() => User)
   @JoinColumn({ name: 'telegram_id', referencedColumnName: 'telegram_id' })

@@ -19,7 +19,7 @@ export default class AddTrackedTopicService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(topic_id: number, telegram_id?: number): Promise<TrackedTopic> {
+  public async execute(topic_id: number, telegram_id?: string): Promise<TrackedTopic> {
     const topicExists = await this.trackedTopicsRepository.findOneByTopicId(topic_id);
 
     if (topicExists) {

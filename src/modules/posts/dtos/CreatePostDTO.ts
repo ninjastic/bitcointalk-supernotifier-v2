@@ -10,6 +10,6 @@ export default interface CreatePostDTO {
   board_id?: number;
   checked: boolean;
   notified: boolean;
-  notified_to: number[];
+  notified_to: string[];
   archive?: boolean;
 }
