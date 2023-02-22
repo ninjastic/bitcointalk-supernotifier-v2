@@ -74,9 +74,9 @@ interface ScrapeTopicJob extends Job {
     repeat: { every: 15000 }
   });
 
-  // await mainQueue.add('scrapeModLog', null, {
-  //   repeat: { every: 300000 },
-  // });
+  await mainQueue.add('scrapeModLog', null, {
+    repeat: { every: 300000 }
+  });
 
   mainQueue.process('scrapeRecentPosts', async () => {
     const scrapePostsRepository = container.resolve(ScrapePostsRepository);
