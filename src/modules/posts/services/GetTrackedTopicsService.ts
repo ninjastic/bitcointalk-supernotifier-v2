@@ -23,7 +23,6 @@ export default class GetTrackedTopicsService {
     }
 
     const trackedTopics = await this.trackedTopicsRepository.findAllWithUsers();
-
     await this.cacheRepository.save('trackedTopics', trackedTopics);
 
     return trackedTopics;

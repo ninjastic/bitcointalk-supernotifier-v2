@@ -28,7 +28,9 @@ export default class TrackedPhrasesRepository implements ITrackedPhrasesReposito
   }
 
   public async findAll(): Promise<TrackedPhrase[]> {
-    return this.ormRepository.find();
+    return this.ormRepository.find({
+      relations: ['user']
+    });
   }
 
   public async findOne(conditions: IFindTrackedPhraseDTO): Promise<TrackedPhrase> {

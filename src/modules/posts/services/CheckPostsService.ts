@@ -9,11 +9,10 @@ import IWebUsersRepository from '../../web/repositories/IWebUsersRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import SetPostCheckedService from './SetPostCheckedService';
-import GetTrackedTopicsService from './GetTrackedTopicsService';
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
 import GetIgnoredTopicsService from './GetIgnoredTopicsService';
+import GetTrackedTopicsService from './GetTrackedTopicsService';
 import GetTrackedPhrasesService from './GetTrackedPhrasesService';
-import CreateWebNotificationService from '../../web/services/CreateWebNotificationService';
 import FindTrackedTopicUsersService from '../../../shared/infra/telegram/services/FindTrackedTopicUsersService';
 
 @injectable()
@@ -34,12 +33,11 @@ export default class CheckPostsService {
 
   public async execute(): Promise<void> {
     const posts = await this.postsRepository.findLatestUncheckedPosts(30);
-    const webUsers = await this.webUsersRepository.findAll();
     const users = await this.usersRepository.getUsersWithMentions();
 
+    const getTrackedTopics = container.resolve(GetTrackedTopicsService);
     const getTrackedPhrases = container.resolve(GetTrackedPhrasesService);
 
-    const getTrackedTopics = container.resolve(GetTrackedTopicsService);
     const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
     const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
     const getIgnoredTopics = container.resolve(GetIgnoredTopicsService);
@@ -50,7 +48,6 @@ export default class CheckPostsService {
     const ignoredTopics = await getIgnoredTopics.execute();
 
     const setPostChecked = container.resolve(SetPostCheckedService);
-    const createWebNotification = container.resolve(CreateWebNotificationService);
 
     const scapeRegexText = (text: string) => text.replace(/([<>*()?])/g, '\\$1');
 
@@ -59,187 +56,110 @@ export default class CheckPostsService {
       defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
     });
 
-    await Promise.allSettled(
-      posts.map(async post => {
-        await setPostChecked.execute(post.post_id);
+    const postsCheckingCache = await this.cacheProvider.recoverMany<number>(posts.map(post => String(post.post_id)));
+    const uncheckedPosts = posts.filter(post => !postsCheckingCache.includes(post.post_id));
 
-        await Promise.allSettled(
-          trackedPhrases.map(async trackedPhrase => {
-            const phraseRegex = new RegExp(`(?<!\\w)${scapeRegexText(trackedPhrase.phrase)}(?!\\w)`, 'gi');
+    await this.cacheProvider.saveMany(
+      posts.map(({ post_id }) => ({
+        key: `postChecking:${post_id}`,
+        value: post_id,
+        arg: 'EX',
+        time: 300
+      }))
+    );
 
-            if (!post.content.match(phraseRegex)) {
-              return Promise.resolve();
-            }
+    const postsNotified = new Set<string>();
 
-            const user = await this.usersRepository.findByTelegramId(trackedPhrase.telegram_id);
+    const checkMentionsPromises = uncheckedPosts.map(async post =>
+      users.map(async user => {
+        const usernameRegex = new RegExp(`(?<!\\w)${scapeRegexText(user.username)}(?!\\w)`, 'gi');
+        const altUsernameRegex = user.alternative_usernames.length
+          ? new RegExp(`(?<!\\w)${scapeRegexText(user.alternative_usernames[0])}(?!\\w)`, 'gi')
+          : null;
+        const backupAtSignRegex = new RegExp(`@${scapeRegexText(user.username)}`, 'gi');
+        const backupQuotedRegex = new RegExp(`Quote from: ${scapeRegexText(user.username)} on`, 'gi');
 
-            if (!user) {
-              return Promise.resolve();
-            }
+        const regexList = [usernameRegex, altUsernameRegex, backupAtSignRegex, backupQuotedRegex];
 
-            if (user.username.toLowerCase() === post.author.toLowerCase()) {
-              return Promise.resolve();
-            }
+        if (!regexList.find(regex => post.content.match(regex))) {
+          return;
+        }
 
-            if (user.user_id === post.author_uid) {
-              return Promise.resolve();
-            }
+        const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
+        const isSameUid = post.author_uid === user.user_id;
+        const isAlreadyNotified =
+          post.notified_to.includes(user.telegram_id) || postsNotified.has(`${post.post_id}:${user.telegram_id}`);
+        const isAuthorIgnored = ignoredUsers
+          .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
+          ?.ignoring.includes(user.telegram_id);
+        const isTopicIgnored = ignoredTopics
+          .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
+          ?.ignoring.includes(user.telegram_id);
 
-            if (post.notified_to.includes(user.telegram_id)) {
-              return Promise.resolve();
-            }
+        if (isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored) {
+          return;
+        }
 
-            const foundIgnoredUser = ignoredUsers.find(
-              ignoredUser => ignoredUser.username === post.author.toLowerCase()
-            );
-
-            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(user.telegram_id)) {
-              return Promise.resolve();
-            }
-
-            const foundIgnoredTopic = ignoredTopics.find(ignoredTopic => ignoredTopic.topic_id === post.topic_id);
-
-            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(user.telegram_id)) {
-              return Promise.resolve();
-            }
-
-            const postNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${post.post_id}:${user.telegram_id}`
-            );
-
-            if (postNotified) {
-              return Promise.resolve();
-            }
-
-            const trackedTopicUsers = await findTrackedTopicUsers.execute({
-              telegram_id: user.telegram_id,
-              topic_id: post.topic_id
-            });
-
-            if (trackedTopicUsers.length) {
-              const withlistedAuthor = trackedTopicUsers.findIndex(
-                trackedTopicUser => trackedTopicUser.username === post.author.toLowerCase()
-              );
-
-              if (withlistedAuthor === -1) {
-                return Promise.resolve();
-              }
-            }
-
-            await this.cacheProvider.save(`notified:${post.post_id}:${user.telegram_id}`, true, 'EX', 900);
-
-            return queue.add('sendPhraseTrackingNotification', {
-              post,
-              user,
-              trackedPhrase
-            });
-          })
-        );
+        await queue.add('sendMentionNotification', { post, user });
+        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
       })
     );
 
-    await Promise.allSettled(
-      posts.map(async post => {
-        await Promise.allSettled(
-          users.map(async user => {
-            if (post.author.toLowerCase() === user.username.toLowerCase()) {
-              return Promise.resolve();
-            }
+    const checkTrackedPhrasesPromises = uncheckedPosts.map(async post =>
+      trackedPhrases.map(async trackedPhrase => {
+        const { user, phrase } = trackedPhrase;
+        const phraseRegex = new RegExp(`(?<!\\w)${scapeRegexText(phrase)}(?!\\w)`, 'gi');
 
-            const usernameRegex = new RegExp(`(?<!\\w)${scapeRegexText(user.username)}(?!\\w)`, 'gi');
-            const altUsernameRegex = user.alternative_usernames.length
-              ? new RegExp(`(?<!\\w)${scapeRegexText(user.alternative_usernames[0])}(?!\\w)`, 'gi')
-              : null;
+        if (!post.content.match(phraseRegex)) {
+          return;
+        }
 
-            const regexBackupAtSign = new RegExp(`@${scapeRegexText(user.username)}`, 'gi');
-            const regexBackupQuoted = new RegExp(`Quote from: ${scapeRegexText(user.username)} on`, 'gi');
+        const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
+        const isSameUid = post.author_uid === user.user_id;
+        const isAlreadyNotified =
+          post.notified_to.includes(user.telegram_id) || postsNotified.has(`${post.post_id}:${user.telegram_id}`);
+        const isAuthorIgnored = ignoredUsers
+          .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
+          ?.ignoring.includes(user.telegram_id);
+        const isTopicIgnored = ignoredTopics
+          .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
+          ?.ignoring.includes(user.telegram_id);
 
-            if (!post.content.match(usernameRegex)) {
-              const foundAltUsername = altUsernameRegex && post.content.match(altUsernameRegex);
+        if (isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored) {
+          return;
+        }
 
-              const foundBackupRegex = post.content.match(regexBackupAtSign) || post.content.match(regexBackupQuoted);
+        await queue.add('sendPhraseTrackingNotification', {
+          post,
+          user,
+          trackedPhrase
+        });
 
-              if (!foundAltUsername && !foundBackupRegex) {
-                return Promise.resolve();
-              }
-            }
-
-            if (post.notified_to.includes(user.telegram_id)) {
-              return Promise.resolve();
-            }
-
-            const foundIgnoredUser = ignoredUsers.find(
-              ignoredUser => ignoredUser.username === post.author.toLowerCase()
-            );
-
-            if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(user.telegram_id)) {
-              return Promise.resolve();
-            }
-
-            const foundIgnoredTopic = ignoredTopics.find(ignoredTopic => ignoredTopic.topic_id === post.topic_id);
-
-            if (foundIgnoredTopic && foundIgnoredTopic.ignoring.includes(user.telegram_id)) {
-              return Promise.resolve();
-            }
-
-            const postNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${post.post_id}:${user.telegram_id}`
-            );
-
-            if (postNotified) {
-              return Promise.resolve();
-            }
-
-            await this.cacheProvider.save(`notified:${post.post_id}:${user.telegram_id}`, true, 'EX', 900);
-
-            return queue.add('sendMentionNotification', { post, user });
-          })
-        );
+        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
       })
     );
 
-    await Promise.allSettled(
-      posts.map(async post => {
-        await Promise.allSettled(
-          trackedTopics.map(async trackedTopic => {
-            if (trackedTopic.topic_id !== post.topic_id) {
-              return Promise.resolve();
-            }
+    const checkTrackedTopicsPromises = uncheckedPosts
+      .filter(post => trackedTopics.find(trackedTopic => post.topic_id === trackedTopic.topic_id))
+      .map(async post =>
+        Promise.all(
+          trackedTopics.map(trackedTopic =>
+            Promise.all(
+              trackedTopic.tracking.map(async trackingTelegramId => {
+                const user = await this.usersRepository.findByTelegramId(trackingTelegramId);
 
-            return Promise.allSettled(
-              trackedTopic.tracking.map(async telegram_id => {
-                const user = await this.usersRepository.findByTelegramId(telegram_id);
+                const isDifferentTopicId = trackedTopic.topic_id !== post.topic_id;
+                const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
+                const isSameUid = post.author_uid === user.user_id;
+                const isAlreadyNotified =
+                  post.notified_to.includes(user.telegram_id) ||
+                  postsNotified.has(`${post.post_id}:${user.telegram_id}`);
+                const isAuthorIgnored = ignoredUsers
+                  .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
+                  ?.ignoring.includes(user.telegram_id);
 
-                if (!user) {
-                  return Promise.resolve();
-                }
-
-                if (user.username.toLowerCase() === post.author.toLowerCase()) {
-                  return Promise.resolve();
-                }
-
-                if (user.user_id === post.author_uid) {
-                  return Promise.resolve();
-                }
-
-                if (post.notified_to.includes(user.telegram_id)) {
-                  return Promise.resolve();
-                }
-
-                const foundIgnoredUser = ignoredUsers.find(
-                  ignoredUser => ignoredUser.username === post.author.toLowerCase()
-                );
-
-                if (foundIgnoredUser && foundIgnoredUser.ignoring.includes(user.telegram_id)) {
-                  return Promise.resolve();
-                }
-
-                const postNotified = await this.cacheProvider.recover<boolean>(
-                  `notified:${post.post_id}:${user.telegram_id}`
-                );
-
-                if (postNotified) {
-                  return Promise.resolve();
+                if (isDifferentTopicId || isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored) {
+                  return;
                 }
 
                 const trackedTopicUsers = await findTrackedTopicUsers.execute({
@@ -247,52 +167,29 @@ export default class CheckPostsService {
                   topic_id: post.topic_id
                 });
 
-                if (trackedTopicUsers.length) {
-                  const withlistedAuthor = trackedTopicUsers.findIndex(
-                    trackedTopicUser => trackedTopicUser.username === post.author.toLowerCase()
-                  );
+                const isAuthorWhitelisted = trackedTopicUsers.find(
+                  trackedTopicUser => trackedTopicUser.username.toLowerCase() === post.author.toLowerCase()
+                );
 
-                  if (withlistedAuthor === -1) {
-                    return Promise.resolve();
-                  }
+                if (trackedTopicUsers.length && !isAuthorWhitelisted) {
+                  return;
                 }
 
-                await this.cacheProvider.save(`notified:${post.post_id}:${user.telegram_id}`, true, 'EX', 900);
-
-                return queue.add('sendTopicTrackingNotification', {
-                  post,
-                  user
-                });
+                await queue.add('sendTopicTrackingNotification', { post, user });
+                postsNotified.add(`${post.post_id}:${user.telegram_id}`);
               })
-            );
-          })
-        );
-      })
-    );
+            )
+          )
+        )
+      );
 
-    await Promise.allSettled(
-      posts.map(async post => {
-        await Promise.allSettled(
-          webUsers.map(async webUser => {
-            if (post.author.toLowerCase() === webUser.username.toLowerCase()) {
-              return Promise.resolve();
-            }
-
-            const usernameRegex = new RegExp(`(?<!\\w)${scapeRegexText(webUser.username)}(?!\\w)`, 'gi');
-
-            if (!post.content.match(usernameRegex)) {
-              return Promise.resolve();
-            }
-
-            return createWebNotification.execute({
-              user_id: webUser.id,
-              post_id: post.post_id
-            });
-          })
-        );
-      })
-    );
+    await Promise.all(checkMentionsPromises);
+    await Promise.all(checkTrackedPhrasesPromises);
+    await Promise.all(checkTrackedTopicsPromises);
 
     await queue.close();
+
+    const setPostsCheckedPromises = uncheckedPosts.map(async post => setPostChecked.execute(post.post_id));
+    await Promise.allSettled(setPostsCheckedPromises);
   }
 }
