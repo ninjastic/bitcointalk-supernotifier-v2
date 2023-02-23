@@ -100,8 +100,8 @@ export default class CheckPostsService {
           return;
         }
 
-        await queue.add('sendMentionNotification', { post, user });
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
+        await queue.add('sendMentionNotification', { post, user });
       })
     );
 
@@ -129,13 +129,12 @@ export default class CheckPostsService {
           return;
         }
 
+        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
         await queue.add('sendPhraseTrackingNotification', {
           post,
           user,
           trackedPhrase
         });
-
-        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
       })
     );
 
@@ -175,8 +174,8 @@ export default class CheckPostsService {
                   return;
                 }
 
-                await queue.add('sendTopicTrackingNotification', { post, user });
                 postsNotified.add(`${post.post_id}:${user.telegram_id}`);
+                await queue.add('sendTopicTrackingNotification', { post, user });
               })
             )
           )
