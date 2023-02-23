@@ -28,7 +28,7 @@ export default class CheckMeritsService {
   ) {}
 
   public async execute(): Promise<void> {
-    const merits = await this.meritsRepository.getLatestUncheckedMerits(20);
+    const merits = await this.meritsRepository.getLatestUncheckedMerits();
     const webUsers = await this.webUsersRepository.findAll();
     const users = await this.usersRepository.getUsersWithMerits();
 

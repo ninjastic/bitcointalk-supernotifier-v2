@@ -29,7 +29,6 @@ export default class ScrapeMeritsService {
 
     const scrapingPromises = merits
       .toArray()
-      .splice(0, 100)
       .map(element => this.parseMeritElement.execute(element))
       .filter(result => result);
 

@@ -37,7 +37,7 @@ export default class MeritsRepository implements IMeritsRepository {
     return merit;
   }
 
-  public async getLatestUncheckedMerits(limit: number): Promise<Merit[]> {
+  public async getLatestUncheckedMerits(limit?: number): Promise<Merit[]> {
     const merits = await this.ormRepository.find({
       where: {
         checked: false,
