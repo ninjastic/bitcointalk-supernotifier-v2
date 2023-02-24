@@ -32,7 +32,7 @@ export default class CheckPostsService {
   ) {}
 
   public async execute(): Promise<void> {
-    const posts = await this.postsRepository.findLatestUncheckedPosts(30);
+    const posts = await this.postsRepository.findLatestUncheckedPosts();
     const users = await this.usersRepository.getUsersWithMentions();
 
     const getTrackedTopics = container.resolve(GetTrackedTopicsService);

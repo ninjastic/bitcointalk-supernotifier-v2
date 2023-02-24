@@ -10,6 +10,6 @@ export default interface IPostsHistoryRepository {
   create(data: ICreatePostHistoryDTO): PostHistory;
   save(post: PostHistory): Promise<PostHistory>;
   findOne(conditions: IFindOnePostHistoryDTO): Promise<PostHistory | undefined>;
-  findLatestUncheckedPosts(limit: number): Promise<PostHistory[]>;
+  findLatestUncheckedPosts(limit?: number): Promise<PostHistory[]>;
   findAll(conditions?: IFindAllPostsHistoryDTO): Promise<ApiResponse>;
 }

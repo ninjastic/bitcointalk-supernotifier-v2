@@ -34,7 +34,7 @@ export default class PostsRepository implements IPostsRepository {
     return this.ormRepository.findOne({ post_id });
   }
 
-  public async findLatestUncheckedPosts(limit: number): Promise<Post[]> {
+  public async findLatestUncheckedPosts(limit?: number): Promise<Post[]> {
     return this.ormRepository.find({
       where: {
         checked: false,

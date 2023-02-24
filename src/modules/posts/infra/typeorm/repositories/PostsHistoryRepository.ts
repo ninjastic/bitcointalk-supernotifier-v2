@@ -1,11 +1,10 @@
-import { getRepository, Repository } from 'typeorm';
+import { getRepository, MoreThanOrEqual, Repository } from 'typeorm';
+import { sub } from 'date-fns';
 
 import esClient from '../../../../../shared/services/elastic';
 
 import PostHistory from '../entities/PostHistory';
-
 import IPostsHistoryRepository from '../../../repositories/IPostsHistoryRepository';
-
 import IFindOnePostHistoryDTO from '../../../dtos/IFindOnePostHistoryDTO';
 import IFindAllPostsHistoryDTO from '../../../dtos/IFindAllPostsHistoryDTO';
 import ICreatePostHistoryDTO from '../../../dtos/ICreatePostHistoryDTO';
@@ -31,11 +30,12 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     return this.ormRepository.findOne({ post_id, version });
   }
 
-  public async findLatestUncheckedPosts(limit: number): Promise<PostHistory[]> {
+  public async findLatestUncheckedPosts(limit?: number): Promise<PostHistory[]> {
     return this.ormRepository.find({
       where: {
         checked: false,
-        deleted: false
+        deleted: false,
+        date: MoreThanOrEqual(sub(new Date(), { minutes: 30 }))
       },
       order: { post_id: 'DESC' },
       take: limit,

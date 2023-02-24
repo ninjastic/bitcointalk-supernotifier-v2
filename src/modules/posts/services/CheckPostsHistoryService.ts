@@ -25,7 +25,7 @@ export default class CheckPostsHistoryService {
   ) {}
 
   public async execute(): Promise<void> {
-    const histories = await this.postsHistoryRepository.findLatestUncheckedPosts(30);
+    const histories = await this.postsHistoryRepository.findLatestUncheckedPosts();
     const users = await this.usersRepository.getUsersWithMentions();
 
     const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
