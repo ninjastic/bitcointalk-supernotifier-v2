@@ -1,6 +1,6 @@
 import Merit from '../infra/typeorm/entities/Merit';
 
 export default interface IScrapeMeritsRepository {
-  scrapeMerits(): Promise<void>;
+  scrapeMerits(): Promise<number>;
   parseMeritElement(element: cheerio.Element): Promise<Merit>;
 }

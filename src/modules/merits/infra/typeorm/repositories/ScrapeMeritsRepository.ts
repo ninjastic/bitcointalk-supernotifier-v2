@@ -16,9 +16,8 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async scrapeMerits(): Promise<void> {
+  public async scrapeMerits(): Promise<number> {
     const scrapeMerits = new ScrapeMeritsService();
-
     const merits = await scrapeMerits.execute();
 
     const valuesToRecover = merits.map(
@@ -26,31 +25,31 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
     );
 
     const cached = await this.cacheRepository.recoverMany<Merit>(valuesToRecover);
-
     const operations = [];
 
-    merits.forEach(merit => {
-      if (!merit.post_id) return;
+    const meritsToAdd = merits.filter(
+      merit =>
+        !cached.find(cache => {
+          if (!cache) {
+            return false;
+          }
 
-      const found = cached.find(
-        cache =>
-          cache &&
-          Date.parse(String(cache.date)) === Date.parse(String(merit.date)) &&
-          cache.amount === merit.amount &&
-          cache.post_id === merit.post_id &&
-          cache.sender_uid === merit.sender_uid
-      );
+          return (
+            new Date(cache.date).toISOString() === new Date(merit.date).toISOString() &&
+            cache.amount === merit.amount &&
+            cache.post_id === merit.post_id &&
+            cache.sender_uid === merit.sender_uid
+          );
+        })
+    );
 
-      if (!found) {
-        operations.push(merit);
-      }
-    });
-
-    if (!operations.length) {
-      return;
+    if (meritsToAdd.length) {
+      operations.push(...meritsToAdd);
+    } else {
+      return 0;
     }
 
-    await getManager()
+    const inserted = await getManager()
       .createQueryBuilder()
       .insert()
       .into(Merit)
@@ -61,24 +60,24 @@ export default class ScrapeMeritsRepository implements IScrapeMeritsRepository {
 
     const valuesToSet = [];
 
-    merits.forEach((merit: Merit) => {
-      if (!merit.post_id) return;
-
-      valuesToSet.push({
-        key: `merit:${new Date(merit.date)}-${merit.amount}-${merit.post_id}-${merit.sender_uid}`,
-        value: merit,
-        arg: 'EX',
-        time: 900
-      });
-    });
+    for (const merit of inserted.raw) {
+      if (merit.post_id) {
+        valuesToSet.push({
+          key: `merit:${new Date(merit.date)}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
+          value: merit,
+          arg: 'EX',
+          time: 900
+        });
+      }
+    }
 
     await this.cacheRepository.saveMany(valuesToSet);
+    return inserted.raw.length;
   }
 
   public async parseMeritElement(element: cheerio.Element): Promise<Merit> {
     const parseMeritElement = container.resolve(ParseMeritElementService);
     const merit = await parseMeritElement.execute(element);
-
     return merit;
   }
 }
