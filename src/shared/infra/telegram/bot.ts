@@ -46,7 +46,6 @@ class TelegramBot {
 
   constructor() {
     this.instance = new Bot(process.env.TELEGRAM_BOT_TOKEN);
-    this.queue = new TelegramQueue();
 
     this.middlewares();
     this.inlineMenus();
@@ -58,12 +57,10 @@ class TelegramBot {
     const runner = run(this.instance);
 
     if (process.env.NODE_ENV === 'production') {
-      const stopRunner = () => runner.isRunning() && runner.stop();
+      const stopRunner = () => runner.isRunning() && runner.stop() && this.queue.instance.close();
       process.once('SIGINT', stopRunner);
       process.once('SIGTERM', stopRunner);
     }
-
-    this.queue.run();
   }
 
   middlewares(): void {
