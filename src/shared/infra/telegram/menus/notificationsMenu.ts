@@ -34,9 +34,7 @@ const handleNotificationToggle = async (ctx: IMenuContext) => {
 };
 
 const mentionsEnabled = (ctx: IMenuContext) => ctx.session.mentions;
-
 const meritsEnabled = (ctx: IMenuContext) => ctx.session.merits;
-
 const modlogsEnabled = (ctx: IMenuContext) => ctx.session.modlogs;
 
 notificationsMenu.interact(

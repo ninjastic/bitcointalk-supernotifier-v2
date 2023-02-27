@@ -64,7 +64,6 @@ const getTrackedTopicUrl = async (ctx: IMenuContext): Promise<string> => {
   const topicId = Number(ctx.match[1]);
 
   const findPostByTrackedTopic = container.resolve(FindPostByTrackedTopicService);
-
   const post = await findPostByTrackedTopic.execute({ topic_id: topicId });
 
   return `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
@@ -95,21 +94,18 @@ trackedTopicInfoMenu.submenu('👤 Whitelist Authors', 'a', trackedTopicAuthorsM
 const getTrackedTopicUsersList = async (ctx: IMenuContext) => {
   const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
 
-  const choices = await findTrackedTopicUsers.execute({
+  const trackedTopicUsers = await findTrackedTopicUsers.execute({
     telegram_id: String(ctx.chat.id),
     topic_id: Number(ctx.match[1])
   });
 
-  const formatted = {};
+  const choices = {};
 
-  choices.forEach(choice => {
-    let formattedTitle = '';
-    formattedTitle += choice.username;
+  for (const trackedTopicUser of trackedTopicUsers) {
+    choices[trackedTopicUser.username] = trackedTopicUser.username;
+  }
 
-    formatted[choice.username] = formattedTitle;
-  });
-
-  return formatted;
+  return choices;
 };
 
 const trackedTopicUsersInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
@@ -135,7 +131,6 @@ const confirmRemoveTrackedTopicUser = new MenuTemplate<IMenuContext>(async ctx =
 confirmRemoveTrackedTopicUser.interact('Yes, do it!', 'yes', {
   do: async ctx => {
     const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
-
     const deleteTrackedTopicUser = container.resolve(DeleteTrackedTopicUserService);
 
     const trackedTopicUser = await findTrackedTopicUsers.execute({
@@ -145,7 +140,6 @@ confirmRemoveTrackedTopicUser.interact('Yes, do it!', 'yes', {
     });
 
     await deleteTrackedTopicUser.execute(trackedTopicUser[0]);
-
     return `/tt/tt:${ctx.match[1]}/a/`;
   }
 });
@@ -355,7 +349,7 @@ const getTrackedTopicsList = async (ctx: IMenuContext) => {
 };
 
 trackedTopicsMenu.chooseIntoSubmenu('tt', getTrackedTopicsList, trackedTopicInfoMenu, {
-  maxRows: 4,
+  maxRows: 5,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {

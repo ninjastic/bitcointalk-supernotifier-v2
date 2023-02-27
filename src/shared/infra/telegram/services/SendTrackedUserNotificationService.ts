@@ -3,14 +3,14 @@ import cheerio from 'cheerio';
 import escape from 'escape-html';
 import logger from '../../../services/logger';
 
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-
 import bot from '../index';
+
+import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
 import SetUserBlockedService from './SetUserBlockedService';
 
-export default class SendTopicTrackingNotificationService {
+export default class SendTrackedUserNotificationService {
   public async execute(telegram_id: string, post: Post): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
@@ -27,8 +27,8 @@ export default class SendTopicTrackingNotificationService {
     const titleWithBoards = boards.length ? `${boards[boards.length - 1]} / ${title}` : title;
 
     let message = '';
-    message += `There is a new reply by <b>${escape(author)}</b> `;
-    message += `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
+    message += `There is a new post by the tracked user <b>${escape(author)}</b>: `;
+    message += `<a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
     message += `${escape(titleWithBoards)}`;
     message += `</a>\n`;
     message += `<pre>`;
@@ -39,14 +39,14 @@ export default class SendTopicTrackingNotificationService {
     await bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
-        logger.info({ telegram_id, message }, 'Tracking Topic notification was sent');
+        logger.info({ telegram_id, message }, 'Tracking User notification was sent');
         await setPostNotified.execute(post.post_id, telegram_id);
       })
       .catch(async error => {
         if (!error.response) {
           logger.error(
             { error: error.message, telegram_id, post: post.id, message },
-            'Error while sending Tracking Topic Notification telegram message'
+            'Error while sending Tracking User Notification telegram message'
           );
 
           return;
@@ -63,7 +63,7 @@ export default class SendTopicTrackingNotificationService {
         } else {
           logger.error(
             { error: error.response, telegram_id, post: post.id, message },
-            'Error while sending Tracked Topic Notification telegram message'
+            'Error while sending Tracked User Notification telegram message'
           );
         }
       });

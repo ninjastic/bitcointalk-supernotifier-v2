@@ -75,8 +75,9 @@ export default class GetMeritsService {
       if (query.child_boards === '1' || query.child_boards?.toLowerCase() === 'true') {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(query.board);
+        const boardsIdList = boards.map(_board => _board.board_id);
 
-        queryBuilder.query('terms', 'board_id', boards);
+        queryBuilder.query('terms', 'board_id', boardsIdList);
       } else {
         queryBuilder.query('terms', 'board_id', [query.board]);
       }

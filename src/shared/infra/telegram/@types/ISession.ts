@@ -1,6 +1,4 @@
-import { Context } from 'grammy';
-
-export default interface ISession extends Context {
+export default interface ISession {
   username: string;
   userId: number;
   mentions: boolean;

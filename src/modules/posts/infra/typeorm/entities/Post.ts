@@ -33,6 +33,10 @@ class Post {
 
   edited: Date;
 
+  topicReplies: number;
+
+  topicAuthor: string;
+
   @Column({ type: 'varchar', array: true, default: [] })
   boards: string[];
 

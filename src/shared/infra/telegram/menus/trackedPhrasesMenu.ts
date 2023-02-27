@@ -35,9 +35,7 @@ const trackedPhraseInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
 
 const confirmRemoveTrackedPhraseMenu = new MenuTemplate<IMenuContext>(async ctx => {
   const phraseId = ctx.match[1];
-
   const findTrackedPhrasesById = container.resolve(FindTrackedPhrasesByIdService);
-
   const { phrase } = await findTrackedPhrasesById.execute(phraseId);
 
   return {
@@ -49,9 +47,7 @@ const confirmRemoveTrackedPhraseMenu = new MenuTemplate<IMenuContext>(async ctx 
 confirmRemoveTrackedPhraseMenu.interact('Yes, do it!', 'yes', {
   do: async ctx => {
     const removeTrackedPhrase = container.resolve(RemoveTrackedPhraseService);
-
     await removeTrackedPhrase.execute(ctx.match[1], String(ctx.chat.id));
-
     return '/tp/';
   }
 });

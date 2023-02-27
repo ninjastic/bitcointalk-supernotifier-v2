@@ -10,7 +10,7 @@ import UpdateUserByTelegramIdService from '../services/UpdateUserByTelegramIdSer
 
 import { mainMenu } from '../menus/mainMenu';
 
-const uidHelpMenu = new Menu('uidHelp').text("I don't know", async ctx =>
+const uidHelpInlineMenu = new Menu('uidHelp').text("I don't know", async ctx =>
   ctx.replyWithPhoto('https://i.imgur.com/XFB3TeA.png')
 );
 
@@ -22,7 +22,7 @@ const askForPrompt = async (
   const typeText = type === 'username' ? 'username' : 'UID';
 
   await ctx.reply(`What is your BitcoinTalk ${typeText}?`, {
-    reply_markup: type === 'userId' ? uidHelpMenu : null
+    reply_markup: type === 'userId' ? uidHelpInlineMenu : null
   });
 
   const input = type === 'username' ? await conversation.form.text() : await conversation.form.number();
@@ -125,4 +125,4 @@ const setupConversation = async (
   await replyMenuToContext(mainMenu, ctx, '/');
 };
 
-export { setupConversation, uidHelpMenu };
+export { setupConversation, uidHelpInlineMenu };

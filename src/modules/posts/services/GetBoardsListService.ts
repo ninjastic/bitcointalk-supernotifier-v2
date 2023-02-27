@@ -1,7 +1,9 @@
 import { getManager } from 'typeorm';
 
+import Board from '../infra/typeorm/entities/Board';
+
 export default class GetBoardsListService {
-  public async execute(raw = false): Promise<any[]> {
+  public async execute(raw = false): Promise<Board[]> {
     const boards = await getManager().query('select board_id, name, parent_id from boards;');
 
     if (raw) {

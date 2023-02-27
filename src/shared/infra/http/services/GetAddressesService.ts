@@ -61,8 +61,9 @@ export default class GetAddressesService {
       if (child_boards && (child_boards === '1' || child_boards.toLowerCase() === 'true')) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
+        const boardsIdList = boards.map(_board => _board.board_id);
 
-        must.push({ terms: { board_id: boards } });
+        must.push({ terms: { board_id: boardsIdList } });
       } else {
         must.push({ terms: { board_id: [board] } });
       }

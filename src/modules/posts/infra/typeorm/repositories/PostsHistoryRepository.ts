@@ -77,8 +77,9 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     if (board) {
       const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
       const boards = await getBoardChildrensFromId.execute(board);
+      const boardsIdList = boards.map(_board => _board.board_id);
 
-      must.push({ terms: { board_id: boards } });
+      must.push({ terms: { board_id: boardsIdList } });
     }
 
     const results = await esClient.search({

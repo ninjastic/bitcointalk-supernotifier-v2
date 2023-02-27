@@ -2,7 +2,9 @@ import cheerio from 'cheerio';
 import { inject, injectable } from 'tsyringe';
 
 import IPostsRepository from '../repositories/IPostsRepository';
+import { RecentPostWithFooter } from '../repositories/IScrapePostsRepository';
 
+import logger from '../../../shared/services/logger';
 import Post from '../infra/typeorm/entities/Post';
 
 @injectable()
@@ -12,19 +14,20 @@ export default class ParseRecentPostElementService {
     private postsRepository: IPostsRepository
   ) {}
 
-  public execute(element: cheerio.Element): Post {
-    const $ = cheerio.load(element, { decodeEntities: true });
+  public execute(recentPost: RecentPostWithFooter): Post {
+    const { postElement, footerElement } = recentPost;
+    let $ = cheerio.load(postElement, { decodeEntities: true });
 
     const fullTitleWithBoards = $('tbody > tr.titlebg2 > td > div:nth-child(2)');
 
-    const post_id = Number(
+    const postId = Number(
       fullTitleWithBoards
         .find('b > a')
         .attr('href')
         .match(/#msg(\d*)/)[1]
     );
 
-    const topic_id = Number(
+    const topicId = Number(
       fullTitleWithBoards
         .find('b > a')
         .attr('href')
@@ -32,10 +35,22 @@ export default class ParseRecentPostElementService {
     );
 
     const title = fullTitleWithBoards.find('b > a').text().trim();
-
     const author = $('tr:nth-child(2) > td > span > a:nth-child(2)').text();
+    const topicAuthor = $('tr:nth-child(2) > td > span > a:nth-child(1)').text();
 
-    const author_uid = Number(
+    if (!topicAuthor) {
+      logger.error(
+        {
+          elementHtml: $('tr:nth-child(2) > td > span > a:nth-child(1)').html(),
+          author,
+          postId,
+          topicId
+        },
+        'topicAuthor missing in recent post'
+      );
+    }
+
+    const authorUid = Number(
       $('tr:nth-child(2) > td > span > a:nth-child(2)')
         .attr('href')
         .match(/u=(\d*)/)[1]
@@ -47,32 +62,40 @@ export default class ParseRecentPostElementService {
     const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
 
     const date = new Date(
-      $(element).find('td.middletext > div:nth-child(3)').text().replace('on: Today at', today).trim()
+      $(postElement).find('td.middletext > div:nth-child(3)').text().replace('on: Today at', today).trim()
     );
 
     const boards = $(fullTitleWithBoards).find('a');
     const boardsArray: number[] = [];
 
-    $(boards).each((boardIndex, board) => {
-      const { length } = boards;
+    for (const [index, board] of Array.from(boards).entries()) {
       const boardIdRegEx = /board=(\d+)/;
       const boardUrl = $(board).attr('href');
 
-      if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) return;
+      if (boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) {
+        if (index < boards.length - 1) {
+          const boardId = boardUrl.match(boardIdRegEx)[1];
 
-      if (boardIndex < length - 1) {
-        const boardId = boardUrl.match(boardIdRegEx)[1];
-
-        boardsArray.push(Number(boardId));
+          boardsArray.push(Number(boardId));
+        }
       }
-    });
+    }
+
+    $ = cheerio.load(footerElement);
+
+    const topicReplies = Number(
+      $('td.maintab_back > a:nth-child(1)')
+        .attr('href')
+        .match(/topic=\d+\.(\d+)/)
+        .at(1)
+    );
 
     const post = this.postsRepository.create({
-      post_id,
-      topic_id,
+      post_id: postId,
+      topic_id: topicId,
       title,
       author,
-      author_uid,
+      author_uid: authorUid,
       content,
       date,
       boards: [],
@@ -81,6 +104,9 @@ export default class ParseRecentPostElementService {
       notified: false,
       notified_to: []
     });
+
+    post.topicAuthor = topicAuthor;
+    post.topicReplies = topicReplies;
 
     return post;
   }

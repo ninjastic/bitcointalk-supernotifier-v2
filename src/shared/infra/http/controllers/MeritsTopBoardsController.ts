@@ -41,7 +41,7 @@ export default class MeritsTopBoardsController {
       const boards = await getBoardsListService.execute(true);
 
       const data = results.map(result => ({
-        board_name: boards.find(board => board.board_id === result.board_id)?.name,
+        board_name: boards.find(board => board.board_id === Number(result.board_id))?.name,
         ...result
       }));
 

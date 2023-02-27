@@ -43,6 +43,11 @@ interface ScrapeTopicJob extends Job {
 }
 
 (async () => {
+  const recentPostsQueue = new Queue('ForumRecentPostsQueue', {
+    redis: cacheConfig.config.redis,
+    defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
+  });
+
   const mainQueue = new Queue('ForumScrapperQueue', {
     redis: cacheConfig.config.redis,
     defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
@@ -62,11 +67,12 @@ interface ScrapeTopicJob extends Job {
     defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
   });
 
+  await recentPostsQueue.removeRepeatable('scrapeRecentPosts', { every: 5000 });
   await mainQueue.removeRepeatable('scrapeRecentPosts', { every: 5000 });
   await mainQueue.removeRepeatable('scrapeMerits', { every: 15000 });
   await mainQueue.removeRepeatable('scrapeModLog', { every: 300000 });
 
-  await mainQueue.add('scrapeRecentPosts', null, {
+  await recentPostsQueue.add('scrapeRecentPosts', null, {
     repeat: { every: 5000 }
   });
 
@@ -78,27 +84,22 @@ interface ScrapeTopicJob extends Job {
     repeat: { every: 300000 }
   });
 
-  mainQueue.process('scrapeRecentPosts', async () => {
+  recentPostsQueue.process('scrapeRecentPosts', async () => {
     const scrapePostsRepository = container.resolve(ScrapePostsRepository);
-
     const result = await scrapePostsRepository.scrapeRecent();
     uptimeApi.get(process.env.HEARTBEAT_POSTS);
-
     return result;
   });
 
   mainQueue.process('scrapeMerits', async () => {
     const scrapeMeritsRepository = container.resolve(ScrapeMeritsRepository);
-
     const result = await scrapeMeritsRepository.scrapeMerits();
     uptimeApi.get(process.env.HEARTBEAT_MERITS);
-
     return result;
   });
 
   mainQueue.process('scrapeModLog', async () => {
     const scrapeModLog = new ScrapeModLogService();
-
     const result = await scrapeModLog.execute();
     return result;
   });
@@ -106,7 +107,6 @@ interface ScrapeTopicJob extends Job {
   sideQueue.process('scrapePost', async (job: ScrapePostJob) => {
     const scrapePostsRepository = container.resolve(ScrapePostsRepository);
     const savePostService = container.resolve(SavePostService);
-
     const post = await scrapePostsRepository.scrapePost({
       topic_id: job.data.topic_id,
       post_id: job.data.post_id
@@ -118,27 +118,24 @@ interface ScrapeTopicJob extends Job {
 
   sideQueue.process('scrapeUserMeritCount', async (job: ScrapeUserMeritCountJob) => {
     const scrapeUserMeritCount = new ScrapeUserMeritCountService();
-
     const result = await scrapeUserMeritCount.execute(job.data.uid);
     return result;
   });
 
   sideQueue.process('scrapeTopic', async (job: ScrapeTopicJob) => {
     const scrapeTopic = container.resolve(ScrapeTopicService);
-
     const result = await scrapeTopic.execute(job.data.topic_id);
     return result;
   });
 
   lowPrioritySideQueue.process('scrapePostForChanges', async (job: ScrapePostJob) => {
     const { topic_id, post_id } = job.data;
-
     const scrapePostForEdits = container.resolve(ScrapePostForEditsService);
-
     const result = await scrapePostForEdits.execute({ topic_id, post_id });
     return result;
   });
 
+  loggerHandler(recentPostsQueue);
   loggerHandler(mainQueue);
   loggerHandler(sideQueue);
   loggerHandler(lowPrioritySideQueue);

@@ -3,19 +3,21 @@ import cheerio from 'cheerio';
 import escape from 'escape-html';
 import logger from '../../../services/logger';
 
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-
 import bot from '../index';
+
+import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import TrackedBoard from '../../../../modules/posts/infra/typeorm/entities/TrackedBoard';
 
 import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
 import SetUserBlockedService from './SetUserBlockedService';
 
-export default class SendTopicTrackingNotificationService {
-  public async execute(telegram_id: string, post: Post): Promise<void> {
+export default class SendTrackedBoardNotificationService {
+  public async execute(telegram_id: string, post: Post, trackedBoard: TrackedBoard): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const setUserBlocked = container.resolve(SetUserBlockedService);
 
     const { post_id, topic_id, title, author, boards, content } = post;
+    const { board } = trackedBoard;
 
     const $ = cheerio.load(content);
     const data = $('body');
@@ -27,8 +29,8 @@ export default class SendTopicTrackingNotificationService {
     const titleWithBoards = boards.length ? `${boards[boards.length - 1]} / ${title}` : title;
 
     let message = '';
-    message += `There is a new reply by <b>${escape(author)}</b> `;
-    message += `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
+    message += `There is a new topic by <b>${escape(author)}</b> `;
+    message += `in the tracked board <b>${board.name}</b>: <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
     message += `${escape(titleWithBoards)}`;
     message += `</a>\n`;
     message += `<pre>`;
@@ -39,14 +41,14 @@ export default class SendTopicTrackingNotificationService {
     await bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
-        logger.info({ telegram_id, message }, 'Tracking Topic notification was sent');
+        logger.info({ telegram_id, message }, 'Tracking Board notification was sent');
         await setPostNotified.execute(post.post_id, telegram_id);
       })
       .catch(async error => {
         if (!error.response) {
           logger.error(
-            { error: error.message, telegram_id, post: post.id, message },
-            'Error while sending Tracking Topic Notification telegram message'
+            { error: error.message, telegram_id, post: post.id, trackedBoard, message },
+            'Error while sending Tracking Board Notification telegram message'
           );
 
           return;
@@ -56,14 +58,14 @@ export default class SendTopicTrackingNotificationService {
           error.response.description === 'Forbidden: user is deactivated'
         ) {
           logger.info(
-            { error: error.response, telegram_id, post: post.id, message },
+            { error: error.response, telegram_id, post: post.id, trackedBoard, message },
             'Telegram user marked as blocked'
           );
           await setUserBlocked.execute(telegram_id);
         } else {
           logger.error(
-            { error: error.response, telegram_id, post: post.id, message },
-            'Error while sending Tracked Topic Notification telegram message'
+            { error: error.response, telegram_id, post: post.id, trackedBoard, message },
+            'Error while sending Tracked Board Notification telegram message'
           );
         }
       });

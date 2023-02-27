@@ -1,6 +1,7 @@
-import { Context } from 'grammy';
+import { ConversationFlavor } from '@grammyjs/conversations';
+import { Context, SessionFlavor } from 'grammy';
 import ISession from './ISession';
 
-export default interface IMenuContext extends Context {
-  session: ISession;
-}
+type IMenuContext = Context & SessionFlavor<ISession> & ConversationFlavor;
+
+export default IMenuContext;

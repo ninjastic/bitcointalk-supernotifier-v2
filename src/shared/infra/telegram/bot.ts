@@ -16,9 +16,20 @@ import ISession from './@types/ISession';
 
 import TelegramQueue from '../bull/queues/TelegramQueue';
 
+import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
+
 import { setupQuestionMiddlewares } from './menus';
 import { mainMenuMiddleware } from './menus/mainMenu';
-import { setupConversation, uidHelpMenu } from './conversations/setupConversation';
+
+import { setupConversation, uidHelpInlineMenu } from './conversations/setupConversation';
+import addTrackedBoardConversation, {
+  confirmAddTrackedBoardInlineMenu,
+  cancelAddTrackedBoardPromptInlineMenu
+} from './conversations/addTrackedBoardConversation';
+import addTrackedUserConversation, {
+  cancelAddTrackedUserPromptInlineMenu,
+  confirmAddTrackedUserInlineMenu
+} from './conversations/addTrackedUserConversation';
 
 import startCommand from './commands/startCommand';
 import menuCommand from './commands/menuCommand';
@@ -27,8 +38,6 @@ import setMeritCommand from './commands/setMeritCommand';
 import altCommand from './commands/altCommand';
 import infoCommand from './commands/infoCommand';
 import devCommand from './commands/dev';
-
-import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
 
 class TelegramBot {
   public instance: Bot<Context & SessionFlavor<ISession>>;
@@ -40,8 +49,9 @@ class TelegramBot {
     this.queue = new TelegramQueue();
 
     this.middlewares();
-    this.menus();
+    this.inlineMenus();
     this.conversations();
+    this.menus();
     this.commands();
     this.errorHandler();
 
@@ -98,7 +108,6 @@ class TelegramBot {
       await next();
     });
     setupQuestionMiddlewares(this.instance);
-    this.instance.use(mainMenuMiddleware);
   }
 
   async commands(): Promise<void> {
@@ -120,17 +129,28 @@ class TelegramBot {
   }
 
   menus(): void {
-    this.instance.use(uidHelpMenu);
+    this.instance.use(mainMenuMiddleware);
+  }
+
+  inlineMenus(): void {
+    this.instance.use(
+      uidHelpInlineMenu,
+      confirmAddTrackedBoardInlineMenu,
+      cancelAddTrackedBoardPromptInlineMenu,
+      confirmAddTrackedUserInlineMenu,
+      cancelAddTrackedUserPromptInlineMenu
+    );
   }
 
   conversations(): void {
-    this.instance.use(createConversation(setupConversation, 'setup'));
+    this.instance.use(
+      createConversation(setupConversation, 'setup'),
+      createConversation(addTrackedBoardConversation, 'addTrackedBoard'),
+      createConversation(addTrackedUserConversation, 'addTrackedUser')
+    );
   }
 
   errorHandler(): void {
-    this.instance.errorBoundary(error => {
-      logger.error(error);
-    });
     this.instance.catch(error => logger.error(error));
   }
 }

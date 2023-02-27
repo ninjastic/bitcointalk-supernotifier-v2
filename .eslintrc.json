@@ -33,7 +33,8 @@
         "@typescript-eslint/naming-convention": "off",
         "import/no-cycle": "off",
         "import/no-named-as-default": "off",
-        "@typescript-eslint/no-explicit-any": "off"
+        "@typescript-eslint/no-explicit-any": "off",
+        "no-continue": "off"
     },
     "settings": {
         "import/resolver": {
