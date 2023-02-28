@@ -56,7 +56,7 @@ confirmRemoveTrackedPhraseMenu.interact('No, go back!', 'no', {
   do: async () => `..`
 });
 
-trackedPhraseInfoMenu.submenu('❌ Remove Phrase', 'remove', confirmRemoveTrackedPhraseMenu);
+trackedPhraseInfoMenu.submenu('🗑️ Remove Phrase', 'remove', confirmRemoveTrackedPhraseMenu);
 
 trackedPhraseInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..'
@@ -115,7 +115,7 @@ const getTrackedPhrasesList = async (ctx: IMenuContext) => {
 };
 
 trackedPhrasesMenu.chooseIntoSubmenu('tp', getTrackedPhrasesList, trackedPhraseInfoMenu, {
-  maxRows: 4,
+  maxRows: 5,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {

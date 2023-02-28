@@ -13,9 +13,10 @@ import trackedBoardsMenu from '../menus/trackedBoardsMenu';
 
 export const confirmAddTrackedBoardInlineMenu = new Menu('addTrackedBoardConfirm')
   .text({ text: 'Yes', payload: 'yes' })
-  .text({ text: 'Yes, include children boards', payload: 'yes-childs' })
   .row()
-  .text({ text: 'No, try again', payload: 'no' });
+  .text({ text: 'Include children boards', payload: 'yes-childs' })
+  .row()
+  .text({ text: 'No', payload: 'no' });
 
 export const cancelAddTrackedBoardPromptInlineMenu = new Menu('cancelAddTrackedBoard').text({ text: 'Cancel' });
 

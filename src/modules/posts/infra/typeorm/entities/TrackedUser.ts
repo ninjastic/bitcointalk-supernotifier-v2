@@ -25,6 +25,9 @@ class TrackedUser {
   @Column()
   username: string;
 
+  @Column({ default: false })
+  only_topics: boolean;
+
   @CreateDateColumn()
   created_at: Date;
 

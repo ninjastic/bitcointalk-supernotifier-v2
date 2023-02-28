@@ -39,30 +39,19 @@ export default class SendTrackedUserNotificationService {
     await bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
-        logger.info({ telegram_id, message }, 'Tracking User notification was sent');
+        logger.info({ telegram_id, post_id, message }, 'Tracked User notification was sent');
         await setPostNotified.execute(post.post_id, telegram_id);
       })
       .catch(async error => {
-        if (!error.response) {
-          logger.error(
-            { error: error.message, telegram_id, post: post.id, message },
-            'Error while sending Tracking User Notification telegram message'
-          );
-
-          return;
-        }
-        if (
-          error.response.description === 'Forbidden: bot was blocked by the user' ||
-          error.response.description === 'Forbidden: user is deactivated'
-        ) {
-          logger.info(
-            { error: error.response, telegram_id, post: post.id, message },
-            'Telegram user marked as blocked'
-          );
+        const isBotBlocked = ['Forbidden: bot was blocked by the user', 'Forbidden: user is deactivated'].includes(
+          error.response?.description
+        );
+        if (isBotBlocked) {
+          logger.info({ telegram_id, post_id, message }, 'Telegram user marked as blocked');
           await setUserBlocked.execute(telegram_id);
         } else {
           logger.error(
-            { error: error.response, telegram_id, post: post.id, message },
+            { error: error.response ?? error.message, telegram_id, post_id, message },
             'Error while sending Tracked User Notification telegram message'
           );
         }

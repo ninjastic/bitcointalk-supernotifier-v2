@@ -63,7 +63,7 @@ confirmRemoveIgnoredTopicMenu.interact('No, go back!', 'no', {
   do: async () => `..`
 });
 
-ignoredTopicsMenuInfoMenu.submenu('❌ Stop Ignoring', 'remove', confirmRemoveIgnoredTopicMenu);
+ignoredTopicsMenuInfoMenu.submenu('🚫 Stop Ignoring', 'remove', confirmRemoveIgnoredTopicMenu);
 
 ignoredTopicsMenuInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..'
@@ -150,7 +150,7 @@ const getIgnoredTopics = async (ctx: IMenuContext) => {
 };
 
 ignoredTopicsMenu.chooseIntoSubmenu('ignoredTopics', getIgnoredTopics, ignoredTopicsMenuInfoMenu, {
-  maxRows: 4,
+  maxRows: 5,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {

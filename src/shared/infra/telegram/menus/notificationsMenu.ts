@@ -38,7 +38,7 @@ const meritsEnabled = (ctx: IMenuContext) => ctx.session.merits;
 const modlogsEnabled = (ctx: IMenuContext) => ctx.session.modlogs;
 
 notificationsMenu.interact(
-  ctx => (mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '❌ Mentions Disabled'),
+  ctx => (mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '🚫 Mentions Disabled'),
   'mentions',
   {
     do: async ctx => {
@@ -50,7 +50,7 @@ notificationsMenu.interact(
   }
 );
 
-notificationsMenu.interact(ctx => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '❌ Merits Disabled'), 'merits', {
+notificationsMenu.interact(ctx => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '🚫 Merits Disabled'), 'merits', {
   do: async ctx => {
     await ctx.answerCallbackQuery();
     await handleNotificationToggle(ctx);
@@ -60,7 +60,7 @@ notificationsMenu.interact(ctx => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '
 });
 
 notificationsMenu.interact(
-  ctx => (modlogsEnabled(ctx) ? '✅ Deleted Posts Enabled ' : '❌ Deleted Posts Disabled'),
+  ctx => (modlogsEnabled(ctx) ? '✅ Deleted Posts Enabled ' : '🚫 Deleted Posts Disabled'),
   'modlogs',
   {
     do: async ctx => {

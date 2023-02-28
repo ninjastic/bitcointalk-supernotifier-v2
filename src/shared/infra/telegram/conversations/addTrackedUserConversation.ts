@@ -10,8 +10,11 @@ import trackedUsersMenu from '../menus/trackedUsersMenu';
 import TrackedUsersRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedUsersRepository';
 
 export const confirmAddTrackedUserInlineMenu = new Menu('addTrackedUserConfirm')
-  .text({ text: 'Yes', payload: 'yes' })
-  .text({ text: 'No, try again', payload: 'no' });
+  .text({ text: 'Yes', payload: 'yes-posts' })
+  .row()
+  .text({ text: 'Only for topics', payload: 'yes-topics' })
+  .row()
+  .text({ text: 'No', payload: 'no' });
 
 export const cancelAddTrackedUserPromptInlineMenu = new Menu('cancelAddTrackedUser').text({ text: 'Cancel' });
 
@@ -53,7 +56,11 @@ const askForPrompt = async (
 
   const answerCb = await conversation.waitForCallbackQuery(/addTrackedUserConfirm/);
 
-  if (answerCb.callbackQuery.data.match(/\/yes\//)) {
+  if (answerCb.callbackQuery.data.match(/\/yes-topics\//)) {
+    trackedUser.only_topics = true;
+  }
+
+  if (answerCb.callbackQuery.data.match(/yes/)) {
     await ctx.api.deleteMessage(ctx.chat.id, answerCb.callbackQuery.message.message_id);
     return trackedUser;
   }

@@ -43,7 +43,7 @@ export default class SendMentionNotificationService {
     await bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
-        logger.info({ telegram_id, message }, 'Mention notification was sent');
+        logger.info({ telegram_id, post_id, history, message }, 'Mention notification was sent');
 
         if (history) {
           await setPostHistoryNotified.execute(post.post_id, telegram_id);
@@ -52,26 +52,15 @@ export default class SendMentionNotificationService {
         }
       })
       .catch(async error => {
-        if (!error.response) {
-          logger.error(
-            { error: error.message, telegram_id, post: post.id, message },
-            'Error while sending Mention Notification telegram message'
-          );
-
-          return;
-        }
-        if (
-          error.response.description === 'Forbidden: bot was blocked by the user' ||
-          error.response.description === 'Forbidden: user is deactivated'
-        ) {
-          logger.info(
-            { error: error.response, telegram_id, post: post.id, message },
-            'Telegram user marked as blocked'
-          );
+        const isBotBlocked = ['Forbidden: bot was blocked by the user', 'Forbidden: user is deactivated'].includes(
+          error.response?.description
+        );
+        if (isBotBlocked) {
+          logger.info({ telegram_id, post_id, message }, 'Telegram user marked as blocked');
           await setUserBlocked.execute(telegram_id);
         } else {
           logger.error(
-            { error: error.response, telegram_id, post: post.id, message },
+            { error: error.response ?? error.message, telegram_id, post_id, history, message },
             'Error while sending Mention Notification telegram message'
           );
         }

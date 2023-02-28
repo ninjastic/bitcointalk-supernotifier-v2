@@ -185,11 +185,11 @@ export default class CheckPostsService {
         }
       }
 
-      // Tracked Users
-      const trackedUsersFiltered = trackedUsers.filter(
+      // Tracked Users (Posts)
+      const trackedUsersWithMatchingPosts = trackedUsers.filter(
         trackedUser => trackedUser.username.toLowerCase() === post.author.toLowerCase()
       );
-      for await (const trackedUser of trackedUsersFiltered) {
+      for await (const trackedUser of trackedUsersWithMatchingPosts) {
         const { user } = trackedUser;
 
         const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
@@ -206,11 +206,12 @@ export default class CheckPostsService {
       }
     }
 
-    // Tracked Boards
     for await (const topic of uncheckedTopics) {
-      const trackedBoardsFiltered = trackedBoards.filter(trackedBoard => trackedBoard.board_id === topic.post.board_id);
-
-      for await (const trackedBoard of trackedBoardsFiltered) {
+      // Tracked Boards
+      const trackedBoardsWithMatchingTopics = trackedBoards.filter(
+        trackedBoard => trackedBoard.board_id === topic.post.board_id
+      );
+      for await (const trackedBoard of trackedBoardsWithMatchingTopics) {
         const { user } = trackedBoard;
         const { post } = topic;
 
@@ -228,6 +229,27 @@ export default class CheckPostsService {
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
         await queue.add('sendTrackedBoardNotification', { post, user, trackedBoard });
+      }
+
+      // Tracked Users (Topics)
+      const trackedUsersWithMatchingTopics = trackedUsers.filter(
+        trackedUser => trackedUser.only_topics && trackedUser.username.toLowerCase() === topic.post.author.toLowerCase()
+      );
+      for await (const trackedUser of trackedUsersWithMatchingTopics) {
+        const { user } = trackedUser;
+        const { post } = topic;
+
+        const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
+        const isSameUid = post.author_uid === user.user_id;
+        const isAlreadyNotified =
+          post.notified_to.includes(user.telegram_id) || postsNotified.has(`${post.post_id}:${user.telegram_id}`);
+
+        if (isSameUsername || isSameUid || isAlreadyNotified) {
+          continue;
+        }
+
+        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
+        await queue.add('sendTrackedUserNotification', { post, user });
       }
     }
 

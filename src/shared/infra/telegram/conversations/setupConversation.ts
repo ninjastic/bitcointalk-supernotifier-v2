@@ -66,7 +66,7 @@ const askForConfirmation = async (
   await ctx.api.editMessageText(
     ctx.chat.id,
     promptMsg.message_id,
-    answer ? `✅ We will notify you of new ${type}` : `❌ We won't notify you of new ${type}`,
+    answer ? `✅ We will notify you of new ${type}` : `🚫 We won't notify you of new ${type}`,
     { reply_markup: null }
   );
 

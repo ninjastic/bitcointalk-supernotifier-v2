@@ -3,6 +3,7 @@ import { container } from 'tsyringe';
 
 import IMenuContext from '../@types/IMenuContext';
 import TrackedUsersRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedUsersRepository';
+import TrackedUser from '../../../../modules/posts/infra/typeorm/entities/TrackedUser';
 
 const trackedUsersMenu = new MenuTemplate<IMenuContext>(() => ({
   text: '<b>Tracked Users</b>\n\nGet notified for new posts from your favorite users.',
@@ -39,6 +40,12 @@ const getTrackedUser = async (telegramId: string, username: string) => {
   return trackedUser;
 };
 
+const saveTrackedUser = async (trackedUser: TrackedUser) => {
+  const trackedUsersRepository = container.resolve(TrackedUsersRepository);
+  const savedTrackedUser = await trackedUsersRepository.save(trackedUser);
+  return savedTrackedUser;
+};
+
 const trackedUserInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
   const trackedUser = await getTrackedUser(String(ctx.from.id), ctx.match[1]);
 
@@ -52,7 +59,23 @@ const trackedUserInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
   };
 });
 
-trackedUserInfoMenu.submenu('❌ Remove User', 'remove', confirmRemoveTrackedUserMenu);
+trackedUserInfoMenu.submenu('🗑️ Remove User', 'remove', confirmRemoveTrackedUserMenu);
+
+trackedUserInfoMenu.interact(
+  async ctx => {
+    const trackedUser = await getTrackedUser(String(ctx.from.id), ctx.match[1]);
+    return trackedUser.only_topics ? '✅ Topics Only Enabled' : '🚫 Topics Only Disabled';
+  },
+  'topics-only',
+  {
+    do: async ctx => {
+      const trackedUser = await getTrackedUser(String(ctx.from.id), ctx.match[1]);
+      trackedUser.only_topics = !trackedUser.only_topics;
+      await saveTrackedUser(trackedUser);
+      return true;
+    }
+  }
+);
 
 trackedUserInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..'

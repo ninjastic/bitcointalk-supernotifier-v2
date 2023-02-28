@@ -1,5 +1,5 @@
 import { sub } from 'date-fns';
-import { getRepository, MoreThanOrEqual, Repository } from 'typeorm';
+import { getRepository, Repository } from 'typeorm';
 
 import ICreateTopicDTO from '../../../dtos/ICreateTopicDTO';
 

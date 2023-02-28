@@ -44,7 +44,7 @@ confirmRemoveIgnoredUserMenu.interact('No, go back!', 'no', {
   do: async () => `..`
 });
 
-ignoredUsersMenuInfoMenu.submenu('❌ Stop Ignoring', 'remove', confirmRemoveIgnoredUserMenu);
+ignoredUsersMenuInfoMenu.submenu('🚫 Stop Ignoring', 'remove', confirmRemoveIgnoredUserMenu);
 
 ignoredUsersMenuInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..'
@@ -105,7 +105,7 @@ const getIgnoredUsers = async (ctx: IMenuContext) => {
 };
 
 ignoredUsersMenu.chooseIntoSubmenu('ignoredUsers', getIgnoredUsers, ignoredUsersMenuInfoMenu, {
-  maxRows: 4,
+  maxRows: 5,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {

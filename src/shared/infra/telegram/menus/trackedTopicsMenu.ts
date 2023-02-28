@@ -148,7 +148,7 @@ confirmRemoveTrackedTopicUser.interact('No, go back!', 'no', {
   do: async () => `..`
 });
 
-trackedTopicUsersInfoMenu.submenu('❌ Remove User', 'remove', confirmRemoveTrackedTopicUser);
+trackedTopicUsersInfoMenu.submenu('🗑️ Remove User', 'remove', confirmRemoveTrackedTopicUser);
 
 trackedTopicUsersInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..',
@@ -200,7 +200,7 @@ const addTrackedTopicUserQuestion = new StatelessQuestion('addUser', async (ctx:
 });
 
 trackedTopicAuthorsMenu.chooseIntoSubmenu('authors', getTrackedTopicUsersList, trackedTopicUsersInfoMenu, {
-  maxRows: 4,
+  maxRows: 5,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {
@@ -248,7 +248,7 @@ confirmRemoveTrackedTopicMenu.interact('No, go back!', 'no', {
   do: async () => `..`
 });
 
-trackedTopicInfoMenu.submenu('❌ Remove Topic', 'remove', confirmRemoveTrackedTopicMenu);
+trackedTopicInfoMenu.submenu('🗑️ Remove Topic', 'remove', confirmRemoveTrackedTopicMenu);
 
 trackedTopicInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..'

@@ -57,7 +57,7 @@ const trackedBoardInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
   };
 });
 
-trackedBoardInfoMenu.submenu('❌ Remove Board', 'remove', confirmRemoveTrackedBoardMenu);
+trackedBoardInfoMenu.submenu('🗑️ Remove Board', 'remove', confirmRemoveTrackedBoardMenu);
 
 trackedBoardInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..'
