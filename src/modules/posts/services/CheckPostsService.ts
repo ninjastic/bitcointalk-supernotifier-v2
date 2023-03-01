@@ -187,7 +187,7 @@ export default class CheckPostsService {
 
       // Tracked Users (Posts)
       const trackedUsersWithMatchingPosts = trackedUsers.filter(
-        trackedUser => trackedUser.username.toLowerCase() === post.author.toLowerCase()
+        trackedUser => !trackedUser.only_topics && trackedUser.username.toLowerCase() === post.author.toLowerCase()
       );
       for await (const trackedUser of trackedUsersWithMatchingPosts) {
         const { user } = trackedUser;
