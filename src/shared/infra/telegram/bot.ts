@@ -38,6 +38,7 @@ import setMeritCommand from './commands/setMeritCommand';
 import altCommand from './commands/altCommand';
 import infoCommand from './commands/infoCommand';
 import devCommand from './commands/dev';
+import apiCommand from './commands/apiCommand';
 
 class TelegramBot {
   public instance: Bot<Context & SessionFlavor<ISession>>;
@@ -114,6 +115,7 @@ class TelegramBot {
     this.instance.hears(/\/?setmerit (.*)/i, setMeritCommand);
     this.instance.hears(/\/?alt (.*)/i, altCommand);
     this.instance.hears(/\/?info/i, infoCommand);
+    this.instance.hears(/\/?api/i, apiCommand);
 
     this.instance.command('dev', devCommand);
 

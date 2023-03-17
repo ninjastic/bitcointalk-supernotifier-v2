@@ -11,6 +11,7 @@ import SendTrackedPhraseNotificationService from '../../telegram/services/SendTr
 import SendRemovedTopicNotificationService from '../../telegram/services/SendRemovedTopicNotificationService';
 import SendTrackedBoardNotificationService from '../../telegram/services/SendTrackedBoardNotificationService';
 import SendTrackedUserNotificationService from '../../telegram/services/SendTrackedUserNotificationService';
+import SendApiNotificationService from '../../telegram/services/SendApiNotificationService';
 
 class TelegramQueue {
   public instance: Queue.Queue;
@@ -71,6 +72,12 @@ class TelegramQueue {
       const { post, user } = job.data;
       const sendTrackedBoardNotification = new SendTrackedUserNotificationService();
       await sendTrackedBoardNotification.execute(user.telegram_id, post);
+    });
+
+    this.instance.process('sendApiNotification', async job => {
+      const { telegram_id, message } = job.data;
+      const sendApiNotification = new SendApiNotificationService();
+      await sendApiNotification.execute(telegram_id, message);
     });
 
     loggerHandler(this.instance);
