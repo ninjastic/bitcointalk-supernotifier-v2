@@ -17,7 +17,8 @@ export const api = axios.create({
     'User-Agent': new UserAgent().toString(),
     'Cache-Control': 'no-cache'
   },
-  responseType: 'arraybuffer'
+  responseType: 'arraybuffer',
+  responseEncoding: 'binary'
 });
 
 export const uptimeApi = axios.create({
@@ -58,9 +59,7 @@ api.interceptors.response.use(
       WAITING = false;
     }
 
-    const utf8String = iconv.decode(response.data, 'ISO-8859-1');
-    response.data = utf8String;
-
+    response.data = iconv.decode(response.data, 'WINDOWS-1252');
     return Promise.resolve(response);
   },
   error => {
