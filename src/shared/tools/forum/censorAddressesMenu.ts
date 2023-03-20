@@ -11,27 +11,22 @@ type PromptResponse = {
   newContent: string;
 };
 
-export const censorPostsMenu = async (): Promise<void> => {
-  const defaultNewContent = 'Censored by TryNinja due to a privacy request';
-  let post = null;
+export const censorAddressesMenu = async (): Promise<void> => {
+  const matches = [];
 
-  const { newContent } = await inquirer
+  await inquirer
     .prompt<PromptResponse>([
       {
         type: 'input',
         name: 'post_id',
-        message: 'Post ID to edit',
+        message: 'Address to remove',
         validate: async value => {
-          if (!value || Number.isNaN(Number(value))) {
-            return false;
-          }
-
           const search = await esClient.search({
-            index: 'posts',
+            index: 'posts_addresses',
             body: {
               query: {
                 match: {
-                  post_id: value
+                  address: value
                 }
               }
             }
@@ -41,14 +36,12 @@ export const censorPostsMenu = async (): Promise<void> => {
             return false;
           }
 
-          post = search.body.hits.hits.at(0);
-          return post !== null;
+          for (const match of search.body.hits.hits) {
+            matches.push(match._source);
+          }
+
+          return search.body.hits.hits.length > 0;
         }
-      },
-      {
-        type: 'input',
-        name: 'newContent',
-        default: defaultNewContent
       }
     ])
     .catch(err => {
@@ -56,31 +49,32 @@ export const censorPostsMenu = async (): Promise<void> => {
       process.exit();
     });
 
-  Object.entries(post._source).forEach(([key, value]) => {
-    console.info(chalk.green(`${key}: `), value);
-  });
+  for (const match of matches) {
+    Object.entries(match).forEach(([key, value]) => {
+      console.info(chalk.green(`${key}: `), value);
+    });
 
-  console.info(chalk.red('\nNew content:', newContent));
+    console.log('\n');
+  }
+
+  console.log('Matches:', matches.length);
 
   const confirm = (await inquirer
     .prompt({
       type: 'confirm',
       name: 'choice',
-      message: 'Edit into database?',
+      message: 'Remove from database?',
       default: false
     })
     .catch(() => process.exit())) as { choice: boolean };
 
   if (confirm.choice) {
-    await esClient.update({
-      index: post._index,
-      id: post._id,
-      body: {
-        doc: {
-          content: newContent
-        }
-      }
-    });
+    for await (const match of matches) {
+      await esClient.delete({
+        index: 'posts_addresses',
+        id: `${match.address}_${match.post_id}`
+      });
+    }
   } else {
     console.log('Canceled!');
   }

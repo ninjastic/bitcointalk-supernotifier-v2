@@ -4,9 +4,11 @@ import { createPostMenu } from './forum/createPostsMenu';
 import { scrapePostMenu } from './forum/scrapePostMenu';
 import { syncBoards } from './forum/syncBoards';
 import { scrapeMeritDump } from './forum/scrapeMeritDump';
+import { censorAddressesMenu } from './forum/censorAddressesMenu';
 
-type MainMenuOptions = 'Posts' | 'Boards' | 'Merits';
+type MainMenuOptions = 'Posts' | 'Boards' | 'Merits' | 'Addresses';
 type PostsMenuOptions = 'Scrape' | 'Create' | 'Censor';
+type AddressesMenuOptions = 'Censor';
 type MeritsMenuOptions = 'Scrape Last Dump' | 'Scrape Loyce';
 type BoardsMenuOptions = 'Sync';
 
@@ -15,6 +17,7 @@ interface PromptResponse {
   postsMenu: PostsMenuOptions;
   meritsMenu: MeritsMenuOptions;
   boardsMenu: BoardsMenuOptions;
+  addressesMenu: AddressesMenuOptions;
 }
 
 const mainMenu = async () =>
@@ -24,13 +27,13 @@ const mainMenu = async () =>
         name: 'mainMenu',
         message: 'Choose the category',
         type: 'list',
-        choices: ['Posts', 'Merits', 'Boards']
+        choices: ['Posts', 'Merits', 'Boards', 'Addresses']
       },
       {
         name: 'postsMenu',
         message: 'What about it?',
         type: 'list',
-        choices: ['Scrape', 'Create', 'Censor'],
+        choices: ['Scrape', 'Create', 'Privacy'],
         when(answers) {
           return answers.mainMenu === 'Posts';
         }
@@ -52,6 +55,15 @@ const mainMenu = async () =>
         when(answers) {
           return answers.mainMenu === 'Boards';
         }
+      },
+      {
+        name: 'addressesMenu',
+        message: 'What about it?',
+        type: 'list',
+        choices: ['Privacy'],
+        when(answers) {
+          return answers.mainMenu === 'Addresses';
+        }
       }
     ])
     .then(async response => {
@@ -66,6 +78,8 @@ const mainMenu = async () =>
         await scrapeMeritDump(shouldScrapeLoyce);
       } else if (response.boardsMenu === 'Sync') {
         await syncBoards();
+      } else if (response.addressesMenu === 'Censor') {
+        await censorAddressesMenu();
       }
     });
 

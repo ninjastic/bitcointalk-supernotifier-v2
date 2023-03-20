@@ -14,18 +14,16 @@ export const scrapePostMenu = async (): Promise<void> => {
     .prompt([
       {
         type: 'input',
-        name: 'topic_id',
-        message: `Id of the topic`,
-        validate: value => value && !Number.isNaN(Number(value))
-      },
-      {
-        type: 'input',
-        name: 'post_id',
-        message: `Id of the post`,
-        validate: value => value && !Number.isNaN(Number(value))
+        name: 'data',
+        message: 'URL of post',
+        filter: value => {
+          const [, topicId, postId] = value.match(/topic=(\d+)\.msg(\d+)/);
+          return [topicId, postId];
+        },
+        validate: data => data.length === 2
       }
     ])
-    .then(async ({ post_id, topic_id }) => {
+    .then(async ({ data: [topic_id, post_id] }) => {
       const post = await scrapePost.execute({ post_id, topic_id });
 
       if (!post) {
@@ -54,7 +52,7 @@ export const scrapePostMenu = async (): Promise<void> => {
           .insert()
           .into(Post)
           .values([post])
-          .onConflict('("post_id") DO NOTHING')
+          .onConflict('("post_id") DO UPDATE SET title=EXCLUDED.title, content=EXCLUDED.content')
           .execute()
           .then(r =>
             r.identifiers.length
