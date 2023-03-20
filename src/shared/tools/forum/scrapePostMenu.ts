@@ -52,7 +52,9 @@ export const scrapePostMenu = async (): Promise<void> => {
           .insert()
           .into(Post)
           .values([post])
-          .onConflict('("post_id") DO UPDATE SET title=EXCLUDED.title, content=EXCLUDED.content')
+          .onConflict(
+            '("post_id") DO UPDATE SET title=EXCLUDED.title, content=EXCLUDED.content, updated_at=EXCLUDED.updated_at'
+          )
           .execute()
           .then(r =>
             r.identifiers.length
