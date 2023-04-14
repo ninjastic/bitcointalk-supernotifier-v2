@@ -14,7 +14,7 @@ export default class AddressesController {
     const params = request.params as unknown as { address: string };
 
     const addressRegex =
-      /0x[a-fA-F0-9]{40}|(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/;
+      /0x[a-fA-F0-9]{40}|(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})|\bT[A-Za-z1-9]{33}\b/;
 
     const schemaValidation = Joi.object({
       address: Joi.string().regex(addressRegex).message('Address is invalid').required()
@@ -58,7 +58,7 @@ export default class AddressesController {
     const schemaValidation = Joi.object({
       address: Joi.string(),
       author: Joi.string(),
-      coin: Joi.string().valid('BTC', 'ETH').insensitive(),
+      coin: Joi.string().valid('BTC', 'ETH', 'TRX').insensitive(),
       post_id: Joi.number(),
       topic_id: Joi.number(),
       board: Joi.number(),

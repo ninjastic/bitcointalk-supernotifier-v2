@@ -23,12 +23,14 @@ createConnection().then(async () => {
   const bitcoinRegex =
     /(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/g;
   const ethereumRegex = /0x[a-fA-F0-9]{40}/g;
+  const tronRegex = /\bT[A-Za-z1-9]{33}\b/g;
 
   let stillHas = true;
   let emptyOperations = false;
 
   while (await stillHas) {
     const lastPostId = await getCache.execute<number>('analysis:AddressesPostLastId');
+    console.log('lastPostId', lastPostId);
 
     const posts = await getPosts.execute({ last: lastPostId, limit: 100000 });
 
@@ -44,6 +46,7 @@ createConnection().then(async () => {
 
       const bitcoinAddresses = contentWithoutQuotes.match(bitcoinRegex);
       const ethereumAddresses = contentWithoutQuotes.match(ethereumRegex);
+      const tronAddresses = contentWithoutQuotes.match(tronRegex);
 
       if (bitcoinAddresses) {
         bitcoinAddresses.forEach(address => {
@@ -69,6 +72,18 @@ createConnection().then(async () => {
             operations.push({
               post_id: post.post_id,
               coin: 'ETH',
+              address
+            });
+          }
+        });
+      }
+
+      if (tronAddresses) {
+        tronAddresses.forEach(address => {
+          if (operations.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
+            operations.push({
+              post_id: post.post_id,
+              coin: 'TRX',
               address
             });
           }

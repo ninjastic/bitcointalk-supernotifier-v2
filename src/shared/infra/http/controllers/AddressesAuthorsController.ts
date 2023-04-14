@@ -13,7 +13,7 @@ export default class AddressesAuthorsController {
     const schemaValidation = Joi.object({
       address: Joi.string(),
       author: Joi.string(),
-      coin: Joi.string().valid('BTC', 'ETH').insensitive(),
+      coin: Joi.string().valid('BTC', 'ETH', 'TRX').insensitive(),
       post_id: Joi.number(),
       topic_id: Joi.number(),
       board: Joi.number(),

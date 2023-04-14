@@ -31,11 +31,11 @@ class Post {
   @Column()
   date: Date;
 
-  edited: Date;
+  edited?: Date;
 
-  topicReplies: number;
+  topicReplies?: number;
 
-  topicAuthor: string;
+  topicAuthor?: string;
 
   @Column({ type: 'varchar', array: true, default: [] })
   boards: string[];

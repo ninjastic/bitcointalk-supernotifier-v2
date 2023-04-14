@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc",
     "release": "standard-version",
+    "test": "jest",
     "start:scrapper": "cross-env NODE_ENV=production node dist/shared/infra/bull/workers/scrapper.js",
     "start:server": "cross-env NODE_ENV=production node dist/shared/infra/http/server.js",
     "start:telegram": "cross-env NODE_ENV=production node dist/shared/infra/telegram/index.js",
@@ -29,6 +30,7 @@
     }
   },
   "devDependencies": {
+    "@babel/preset-typescript": "^7.21.4",
     "@commitlint/cli": "^9.1.2",
     "@commitlint/config-conventional": "^9.1.2",
     "@grammyjs/types": "^2.12.1",
@@ -48,6 +50,7 @@
     "@types/helmet": "^0.0.48",
     "@types/inquirer": "^9.0.3",
     "@types/ioredis": "^4.17.2",
+    "@types/jest": "^29.5.0",
     "@types/lzma-native": "^4.0.1",
     "@types/node": "^8.0.29",
     "@types/node-fetch": "^2.5.7",
@@ -74,6 +77,7 @@
     "pino-pretty": "^4.1.0",
     "prettier": "^2.0.5",
     "standard-version": "^9.0.0",
+    "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^4.8.4",
@@ -113,6 +117,7 @@
     "iconv-lite": "^0.6.3",
     "inquirer": "^8",
     "ioredis": "^4.17.3",
+    "jest": "^29.5.0",
     "joi": "^17.2.1",
     "lzma-native": "^8.0.6",
     "node-fetch": "^2.6.1",
