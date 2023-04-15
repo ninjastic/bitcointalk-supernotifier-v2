@@ -3,6 +3,7 @@ import validate from 'bitcoin-address-validation';
 
 import Address from '../infra/typeorm/entities/Address';
 import Post from '../infra/typeorm/entities/Post';
+import { validateTronAddress } from '../../../shared/services/utils';
 
 export default class ParsePostAddressesService {
   public execute(post: Post): Address[] {
@@ -56,6 +57,9 @@ export default class ParsePostAddressesService {
 
     if (tronAddresses) {
       tronAddresses.forEach(address => {
+        if (!validateTronAddress(address)) {
+          return;
+        }
         if (addresses.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
           addresses.push({
             post_id: post.post_id,
