@@ -66,7 +66,7 @@ export default class SendMeritNotificationService {
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
 
     let message = '';
-    message += `(Merits: <b>${totalMeritCount}</b>) `;
+    message += `⭐️ (Merits: <b>${totalMeritCount}</b>) `;
     message += `You received <b>${amount}</b> ${pluralize('merit', amount)} `;
     message += `from <b>${escape(sender)}</b> `;
     message += `for <a href="${postUrl}">`;

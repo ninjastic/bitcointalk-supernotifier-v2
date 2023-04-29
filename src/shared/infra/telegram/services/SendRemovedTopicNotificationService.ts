@@ -18,7 +18,7 @@ export default class SendRemovedTopicNotificationService {
     const setUserBlocked = container.resolve(SetUserBlockedService);
 
     let message = '';
-    message += `You had <b>${posts.length}</b> `;
+    message += `🗑️ You had <b>${posts.length}</b> `;
     message += pluralize('post', posts.length);
     message += ` deleted because `;
     message += posts.length === 1 ? 'its' : 'their';

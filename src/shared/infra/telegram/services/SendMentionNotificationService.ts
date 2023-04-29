@@ -31,7 +31,7 @@ export default class SendMentionNotificationService {
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
 
     let message = '';
-    message += `You have been mentioned by <b>${escape(author)}</b> `;
+    message += `💬 You have been mentioned by <b>${escape(author)}</b> `;
     message += `in <a href="${postUrl}">`;
     message += `${escape(titleWithBoards)}`;
     message += `</a>\n`;

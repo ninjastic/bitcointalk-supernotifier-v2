@@ -2,6 +2,7 @@ import { container } from 'tsyringe';
 import { Conversation, ConversationFlavor } from '@grammyjs/conversations';
 import { Menu } from '@grammyjs/menu';
 import { replyMenuToContext } from 'grammy-inline-menu';
+import { z } from 'zod';
 
 import IMenuContext from '../@types/IMenuContext';
 import { mainMenu } from '../menus/mainMenu';
@@ -48,6 +49,20 @@ const askForPrompt = async (
   }
 
   const trackedUser = trackedUsersRepository.create({ telegram_id: String(ctx.from.id), username: text.toLowerCase() });
+
+  const validation = z.object({
+    telegram_id: z.string(),
+    username: z
+      .string()
+      .max(25)
+      .regex(/^(?!.*bitcointalk\.org\/index\.php\?action=profile).*/),
+    only_topics: z.boolean().optional()
+  });
+
+  if (!validation.safeParse(trackedUser).success) {
+    await ctx.reply('Username is not valid, try again.');
+    return askForPrompt(conversation, ctx);
+  }
 
   await ctx.reply(`Do you want to add the user <b>${trackedUser.username}</b>?`, {
     parse_mode: 'HTML',

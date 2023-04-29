@@ -27,7 +27,7 @@ export default class SendTrackedTopicNotificationService {
     const titleWithBoards = boards.length ? `${boards[boards.length - 1]} / ${title}` : title;
 
     let message = '';
-    message += `There is a new reply by <b>${escape(author)}</b> `;
+    message += `📄 There is a new reply by <b>${escape(author)}</b> `;
     message += `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
     message += `${escape(titleWithBoards)}`;
     message += `</a>\n`;

@@ -28,7 +28,7 @@ export default class SendTrackedPhraseNotificationService {
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
 
     let message = '';
-    message += `New post with matched phrase <b>${phrase}</b> `;
+    message += `🔠 New post with matched phrase <b>${phrase}</b> `;
     message += `by <b>${escape(author)}</b> `;
     message += `in the topic <a href="${postUrl}">`;
     message += `${escape(titleWithBoards)}`;

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "release": "standard-version",
     "test": "jest",
     "start:scrapper": "cross-env NODE_ENV=production node dist/shared/infra/bull/workers/scrapper.js",
@@ -134,6 +134,7 @@
     "reflect-metadata": "^0.1.10",
     "tsyringe": "^4.3.0",
     "typeorm": "0.2.25",
-    "user-agents": "^1.0.1294"
+    "user-agents": "^1.0.1294",
+    "zod": "^3.21.4"
   }
 }

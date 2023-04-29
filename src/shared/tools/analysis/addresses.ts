@@ -14,6 +14,7 @@ import PostAddress from '../../../modules/posts/infra/typeorm/entities/PostAddre
 import GetPostsService from '../../../modules/posts/services/GetPostsService';
 import SaveCacheService from '../../container/providers/services/SaveCacheService';
 import GetCacheService from '../../container/providers/services/GetCacheService';
+import { validateTronAddress } from '../../services/utils';
 
 createConnection().then(async () => {
   const getPosts = container.resolve(GetPostsService);
@@ -25,14 +26,16 @@ createConnection().then(async () => {
   const ethereumRegex = /0x[a-fA-F0-9]{40}/g;
   const tronRegex = /\bT[A-Za-z1-9]{33}\b/g;
 
+  const limit = 100000;
   let stillHas = true;
-  let emptyOperations = false;
+  let startOver = false;
+  const coins = ['TRX'];
 
   while (await stillHas) {
-    const lastPostId = await getCache.execute<number>('analysis:AddressesPostLastId');
+    const lastPostId = startOver ? null : await getCache.execute<number>('analysis:AddressesPostLastId');
     console.log('lastPostId', lastPostId);
 
-    const posts = await getPosts.execute({ last: lastPostId, limit: 100000 });
+    const posts = await getPosts.execute({ last: lastPostId, limit });
 
     const operations = [];
 
@@ -48,7 +51,7 @@ createConnection().then(async () => {
       const ethereumAddresses = contentWithoutQuotes.match(ethereumRegex);
       const tronAddresses = contentWithoutQuotes.match(tronRegex);
 
-      if (bitcoinAddresses) {
+      if (bitcoinAddresses && coins.includes('BTC')) {
         bitcoinAddresses.forEach(address => {
           try {
             if (!validate(address)) return;
@@ -66,7 +69,7 @@ createConnection().then(async () => {
         });
       }
 
-      if (ethereumAddresses) {
+      if (ethereumAddresses && coins.includes('ETH')) {
         ethereumAddresses.forEach(address => {
           if (operations.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
             operations.push({
@@ -78,8 +81,11 @@ createConnection().then(async () => {
         });
       }
 
-      if (tronAddresses) {
+      if (tronAddresses && coins.includes('TRX')) {
         tronAddresses.forEach(address => {
+          if (!validateTronAddress(address)) {
+            return;
+          }
           if (operations.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
             operations.push({
               post_id: post.post_id,
@@ -94,16 +100,6 @@ createConnection().then(async () => {
     const first = posts[0];
     const last = posts[posts.length - 1];
 
-    if (operations.length === 0) {
-      if (emptyOperations) {
-        console.log('-- Finished --');
-        stillHas = false;
-        break;
-      }
-
-      emptyOperations = true;
-    }
-
     const manager = getManager();
     let inserted = null as InsertResult;
 
@@ -117,11 +113,22 @@ createConnection().then(async () => {
         .execute();
     }
 
+    if (operations.length === 0 && posts.length < limit) {
+      console.log('-- Finished --');
+      stillHas = false;
+      break;
+    }
+
     if (last && inserted) {
-      await saveCache.execute('analysis:AddressesPostLastId', last.post_id);
       console.log(`Inserted ${inserted.raw.length}, first: ${first.post_id} last: ${last.post_id}`);
     } else {
-      console.log('nothing happened...');
+      console.log('Nothing was inserted...');
+    }
+
+    await saveCache.execute('analysis:AddressesPostLastId', last.post_id);
+
+    if (startOver) {
+      startOver = false;
     }
   }
 });
