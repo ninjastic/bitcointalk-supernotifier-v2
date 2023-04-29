@@ -16,7 +16,6 @@
     "dev:checker": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/infra/bull/workers/checker.ts | pino-pretty",
     "dev:es:upload:posts": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/elasticsearch/upload-posts.ts",
     "dev:loyce:archive": "cross-env NODE_ENV=development ts-node-dev --transpile-only src/shared/tools/loyce/scraper-archive.ts",
-    "postinstall": "typesync",
     "typeorm": "cross-env NODE_ENV=production ts-node-dev ./node_modules/typeorm/cli.js",
     "dev:typeorm": "cross-env NODE_ENV=development ts-node-dev ./node_modules/typeorm/cli.js",
     "migrate": "cross-env NODE_ENV=production typeorm migration:run",
@@ -80,8 +79,7 @@
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.8.4",
-    "typesync": "^0.7.0"
+    "typescript": "^4.8.4"
   },
   "dependencies": {
     "@elastic/elasticsearch": "^7.9.0",
