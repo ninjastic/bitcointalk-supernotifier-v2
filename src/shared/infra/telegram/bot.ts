@@ -3,7 +3,7 @@ import 'dotenv/config.js';
 import { Bot, Context, session, SessionFlavor } from 'grammy';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { conversations, createConversation } from '@grammyjs/conversations';
-import { run } from '@grammyjs/runner';
+import { run, RunnerHandle } from '@grammyjs/runner';
 import { container } from 'tsyringe';
 import IORedis from 'ioredis';
 
@@ -13,8 +13,6 @@ import '../../container';
 import cache from '../../../config/cache';
 import logger from '../../services/logger';
 import ISession from './@types/ISession';
-
-import TelegramQueue from '../bull/queues/TelegramQueue';
 
 import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
 
@@ -43,7 +41,7 @@ import apiCommand from './commands/apiCommand';
 class TelegramBot {
   public instance: Bot<Context & SessionFlavor<ISession>>;
 
-  public queue: TelegramQueue;
+  public runner: RunnerHandle;
 
   constructor() {
     this.instance = new Bot(process.env.TELEGRAM_BOT_TOKEN);
@@ -55,13 +53,7 @@ class TelegramBot {
     this.commands();
     this.errorHandler();
 
-    const runner = run(this.instance);
-
-    if (process.env.NODE_ENV === 'production') {
-      const stopRunner = () => runner.isRunning() && runner.stop() && this.queue.instance.close();
-      process.once('SIGINT', stopRunner);
-      process.once('SIGTERM', stopRunner);
-    }
+    this.runner = run(this.instance);
   }
 
   middlewares(): void {

@@ -82,6 +82,10 @@ class TelegramQueue {
 
     loggerHandler(this.instance);
   }
+
+  public async close(): Promise<void> {
+    await this.instance.close();
+  }
 }
 
 export default TelegramQueue;
