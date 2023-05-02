@@ -1,11 +1,11 @@
 import { container } from 'tsyringe';
-import { CommandContext } from 'grammy';
+import { HearsContext } from 'grammy';
 
 import IMenuContext from '../@types/IMenuContext';
 
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
 
-const setMeritCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
+const setMeritCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
   const saveCache = container.resolve(SaveCacheService);
 
   const value = Number(ctx.match[1]);

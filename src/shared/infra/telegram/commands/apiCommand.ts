@@ -1,9 +1,9 @@
-import { CommandContext } from 'grammy';
+import { HearsContext } from 'grammy';
 
 import NotificationApiKeyRepository from '../../../../modules/users/infra/typeorm/repositories/NotificationApiKeyRepository';
 import IMenuContext from '../@types/IMenuContext';
 
-const apiCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
+const apiCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
   const notificationApiKeyRepository = new NotificationApiKeyRepository();
   const apiKeyExists = await notificationApiKeyRepository.findOne({ telegram_id: String(ctx.chat.id) });
 

@@ -1,11 +1,11 @@
 import { container } from 'tsyringe';
-import { CommandContext } from 'grammy';
+import { HearsContext } from 'grammy';
 
 import IMenuContext from '../@types/IMenuContext';
 
 import SetUserAlternativeUsernameService from '../services/SetUserAlternativeUsernameService';
 
-const altCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
+const altCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
   const setUserAlternativeUsername = container.resolve(SetUserAlternativeUsernameService);
 
   const value = ctx.match[1];
