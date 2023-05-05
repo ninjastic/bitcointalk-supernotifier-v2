@@ -1,13 +1,11 @@
 import { injectable, inject } from 'tsyringe';
-import Queue from 'bull';
-
-import cacheConfig from '../../../config/cache';
 
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
 
 import Post from '../infra/typeorm/entities/Post';
 import TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
+import forumScrapperSideQueue from '../../../shared/infra/bull/queues/forumScrapperSideQueue';
 
 @injectable()
 export default class AddTrackedTopicService {
@@ -41,12 +39,7 @@ export default class AddTrackedTopicService {
       return topicExists;
     }
 
-    const queue = new Queue('ForumScrapperSideQueue', {
-      redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
-    });
-
-    const job = await queue.add('scrapeTopic', { topic_id }, { priority: 1 });
+    const job = await forumScrapperSideQueue.add('scrapeTopic', { topic_id }, { priority: 1 });
 
     const topicPost = (await job.finished()) as Post;
 
@@ -59,8 +52,6 @@ export default class AddTrackedTopicService {
     await this.trackedTopicsRepository.save(trackedTopic);
 
     const trackedWithTopic = await this.trackedTopicsRepository.findOneByTopicId(topic_id);
-
-    await queue.close();
 
     await this.cacheRepository.invalidate(`trackedTopics:${telegram_id}`);
     await this.cacheRepository.invalidate('trackedTopics');

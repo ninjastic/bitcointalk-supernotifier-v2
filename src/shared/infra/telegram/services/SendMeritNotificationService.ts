@@ -1,10 +1,8 @@
 import { container, injectable, inject } from 'tsyringe';
 import pluralize from 'pluralize';
 import escape from 'escape-html';
-import Queue from 'bull';
 
 import logger from '../../../services/logger';
-import cacheConfig from '../../../../config/cache';
 
 import bot from '../index';
 
@@ -14,6 +12,7 @@ import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
 import SetMeritNotifiedService from '../../../../modules/merits/services/SetMeritNotifiedService';
 import GetPostService from '../../../../modules/posts/services/GetPostService';
 import SetUserBlockedService from './SetUserBlockedService';
+import forumScrapperSideQueue from '../../bull/queues/forumScrapperSideQueue';
 
 @injectable()
 export default class SendMeritNotificationService {
@@ -42,22 +41,11 @@ export default class SendMeritNotificationService {
 
       await this.cacheRepository.save(`meritCount:${telegram_id}`, totalMeritCount);
     } else {
-      const queue = new Queue('ForumScrapperSideQueue', {
-        redis: cacheConfig.config.redis,
-        defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
-      });
-
-      const job = await queue.add(
-        'scrapeUserMeritCount',
-        {
-          uid: receiver_uid
-        },
-        { delay: 5000 }
-      );
+      const job = await forumScrapperSideQueue.add('scrapeUserMeritCount', { uid: receiver_uid }, { delay: 5000 });
 
       totalMeritCount = await job.finished();
 
-      await queue.close();
+      // await forumScrapperSideQueue.close();
 
       await this.cacheRepository.save(`meritCount:${telegram_id}`, totalMeritCount);
     }

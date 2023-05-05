@@ -7,10 +7,13 @@ const loggerHandler = (queue: Queue): void => {
     logger.info(
       {
         queue: queue.name,
+        job: {
+          name: job.name,
+          id: job.id
+        },
         data: job.data
       },
-      'Starting job %s',
-      job.name
+      'Starting job'
     );
   });
 
@@ -18,11 +21,13 @@ const loggerHandler = (queue: Queue): void => {
     logger.info(
       {
         queue: queue.name,
-        data: job.data,
+        job: {
+          name: job.name,
+          id: job.id
+        },
         returnValue: job.returnvalue
       },
-      'Completed job %s',
-      job.name
+      'Completed job'
     );
   });
 
@@ -30,12 +35,14 @@ const loggerHandler = (queue: Queue): void => {
     logger.error(
       {
         queue: queue.name,
+        job: {
+          name: job.name,
+          id: job.id
+        },
         reason: job.failedReason,
-        stacktrace: job.stacktrace,
-        data: job.data
+        stacktrace: job.stacktrace
       },
-      'Job failed %s',
-      job.name
+      'Job failed'
     );
   });
 

@@ -22,7 +22,7 @@ export default class ScrapePostForChangesService {
     const currentPost = await scrapePost.execute({ topic_id, post_id });
     const savedPost = await getPost.execute({ post_id }, { skipCache: true });
 
-    if (!currentPost.title) {
+    if (!currentPost?.title) {
       delete savedPost.created_at;
       delete savedPost.updated_at;
 

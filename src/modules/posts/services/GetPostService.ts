@@ -1,7 +1,4 @@
 import { inject, injectable, container } from 'tsyringe';
-import Queue from 'bull';
-
-import cacheConfig from '../../../config/cache';
 
 import Post from '../infra/typeorm/entities/Post';
 
@@ -9,6 +6,7 @@ import ICacheProvider from '../../../shared/container/providers/models/ICachePro
 import IPostsRepository from '../repositories/IPostsRepository';
 
 import ScrapePostService from './ScrapePostService';
+import forumScrapperSideQueue from '../../../shared/infra/bull/queues/forumScrapperSideQueue';
 
 interface Data {
   post_id: number;
@@ -74,12 +72,7 @@ export default class GetPostService {
       throw new Error('The post does not exist in the DB and a topic_id has not been provided');
     }
 
-    const queue = new Queue('ForumScrapperSideQueue', {
-      redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
-    });
-
-    const job = await queue.add(
+    const job = await forumScrapperSideQueue.add(
       'scrapePost',
       { topic_id, post_id },
       {
@@ -89,9 +82,6 @@ export default class GetPostService {
     );
 
     const jobResults = await job.finished();
-
-    await queue.close();
-
     return jobResults;
   }
 }
