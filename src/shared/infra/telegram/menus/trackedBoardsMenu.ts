@@ -13,7 +13,7 @@ const trackedBoardsMenu = new MenuTemplate<IMenuContext>(() => ({
 const confirmRemoveTrackedBoardMenu = new MenuTemplate<IMenuContext>(async ctx => {
   const trackedBoardsRepository = container.resolve(TrackedBoardsRepository);
   const trackedBoard = await trackedBoardsRepository.findOne({
-    telegram_id: String(ctx.from.id),
+    telegram_id: String(ctx.chat.id),
     board_id: Number(ctx.match[1])
   });
 
@@ -45,7 +45,7 @@ const getTrackedBoard = async (telegramId: string, boardId: number) => {
 };
 
 const trackedBoardInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
-  const trackedBoard = await getTrackedBoard(String(ctx.from.id), Number(ctx.match[1]));
+  const trackedBoard = await getTrackedBoard(String(ctx.chat.id), Number(ctx.match[1]));
 
   let message = '';
   message += '<b>🗂️ Selected Tracked Board:</b>\n\n';
@@ -65,7 +65,7 @@ trackedBoardInfoMenu.interact('↩ Go Back', 'back', {
 
 const getTrackedBoards = async (ctx: IMenuContext) => {
   const trackedBoardsRepository = container.resolve(TrackedBoardsRepository);
-  const trackedBoards = await trackedBoardsRepository.findByTelegramId(String(ctx.from.id));
+  const trackedBoards = await trackedBoardsRepository.findByTelegramId(String(ctx.chat.id));
 
   const choices = {};
 

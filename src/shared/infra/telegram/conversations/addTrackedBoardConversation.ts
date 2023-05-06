@@ -34,7 +34,7 @@ const askForPrompt = async (
   const { message, callbackQuery } = await conversation.wait();
 
   if (callbackQuery?.data.includes('cancelAddTrackedBoard')) {
-    await ctx.api.deleteMessage(ctx.from.id, promptMessage.message_id);
+    await ctx.api.deleteMessage(ctx.chat.id, promptMessage.message_id);
     await replyMenuToContext(mainMenu, ctx, '/tb/');
     return null;
   }
@@ -109,13 +109,13 @@ const addTrackedBoardConversation = async (
     return;
   }
 
-  const userTrackedTopics = await trackedBoardsRepository.findByTelegramId(String(ctx.from.id));
+  const userTrackedTopics = await trackedBoardsRepository.findByTelegramId(String(ctx.chat.id));
 
   const trackedBoardsToAdd = newBoards
     .map(board =>
       trackedBoardsRepository.create({
         board_id: board.board_id,
-        telegram_id: String(ctx.from.id)
+        telegram_id: String(ctx.chat.id)
       })
     )
     .filter(

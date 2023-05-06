@@ -5,6 +5,7 @@ export default interface ISession {
   merits: boolean;
   modlogs: boolean;
   alternative_usernames: Array<string>;
+  isGroup: boolean;
   addTrackedTopicUserTopicId: number;
   page: number;
 }

@@ -47,7 +47,7 @@ const saveTrackedUser = async (trackedUser: TrackedUser) => {
 };
 
 const trackedUserInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
-  const trackedUser = await getTrackedUser(String(ctx.from.id), ctx.match[1]);
+  const trackedUser = await getTrackedUser(String(ctx.chat.id), ctx.match[1]);
 
   let message = '';
   message += '<b>👤 Selected Tracked User:</b>\n\n';
@@ -63,13 +63,13 @@ trackedUserInfoMenu.submenu('🗑️ Remove User', 'remove', confirmRemoveTracke
 
 trackedUserInfoMenu.interact(
   async ctx => {
-    const trackedUser = await getTrackedUser(String(ctx.from.id), ctx.match[1]);
+    const trackedUser = await getTrackedUser(String(ctx.chat.id), ctx.match[1]);
     return trackedUser.only_topics ? '✅ Topics Only Enabled' : '🚫 Topics Only Disabled';
   },
   'topics-only',
   {
     do: async ctx => {
-      const trackedUser = await getTrackedUser(String(ctx.from.id), ctx.match[1]);
+      const trackedUser = await getTrackedUser(String(ctx.chat.id), ctx.match[1]);
       trackedUser.only_topics = !trackedUser.only_topics;
       await saveTrackedUser(trackedUser);
       return true;
@@ -83,7 +83,7 @@ trackedUserInfoMenu.interact('↩ Go Back', 'back', {
 
 const getTrackedUsers = async (ctx: IMenuContext) => {
   const trackedUsersRepository = container.resolve(TrackedUsersRepository);
-  const trackedUsers = await trackedUsersRepository.findByTelegramId(String(ctx.from.id));
+  const trackedUsers = await trackedUsersRepository.findByTelegramId(String(ctx.chat.id));
 
   const choices = {};
 

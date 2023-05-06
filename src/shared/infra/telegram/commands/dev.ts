@@ -29,7 +29,7 @@ const devCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
     notified_to: []
   });
 
-  await sendMeritNotification.execute(String(ctx.from.id), merit);
+  await sendMeritNotification.execute(String(ctx.chat.id), merit);
 };
 
 export default devCommand;

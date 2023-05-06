@@ -37,6 +37,17 @@ import altCommand from './commands/altCommand';
 import infoCommand from './commands/infoCommand';
 import devCommand from './commands/dev';
 import apiCommand from './commands/apiCommand';
+import resetCommand from './commands/resetCommand';
+
+export function initialSession(): ISession {
+  return {
+    username: null,
+    userId: null,
+    mentions: false,
+    merits: false,
+    modlogs: false
+  } as ISession;
+}
 
 class TelegramBot {
   public instance: Bot<Context & SessionFlavor<ISession>>;
@@ -62,6 +73,9 @@ class TelegramBot {
     } = cache;
     this.instance.use(
       session({
+        getSessionKey(ctx: Context): string | undefined {
+          return ctx.chat?.id.toString();
+        },
         storage: new RedisAdapter({
           instance: new IORedis({
             host: redis.host,
@@ -71,22 +85,16 @@ class TelegramBot {
             keyPrefix: 'session:'
           })
         }),
-        initial: () =>
-          ({
-            username: null,
-            userId: null,
-            mentions: false,
-            merits: false,
-            modlogs: false
-          } as ISession)
+        initial: () => initialSession()
       })
     );
 
     this.instance.use(conversations());
+    this.instance.hears(/\/?reset/i, resetCommand);
     this.instance.use(async (ctx, next) => {
       if (!ctx.session.username || !ctx.session.userId) {
         const findUserByTelegramId = container.resolve(FindUserByTelegramIdService);
-        const user = await findUserByTelegramId.execute(String(ctx.from.id));
+        const user = await findUserByTelegramId.execute(String(ctx.chat.id));
         if (user) {
           ctx.session.username = user.username;
           ctx.session.userId = user.user_id;

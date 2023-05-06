@@ -32,7 +32,7 @@ const askForPrompt = async (
   const { message, callbackQuery } = await conversation.wait();
 
   if (callbackQuery?.data.includes('cancelAddTrackedUser')) {
-    await ctx.api.deleteMessage(ctx.from.id, promptMessage.message_id);
+    await ctx.api.deleteMessage(ctx.chat.id, promptMessage.message_id);
     await replyMenuToContext(mainMenu, ctx, '/');
     return null;
   }
@@ -48,7 +48,7 @@ const askForPrompt = async (
     return null;
   }
 
-  const trackedUser = trackedUsersRepository.create({ telegram_id: String(ctx.from.id), username: text.toLowerCase() });
+  const trackedUser = trackedUsersRepository.create({ telegram_id: String(ctx.chat.id), username: text.toLowerCase() });
 
   const validation = z.object({
     telegram_id: z.string(),
@@ -95,7 +95,7 @@ const addTrackedUserConversation = async (
     return;
   }
 
-  const userTrackedUsers = await trackedUsersRepository.findByTelegramId(String(ctx.from.id));
+  const userTrackedUsers = await trackedUsersRepository.findByTelegramId(String(ctx.chat.id));
   const trackedUserExists = userTrackedUsers.find(
     userTrackedUser => userTrackedUser.username === newTrackedUser.username
   );

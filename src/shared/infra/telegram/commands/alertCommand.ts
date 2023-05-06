@@ -5,7 +5,7 @@ import IMenuContext from '../@types/IMenuContext';
 import SendGlobalNotificationService from '../services/SendGlobalNotificationService';
 
 const alertCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
-  if (String(ctx.from.id) !== '608520255') {
+  if (String(ctx.chat.id) !== '608520255') {
     return;
   }
 
