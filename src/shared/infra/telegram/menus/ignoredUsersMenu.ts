@@ -105,7 +105,7 @@ const getIgnoredUsers = async (ctx: IMenuContext) => {
 };
 
 ignoredUsersMenu.chooseIntoSubmenu('ignoredUsers', getIgnoredUsers, ignoredUsersMenuInfoMenu, {
-  maxRows: 5,
+  maxRows: 10,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {

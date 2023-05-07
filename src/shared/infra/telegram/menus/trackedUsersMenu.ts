@@ -95,7 +95,7 @@ const getTrackedUsers = async (ctx: IMenuContext) => {
 };
 
 trackedUsersMenu.chooseIntoSubmenu('tu', getTrackedUsers, trackedUserInfoMenu, {
-  maxRows: 5,
+  maxRows: 10,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {

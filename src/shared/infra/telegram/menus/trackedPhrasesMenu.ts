@@ -115,7 +115,7 @@ const getTrackedPhrasesList = async (ctx: IMenuContext) => {
 };
 
 trackedPhrasesMenu.chooseIntoSubmenu('tp', getTrackedPhrasesList, trackedPhraseInfoMenu, {
-  maxRows: 5,
+  maxRows: 10,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {

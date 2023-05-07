@@ -77,8 +77,8 @@ const getTrackedBoards = async (ctx: IMenuContext) => {
 };
 
 trackedBoardsMenu.chooseIntoSubmenu('tb', getTrackedBoards, trackedBoardInfoMenu, {
-  columns: 1,
   maxRows: 10,
+  columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {
     ctx.session.page = page;

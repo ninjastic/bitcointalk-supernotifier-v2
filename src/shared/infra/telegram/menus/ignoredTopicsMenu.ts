@@ -150,7 +150,7 @@ const getIgnoredTopics = async (ctx: IMenuContext) => {
 };
 
 ignoredTopicsMenu.chooseIntoSubmenu('ignoredTopics', getIgnoredTopics, ignoredTopicsMenuInfoMenu, {
-  maxRows: 5,
+  maxRows: 10,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {

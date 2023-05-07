@@ -349,7 +349,7 @@ const getTrackedTopicsList = async (ctx: IMenuContext) => {
 };
 
 trackedTopicsMenu.chooseIntoSubmenu('tt', getTrackedTopicsList, trackedTopicInfoMenu, {
-  maxRows: 5,
+  maxRows: 10,
   columns: 1,
   getCurrentPage: ctx => ctx.session.page,
   setPage: (ctx, page) => {
