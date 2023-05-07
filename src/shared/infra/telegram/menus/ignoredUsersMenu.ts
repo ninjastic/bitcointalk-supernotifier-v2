@@ -68,7 +68,7 @@ const addIgnoredUserQuestion = new StatelessQuestion('addIgnoredUser', async (ct
         reply_markup: { remove_keyboard: true }
       });
 
-      await replyMenuToContext(ignoredUsersMenu, ctx, '/');
+      await replyMenuToContext(ignoredUsersMenu, ctx, '/iu/');
     } catch (error) {
       if (error.message === 'User already being ignored.') {
         await ctx.reply('You are already ignoring this user.', {

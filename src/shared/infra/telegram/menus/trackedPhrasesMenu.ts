@@ -82,7 +82,7 @@ const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (c
       reply_markup: { remove_keyboard: true }
     });
 
-    await replyMenuToContext(trackedPhrasesMenu, ctx, '/');
+    await replyMenuToContext(trackedPhrasesMenu, ctx, '/tp/');
   } catch (error) {
     if (error.message === 'Tracked phrase already exists') {
       await ctx.reply('You are already tracking this phrase.', {

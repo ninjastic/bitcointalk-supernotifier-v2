@@ -35,7 +35,7 @@ const askForPrompt = async (
 
   if (callbackQuery?.data.includes('cancelAddTrackedBoard')) {
     await ctx.api.deleteMessage(ctx.chat.id, promptMessage.message_id);
-    await replyMenuToContext(mainMenu, ctx, '/tb/');
+    await replyMenuToContext(trackedBoardsMenu, ctx, '/tb/');
     return null;
   }
 

@@ -177,7 +177,7 @@ const addTrackedTopicUserQuestion = new StatelessQuestion('addUser', async (ctx:
         reply_markup: { remove_keyboard: true }
       });
 
-      await replyMenuToContext(trackedTopicsMenu, ctx, '/');
+      await replyMenuToContext(trackedTopicsMenu, ctx, '/tt/');
     } catch (error) {
       if (error.message === 'User already exists in the specified tracked topic') {
         await ctx.reply('You already added this user.', {
@@ -293,7 +293,7 @@ const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx
         reply_markup: { remove_keyboard: true }
       });
 
-      await replyMenuToContext(trackedTopicsMenu, ctx, '/');
+      await replyMenuToContext(trackedTopicsMenu, ctx, '/tt/');
     } catch (error) {
       await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id).catch();
 
