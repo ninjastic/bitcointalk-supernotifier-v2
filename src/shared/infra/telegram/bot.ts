@@ -38,6 +38,7 @@ import infoCommand from './commands/infoCommand';
 import devCommand from './commands/dev';
 import apiCommand from './commands/apiCommand';
 import resetCommand from './commands/resetCommand';
+import SetUserBlockedService from './services/SetUserBlockedService';
 
 export function initialSession(): ISession {
   return {
@@ -168,7 +169,15 @@ class TelegramBot {
   }
 
   errorHandler(): void {
-    this.instance.catch(error => logger.error(error));
+    this.instance.catch(async error => {
+      if (error.message.includes('Forbidden: bot was kicked from the group chat')) {
+        logger.info({ telegram_id: error.ctx.chat.id }, 'Telegram user marked as blocked');
+        const setUserBlocked = container.resolve(SetUserBlockedService);
+        await setUserBlocked.execute(String(error.ctx.chat.id));
+      } else {
+        logger.error(error);
+      }
+    });
   }
 }
 

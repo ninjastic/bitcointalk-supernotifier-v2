@@ -4,9 +4,9 @@ import logger from '../../../services/logger';
 import bot from '../index';
 
 import IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
-
-import SetUserBlockedService from './SetUserBlockedService';
 import RedisProvider from '../../../container/providers/implementations/RedisProvider';
+
+import { checkBotNotificationError } from '../../../services/utils';
 
 type MessageSent = {
   telegramId: string;
@@ -21,7 +21,6 @@ export default class SendGlobalNotificationService {
   ) {}
 
   public async execute(message: string): Promise<void> {
-    const setUserBlocked = container.resolve(SetUserBlockedService);
     const redisProvider = container.resolve(RedisProvider);
 
     const unblockedUsers = await this.usersRepository.findAll(true);
@@ -54,34 +53,7 @@ export default class SendGlobalNotificationService {
               })
               .catch(async error => {
                 errored += 1;
-                if (!error.response) {
-                  logger.error(
-                    { error: error.message, telegram_id: user.telegram_id, message },
-                    'Error while sending Global Notification telegram message'
-                  );
-                } else if (
-                  error.response.description === 'Forbidden: bot was blocked by the user' ||
-                  error.response.description === 'Forbidden: user is deactivated'
-                ) {
-                  logger.info(
-                    {
-                      error: error.response,
-                      telegram_id: user.telegram_id,
-                      message
-                    },
-                    'Telegram user marked as blocked'
-                  );
-                  await setUserBlocked.execute(user.telegram_id);
-                } else {
-                  logger.error(
-                    {
-                      error: error.response,
-                      telegram_id: user.telegram_id,
-                      message
-                    },
-                    'Error while sending Global Notification telegram message'
-                  );
-                }
+                await checkBotNotificationError(error, user.telegram_id, { message });
                 reject();
               });
           }, 150 * index);

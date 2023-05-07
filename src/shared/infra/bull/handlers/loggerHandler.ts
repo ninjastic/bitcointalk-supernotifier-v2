@@ -17,20 +17,6 @@ const loggerHandler = (queue: Queue): void => {
     );
   });
 
-  queue.on('completed', job => {
-    logger.info(
-      {
-        queue: queue.name,
-        job: {
-          name: job.name,
-          id: job.id
-        },
-        returnValue: job.returnvalue
-      },
-      'Completed job'
-    );
-  });
-
   queue.on('failed', job => {
     logger.error(
       {

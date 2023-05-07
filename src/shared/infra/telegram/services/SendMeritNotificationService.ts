@@ -9,9 +9,9 @@ import bot from '../index';
 import ICacheProvider from '../../../container/providers/models/ICacheProvider';
 import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
 
+import { checkBotNotificationError } from '../../../services/utils';
 import SetMeritNotifiedService from '../../../../modules/merits/services/SetMeritNotifiedService';
 import GetPostService from '../../../../modules/posts/services/GetPostService';
-import SetUserBlockedService from './SetUserBlockedService';
 import forumScrapperSideQueue from '../../bull/queues/forumScrapperSideQueue';
 
 @injectable()
@@ -23,7 +23,6 @@ export default class SendMeritNotificationService {
 
   public async execute(telegram_id: string, merit: Merit): Promise<void> {
     const setMeritNotified = container.resolve(SetMeritNotifiedService);
-    const setUserBlocked = container.resolve(SetUserBlockedService);
     const getPost = container.resolve(GetPostService);
 
     const post = await getPost.execute({
@@ -45,8 +44,6 @@ export default class SendMeritNotificationService {
 
       totalMeritCount = await job.finished();
 
-      // await forumScrapperSideQueue.close();
-
       await this.cacheRepository.save(`meritCount:${telegram_id}`, totalMeritCount);
     }
 
@@ -67,19 +64,6 @@ export default class SendMeritNotificationService {
         logger.info({ telegram_id, post_id, message }, 'Merit notification was sent');
         await setMeritNotified.execute(merit, telegram_id);
       })
-      .catch(async error => {
-        const isBotBlocked = ['Forbidden: bot was blocked by the user', 'Forbidden: user is deactivated'].includes(
-          error.response?.description
-        );
-        if (isBotBlocked) {
-          logger.info({ telegram_id, post_id, message }, 'Telegram user marked as blocked');
-          await setUserBlocked.execute(telegram_id);
-        } else {
-          logger.error(
-            { error: error.response ?? error.message, telegram_id, post_id, merit, message },
-            'Error while sending Merit Notification telegram message'
-          );
-        }
-      });
+      .catch(async error => checkBotNotificationError(error, telegram_id, { post_id, id: merit.id, message }));
   }
 }

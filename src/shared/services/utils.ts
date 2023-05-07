@@ -1,5 +1,9 @@
 import bs58 from 'bs58';
 import JSsha from 'jssha';
+import { container } from 'tsyringe';
+
+import logger from './logger';
+import SetUserBlockedService from '../infra/telegram/services/SetUserBlockedService';
 
 const sha256 = (str: string) => {
   const inst = new JSsha('SHA-256', 'HEX');
@@ -18,5 +22,23 @@ export function validateTronAddress(addressBase58Check: string) {
     return expectedCheckSum === checkSum;
   } catch (e) {
     return false;
+  }
+}
+
+export async function checkBotNotificationError(error: any, telegram_id: string, ...meta: any) {
+  const setUserBlocked = container.resolve(SetUserBlockedService);
+  const errorMessage: string = error.response?.description || error.message;
+
+  const isBotBlocked = [
+    'Forbidden: bot was blocked by the user',
+    'Forbidden: user is deactivated',
+    'Forbidden: bot was kicked from the group chat'
+  ].some(patternMessage => errorMessage.match(new RegExp(patternMessage, 'i')));
+
+  if (isBotBlocked) {
+    logger.info({ telegram_id, ...meta }, 'Telegram user marked as blocked');
+    await setUserBlocked.execute(telegram_id);
+  } else {
+    logger.error({ error: errorMessage, telegram_id, ...meta }, 'Error while sending telegram message');
   }
 }

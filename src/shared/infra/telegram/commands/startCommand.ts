@@ -25,7 +25,8 @@ const startCommand = async (ctx: ConversationFlavor & CommandContext<IMenuContex
     let group = await userRepository.findOne({ telegram_id: String(ctx.chat.id), is_group: true });
 
     if (group) {
-      await ctx.reply('Group already initiated.');
+      group.blocked = false;
+      await userRepository.save(group);
     } else {
       group = userRepository.create({
         enable_mentions: false,
@@ -40,9 +41,9 @@ const startCommand = async (ctx: ConversationFlavor & CommandContext<IMenuContex
       });
       await userRepository.save(group);
       await ctx.reply('Group initiated!');
-
-      await replyMenuToContext(mainMenu, ctx, '/');
     }
+
+    await replyMenuToContext(mainMenu, ctx, '/');
   }
 };
 

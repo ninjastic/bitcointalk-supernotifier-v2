@@ -1,19 +1,18 @@
 import { container } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
+
 import logger from '../../../services/logger';
+import bot from '../index';
 
 import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
-import bot from '../index';
-
 import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
-import SetUserBlockedService from './SetUserBlockedService';
+import { checkBotNotificationError } from '../../../services/utils';
 
 export default class SendTrackedTopicNotificationService {
   public async execute(telegram_id: string, post: Post): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
-    const setUserBlocked = container.resolve(SetUserBlockedService);
 
     const { post_id, topic_id, title, author, boards, content } = post;
 
@@ -42,19 +41,6 @@ export default class SendTrackedTopicNotificationService {
         logger.info({ telegram_id, post_id, message }, 'Tracked Topic notification was sent');
         await setPostNotified.execute(post.post_id, telegram_id);
       })
-      .catch(async error => {
-        const isBotBlocked = ['Forbidden: bot was blocked by the user', 'Forbidden: user is deactivated'].includes(
-          error.response?.description
-        );
-        if (isBotBlocked) {
-          logger.info({ telegram_id, post_id, message }, 'Telegram user marked as blocked');
-          await setUserBlocked.execute(telegram_id);
-        } else {
-          logger.error(
-            { error: error.response ?? error.message, telegram_id, post_id, message },
-            'Error while sending Tracked Topic Notification telegram message'
-          );
-        }
-      });
+      .catch(async error => checkBotNotificationError(error, telegram_id, { post_id, message }));
   }
 }
