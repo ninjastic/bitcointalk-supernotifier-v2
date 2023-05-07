@@ -101,6 +101,7 @@ class TelegramBot {
           ctx.session.mentions = user.enable_mentions;
           ctx.session.merits = user.enable_merits;
           ctx.session.modlogs = user.enable_modlogs;
+          ctx.session.isGroup = ctx.chat.type !== 'private';
         }
       }
       await next();

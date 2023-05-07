@@ -23,9 +23,7 @@ export default class GetTrackedPhrasesService {
     }
 
     const trackedPhrases = await this.trackedPhrasesRepository.findAll();
-
     await this.cacheRepository.save('trackedPhrases', trackedPhrases);
-
     return trackedPhrases;
   }
 }

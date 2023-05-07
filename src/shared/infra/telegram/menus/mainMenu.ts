@@ -12,7 +12,9 @@ import notificationsMenu from './notificationsMenu';
 import aboutMenu from './aboutMenu';
 
 const mainMenu = new MenuTemplate<IMenuContext>(async (ctx: IMenuContext) => ({
-  text: `Hello, <b>${ctx.session.username}</b>.\nNice to see you. What do you want to do now?`,
+  text: `Hello, <b>${
+    ctx.session.isGroup ? ctx.from.username : ctx.session.username
+  }</b>.\nNice to see you. What do you want to do now?`,
   parse_mode: 'HTML'
 }));
 
@@ -22,7 +24,7 @@ mainMenu.submenu('🗂️ Tracked Boards', 'tb', trackedBoardsMenu);
 mainMenu.submenu('✍️ Tracked Users', 'tu', trackedUsersMenu, { joinLastRow: true });
 mainMenu.submenu('🚫 Ignored Topics', 'it', ignoredTopicsMenu);
 mainMenu.submenu('🚫 Ignored Users', 'iu', ignoredUsersMenu, { joinLastRow: true });
-mainMenu.submenu('🔔 Notifications', 'notifications', notificationsMenu);
+mainMenu.submenu('🔔 Notifications', 'notifications', notificationsMenu, { hide: ctx => ctx.session.isGroup });
 mainMenu.submenu('👋 About', 'about', aboutMenu, { joinLastRow: true });
 
 const mainMenuMiddleware = new MenuMiddleware('/', mainMenu);

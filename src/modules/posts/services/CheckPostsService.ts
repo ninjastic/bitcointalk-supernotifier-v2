@@ -5,7 +5,6 @@ import cacheConfig from '../../../config/cache';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
-import IWebUsersRepository from '../../web/repositories/IWebUsersRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import SetPostCheckedService from './SetPostCheckedService';
@@ -26,9 +25,6 @@ export default class CheckPostsService {
 
     @inject('UsersRepository')
     private usersRepository: IUsersRepository,
-
-    @inject('WebUsersRepository')
-    private webUsersRepository: IWebUsersRepository,
 
     @inject('CacheRepository')
     private cacheProvider: ICacheProvider
@@ -85,6 +81,10 @@ export default class CheckPostsService {
     for await (const post of uncheckedPosts) {
       // Mentions
       for await (const user of users) {
+        if (!user.username) {
+          continue;
+        }
+
         const usernameRegex = new RegExp(`(?<!\\w)${scapeRegexText(user.username)}(?!\\w)`, 'gi');
         const altUsernameRegex = user.alternative_usernames.length
           ? new RegExp(`(?<!\\w)${scapeRegexText(user.alternative_usernames[0])}(?!\\w)`, 'gi')
@@ -126,8 +126,8 @@ export default class CheckPostsService {
           continue;
         }
 
-        const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = post.author_uid === user.user_id;
+        const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
+        const isSameUid = user.user_id && post.author_uid === user.user_id;
         const isAlreadyNotified =
           post.notified_to.includes(user.telegram_id) || postsNotified.has(`${post.post_id}:${user.telegram_id}`);
         const isAuthorIgnored = ignoredUsers
@@ -155,8 +155,8 @@ export default class CheckPostsService {
         for await (const trackingTelegramId of trackedTopic.tracking) {
           const user = await this.usersRepository.findByTelegramId(trackingTelegramId);
 
-          const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
-          const isSameUid = post.author_uid === user.user_id;
+          const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
+          const isSameUid = user.user_id && post.author_uid === user.user_id;
           const isAlreadyNotified =
             post.notified_to.includes(user.telegram_id) || postsNotified.has(`${post.post_id}:${user.telegram_id}`);
           const isAuthorIgnored = ignoredUsers
@@ -192,8 +192,8 @@ export default class CheckPostsService {
       for await (const trackedUser of trackedUsersWithMatchingPosts) {
         const { user } = trackedUser;
 
-        const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = post.author_uid === user.user_id;
+        const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
+        const isSameUid = user.user_id && post.author_uid === user.user_id;
         const isAlreadyNotified =
           post.notified_to.includes(user.telegram_id) || postsNotified.has(`${post.post_id}:${user.telegram_id}`);
 
@@ -215,8 +215,8 @@ export default class CheckPostsService {
         const { user } = trackedBoard;
         const { post } = topic;
 
-        const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = post.author_uid === user.user_id;
+        const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
+        const isSameUid = user.user_id && post.author_uid === user.user_id;
         const isAlreadyNotified =
           post.notified_to.includes(user.telegram_id) || postsNotified.has(`${post.post_id}:${user.telegram_id}`);
         const isAuthorIgnored = ignoredUsers
@@ -239,8 +239,8 @@ export default class CheckPostsService {
         const { user } = trackedUser;
         const { post } = topic;
 
-        const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = post.author_uid === user.user_id;
+        const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
+        const isSameUid = user.user_id && post.author_uid === user.user_id;
         const isAlreadyNotified =
           post.notified_to.includes(user.telegram_id) || postsNotified.has(`${post.post_id}:${user.telegram_id}`);
 

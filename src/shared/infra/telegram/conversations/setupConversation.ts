@@ -91,6 +91,7 @@ const setupConversation = async (
   conversation.session.userId = userId;
   conversation.session.mentions = mentionsEnabled;
   conversation.session.merits = meritsEnabled;
+  conversation.session.isGroup = false;
 
   const createUser = container.resolve(CreateUserService);
   const findUserByTelegramId = container.resolve(FindUserByTelegramIdService);
@@ -107,7 +108,8 @@ const setupConversation = async (
       enable_merits: meritsEnabled,
       language: 'en',
       telegram_id: String(ctx.chat.id),
-      blocked: false
+      blocked: false,
+      is_group: false
     });
   } else {
     await createUser.execute({
@@ -118,7 +120,8 @@ const setupConversation = async (
       enable_merits: meritsEnabled,
       language: 'en',
       telegram_id: String(ctx.chat.id),
-      blocked: false
+      blocked: false,
+      is_group: false
     });
   }
 

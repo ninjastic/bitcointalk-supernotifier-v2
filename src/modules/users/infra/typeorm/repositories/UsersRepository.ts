@@ -1,5 +1,6 @@
 import { Repository, getRepository } from 'typeorm';
 
+import FindOneUserDTO from 'modules/users/dtos/FindOneUserDTO';
 import CreateUserDTO from '../../../dtos/CreateUserDTO';
 
 import User from '../entities/User';
@@ -13,51 +14,41 @@ export default class UsersRepository implements IUsersRepository {
   }
 
   public create(data: CreateUserDTO): User {
-    const user = this.ormRepository.create(data);
-
-    return user;
+    return this.ormRepository.create(data);
   }
 
   public async save(user: User): Promise<User> {
-    const userSaved = await this.ormRepository.save(user);
+    return this.ormRepository.save(user);
+  }
 
-    return userSaved;
+  public async findOne(where: FindOneUserDTO): Promise<User | undefined> {
+    return this.ormRepository.findOne({ where });
   }
 
   public async findByUserId(user_id: number): Promise<User | undefined> {
-    const user = await this.ormRepository.findOne({ user_id });
-
-    return user;
+    return this.ormRepository.findOne({ user_id });
   }
 
   public async findByTelegramId(telegram_id: string): Promise<User | undefined> {
-    const user = await this.ormRepository.findOne({ telegram_id });
-
-    return user;
+    return this.ormRepository.findOne({ telegram_id });
   }
 
   public async getUsersWithMentions(): Promise<User[]> {
-    const users = await this.ormRepository.find({
-      where: { enable_mentions: true, blocked: false }
+    return this.ormRepository.find({
+      where: { enable_mentions: true, blocked: false, is_group: false }
     });
-
-    return users;
   }
 
   public async getUsersWithMerits(): Promise<User[]> {
-    const users = await this.ormRepository.find({
-      where: { enable_merits: true, blocked: false }
+    return this.ormRepository.find({
+      where: { enable_merits: true, blocked: false, is_group: false }
     });
-
-    return users;
   }
 
   public async getUsersWithModlogs(): Promise<User[]> {
-    const users = await this.ormRepository.find({
-      where: { enable_modlogs: true, blocked: false }
+    return this.ormRepository.find({
+      where: { enable_modlogs: true, blocked: false, is_group: false }
     });
-
-    return users;
   }
 
   public async findAll(only_unblocked?: boolean): Promise<User[]> {

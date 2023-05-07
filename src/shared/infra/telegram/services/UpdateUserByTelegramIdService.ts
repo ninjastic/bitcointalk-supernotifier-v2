@@ -19,15 +19,8 @@ export default class UpdateUserByTelegramIdService {
 
     logger.info({ user, data }, 'Updating user');
 
-    user.user_id = data.user_id;
-    user.username = data.username;
-    user.alternative_usernames = data.alternative_usernames;
-    user.enable_mentions = data.enable_mentions;
-    user.enable_merits = data.enable_merits;
-    user.language = data.language;
-    user.blocked = data.blocked;
-
-    await this.usersRepository.save(user);
+    const updatedUser: User = Object.assign(user, data);
+    await this.usersRepository.save(updatedUser);
 
     return user;
   }

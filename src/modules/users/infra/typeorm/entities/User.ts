@@ -5,13 +5,13 @@ class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
   @Index({ unique: false })
-  user_id: number;
+  @Column({ nullable: true })
+  user_id?: number;
 
-  @Column()
   @Index({ unique: false })
-  username: string;
+  @Column({ nullable: true })
+  username?: string;
 
   @Column({ type: 'varchar', array: true, default: [] })
   alternative_usernames: string[];
@@ -19,7 +19,7 @@ class User {
   @Column({ default: 'en' })
   language: string;
 
-  @Column({ default: null })
+  @Column()
   telegram_id: string;
 
   @Column()
@@ -33,6 +33,9 @@ class User {
 
   @Column({ default: false })
   blocked: boolean;
+
+  @Column({ default: false })
+  is_group: boolean;
 
   @CreateDateColumn()
   created_at: Date;
