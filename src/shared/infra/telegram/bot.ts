@@ -89,6 +89,23 @@ class TelegramBot {
       })
     );
 
+    this.instance.use(async (ctx, next): Promise<void> => {
+      if (ctx.chat.type === 'private') {
+        await next();
+        return;
+      }
+
+      const chatMember = await ctx.getChatMember(ctx.from.id);
+      if (['creator', 'administrator'].includes(chatMember.status)) {
+        await next();
+        return;
+      }
+
+      if (ctx.callbackQuery) {
+        await ctx.answerCallbackQuery('Not allowed');
+      }
+    });
+
     this.instance.use(conversations());
     this.instance.hears(/\/?reset/i, resetCommand);
     this.instance.use(async (ctx, next) => {
