@@ -10,10 +10,12 @@ import TrackedBoard from '../../../../modules/posts/infra/typeorm/entities/Track
 
 import { checkBotNotificationError } from '../../../services/utils';
 import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
+import RedisProvider from '../../../container/providers/implementations/RedisProvider';
 
 export default class SendTrackedBoardNotificationService {
   public async execute(telegram_id: string, post: Post, trackedBoard: TrackedBoard): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
+    const postLength = (await container.resolve(RedisProvider).recover<number>(`${telegram_id}:postLength`)) ?? 150;
 
     const { post_id, topic_id, title, author, boards, content } = post;
     const { board } = trackedBoard;
@@ -33,8 +35,8 @@ export default class SendTrackedBoardNotificationService {
     message += `${escape(titleWithBoards)}`;
     message += `</a>\n`;
     message += `<pre>`;
-    message += `${escape(contentFiltered.substring(0, 150))}`;
-    message += `${contentFiltered.length > 150 ? '...' : ''}`;
+    message += `${escape(contentFiltered.substring(0, postLength))}`;
+    message += `${contentFiltered.length > postLength ? '...' : ''}`;
     message += `</pre>`;
 
     await bot.instance.api

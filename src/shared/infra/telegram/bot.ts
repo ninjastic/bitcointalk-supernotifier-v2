@@ -15,6 +15,7 @@ import logger from '../../services/logger';
 import ISession from './@types/ISession';
 
 import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
+import SetUserBlockedService from './services/SetUserBlockedService';
 
 import { setupQuestionMiddlewares } from './menus';
 import { mainMenuMiddleware } from './menus/mainMenu';
@@ -38,7 +39,7 @@ import infoCommand from './commands/infoCommand';
 import devCommand from './commands/dev';
 import apiCommand from './commands/apiCommand';
 import resetCommand from './commands/resetCommand';
-import SetUserBlockedService from './services/SetUserBlockedService';
+import lengthCommand from './commands/lengthCommand';
 
 export function initialSession(): ISession {
   return {
@@ -135,6 +136,7 @@ class TelegramBot {
     this.instance.hears(/\/?alt (.*)/i, altCommand);
     this.instance.hears(/\/?info/i, infoCommand);
     this.instance.hears(/\/?api/i, apiCommand);
+    this.instance.hears(/\/?length (.*)/i, lengthCommand);
 
     this.instance.command('dev', devCommand);
 
