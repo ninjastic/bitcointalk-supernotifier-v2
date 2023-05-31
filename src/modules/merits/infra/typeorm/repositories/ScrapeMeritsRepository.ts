@@ -1,6 +1,6 @@
 import { container, injectable, inject } from 'tsyringe';
-
 import { getManager } from 'typeorm';
+
 import IScrapeMeritsRepository from '../../../repositories/IScrapeMeritsRepository';
 import ICacheProvider from '../../../../../shared/container/providers/models/ICacheProvider';
 

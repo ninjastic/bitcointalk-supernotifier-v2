@@ -5,7 +5,6 @@ import { getManager } from 'typeorm';
 import inquirer from 'inquirer';
 import { container } from 'tsyringe';
 
-import '../../infra/typeorm';
 import '../../container';
 
 import chalk from 'chalk';

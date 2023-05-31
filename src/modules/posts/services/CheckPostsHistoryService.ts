@@ -1,7 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
-import Queue from 'bull';
 
-import cacheConfig from '../../../config/cache';
+import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IUsersRepository from '../../users/repositories/IUsersRepository';
 import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
@@ -35,11 +34,6 @@ export default class CheckPostsHistoryService {
     const ignoredTopics = await getIgnoredTopics.execute();
 
     const setPostHistoryChecked = container.resolve(SetPostHistoryCheckedService);
-
-    const queue = new Queue('TelegramQueue', {
-      redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
-    });
 
     await Promise.all(
       histories.map(async history => {
@@ -104,7 +98,7 @@ export default class CheckPostsHistoryService {
               content: history.content
             };
 
-            return queue.add('sendMentionNotification', {
+            return telegramQueue.add('sendMentionNotification', {
               post: postToNotify,
               user,
               history: true
@@ -115,7 +109,5 @@ export default class CheckPostsHistoryService {
         return setPostHistoryChecked.execute(history.post.post_id, 1);
       })
     );
-
-    await queue.close();
   }
 }

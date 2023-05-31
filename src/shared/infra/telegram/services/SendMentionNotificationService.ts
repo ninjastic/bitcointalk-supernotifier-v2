@@ -13,7 +13,7 @@ import SetPostHistoryNotifiedService from '../../../../modules/posts/services/Se
 import RedisProvider from '../../../container/providers/implementations/RedisProvider';
 
 export default class SendMentionNotificationService {
-  public async execute(telegram_id: string, post: Post, history?: boolean): Promise<void> {
+  public async execute(telegram_id: string, post: Post, history?: boolean): Promise<boolean> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const setPostHistoryNotified = container.resolve(SetPostHistoryNotifiedService);
     const postLength = (await container.resolve(RedisProvider).recover<number>(`${telegram_id}:postLength`)) ?? 150;
@@ -40,7 +40,7 @@ export default class SendMentionNotificationService {
     message += `${contentFiltered.length > postLength ? '...' : ''}`;
     message += `</pre>`;
 
-    await bot.instance.api
+    return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
         logger.info({ telegram_id, post_id, history, message }, 'Mention notification was sent');
@@ -50,7 +50,12 @@ export default class SendMentionNotificationService {
         } else {
           await setPostNotified.execute(post.post_id, telegram_id);
         }
+
+        return true;
       })
-      .catch(async error => checkBotNotificationError(error, telegram_id, { post_id, message, history }));
+      .catch(async error => {
+        await checkBotNotificationError(error, telegram_id, { post_id, message, history });
+        return false;
+      });
   }
 }

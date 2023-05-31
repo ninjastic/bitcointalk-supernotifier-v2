@@ -7,7 +7,6 @@ import { run, RunnerHandle } from '@grammyjs/runner';
 import { container } from 'tsyringe';
 import IORedis from 'ioredis';
 
-import '../typeorm';
 import '../../container';
 
 import cache from '../../../config/cache';

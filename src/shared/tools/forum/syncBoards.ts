@@ -1,10 +1,9 @@
 import 'dotenv/config.js';
 import cheerio from 'cheerio';
-import { createQueryBuilder } from 'typeorm';
+import { createConnection, createQueryBuilder } from 'typeorm';
 import { container } from 'tsyringe';
 import ora from 'ora';
 
-import '../../infra/typeorm';
 import '../../container';
 
 import api from '../../services/api';
@@ -107,6 +106,7 @@ const scrapeBoards = async (
 };
 
 export const syncBoards = async (): Promise<void> => {
+  await createConnection();
   const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
 
   spinner.start();

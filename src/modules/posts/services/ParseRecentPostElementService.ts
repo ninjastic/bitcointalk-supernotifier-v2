@@ -46,7 +46,7 @@ export default class ParseRecentPostElementService {
           postId,
           topicId
         },
-        'topicAuthor missing in recent post'
+        '[ParseRecentPostElementService] topicAuthor missing in recent post'
       );
     }
 

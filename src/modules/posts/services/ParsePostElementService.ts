@@ -31,7 +31,7 @@ export default class ParsePostElementService {
         .includes('The topic or board you are looking for appears to be either missing or off limits to you.');
 
     if (topicNotFound || topicOffLimit) {
-      logger.info(`Topic ${topic_id} of post ${post_id} was not found or is off limit`);
+      logger.info(`[ParsePostElementService] Topic ${topic_id} of post ${post_id} was not found or is off limit`);
       return null;
     }
 
@@ -46,7 +46,7 @@ export default class ParsePostElementService {
       });
 
     if (!postElement) {
-      logger.info(`Post ${post_id} not found on topic ${topic_id}`);
+      logger.info(`[ParsePostElementService] Post ${post_id} not found on topic ${topic_id}`);
       return null;
     }
 

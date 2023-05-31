@@ -15,7 +15,7 @@ export default class ScrapePostForChangesService {
     private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
-  public async execute({ topic_id, post_id }: ScrapePostDTO): Promise<void> {
+  public async execute({ topic_id, post_id }: ScrapePostDTO): Promise<boolean> {
     const scrapePost = container.resolve(ScrapePostService);
     const getPost = container.resolve(GetPostService);
 
@@ -32,7 +32,7 @@ export default class ScrapePostForChangesService {
         version: 1
       });
       await this.postsHistoryRepository.save(postHistory);
-      return;
+      return true;
     }
 
     if (currentPost.content !== savedPost.content || currentPost.title !== savedPost.title) {
@@ -46,6 +46,9 @@ export default class ScrapePostForChangesService {
         version: 1
       });
       await this.postsHistoryRepository.save(postHistory);
+      return true;
     }
+
+    return false;
   }
 }

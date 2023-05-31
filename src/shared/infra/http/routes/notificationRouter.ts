@@ -1,8 +1,8 @@
-import Queue from 'bull';
 import { Router, Request, Response } from 'express';
 import Joi from 'joi';
 
-import cacheConfig from '../../../../config/cache';
+import telegramQueue from '../../bull/queues/telegramQueue';
+
 import NotificationApiKeyRepository from '../../../../modules/users/infra/typeorm/repositories/NotificationApiKeyRepository';
 
 const notificationRouter = Router();
@@ -28,12 +28,7 @@ notificationRouter.post('/', async (request: Request, response: Response) => {
     return response.status(404).json({ error: true, message: 'api_key is invalid' });
   }
 
-  const queue = new Queue('TelegramQueue', {
-    redis: cacheConfig.config.redis,
-    defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
-  });
-
-  await queue.add('sendApiNotification', {
+  await telegramQueue.add('sendApiNotification', {
     telegram_id: notificationApiKey.telegram_id,
     message: body.message
   });

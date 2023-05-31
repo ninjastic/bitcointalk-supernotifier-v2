@@ -11,7 +11,6 @@ import del from 'del';
 import iconv from 'iconv-lite';
 import { sub } from 'date-fns';
 
-import '../../infra/typeorm';
 import '../../container';
 
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';

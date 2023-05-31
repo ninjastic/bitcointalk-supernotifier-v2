@@ -6,7 +6,6 @@ import { createConnection, getManager, InsertResult } from 'typeorm';
 import cheerio from 'cheerio';
 import validate from 'bitcoin-address-validation';
 
-import '../../infra/typeorm';
 import '../../container';
 
 import PostAddress from '../../../modules/posts/infra/typeorm/entities/PostAddress';

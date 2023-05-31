@@ -10,9 +10,9 @@ import ICacheProvider from '../../../container/providers/models/ICacheProvider';
 import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
 
 import { checkBotNotificationError } from '../../../services/utils';
+import forumScraperQueue, { queueEvents } from '../../bull/queues/forumScraperQueue';
 import SetMeritNotifiedService from '../../../../modules/merits/services/SetMeritNotifiedService';
 import GetPostService from '../../../../modules/posts/services/GetPostService';
-import forumScrapperSideQueue from '../../bull/queues/forumScrapperSideQueue';
 
 @injectable()
 export default class SendMeritNotificationService {
@@ -21,7 +21,7 @@ export default class SendMeritNotificationService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(telegram_id: string, merit: Merit): Promise<void> {
+  public async execute(telegram_id: string, merit: Merit): Promise<boolean> {
     const setMeritNotified = container.resolve(SetMeritNotifiedService);
     const getPost = container.resolve(GetPostService);
 
@@ -37,13 +37,10 @@ export default class SendMeritNotificationService {
 
     if (totalMeritCount) {
       totalMeritCount += amount;
-
       await this.cacheRepository.save(`meritCount:${telegram_id}`, totalMeritCount);
     } else {
-      const job = await forumScrapperSideQueue.add('scrapeUserMeritCount', { uid: receiver_uid }, { delay: 5000 });
-
-      totalMeritCount = await job.finished();
-
+      const job = await forumScraperQueue.add('scrapeUserMeritCount', { uid: receiver_uid }, { delay: 5000 });
+      totalMeritCount = await job.waitUntilFinished(queueEvents);
       await this.cacheRepository.save(`meritCount:${telegram_id}`, totalMeritCount);
     }
 
@@ -58,12 +55,16 @@ export default class SendMeritNotificationService {
     message += `${escape(titleWithBoards)}`;
     message += `</a>`;
 
-    await bot.instance.api
+    return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
         logger.info({ telegram_id, post_id, message }, 'Merit notification was sent');
         await setMeritNotified.execute(merit, telegram_id);
+        return true;
       })
-      .catch(async error => checkBotNotificationError(error, telegram_id, { post_id, id: merit.id, message }));
+      .catch(async error => {
+        await checkBotNotificationError(error, telegram_id, { post_id, id: merit.id, message });
+        return false;
+      });
   }
 }

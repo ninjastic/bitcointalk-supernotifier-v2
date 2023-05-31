@@ -13,7 +13,7 @@ import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNo
 import RedisProvider from '../../../container/providers/implementations/RedisProvider';
 
 export default class SendTrackedBoardNotificationService {
-  public async execute(telegram_id: string, post: Post, trackedBoard: TrackedBoard): Promise<void> {
+  public async execute(telegram_id: string, post: Post, trackedBoard: TrackedBoard): Promise<boolean> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const postLength = (await container.resolve(RedisProvider).recover<number>(`${telegram_id}:postLength`)) ?? 150;
 
@@ -39,12 +39,16 @@ export default class SendTrackedBoardNotificationService {
     message += `${contentFiltered.length > postLength ? '...' : ''}`;
     message += `</pre>`;
 
-    await bot.instance.api
+    return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
         logger.info({ telegram_id, post_id, message }, 'Tracked Board notification was sent');
         await setPostNotified.execute(post.post_id, telegram_id);
+        return true;
       })
-      .catch(async error => checkBotNotificationError(error, telegram_id, { post_id, trackedBoard, message }));
+      .catch(async error => {
+        await checkBotNotificationError(error, telegram_id, { post_id, trackedBoard, message });
+        return false;
+      });
   }
 }

@@ -4,12 +4,16 @@ import bot from '../index';
 import { checkBotNotificationError } from '../../../services/utils';
 
 export default class SendApiNotificationService {
-  public async execute(telegram_id: string, message: string): Promise<void> {
-    await bot.instance.api
+  public async execute(telegram_id: string, message: string): Promise<boolean> {
+    return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
         logger.info({ telegram_id, message }, 'API notification was sent');
+        return true;
       })
-      .catch(async error => checkBotNotificationError(error, telegram_id, { message }));
+      .catch(async error => {
+        await checkBotNotificationError(error, telegram_id, { message });
+        return false;
+      });
   }
 }

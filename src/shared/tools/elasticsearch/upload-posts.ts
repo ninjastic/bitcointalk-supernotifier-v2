@@ -6,7 +6,6 @@ import { container } from 'tsyringe';
 import esClient from '../../services/elastic';
 import GetPostsService from '../../../modules/posts/services/GetPostsService';
 
-import '../../infra/typeorm';
 import '../../container';
 
 type PromptResponse = {

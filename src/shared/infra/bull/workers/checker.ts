@@ -1,11 +1,12 @@
 import 'reflect-metadata';
 import 'dotenv/config.js';
 import { container } from 'tsyringe';
+import { createConnection } from 'typeorm';
 
-import '../../typeorm';
 import '../../../container';
 
-import checkerQueue from '../queues/checkerQueue';
+import { queueRepeatableFunction } from '../../../services/utils';
+
 import CheckPostsService from '../../../../modules/posts/services/CheckPostsService';
 import CheckPostsHistoryService from '../../../../modules/posts/services/CheckPostsHistoryService';
 import CheckMeritsService from '../../../../modules/merits/services/CheckMeritsService';
@@ -13,67 +14,45 @@ import CheckModLogsService from '../../../../modules/modlog/services/CheckModLog
 import CheckPostsAddressesService from '../../../../modules/posts/services/CheckPostsAddressesService';
 import CheckPostsRescraperForChangesService from '../../../../modules/posts/services/CheckPostsRescraperForChangesService';
 
-(async () => {
-  await checkerQueue.removeRepeatable('checkPosts', { every: 5000 });
-  await checkerQueue.removeRepeatable('checkPostsHistory', { every: 120000 });
-  await checkerQueue.removeRepeatable('checkMerits', { every: 5000 });
-  await checkerQueue.removeRepeatable('checkModLogs', { every: 300000 });
-  await checkerQueue.removeRepeatable('checkPostsAddresses', { every: 20000 });
-  await checkerQueue.removeRepeatable('checkPostsRescraperForChanges', {
-    every: 20000
-  });
+const checkPosts = async () => {
+  const checkPostsService = container.resolve(CheckPostsService);
+  await checkPostsService.execute();
+};
 
-  await checkerQueue.add('checkPosts', null, {
-    repeat: { every: 5000 }
-  });
+const checkPostsHistory = async () => {
+  const checkPostsHistoryService = container.resolve(CheckPostsHistoryService);
+  await checkPostsHistoryService.execute();
+};
 
-  await checkerQueue.add('checkPostsHistory', null, {
-    repeat: { every: 120000 }
-  });
+const checkMerits = async () => {
+  const checkMeritsService = container.resolve(CheckMeritsService);
+  await checkMeritsService.execute();
+};
 
-  await checkerQueue.add('checkMerits', null, {
-    repeat: { every: 5000 }
-  });
+const checkModLogs = async () => {
+  const checkModLogsService = container.resolve(CheckModLogsService);
+  await checkModLogsService.execute();
+};
 
-  await checkerQueue.add('checkModLogs', null, {
-    repeat: { every: 300000 }
-  });
+const checkPostsAddresses = async () => {
+  const checkPostsAddressesService = container.resolve(CheckPostsAddressesService);
+  await checkPostsAddressesService.execute();
+};
 
-  await checkerQueue.add('checkPostsAddresses', null, {
-    repeat: { every: 20000 }
-  });
+const checkPostsRescraperForChanges = async () => {
+  const checkPostsRescraperForChangesService = container.resolve(CheckPostsRescraperForChangesService);
+  await checkPostsRescraperForChangesService.execute();
+};
 
-  await checkerQueue.add('checkPostsRescraperForChanges', null, {
-    repeat: { every: 30000 }
-  });
+const checker = async () => {
+  await createConnection();
 
-  checkerQueue.process('checkPosts', async () => {
-    const checkPosts = container.resolve(CheckPostsService);
-    await checkPosts.execute();
-  });
+  queueRepeatableFunction(checkPosts, 1000 * 5);
+  queueRepeatableFunction(checkMerits, 1000 * 60 * 5);
+  queueRepeatableFunction(checkPostsHistory, 1000 * 60 * 2);
+  queueRepeatableFunction(checkModLogs, 1000 * 60 * 5);
+  queueRepeatableFunction(checkPostsAddresses, 1000 * 20);
+  queueRepeatableFunction(checkPostsRescraperForChanges, 1000 * 30);
+};
 
-  checkerQueue.process('checkPostsHistory', async () => {
-    const checkPostsHistory = container.resolve(CheckPostsHistoryService);
-    await checkPostsHistory.execute();
-  });
-
-  checkerQueue.process('checkMerits', async () => {
-    const checkMerits = container.resolve(CheckMeritsService);
-    await checkMerits.execute();
-  });
-
-  checkerQueue.process('checkModLogs', async () => {
-    const checkModLogs = container.resolve(CheckModLogsService);
-    await checkModLogs.execute();
-  });
-
-  checkerQueue.process('checkPostsAddresses', async () => {
-    const checkPostsAddresses = container.resolve(CheckPostsAddressesService);
-    await checkPostsAddresses.execute();
-  });
-
-  checkerQueue.process('checkPostsRescraperForChanges', async () => {
-    const checkPostsRescraperForChanges = container.resolve(CheckPostsRescraperForChangesService);
-    await checkPostsRescraperForChanges.execute();
-  });
-})();
+checker();

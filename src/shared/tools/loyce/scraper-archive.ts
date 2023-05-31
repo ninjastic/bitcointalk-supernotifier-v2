@@ -8,7 +8,6 @@ import axios from 'axios';
 import { sub } from 'date-fns';
 import inquirer from 'inquirer';
 
-import '../../infra/typeorm';
 import '../../container';
 
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';

@@ -20,7 +20,7 @@ export default class SendGlobalNotificationService {
     private usersRepository: IUsersRepository
   ) {}
 
-  public async execute(message: string): Promise<void> {
+  public async execute(message: string): Promise<boolean> {
     const redisProvider = container.resolve(RedisProvider);
 
     const unblockedUsers = await this.usersRepository.findAll(true);
@@ -70,5 +70,7 @@ export default class SendGlobalNotificationService {
       `The messages were sent!\n\nID: ${id}\n\n<b>${successed}/${unblockedUsers.length} successed (${errored} failed)</b>`,
       { parse_mode: 'HTML' }
     );
+
+    return true;
   }
 }

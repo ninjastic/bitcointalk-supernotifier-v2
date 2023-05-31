@@ -13,7 +13,7 @@ import { checkBotNotificationError } from '../../../services/utils';
 import SetModLogNotifiedService from '../../../../modules/modlog/services/SetModLogNotifiedService';
 
 export default class SendRemovedTopicNotificationService {
-  public async execute(telegram_id: string, posts: Post[], modLog: ModLog): Promise<void> {
+  public async execute(telegram_id: string, posts: Post[], modLog: ModLog): Promise<boolean> {
     const setModLogNotified = container.resolve(SetModLogNotifiedService);
 
     let message = '';
@@ -26,12 +26,16 @@ export default class SendRemovedTopicNotificationService {
     message += `${escape(modLog.title)}`;
     message += `</a>`;
 
-    await bot.instance.api
+    return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
         logger.info({ telegram_id, topic_id: modLog.topic_id, message }, 'Removed Topic notification was sent');
         await setModLogNotified.execute(modLog, telegram_id);
+        return true;
       })
-      .catch(async error => checkBotNotificationError(error, telegram_id, { topic_id: modLog.topic_id, message }));
+      .catch(async error => {
+        await checkBotNotificationError(error, telegram_id, { topic_id: modLog.topic_id, message });
+        return false;
+      });
   }
 }

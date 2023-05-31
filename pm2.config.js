@@ -1,9 +1,9 @@
 module.exports = {
   apps: [
     {
-      name: 'scrapper',
-      script: 'yarn start:scrapper',
-      out_file: './logs/scrapper.log'
+      name: 'scraper',
+      script: 'yarn start:scraper',
+      out_file: './logs/scraper.log'
     },
     {
       name: 'server',

@@ -1,7 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
-import Queue from 'bull';
 
-import cacheConfig from '../../../config/cache';
+import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IPostsRepository from '../../posts/repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
@@ -30,45 +29,32 @@ export default class CheckModLogsService {
 
     const setModLogChecked = container.resolve(SetModLogCheckedService);
 
-    const queue = new Queue('TelegramQueue', {
-      redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
-    });
+    for await (const modLog of modLogs) {
+      const topicPosts = await this.postsRepository.findPostsByTopicId(modLog.topic_id);
 
-    await Promise.all(
-      modLogs.map(async modLog => {
-        const topicPosts = await this.postsRepository.findPostsByTopicId(modLog.topic_id);
+      for await (const user of users) {
+        const postsDeleted = [] as Post[];
 
-        await Promise.all(
-          users.map(async user => {
-            const postsDeleted = [] as Post[];
+        topicPosts.body.hits.hits.forEach(topicPostRaw => {
+          const topicPost = topicPostRaw._source;
 
-            topicPosts.body.hits.hits.forEach(topicPostRaw => {
-              const topicPost = topicPostRaw._source;
+          if (topicPost.author_uid === user.user_id) {
+            postsDeleted.push(topicPost);
+          }
+        });
 
-              if (topicPost.author_uid !== user.user_id) {
-                return;
-              }
+        if (postsDeleted.length === 0) {
+          continue;
+        }
 
-              postsDeleted.push(topicPost);
-            });
-
-            if (postsDeleted.length === 0) {
-              return Promise.resolve();
-            }
-
-            return queue.add('sendRemovedTopicNotification', {
-              user,
-              postsDeleted,
-              modLog
-            });
-          })
-        );
+        await telegramQueue.add('sendRemovedTopicNotification', {
+          user,
+          postsDeleted,
+          modLog
+        });
 
         await setModLogChecked.execute(modLog);
-      })
-    );
-
-    await queue.close();
+      }
+    }
   }
 }

@@ -1,11 +1,11 @@
 import Post from '../typeorm/entities/Post';
 import ScrapePostDTO from '../../dtos/ScrapePostDTO';
-import forumScrapperSideQueue from '../../../../shared/infra/bull/queues/forumScrapperSideQueue';
+import forumScraperQueue, { queueEvents } from '../../../../shared/infra/bull/queues/forumScraperQueue';
 
 export default class ScrapePostJob {
   public async start({ topic_id, post_id }: ScrapePostDTO): Promise<Post> {
-    const job = await forumScrapperSideQueue.add('scrapePost', { topic_id, post_id });
-    const jobResults = await job.finished();
-    return jobResults;
+    const job = await forumScraperQueue.add('scrapePost', { topic_id, post_id });
+    const jobResult = await job.waitUntilFinished(queueEvents);
+    return jobResult;
   }
 }

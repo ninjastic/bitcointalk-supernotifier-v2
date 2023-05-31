@@ -2,7 +2,7 @@ import { inject, injectable } from 'tsyringe';
 import { isBefore } from 'date-fns';
 
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import forumScrapperLowPrioritySideQueue from '../../../shared/infra/bull/queues/forumScrapperLowPrioritySideQueue';
+import forumScraperQueue from '../../../shared/infra/bull/queues/forumScraperQueue';
 
 type Job = { time: number; topic_id: number; post_id: number };
 
@@ -23,14 +23,12 @@ export default class CheckPostsRescraperForChangesService {
     });
 
     for await (const job of jobsToRun) {
-      await forumScrapperLowPrioritySideQueue.add('scrapePostForChanges', {
+      await forumScraperQueue.add('scrapePostForChanges', {
         topic_id: job.topic_id,
         post_id: job.post_id
       });
 
       await this.cacheRepository.invalidate(`RescrapeForChanges:${job.time}:${job.post_id}`);
     }
-
-    // await forumScrapperLowPrioritySideQueue.close();
   }
 }

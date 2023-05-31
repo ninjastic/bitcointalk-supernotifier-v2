@@ -10,7 +10,6 @@ import Queue from 'promise-queue';
 import cheerio from 'cheerio';
 
 import '../../container';
-import '../../infra/typeorm';
 
 import api from '../../services/api';
 import Merit from '../../../modules/merits/infra/typeorm/entities/Merit';

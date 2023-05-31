@@ -16,7 +16,7 @@ export default class CreateUserService {
   public async execute(data: CreateUserDTO): Promise<User> {
     const user = this.usersRepository.create(data);
 
-    logger.info({ user }, 'Creating new user');
+    logger.info({ user }, '[CreateUserService] Creating new user');
 
     return this.usersRepository.save(user);
   }

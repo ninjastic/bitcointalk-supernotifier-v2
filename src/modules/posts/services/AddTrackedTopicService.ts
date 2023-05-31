@@ -5,7 +5,7 @@ import ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
 
 import Post from '../infra/typeorm/entities/Post';
 import TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
-import forumScrapperSideQueue from '../../../shared/infra/bull/queues/forumScrapperSideQueue';
+import forumScraperQueue, { queueEvents } from '../../../shared/infra/bull/queues/forumScraperQueue';
 
 @injectable()
 export default class AddTrackedTopicService {
@@ -39,9 +39,9 @@ export default class AddTrackedTopicService {
       return topicExists;
     }
 
-    const job = await forumScrapperSideQueue.add('scrapeTopic', { topic_id }, { priority: 1 });
+    const job = await forumScraperQueue.add('scrapeTopic', { topic_id }, { priority: 1 });
 
-    const topicPost = (await job.finished()) as Post;
+    const topicPost: Post = await job.waitUntilFinished(queueEvents);
 
     const trackedTopic = this.trackedTopicsRepository.create({
       post_id: topicPost.post_id,

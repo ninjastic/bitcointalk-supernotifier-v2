@@ -9,7 +9,7 @@ import SaveModLogService from './SaveModLogService';
 import ModLog from '../infra/typeorm/entities/ModLog';
 
 export default class ScrapeModLogService {
-  public async execute(): Promise<void> {
+  public async execute(): Promise<number> {
     const response = await api.get('modlog.php');
 
     const $ = cheerio.load(response.data, { decodeEntities: true });
@@ -25,17 +25,15 @@ export default class ScrapeModLogService {
       });
 
     const parseModLog = container.resolve(ParseModLogService);
-
-    const scrapeResults = logsToScrape.map(modLogElement => parseModLog.execute(modLogElement));
-
-    const filteredScrapeResults = scrapeResults.filter(result => result);
-
     const saveModLog = container.resolve(SaveModLogService);
 
-    await Promise.all(
-      filteredScrapeResults.map(async (modLog: ModLog) => {
-        await saveModLog.execute(modLog);
-      })
-    );
+    const scrapeResults = logsToScrape.map(modLogElement => parseModLog.execute(modLogElement));
+    const filteredScrapeResults = scrapeResults.filter(result => Boolean(result)) as ModLog[];
+
+    for await (const modLog of filteredScrapeResults) {
+      await saveModLog.execute(modLog);
+    }
+
+    return filteredScrapeResults.length;
   }
 }

@@ -6,7 +6,7 @@ import logger from '../../../shared/services/logger';
 
 export default class LoginService {
   public async execute(): Promise<void> {
-    logger.info('User bot is disconnected. Trying to log in for cookies.');
+    logger.info('[ForumLoginService] User bot is disconnected. Trying to log in for cookies.');
 
     const bodyFormData = new FormData();
 
@@ -23,13 +23,13 @@ export default class LoginService {
     const cookies = response.headers.raw()['set-cookie'];
 
     if (cookies && cookies[0]) {
-      logger.info('Authentication successed.');
+      logger.info('[ForumLoginService] Authentication successed.');
       api.defaults.headers.Cookie = `${cookies[0]}; ${cookies[1]}`;
 
       return Promise.resolve();
     }
 
-    logger.error('Authentication failed.');
+    logger.error('[ForumLoginService] Authentication failed.');
     return Promise.reject();
   }
 }

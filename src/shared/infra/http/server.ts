@@ -3,8 +3,8 @@ import express, { Express } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import { createConnection } from 'typeorm';
 
-import '../typeorm';
 import '../../container';
 
 import loggerHttp from './middlewares/loggerHttp';
@@ -19,7 +19,10 @@ class Server {
     this.app = express();
     this.middlewares();
     this.app.use(routes);
-    this.app.listen(3333);
+
+    createConnection().then(() => {
+      this.app.listen(3333);
+    });
   }
 
   middlewares() {

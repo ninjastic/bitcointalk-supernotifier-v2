@@ -32,7 +32,9 @@ export async function checkBotNotificationError(error: any, telegram_id: string,
   const isBotBlocked = [
     'Forbidden: bot was blocked by the user',
     'Forbidden: user is deactivated',
-    'Forbidden: bot was kicked from the group chat'
+    'Forbidden: bot was kicked from the group chat',
+    'Forbidden: the group chat was deleted)',
+    'Bad Request: chat not found'
   ].some(patternMessage => errorMessage.match(new RegExp(patternMessage, 'i')));
 
   if (isBotBlocked) {
@@ -40,5 +42,15 @@ export async function checkBotNotificationError(error: any, telegram_id: string,
     await setUserBlocked.execute(telegram_id);
   } else {
     logger.error({ error: errorMessage, telegram_id, ...meta }, 'Error while sending telegram message');
+  }
+}
+
+export async function queueRepeatableFunction(fn: () => Promise<any>, ms: number): Promise<void> {
+  try {
+    await fn();
+  } catch (error) {
+    logger.error({ error }, 'queueRepeatableFunction error');
+  } finally {
+    setTimeout(async () => queueRepeatableFunction(fn, ms), ms);
   }
 }

@@ -1,7 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
-import Queue from 'bull';
 
-import cacheConfig from '../../../config/cache';
+import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
@@ -59,11 +58,6 @@ export default class CheckPostsService {
 
     const scapeRegexText = (text: string) => text.replace(/([<>*()?])/g, '\\$1');
 
-    const queue = new Queue('TelegramQueue', {
-      redis: cacheConfig.config.redis,
-      defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
-    });
-
     const postsCheckingCache = await this.cacheProvider.recoverMany<number>(posts.map(post => String(post.post_id)));
     const uncheckedPosts = posts.filter(post => !postsCheckingCache.includes(post.post_id));
 
@@ -114,7 +108,7 @@ export default class CheckPostsService {
         }
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await queue.add('sendMentionNotification', { post, user });
+        await telegramQueue.add('sendMentionNotification', { post, user });
       }
 
       // Tracked Phrases
@@ -142,7 +136,7 @@ export default class CheckPostsService {
         }
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await queue.add('sendPhraseTrackingNotification', {
+        await telegramQueue.add('sendPhraseTrackingNotification', {
           post,
           user,
           trackedPhrase
@@ -181,7 +175,7 @@ export default class CheckPostsService {
           }
 
           postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-          await queue.add('sendTopicTrackingNotification', { post, user });
+          await telegramQueue.add('sendTopicTrackingNotification', { post, user });
         }
       }
 
@@ -202,7 +196,7 @@ export default class CheckPostsService {
         }
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await queue.add('sendTrackedUserNotification', { post, user });
+        await telegramQueue.add('sendTrackedUserNotification', { post, user });
       }
     }
 
@@ -228,7 +222,7 @@ export default class CheckPostsService {
         }
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await queue.add('sendTrackedBoardNotification', { post, user, trackedBoard });
+        await telegramQueue.add('sendTrackedBoardNotification', { post, user, trackedBoard });
       }
 
       // Tracked Users (Topics)
@@ -249,11 +243,9 @@ export default class CheckPostsService {
         }
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await queue.add('sendTrackedUserNotification', { post, user });
+        await telegramQueue.add('sendTrackedUserNotification', { post, user });
       }
     }
-
-    await queue.close();
 
     const setPostsCheckedPromises = uncheckedPosts.map(async post => setPostChecked.execute(post.post_id));
     await Promise.allSettled(setPostsCheckedPromises);

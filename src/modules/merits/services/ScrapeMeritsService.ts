@@ -25,15 +25,14 @@ export default class ScrapeMeritsService {
       await forumLogin.execute();
     }
 
-    const merits = $('ul > li');
+    const parsedMerits: Merit[] = [];
+    const meritElements = $('ul > li');
 
-    const scrapingPromises = merits
-      .toArray()
-      .map(element => this.parseMeritElement.execute(element))
-      .filter(result => result);
+    for await (const meritElement of meritElements) {
+      const parsedMerit = await this.parseMeritElement.execute(meritElement);
+      parsedMerits.push(parsedMerit);
+    }
 
-    const scrapeResults = await Promise.all(scrapingPromises).then(results => results);
-
-    return scrapeResults as Merit[];
+    return parsedMerits;
   }
 }

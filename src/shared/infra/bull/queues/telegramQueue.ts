@@ -1,14 +1,9 @@
-import Queue from 'bull';
+import { Queue, QueueEvents } from 'bullmq';
 
 import cacheConfig from '../../../../config/cache';
-import loggerHandler from '../handlers/loggerHandler';
 
 const telegramQueue = new Queue('TelegramQueue', {
-  redis: cacheConfig.config.redis,
-  limiter: {
-    max: 1,
-    duration: 200
-  },
+  connection: cacheConfig.config.redis,
   defaultJobOptions: {
     attempts: 2,
     removeOnComplete: true,
@@ -16,6 +11,6 @@ const telegramQueue = new Queue('TelegramQueue', {
   }
 });
 
-loggerHandler(telegramQueue);
+export const queueEvents = new QueueEvents(telegramQueue.name, { connection: cacheConfig.config.redis });
 
 export default telegramQueue;
