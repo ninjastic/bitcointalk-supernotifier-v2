@@ -33,7 +33,7 @@ export async function checkBotNotificationError(error: any, telegram_id: string,
     'Forbidden: bot was blocked by the user',
     'Forbidden: user is deactivated',
     'Forbidden: bot was kicked from the group chat',
-    'Forbidden: the group chat was deleted)',
+    'Forbidden: the group chat was deleted',
     'Bad Request: chat not found'
   ].some(patternMessage => errorMessage.match(new RegExp(patternMessage, 'i')));
 
