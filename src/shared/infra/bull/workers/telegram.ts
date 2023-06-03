@@ -20,7 +20,7 @@ type JobRecipes = Record<string, (job: Job) => Promise<any>>;
 const jobRecipes: JobRecipes = {
   sendMentionNotification: async (job: Job) => {
     const { post, user, history } = job.data;
-    const sendMentionNotification = new SendMentionNotificationService();
+    const sendMentionNotification = container.resolve(SendMentionNotificationService);
     await sendMentionNotification.execute(user.telegram_id, post, history);
   },
   sendMeritNotification: async (job: Job) => {
@@ -30,32 +30,32 @@ const jobRecipes: JobRecipes = {
   },
   sendTopicTrackingNotification: async (job: Job) => {
     const { post, user } = job.data;
-    const sendTrackedTopicNotification = new SendTrackedTopicNotificationService();
+    const sendTrackedTopicNotification = container.resolve(SendTrackedTopicNotificationService);
     await sendTrackedTopicNotification.execute(user.telegram_id, post);
   },
   sendRemovedTopicNotification: async (job: Job) => {
     const { postsDeleted, user, modLog } = job.data;
-    const sendRemovedTopicNotification = new SendRemovedTopicNotificationService();
+    const sendRemovedTopicNotification = container.resolve(SendRemovedTopicNotificationService);
     await sendRemovedTopicNotification.execute(user.telegram_id, postsDeleted, modLog);
   },
   sendPhraseTrackingNotification: async (job: Job) => {
     const { post, user, trackedPhrase } = job.data;
-    const sendTrackedPhraseNotification = new SendTrackedPhraseNotificationService();
+    const sendTrackedPhraseNotification = container.resolve(SendTrackedPhraseNotificationService);
     await sendTrackedPhraseNotification.execute(user.telegram_id, post, trackedPhrase?.phrase);
   },
   sendTrackedBoardNotification: async (job: Job) => {
     const { post, user, trackedBoard } = job.data;
-    const sendTrackedBoardNotification = new SendTrackedBoardNotificationService();
+    const sendTrackedBoardNotification = container.resolve(SendTrackedBoardNotificationService);
     await sendTrackedBoardNotification.execute(user.telegram_id, post, trackedBoard);
   },
   sendTrackedUserNotification: async (job: Job) => {
     const { post, user } = job.data;
-    const sendTrackedBoardNotification = new SendTrackedUserNotificationService();
+    const sendTrackedBoardNotification = container.resolve(SendTrackedUserNotificationService);
     await sendTrackedBoardNotification.execute(user.telegram_id, post);
   },
   sendApiNotification: async (job: Job) => {
     const { telegram_id, message } = job.data;
-    const sendApiNotification = new SendApiNotificationService();
+    const sendApiNotification = container.resolve(SendApiNotificationService);
     await sendApiNotification.execute(telegram_id, message);
   }
 };

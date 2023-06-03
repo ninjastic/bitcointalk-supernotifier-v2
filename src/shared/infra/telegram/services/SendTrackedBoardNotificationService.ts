@@ -1,4 +1,4 @@
-import { container } from 'tsyringe';
+import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 import logger from '../../../services/logger';
@@ -10,12 +10,18 @@ import TrackedBoard from '../../../../modules/posts/infra/typeorm/entities/Track
 
 import { checkBotNotificationError } from '../../../services/utils';
 import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
-import RedisProvider from '../../../container/providers/implementations/RedisProvider';
+import ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
+@injectable()
 export default class SendTrackedBoardNotificationService {
+  constructor(
+    @inject('CacheRepository')
+    private cacheRepository: ICacheProvider
+  ) {}
+
   public async execute(telegram_id: string, post: Post, trackedBoard: TrackedBoard): Promise<boolean> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
-    const postLength = (await container.resolve(RedisProvider).recover<number>(`${telegram_id}:postLength`)) ?? 150;
+    const postLength = (await this.cacheRepository.recover<number>(`${telegram_id}:postLength`)) ?? 150;
 
     const { post_id, topic_id, title, author, boards, content } = post;
     const { board } = trackedBoard;
