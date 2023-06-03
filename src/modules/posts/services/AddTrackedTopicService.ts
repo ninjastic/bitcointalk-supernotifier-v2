@@ -40,7 +40,6 @@ export default class AddTrackedTopicService {
     }
 
     const job = await forumScraperQueue.add('scrapeTopic', { topic_id }, { priority: 1 });
-
     const topicPost: Post = await job.waitUntilFinished(queueEvents);
 
     const trackedTopic = this.trackedTopicsRepository.create({
