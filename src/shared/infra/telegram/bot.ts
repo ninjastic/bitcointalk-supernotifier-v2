@@ -13,8 +13,8 @@ import cache from '../../../config/cache';
 import logger from '../../services/logger';
 import ISession from './@types/ISession';
 
+import { checkBotNotificationError } from '../../services/utils';
 import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
-import SetUserBlockedService from './services/SetUserBlockedService';
 
 import { setupQuestionMiddlewares } from './menus';
 import { mainMenuMiddleware } from './menus/mainMenu';
@@ -39,6 +39,7 @@ import devCommand from './commands/dev';
 import apiCommand from './commands/apiCommand';
 import resetCommand from './commands/resetCommand';
 import lengthCommand from './commands/lengthCommand';
+import imageCommand from './commands/imageCommand';
 
 export function initialSession(): ISession {
   return {
@@ -136,6 +137,7 @@ class TelegramBot {
     this.instance.hears(/\/?info/i, infoCommand);
     this.instance.hears(/\/?api/i, apiCommand);
     this.instance.hears(/\/?length (.*)/i, lengthCommand);
+    this.instance.hears(/\/?image/i, imageCommand);
 
     this.instance.command('dev', devCommand);
 
@@ -171,11 +173,8 @@ class TelegramBot {
 
   errorHandler(): void {
     this.instance.catch(async error => {
-      if (error.message.includes('Forbidden: bot was kicked from the group chat')) {
-        logger.info({ telegram_id: error.ctx.chat.id }, 'Telegram user marked as blocked');
-        const setUserBlocked = container.resolve(SetUserBlockedService);
-        await setUserBlocked.execute(String(error.ctx.chat.id));
-      } else {
+      const isBotBlocked = await checkBotNotificationError(error, String(error.ctx.chat.id));
+      if (!isBotBlocked) {
         logger.error(error);
       }
     });

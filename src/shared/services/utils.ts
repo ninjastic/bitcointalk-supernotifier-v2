@@ -25,7 +25,7 @@ export function validateTronAddress(addressBase58Check: string) {
   }
 }
 
-export async function checkBotNotificationError(error: any, telegram_id: string, ...meta: any) {
+export async function checkBotNotificationError(error: any, telegram_id: string, ...meta: any): Promise<boolean> {
   const setUserBlocked = container.resolve(SetUserBlockedService);
   const errorMessage: string = error.response?.description || error.message;
 
@@ -40,9 +40,10 @@ export async function checkBotNotificationError(error: any, telegram_id: string,
   if (isBotBlocked) {
     logger.info({ telegram_id, ...meta }, 'Telegram user marked as blocked');
     await setUserBlocked.execute(telegram_id);
-  } else {
-    logger.error({ error: errorMessage, telegram_id, ...meta }, 'Error while sending telegram message');
+    return true;
   }
+  logger.error({ error: errorMessage, telegram_id, ...meta }, 'Error while sending telegram message');
+  return false;
 }
 
 export async function queueRepeatableFunction(fn: () => Promise<any>, ms: number): Promise<void> {
