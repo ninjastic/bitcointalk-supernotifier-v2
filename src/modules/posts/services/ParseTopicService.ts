@@ -67,7 +67,7 @@ export default class ParseTopicService {
 
             const date = new Date(
               $(e)
-                .find('td.td_headerandpost table div:nth-child(2)')
+                .find('td.td_headerandpost table:nth-child(1) div:nth-child(2)')
                 .text()
                 .replace('Today at', today)
                 .replace(/Last edit:.*/, '')
