@@ -26,7 +26,7 @@ export default class ParseRecentPostElementService {
     const sender_uid = Number($.html().match(/u=(\d*)"/)[1]);
 
     const d = new Date();
-    const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+    const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
     const withFixedDate = $.html().replace('<b>Today</b> at', today);
     const date = new Date(withFixedDate.match(/>(.*): \d* from <a/i)[1]);
 

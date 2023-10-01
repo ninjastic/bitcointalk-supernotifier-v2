@@ -81,7 +81,7 @@ export default class ParsePostElementService {
     const content = $(postElement).find('td.td_headerandpost div.post').html();
 
     const d = new Date();
-    const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+    const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 
     const date = new Date(
       $(postElement)

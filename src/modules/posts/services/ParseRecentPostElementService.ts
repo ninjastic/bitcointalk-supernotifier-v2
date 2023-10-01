@@ -59,7 +59,7 @@ export default class ParseRecentPostElementService {
     const content = $('.post').html();
 
     const d = new Date();
-    const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+    const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 
     const date = new Date(
       $(postElement).find('td.middletext > div:nth-child(3)').text().replace('on: Today at', today).trim()

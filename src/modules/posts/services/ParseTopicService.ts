@@ -63,7 +63,7 @@ export default class ParseTopicService {
             const content = $(e).find('td.td_headerandpost div.post').html();
 
             const d = new Date();
-            const today = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+            const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 
             const date = new Date(
               $(e)
