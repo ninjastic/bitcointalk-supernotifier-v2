@@ -1,13 +1,10 @@
-import { container, inject, injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
+
+import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
-import IWebUsersRepository from '../../web/repositories/IWebUsersRepository';
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-
-import SetMeritCheckedService from './SetMeritCheckedService';
-import CreateWebNotificationService from '../../web/services/CreateWebNotificationService';
-import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
+import NotificationRepository from '../../notifications/infra/typeorm/repositories/NotificationRepository';
 
 @injectable()
 export default class CheckMeritsService {
@@ -16,65 +13,50 @@ export default class CheckMeritsService {
     private meritsRepository: IMeritsRepository,
 
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository,
-
-    @inject('WebUsersRepository')
-    private webUsersRepository: IWebUsersRepository,
-
-    @inject('CacheRepository')
-    private cacheProvider: ICacheProvider
+    private usersRepository: IUsersRepository
   ) {}
 
   public async execute(): Promise<void> {
     const merits = await this.meritsRepository.getLatestUncheckedMerits();
-    const webUsers = await this.webUsersRepository.findAll();
     const users = await this.usersRepository.getUsersWithMerits();
 
-    const setMeritChecked = container.resolve(SetMeritCheckedService);
-    const createWebNotification = container.resolve(CreateWebNotificationService);
+    const notificationRepository = new NotificationRepository();
 
     for await (const merit of merits) {
-      await setMeritChecked.execute({
-        amount: merit.amount,
-        date: merit.date,
-        post_id: merit.post_id,
-        sender_uid: merit.sender_uid
-      });
+      const receiverUsers = users.filter(user => user.user_id === merit.receiver_uid);
 
-      for await (const user of users) {
-        const isNotReceiverUid = merit.receiver_uid !== user.user_id;
+      if (!receiverUsers.length) {
+        continue;
+      }
+
+      for await (const receiverUser of receiverUsers) {
+        const notificationData = {
+          telegram_id: receiverUser.telegram_id,
+          type: 'merit',
+          metadata: {
+            post_id: merit.post_id,
+            merit_id: merit.id
+          }
+        };
+
         const isAlreadyNotified =
-          merit.notified_to.includes(user.telegram_id) ||
-          (await this.cacheProvider.recover<boolean>(
-            `notified:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`
-          ));
+          merit.notified_to.includes(receiverUser.telegram_id) ||
+          (await notificationRepository.findOne({ where: notificationData }));
 
-        if (isNotReceiverUid || isAlreadyNotified) {
+        if (isAlreadyNotified) {
           continue;
         }
 
-        await this.cacheProvider.save(
-          `notified:${merit.date}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`,
-          true,
-          'EX',
-          180
-        );
+        const notification = notificationRepository.create(notificationData);
+        await notificationRepository.save(notification);
 
-        await telegramQueue.add('sendMeritNotification', { merit, user });
+        await telegramQueue.add('sendMeritNotification', { merit, user: receiverUser });
       }
     }
 
     for await (const merit of merits) {
-      for await (const webUser of webUsers) {
-        if (merit.receiver_uid !== webUser.user_id) {
-          continue;
-        }
-
-        createWebNotification.execute({
-          user_id: webUser.id,
-          merit_id: merit.id
-        });
-      }
+      merit.checked = true;
+      await this.meritsRepository.save(merit);
     }
   }
 }
