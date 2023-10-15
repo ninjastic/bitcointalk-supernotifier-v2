@@ -1,4 +1,5 @@
 import { container } from 'tsyringe';
+import { sub } from 'date-fns';
 import cheerio from 'cheerio';
 
 import api from '../../../shared/services/api';
@@ -17,6 +18,11 @@ export default class ScrapeRecentPostsService {
   public async execute(): Promise<Post[]> {
     const response = await api.get('index.php?action=recent');
     const $ = cheerio.load(response.data, { decodeEntities: true });
+
+    const currentDate = sub(
+      new Date($('body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span').text()),
+      { minutes: new Date().getTimezoneOffset() }
+    );
 
     const recentPostsWithFooter = [...$('div#bodyarea > table > tbody')].reduce<RecentPostWithFooter[]>(
       (array, element, index) => {
@@ -37,7 +43,9 @@ export default class ScrapeRecentPostsService {
       []
     );
 
-    const scrappedPosts = recentPostsWithFooter.map(element => this.parseRecentPostElement.execute(element));
+    const scrappedPosts = recentPostsWithFooter.map(element =>
+      this.parseRecentPostElement.execute(element, currentDate)
+    );
     return scrappedPosts;
   }
 }

@@ -11,8 +11,8 @@ import cacheConfig from '../../../../config/cache';
 import { uptimeApi } from '../../../services/api';
 import { queueRepeatableFunction } from '../../../services/utils';
 
-import ScrapeMeritsRepository from '../../../../modules/merits/infra/typeorm/repositories/ScrapeMeritsRepository';
 import ScrapePostsRepository from '../../../../modules/posts/infra/typeorm/repositories/ScrapePostsRepository';
+import ScrapeRecentMeritsService from '../../../../modules/merits/services/ScrapeRecentMeritsService';
 
 import forumScraperQueue from '../queues/forumScraperQueue';
 
@@ -32,10 +32,10 @@ const scrapeRecentPosts = async (): Promise<number> => {
 };
 
 const scrapeMerits = async (): Promise<number> => {
-  const scrapeMeritsRepository = container.resolve(ScrapeMeritsRepository);
-  const result = await scrapeMeritsRepository.scrapeMerits();
+  const scrapeRecentMeritsService = new ScrapeRecentMeritsService();
+  const result = await scrapeRecentMeritsService.execute();
   uptimeApi.get(process.env.HEARTBEAT_MERITS);
-  return result;
+  return result.length;
 };
 
 const scrapeModLog = async (): Promise<number> => {
@@ -77,7 +77,6 @@ const jobRecipes: JobRecipes = {
 const scraper = async () => {
   await createConnection();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const worker = new Worker(
     forumScraperQueue.name,
     async (job: Job) => {

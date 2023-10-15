@@ -14,7 +14,7 @@ export default class ParseRecentPostElementService {
     private postsRepository: IPostsRepository
   ) {}
 
-  public execute(recentPost: RecentPostWithFooter): Post {
+  public execute(recentPost: RecentPostWithFooter, currentDate: Date): Post {
     const { postElement, footerElement } = recentPost;
     let $ = cheerio.load(postElement, { decodeEntities: true });
 
@@ -58,8 +58,7 @@ export default class ParseRecentPostElementService {
 
     const content = $('.post').html();
 
-    const d = new Date();
-    const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+    const today = `${currentDate.getUTCFullYear()}/${currentDate.getUTCMonth() + 1}/${currentDate.getUTCDate()}`;
 
     const date = new Date(
       $(postElement).find('td.middletext > div:nth-child(3)').text().replace('on: Today at', today).trim()

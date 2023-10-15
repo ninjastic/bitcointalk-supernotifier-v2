@@ -106,9 +106,9 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
     return inserted.raw.length;
   }
 
-  public parseRecentPostElement(element: RecentPostWithFooter): Post {
+  public parseRecentPostElement(element: RecentPostWithFooter, currentDate: Date): Post {
     const parseRecentPostElement = container.resolve(ParseRecentPostElementService);
-    const post = parseRecentPostElement.execute(element);
+    const post = parseRecentPostElement.execute(element, currentDate);
     return post;
   }
 }

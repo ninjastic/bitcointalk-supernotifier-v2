@@ -11,5 +11,5 @@ export default interface IScrapePostsRepository {
   scrapePost(data: ScrapePostDTO): Promise<Post | undefined>;
   scrapeTopic(topic_id: number): Promise<Post | undefined>;
   scrapeRecent(): Promise<number>;
-  parseRecentPostElement(element: RecentPostWithFooter): Post;
+  parseRecentPostElement(element: RecentPostWithFooter, currentDate: Date): Post;
 }
