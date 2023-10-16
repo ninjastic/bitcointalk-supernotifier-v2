@@ -41,7 +41,7 @@ export default class MeritsRepository implements IMeritsRepository {
     const merits = await this.ormRepository.find({
       where: {
         checked: false,
-        date: MoreThanOrEqual(sub(new Date(), { minutes: 30 }))
+        date: MoreThanOrEqual(sub(new Date(), { hours: 24 }))
       },
       order: { created_at: -1 },
       take: limit

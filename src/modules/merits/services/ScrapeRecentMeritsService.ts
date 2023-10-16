@@ -2,6 +2,7 @@ import cheerio from 'cheerio';
 import { container } from 'tsyringe';
 import { sub } from 'date-fns';
 
+import { getManager } from 'typeorm';
 import api from '../../../shared/services/api';
 import Merit from '../infra/typeorm/entities/Merit';
 import PostsRepository from '../../posts/infra/typeorm/repositories/PostsRepository';
@@ -78,6 +79,15 @@ export default class ScrapeRecentMeritsService {
       merits.push(merit);
     }
 
-    return merits;
+    const insertedMerits = await getManager()
+      .createQueryBuilder()
+      .insert()
+      .into(Merit)
+      .values(merits)
+      .returning('*')
+      .onConflict('("date", "amount", "post_id", "sender_uid") DO NOTHING')
+      .execute();
+
+    return insertedMerits.raw as Merit[];
   }
 }
