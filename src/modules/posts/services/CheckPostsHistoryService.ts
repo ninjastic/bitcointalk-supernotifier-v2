@@ -5,6 +5,7 @@ import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
 import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import NotificationRepository from '../../notifications/infra/typeorm/repositories/NotificationRepository';
 
 import SetPostHistoryCheckedService from './SetPostHistoryCheckedService';
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
@@ -29,6 +30,7 @@ export default class CheckPostsHistoryService {
 
     const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
     const getIgnoredTopics = container.resolve(GetIgnoredTopicsService);
+    const notificationRepository = new NotificationRepository();
 
     const ignoredUsers = await getIgnoredUsers.execute();
     const ignoredTopics = await getIgnoredTopics.execute();
@@ -42,6 +44,12 @@ export default class CheckPostsHistoryService {
             if (!history.post) {
               return Promise.resolve();
             }
+
+            const notificationData = {
+              telegram_id: user.telegram_id,
+              type: 'post_mention',
+              metadata: { post_id: history.post.post_id }
+            };
 
             if (history.post.author.toLowerCase() === user.username.toLowerCase()) {
               return Promise.resolve();
@@ -82,9 +90,9 @@ export default class CheckPostsHistoryService {
               return Promise.resolve();
             }
 
-            const postNotified = await this.cacheProvider.recover<boolean>(
-              `notified:${history.post_id}:${user.telegram_id}`
-            );
+            const postNotified =
+              (await this.cacheProvider.recover<boolean>(`notified:${history.post_id}:${user.telegram_id}`)) ||
+              (await notificationRepository.findOne({ where: notificationData }));
 
             if (postNotified) {
               return Promise.resolve();
@@ -97,6 +105,9 @@ export default class CheckPostsHistoryService {
               title: history.title,
               content: history.content
             };
+
+            const notification = notificationRepository.create(notificationData);
+            await notificationRepository.save(notification);
 
             return telegramQueue.add('sendMentionNotification', {
               post: postToNotify,
