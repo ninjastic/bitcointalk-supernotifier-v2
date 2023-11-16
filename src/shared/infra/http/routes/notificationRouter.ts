@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import Joi from 'joi';
 
-import telegramQueue from '../../bull/queues/telegramQueue';
+import { addTelegramJob } from '../../bull/queues/telegramQueue';
 
 import NotificationApiKeyRepository from '../../../../modules/users/infra/typeorm/repositories/NotificationApiKeyRepository';
 
@@ -28,7 +28,7 @@ notificationRouter.post('/', async (request: Request, response: Response) => {
     return response.status(404).json({ error: true, message: 'api_key is invalid' });
   }
 
-  await telegramQueue.add('sendApiNotification', {
+  await addTelegramJob('sendApiNotification', {
     telegram_id: notificationApiKey.telegram_id,
     message: body.message
   });

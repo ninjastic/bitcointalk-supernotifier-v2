@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import ICacheProvider from 'shared/container/providers/models/ICacheProvider';
 import { container } from 'tsyringe';
 
 import esClient from '../../../services/elastic';
+import ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
 const metaRouter = Router();
 const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');

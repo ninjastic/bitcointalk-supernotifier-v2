@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
-import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
+import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
@@ -50,7 +50,7 @@ export default class CheckMeritsService {
         const notification = notificationRepository.create(notificationData);
         await notificationRepository.save(notification);
 
-        await telegramQueue.add('sendMeritNotification', { merit, user: receiverUser });
+        await addTelegramJob('sendMeritNotification', { merit, user: receiverUser });
       }
     }
 

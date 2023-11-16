@@ -28,6 +28,7 @@ import addTrackedUserConversation, {
   cancelAddTrackedUserPromptInlineMenu,
   confirmAddTrackedUserInlineMenu
 } from './conversations/addTrackedUserConversation';
+import { handleTrackTopicRepliesMenu } from './services/SendAutoTrackTopicNotificationService';
 
 import startCommand from './commands/startCommand';
 import menuCommand from './commands/menuCommand';
@@ -40,6 +41,7 @@ import apiCommand from './commands/apiCommand';
 import resetCommand from './commands/resetCommand';
 import lengthCommand from './commands/lengthCommand';
 import imageCommand from './commands/imageCommand';
+import authCommand from './commands/authCommand';
 
 export function initialSession(): ISession {
   return {
@@ -138,6 +140,7 @@ class TelegramBot {
     this.instance.hears(/\/?api/i, apiCommand);
     this.instance.hears(/\/?length (.*)/i, lengthCommand);
     this.instance.hears(/\/?image/i, imageCommand);
+    this.instance.hears(/\/?auth (.*)/i, authCommand);
 
     this.instance.command('dev', devCommand);
 
@@ -161,6 +164,7 @@ class TelegramBot {
       confirmAddTrackedUserInlineMenu,
       cancelAddTrackedUserPromptInlineMenu
     );
+    handleTrackTopicRepliesMenu(this.instance);
   }
 
   conversations(): void {

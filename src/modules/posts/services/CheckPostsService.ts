@@ -1,6 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
 
-import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
+import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IPostsRepository from '../repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
@@ -120,7 +120,7 @@ export default class CheckPostsService {
         await notificationRepository.save(notification);
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await telegramQueue.add('sendMentionNotification', { post, user });
+        await addTelegramJob('sendMentionNotification', { post, user, history: false });
       }
 
       // Tracked Phrases
@@ -163,7 +163,7 @@ export default class CheckPostsService {
         await notificationRepository.save(notification);
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await telegramQueue.add('sendPhraseTrackingNotification', {
+        await addTelegramJob('sendPhraseTrackingNotification', {
           post,
           user,
           trackedPhrase
@@ -213,7 +213,7 @@ export default class CheckPostsService {
           await notificationRepository.save(notification);
 
           postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-          await telegramQueue.add('sendTopicTrackingNotification', { post, user });
+          await addTelegramJob('sendTopicTrackingNotification', { post, user });
         }
       }
 
@@ -245,7 +245,7 @@ export default class CheckPostsService {
         await notificationRepository.save(notification);
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await telegramQueue.add('sendTrackedUserNotification', { post, user });
+        await addTelegramJob('sendTrackedUserNotification', { post, user });
       }
     }
 
@@ -283,7 +283,7 @@ export default class CheckPostsService {
         await notificationRepository.save(notification);
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await telegramQueue.add('sendTrackedBoardNotification', { post, user, trackedBoard });
+        await addTelegramJob('sendTrackedBoardNotification', { post, user, trackedBoard });
       }
 
       // Tracked Users (Topics)
@@ -315,7 +315,29 @@ export default class CheckPostsService {
         await notificationRepository.save(notification);
 
         postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await telegramQueue.add('sendTrackedUserNotification', { post_id: post, user });
+        await addTelegramJob('sendTrackedUserNotification', { post, user });
+      }
+
+      const usersWithAutoTrackTopicsAndMatchingTopic = users.filter(
+        user => user.enable_auto_track_topics && topic.post.author_uid === user.user_id
+      );
+      for await (const user of usersWithAutoTrackTopicsAndMatchingTopic) {
+        const notificationData = {
+          telegram_id: user.telegram_id,
+          type: 'auto_track_topic_request',
+          metadata: { topic: topic.topic_id }
+        };
+
+        const isAlreadyNotified = await notificationRepository.findOne({ where: notificationData });
+
+        if (isAlreadyNotified) {
+          continue;
+        }
+
+        const notification = notificationRepository.create(notificationData);
+        await notificationRepository.save(notification);
+
+        await addTelegramJob('sendAutoTrackTopicRequestNotification', { topic, user });
       }
     }
 

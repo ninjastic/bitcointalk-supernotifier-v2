@@ -1,6 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
 
-import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
+import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IUsersRepository from '../../users/repositories/IUsersRepository';
 import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
@@ -109,7 +109,7 @@ export default class CheckPostsHistoryService {
             const notification = notificationRepository.create(notificationData);
             await notificationRepository.save(notification);
 
-            return telegramQueue.add('sendMentionNotification', {
+            return addTelegramJob('sendMentionNotification', {
               post: postToNotify,
               user,
               history: true

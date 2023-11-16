@@ -5,6 +5,7 @@ import { Job, Worker } from 'bullmq';
 import logger from '../../../services/logger';
 import cacheConfig from '../../../../config/cache';
 import telegramQueue from '../queues/telegramQueue';
+import { JobRecipe } from '../types/telegram';
 
 import SendMentionNotificationService from '../../telegram/services/SendMentionNotificationService';
 import SendMeritNotificationService from '../../telegram/services/SendMeritNotificationService';
@@ -14,56 +15,59 @@ import SendRemovedTopicNotificationService from '../../telegram/services/SendRem
 import SendTrackedBoardNotificationService from '../../telegram/services/SendTrackedBoardNotificationService';
 import SendTrackedUserNotificationService from '../../telegram/services/SendTrackedUserNotificationService';
 import SendApiNotificationService from '../../telegram/services/SendApiNotificationService';
+import SendAutoTrackTopicNotificationService from '../../telegram/services/SendAutoTrackTopicNotificationService';
 
-type JobRecipes = Record<string, (job: Job) => Promise<any>>;
-
-const jobRecipes: JobRecipes = {
-  sendMentionNotification: async (job: Job) => {
+const jobRecipes: JobRecipe = {
+  sendMentionNotification: async job => {
     const { post, user, history } = job.data;
     const sendMentionNotification = container.resolve(SendMentionNotificationService);
     await sendMentionNotification.execute(user.telegram_id, post, history);
   },
-  sendMeritNotification: async (job: Job) => {
+  sendMeritNotification: async job => {
     const { merit, user } = job.data;
     const sendMeritNotification = container.resolve(SendMeritNotificationService);
     await sendMeritNotification.execute(user.telegram_id, merit);
   },
-  sendTopicTrackingNotification: async (job: Job) => {
+  sendTopicTrackingNotification: async job => {
     const { post, user } = job.data;
     const sendTrackedTopicNotification = container.resolve(SendTrackedTopicNotificationService);
     await sendTrackedTopicNotification.execute(user.telegram_id, post);
   },
-  sendRemovedTopicNotification: async (job: Job) => {
+  sendRemovedTopicNotification: async job => {
     const { postsDeleted, user, modLog } = job.data;
     const sendRemovedTopicNotification = container.resolve(SendRemovedTopicNotificationService);
     await sendRemovedTopicNotification.execute(user.telegram_id, postsDeleted, modLog);
   },
-  sendPhraseTrackingNotification: async (job: Job) => {
+  sendPhraseTrackingNotification: async job => {
     const { post, user, trackedPhrase } = job.data;
     const sendTrackedPhraseNotification = container.resolve(SendTrackedPhraseNotificationService);
     await sendTrackedPhraseNotification.execute(user.telegram_id, post, trackedPhrase?.phrase);
   },
-  sendTrackedBoardNotification: async (job: Job) => {
+  sendTrackedBoardNotification: async job => {
     const { post, user, trackedBoard } = job.data;
     const sendTrackedBoardNotification = container.resolve(SendTrackedBoardNotificationService);
     await sendTrackedBoardNotification.execute(user.telegram_id, post, trackedBoard);
   },
-  sendTrackedUserNotification: async (job: Job) => {
+  sendTrackedUserNotification: async job => {
     const { post, user } = job.data;
     const sendTrackedBoardNotification = container.resolve(SendTrackedUserNotificationService);
     await sendTrackedBoardNotification.execute(user.telegram_id, post);
   },
-  sendApiNotification: async (job: Job) => {
+  sendApiNotification: async job => {
     const { telegram_id, message } = job.data;
     const sendApiNotification = container.resolve(SendApiNotificationService);
     await sendApiNotification.execute(telegram_id, message);
+  },
+  sendAutoTrackTopicRequestNotification: async job => {
+    const { topic, user } = job.data;
+    const sendAutoTrackTopicRequestNotification = container.resolve(SendAutoTrackTopicNotificationService);
+    await sendAutoTrackTopicRequestNotification.execute(user.telegram_id, topic);
   }
 };
 
 const telegram = async () => {
   await createConnection();
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const worker = new Worker(
     telegramQueue.name,
     async (job: Job) => {

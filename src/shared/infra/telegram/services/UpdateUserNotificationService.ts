@@ -3,7 +3,7 @@ import User from '../../../../modules/users/infra/typeorm/entities/User';
 
 import IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
 
-type NotificationType = 'mentions' | 'merits' | 'modlogs';
+type NotificationType = 'mentions' | 'merits' | 'modlogs' | 'track_topics';
 
 @injectable()
 export default class UpdateUserNotificationService {
@@ -21,6 +21,8 @@ export default class UpdateUserNotificationService {
       user.enable_merits = value;
     } else if (type === 'modlogs') {
       user.enable_modlogs = value;
+    } else if (type === 'track_topics') {
+      user.enable_auto_track_topics = value;
     }
 
     await this.usersRepository.save(user);

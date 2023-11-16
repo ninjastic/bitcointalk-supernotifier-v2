@@ -14,20 +14,26 @@ const handleNotificationToggle = async (ctx: IMenuContext) => {
 
   if (ctx.update.callback_query.data === '/notifications/merits') {
     ctx.session.merits = !ctx.session.merits;
-
     await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'merits', ctx.session.merits);
   }
 
   if (ctx.update.callback_query.data === '/notifications/mentions') {
     ctx.session.mentions = !ctx.session.mentions;
-
     await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'mentions', ctx.session.mentions);
   }
 
   if (ctx.update.callback_query.data === '/notifications/modlogs') {
     ctx.session.modlogs = !ctx.session.modlogs;
-
     await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'modlogs', ctx.session.modlogs);
+  }
+
+  if (ctx.update.callback_query.data === '/notifications/track_topics') {
+    ctx.session.track_topics = !ctx.session.track_topics;
+    await updateUserNotification.execute(
+      String(ctx.update.callback_query.from.id),
+      'track_topics',
+      ctx.session.track_topics
+    );
   }
 
   await ctx.answerCallbackQuery();
@@ -36,6 +42,7 @@ const handleNotificationToggle = async (ctx: IMenuContext) => {
 const mentionsEnabled = (ctx: IMenuContext) => ctx.session.mentions;
 const meritsEnabled = (ctx: IMenuContext) => ctx.session.merits;
 const modlogsEnabled = (ctx: IMenuContext) => ctx.session.modlogs;
+const trackTopicsEnabled = (ctx: IMenuContext) => ctx.session.track_topics;
 
 notificationsMenu.interact(
   ctx => (mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '🚫 Mentions Disabled'),
@@ -62,6 +69,19 @@ notificationsMenu.interact(ctx => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '
 notificationsMenu.interact(
   ctx => (modlogsEnabled(ctx) ? '✅ Deleted Posts Enabled ' : '🚫 Deleted Posts Disabled'),
   'modlogs',
+  {
+    do: async ctx => {
+      await ctx.answerCallbackQuery();
+      await handleNotificationToggle(ctx);
+
+      return true;
+    }
+  }
+);
+
+notificationsMenu.interact(
+  ctx => (trackTopicsEnabled(ctx) ? '✅ Auto-Track Own Topics Enabled ' : '🚫 Auto-Track Own Topics Disabled'),
+  'track_topics',
   {
     do: async ctx => {
       await ctx.answerCallbackQuery();

@@ -1,6 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
 
-import telegramQueue from '../../../shared/infra/bull/queues/telegramQueue';
+import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IPostsRepository from '../../posts/repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
@@ -47,7 +47,7 @@ export default class CheckModLogsService {
           continue;
         }
 
-        await telegramQueue.add('sendRemovedTopicNotification', {
+        await addTelegramJob('sendRemovedTopicNotification', {
           user,
           postsDeleted,
           modLog

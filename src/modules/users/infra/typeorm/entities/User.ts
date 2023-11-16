@@ -31,6 +31,9 @@ class User {
   @Column()
   enable_modlogs: boolean;
 
+  @Column()
+  enable_auto_track_topics: boolean;
+
   @Column({ default: false })
   blocked: boolean;
 
