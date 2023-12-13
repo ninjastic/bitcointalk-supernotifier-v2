@@ -104,8 +104,11 @@ export default class PostsRepository implements IPostsRepository {
 
     if (author) {
       must.push({
-        match_phrase: {
-          author: author.toLowerCase()
+        term: {
+          author: {
+            value: author,
+            case_insensitive: true
+          }
         }
       });
     }
@@ -205,7 +208,12 @@ export default class PostsRepository implements IPostsRepository {
         'posts.archive'
       ])
       .where(author ? `lower(author) = :author` : '1=1', {
-        author: author ? author.toLowerCase() : undefined
+        author: author
+          ? {
+              value: author,
+              case_insensitive: true
+            }
+          : undefined
       })
       .andWhere(last ? `post_id < :last` : '1=1', {
         last

@@ -16,6 +16,7 @@ export default class AddressesUniqueController {
       address: Joi.string(),
       addresses: Joi.array().items(Joi.string()),
       author: Joi.string(),
+      author_uid: Joi.number(),
       coin: Joi.string().valid('BTC', 'ETH', 'TRX').insensitive(),
       post_id: Joi.number(),
       topic_id: Joi.number(),

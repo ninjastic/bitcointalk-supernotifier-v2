@@ -51,8 +51,11 @@ export default class GetAddressesTopUniqueService {
 
     if (author) {
       must.push({
-        match_phrase: {
-          author: author.toLowerCase()
+        term: {
+          author: {
+            value: author,
+            case_insensitive: true
+          }
         }
       });
     }

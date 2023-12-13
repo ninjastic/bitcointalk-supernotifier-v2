@@ -16,7 +16,8 @@ interface Data {
 
 export default class GetAddressesUniqueService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
-    const { address, addresses, author, coin, post_id, topic_id, board, child_boards, last, limit } = conditions || {};
+    const { address, addresses, author, author_uid, coin, post_id, topic_id, board, child_boards, last, limit } =
+      conditions || {};
 
     const must = [];
 
@@ -40,10 +41,17 @@ export default class GetAddressesUniqueService {
 
     if (author) {
       must.push({
-        match_phrase: {
-          author: author.toLowerCase()
+        term: {
+          author: {
+            value: author,
+            case_insensitive: true
+          }
         }
       });
+    }
+
+    if (author_uid) {
+      must.push({ match: { author_uid } });
     }
 
     if (board) {

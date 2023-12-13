@@ -29,7 +29,8 @@ export default class GetAddressesService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
     const getBoardsList = container.resolve(GetBoardsListService);
 
-    const { address, author, coin, post_id, topic_id, board, child_boards, last, order, limit } = conditions || {};
+    const { address, author, author_uid, coin, post_id, topic_id, board, child_boards, last, order, limit } =
+      conditions || {};
 
     const must = [];
 
@@ -51,10 +52,17 @@ export default class GetAddressesService {
 
     if (author) {
       must.push({
-        match_phrase: {
-          author: author.toLowerCase()
+        term: {
+          author: {
+            value: author,
+            case_insensitive: true
+          }
         }
       });
+    }
+
+    if (author_uid) {
+      must.push({ match: { author_uid } });
     }
 
     if (board) {
