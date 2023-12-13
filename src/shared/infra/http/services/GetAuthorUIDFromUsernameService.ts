@@ -31,8 +31,11 @@ export default class GetAuthorUIDFromUsernameService {
       size: 1,
       body: {
         query: {
-          match_phrase: {
-            'author.keyword': username
+          term: {
+            'author.keyword': {
+              value: username,
+              case_insensitive: true
+            }
           }
         }
       }
