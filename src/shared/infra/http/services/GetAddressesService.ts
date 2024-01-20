@@ -53,7 +53,7 @@ export default class GetAddressesService {
     if (author) {
       must.push({
         term: {
-          author: {
+          'author.keyword': {
             value: author,
             case_insensitive: true
           }

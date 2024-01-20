@@ -25,7 +25,7 @@ export default class GetPostsAuthorsService {
     if (author) {
       must.push({
         term: {
-          author: {
+          'author.keyword': {
             value: author,
             case_insensitive: true
           }

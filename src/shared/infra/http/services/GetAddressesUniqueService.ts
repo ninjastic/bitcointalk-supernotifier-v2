@@ -42,7 +42,7 @@ export default class GetAddressesUniqueService {
     if (author) {
       must.push({
         term: {
-          author: {
+          'author.keyword': {
             value: author,
             case_insensitive: true
           }
