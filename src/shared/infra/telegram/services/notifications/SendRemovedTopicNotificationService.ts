@@ -2,15 +2,15 @@ import { container } from 'tsyringe';
 import pluralize from 'pluralize';
 import escape from 'escape-html';
 
-import logger from '../../../services/logger';
+import logger from '../../../../services/logger';
 
-import bot from '../index';
+import bot from '../../index';
 
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-import ModLog from '../../../../modules/modlog/infra/typeorm/entities/ModLog';
+import Post from '../../../../../modules/posts/infra/typeorm/entities/Post';
+import ModLog from '../../../../../modules/modlog/infra/typeorm/entities/ModLog';
 
-import { checkBotNotificationError } from '../../../services/utils';
-import SetModLogNotifiedService from '../../../../modules/modlog/services/SetModLogNotifiedService';
+import { checkBotNotificationError } from '../../../../services/utils';
+import SetModLogNotifiedService from '../../../../../modules/modlog/services/SetModLogNotifiedService';
 
 export default class SendRemovedTopicNotificationService {
   public async execute(telegram_id: string, posts: Post[], modLog: ModLog): Promise<boolean> {

@@ -6,8 +6,6 @@ import IPostsRepository from '../../posts/repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
 import IModLogRepository from '../repositories/IModLogRepository';
 
-import Post from '../../posts/infra/typeorm/entities/Post';
-
 import SetModLogCheckedService from './SetModLogCheckedService';
 
 @injectable()
@@ -30,18 +28,10 @@ export default class CheckModLogsService {
     const setModLogChecked = container.resolve(SetModLogCheckedService);
 
     for await (const modLog of modLogs) {
-      const topicPosts = await this.postsRepository.findPostsByTopicId(modLog.topic_id);
+      const topicPosts = await this.postsRepository.findPosts({ topic_id: modLog.topic_id });
 
       for await (const user of users) {
-        const postsDeleted = [] as Post[];
-
-        topicPosts.body.hits.hits.forEach(topicPostRaw => {
-          const topicPost = topicPostRaw._source;
-
-          if (topicPost.author_uid === user.user_id) {
-            postsDeleted.push(topicPost);
-          }
-        });
+        const postsDeleted = topicPosts.filter(topicPost => topicPost.author_uid === user.user_id)
 
         if (postsDeleted.length === 0) {
           continue;

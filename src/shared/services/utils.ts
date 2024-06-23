@@ -50,7 +50,7 @@ export async function queueRepeatableFunction(fn: () => Promise<any>, ms: number
   try {
     await fn();
   } catch (error) {
-    logger.error({ error: error.message }, `[${fn.name}] queueRepeatableFunction error`);
+    logger.error(error, `[${fn.name}] queueRepeatableFunction error`);
   } finally {
     setTimeout(async () => queueRepeatableFunction(fn, ms), ms);
   }

@@ -7,6 +7,13 @@ import Post from '../infra/typeorm/entities/Post';
 
 import { RecentPostWithFooter } from '../repositories/IScrapePostsRepository';
 import ParseRecentPostElementService from './ParseRecentPostElementService';
+import ForumLoginService from '../../merits/services/ForumLoginService';
+
+const getRequestPageSelector = async () => {
+  const response = await api.get('index.php?action=recent');
+  const $ = cheerio.load(response.data, { decodeEntities: true });
+  return $;
+};
 
 export default class ScrapeRecentPostsService {
   private parseRecentPostElement: ParseRecentPostElementService;
@@ -16,8 +23,16 @@ export default class ScrapeRecentPostsService {
   }
 
   public async execute(): Promise<Post[]> {
-    const response = await api.get('index.php?action=recent');
-    const $ = cheerio.load(response.data, { decodeEntities: true });
+    let $ = await getRequestPageSelector();
+
+    const isLogged = !!$('#hellomember').length;
+
+    if (!isLogged) {
+      const forumLoginService = new ForumLoginService();
+      await forumLoginService.execute();
+
+      $ = await getRequestPageSelector();
+    }
 
     const currentDate = sub(
       new Date($('body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span').text()),

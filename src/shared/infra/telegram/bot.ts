@@ -28,7 +28,7 @@ import addTrackedUserConversation, {
   cancelAddTrackedUserPromptInlineMenu,
   confirmAddTrackedUserInlineMenu
 } from './conversations/addTrackedUserConversation';
-import { handleTrackTopicRepliesMenu } from './services/SendAutoTrackTopicNotificationService';
+import { handleTrackTopicRepliesMenu } from './services/notifications/SendAutoTrackTopicNotificationService';
 
 import startCommand from './commands/startCommand';
 import menuCommand from './commands/menuCommand';

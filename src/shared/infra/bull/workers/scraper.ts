@@ -21,6 +21,7 @@ import ScrapeUserMeritCountService from '../../../../modules/merits/services/Scr
 import ScrapeTopicService from '../../../../modules/posts/services/ScrapeTopicService';
 import ScrapeModLogService from '../../../../modules/modlog/services/ScrapeModLogService';
 import ScrapePostForEditsService from '../../../../modules/posts/services/ScrapePostForChangesService';
+import ForumLoginService from '../../../../modules/merits/services/ForumLoginService';
 
 type JobRecipes = Record<string, (job: Job) => Promise<any>>;
 
@@ -107,8 +108,11 @@ const scraper = async () => {
   });
 
   worker.on('error', async error => {
-    logger.error({ error }, `[${worker.name}][Worker] Error`);
+    logger.error(error, `[${worker.name}][Worker] Error`);
   });
+
+  const forumLoginService = new ForumLoginService();
+  await forumLoginService.execute();
 
   queueRepeatableFunction(scrapeRecentPosts, 1000 * 5);
   queueRepeatableFunction(scrapeMerits, 1000 * 15);

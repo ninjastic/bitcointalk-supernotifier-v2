@@ -2,7 +2,7 @@ import { CommandContext } from 'grammy';
 import { container } from 'tsyringe';
 
 import IMenuContext from '../@types/IMenuContext';
-import SendGlobalNotificationService from '../services/SendGlobalNotificationService';
+import SendGlobalNotificationService from '../services/notifications/SendGlobalNotificationService';
 
 const alertCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
   if (String(ctx.chat.id) !== '608520255') {

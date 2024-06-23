@@ -7,21 +7,20 @@ import cacheConfig from '../../../../config/cache';
 import telegramQueue from '../queues/telegramQueue';
 import { JobRecipe } from '../types/telegram';
 
-import SendMentionNotificationService from '../../telegram/services/SendMentionNotificationService';
-import SendMeritNotificationService from '../../telegram/services/SendMeritNotificationService';
-import SendTrackedTopicNotificationService from '../../telegram/services/SendTrackedTopicNotificationService';
-import SendTrackedPhraseNotificationService from '../../telegram/services/SendTrackedPhraseNotificationService';
-import SendRemovedTopicNotificationService from '../../telegram/services/SendRemovedTopicNotificationService';
-import SendTrackedBoardNotificationService from '../../telegram/services/SendTrackedBoardNotificationService';
-import SendTrackedUserNotificationService from '../../telegram/services/SendTrackedUserNotificationService';
-import SendApiNotificationService from '../../telegram/services/SendApiNotificationService';
-import SendAutoTrackTopicNotificationService from '../../telegram/services/SendAutoTrackTopicNotificationService';
+import SendMentionNotificationService from '../../telegram/services/notifications/SendMentionNotificationService';
+import SendMeritNotificationService from '../../telegram/services/notifications/SendMeritNotificationService';
+import SendTrackedTopicNotificationService from '../../telegram/services/notifications/SendTrackedTopicNotificationService';
+import SendTrackedPhraseNotificationService from '../../telegram/services/notifications/SendTrackedPhraseNotificationService';
+import SendRemovedTopicNotificationService from '../../telegram/services/notifications/SendRemovedTopicNotificationService';
+import SendTrackedBoardNotificationService from '../../telegram/services/notifications/SendTrackedBoardNotificationService';
+import SendTrackedUserNotificationService from '../../telegram/services/notifications/SendTrackedUserNotificationService';
+import SendApiNotificationService from '../../telegram/services/notifications/SendApiNotificationService';
+import SendAutoTrackTopicNotificationService from '../../telegram/services/notifications/SendAutoTrackTopicNotificationService';
 
 const jobRecipes: JobRecipe = {
   sendMentionNotification: async job => {
-    const { post, user, history } = job.data;
     const sendMentionNotification = container.resolve(SendMentionNotificationService);
-    await sendMentionNotification.execute(user.telegram_id, post, history);
+    await sendMentionNotification.execute(job.data);
   },
   sendMeritNotification: async job => {
     const { merit, user } = job.data;
@@ -83,22 +82,22 @@ const telegram = async () => {
   );
 
   worker.on('active', async (job: Job) => {
-    logger.info({ jobId: job.id, data: job.data }, `[${worker.name}][Worker] Active ${job.name}`);
+    logger.info({ jobId: job.id, data: job.data }, `[${worker.name}][Worker][${job.id}] Active ${job.name}`);
   });
 
   worker.on('completed', async (job: Job) => {
     logger.info(
       { jobId: job.id, value: job.returnvalue, data: job.data },
-      `[${worker.name}][Worker] Completed ${job.name}`
+      `[${worker.name}][Worker][${job.id}] Completed ${job.name}`
     );
   });
 
   worker.on('failed', async ({ failedReason, id }, error) => {
-    logger.warn({ jobId: id, error }, `[${worker.name}][Worker] Failed for ${failedReason}`);
+    logger.warn({ jobId: id, error }, `[${worker.name}][Worker][${id}] Failed for ${failedReason}`);
   });
 
   worker.on('error', async error => {
-    logger.error({ error }, `[${worker.name}][Worker] Error`);
+    logger.error(error, `[${worker.name}][Worker] Error`);
   });
 };
 

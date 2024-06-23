@@ -39,12 +39,6 @@ import PostsAddressesRepository from '../../modules/posts/infra/typeorm/reposito
 import IPostsHistoryRepository from '../../modules/posts/repositories/IPostsHistoryRepository';
 import PostsHistoryRepository from '../../modules/posts/infra/typeorm/repositories/PostsHistoryRepository';
 
-import IWebUsersRepository from '../../modules/web/repositories/IWebUsersRepository';
-import WebUsersRepository from '../../modules/web/infra/typeorm/repositories/WebUsersRepository';
-
-import IWebNotificationsRepository from '../../modules/web/repositories/IWebNotificationsRepository';
-import WebNotificationsRepository from '../../modules/web/infra/typeorm/repositories/WebNotificationsRepository';
-
 import ICacheRepository from './providers/models/ICacheProvider';
 import RedisProvider from './providers/implementations/RedisProvider';
 
@@ -73,9 +67,5 @@ container.registerSingleton<IAddressesRepository>('AddressesRepository', Address
 container.registerSingleton<IPostsAddressesRepository>('PostsAddressesRepository', PostsAddressesRepository);
 
 container.registerSingleton<IPostsHistoryRepository>('PostsHistoryRepository', PostsHistoryRepository);
-
-container.registerSingleton<IWebUsersRepository>('WebUsersRepository', WebUsersRepository);
-
-container.registerSingleton<IWebNotificationsRepository>('WebNotificationsRepository', WebNotificationsRepository);
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);

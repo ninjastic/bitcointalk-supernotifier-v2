@@ -4,7 +4,7 @@ import { container } from 'tsyringe';
 import IMenuContext from '../@types/IMenuContext';
 
 import MeritsRepository from '../../../../modules/merits/infra/typeorm/repositories/MeritsRepository';
-import SendMeritNotificationService from '../services/SendMeritNotificationService';
+import SendMeritNotificationService from '../services/notifications/SendMeritNotificationService';
 
 const devCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
   if (process.env.NODE_ENV === 'production') {

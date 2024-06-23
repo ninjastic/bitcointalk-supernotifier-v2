@@ -10,19 +10,26 @@ import MeritsRepository from '../infra/typeorm/repositories/MeritsRepository';
 import ForumLoginService from './ForumLoginService';
 import ScrapePostJob from '../../posts/infra/jobs/ScrapePostJob';
 
+const getRequestPageSelector = async () => {
+  const response = await api.get('index.php?action=merit;stats=recent');
+  const $ = cheerio.load(response.data, { decodeEntities: true });
+  return $;
+};
+
 export default class ScrapeRecentMeritsService {
   public async execute(): Promise<Merit[]> {
     const postsRepository = container.resolve(PostsRepository);
     const meritsRepository = container.resolve(MeritsRepository);
 
-    const response = await api.get('index.php?action=merit;stats=recent');
-    const $ = cheerio.load(response.data, { decodeEntities: true });
+    let $ = await getRequestPageSelector();
 
     const isLogged = !!$('#hellomember').length;
 
     if (!isLogged) {
       const forumLoginService = new ForumLoginService();
       await forumLoginService.execute();
+
+      $ = await getRequestPageSelector();
     }
 
     const currentDate = sub(

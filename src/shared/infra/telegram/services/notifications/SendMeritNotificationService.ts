@@ -2,17 +2,17 @@ import { container, injectable, inject } from 'tsyringe';
 import pluralize from 'pluralize';
 import escape from 'escape-html';
 
-import logger from '../../../services/logger';
+import logger from '../../../../services/logger';
 
-import bot from '../index';
+import bot from '../../index';
 
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
+import ICacheProvider from '../../../../container/providers/models/ICacheProvider';
+import Merit from '../../../../../modules/merits/infra/typeorm/entities/Merit';
 
-import { checkBotNotificationError } from '../../../services/utils';
-import forumScraperQueue, { queueEvents } from '../../bull/queues/forumScraperQueue';
-import SetMeritNotifiedService from '../../../../modules/merits/services/SetMeritNotifiedService';
-import GetPostService from '../../../../modules/posts/services/GetPostService';
+import { checkBotNotificationError } from '../../../../services/utils';
+import forumScraperQueue, { queueEvents } from '../../../bull/queues/forumScraperQueue';
+import SetMeritNotifiedService from '../../../../../modules/merits/services/SetMeritNotifiedService';
+import GetPostService from '../../../../../modules/posts/services/GetPostService';
 
 @injectable()
 export default class SendMeritNotificationService {
@@ -30,29 +30,32 @@ export default class SendMeritNotificationService {
       topic_id: merit.topic_id
     });
 
-    const { title, boards } = post;
+    const { title } = post;
     const { amount, sender, topic_id, post_id, receiver_uid } = merit;
 
     let totalMeritCount = await this.cacheRepository.recover<number | null>(`meritCount:${telegram_id}`);
 
+    const scraperWorkers = await forumScraperQueue.getWorkers();
+
     if (totalMeritCount) {
       totalMeritCount += amount;
       await this.cacheRepository.save(`meritCount:${telegram_id}`, totalMeritCount);
-    } else {
+    } else if (scraperWorkers.length > 0) {
       const job = await forumScraperQueue.add('scrapeUserMeritCount', { uid: receiver_uid }, { delay: 5000 });
-      totalMeritCount = await job.waitUntilFinished(queueEvents);
+      totalMeritCount = await job.waitUntilFinished(queueEvents, 1000 * 60 * 2);
       await this.cacheRepository.save(`meritCount:${telegram_id}`, totalMeritCount);
+    } else {
+      totalMeritCount = -1;
     }
 
-    const titleWithBoards = boards.length ? `${boards[boards.length - 1]} / ${title}` : title;
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
 
     let message = '';
-    message += `⭐️ (Merits: <b>${totalMeritCount}</b>) `;
+    message += totalMeritCount === -1 ? '⭐️ ' : `⭐️ (Merits: <b>${totalMeritCount}</b>) `;
     message += `You received <b>${amount}</b> ${pluralize('merit', amount)} `;
     message += `from <b>${escape(sender)}</b> `;
     message += `for <a href="${postUrl}">`;
-    message += `${escape(titleWithBoards)}`;
+    message += `${escape(title)}`;
     message += `</a>`;
 
     return bot.instance.api

@@ -1,12 +1,12 @@
 import { injectable, inject, container } from 'tsyringe';
 
-import logger from '../../../services/logger';
-import bot from '../index';
+import logger from '../../../../services/logger';
+import bot from '../../index';
 
-import IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
-import RedisProvider from '../../../container/providers/implementations/RedisProvider';
+import IUsersRepository from '../../../../../modules/users/repositories/IUsersRepository';
+import RedisProvider from '../../../../container/providers/implementations/RedisProvider';
 
-import { checkBotNotificationError } from '../../../services/utils';
+import { checkBotNotificationError } from '../../../../services/utils';
 
 type MessageSent = {
   telegramId: string;

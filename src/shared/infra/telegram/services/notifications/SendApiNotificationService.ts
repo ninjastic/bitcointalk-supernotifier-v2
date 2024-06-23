@@ -1,7 +1,7 @@
-import logger from '../../../services/logger';
-import bot from '../index';
+import logger from '../../../../services/logger';
+import bot from '../../index';
 
-import { checkBotNotificationError } from '../../../services/utils';
+import { checkBotNotificationError } from '../../../../services/utils';
 
 export default class SendApiNotificationService {
   public async execute(telegram_id: string, message: string): Promise<boolean> {

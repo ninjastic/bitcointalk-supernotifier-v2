@@ -1,30 +1,30 @@
 import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
+import logger from '../../../../services/logger';
 
-import logger from '../../../services/logger';
-import bot from '../index';
+import bot from '../../index';
 
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import Post from '../../../../../modules/posts/infra/typeorm/entities/Post';
+import TrackedBoard from '../../../../../modules/posts/infra/typeorm/entities/TrackedBoard';
 
-import { checkBotNotificationError } from '../../../services/utils';
-import SetPostNotifiedService from '../../../../modules/posts/services/SetPostNotifiedService';
-import SetPostHistoryNotifiedService from '../../../../modules/posts/services/SetPostHistoryNotifiedService';
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
+import { checkBotNotificationError } from '../../../../services/utils';
+import SetPostNotifiedService from '../../../../../modules/posts/services/SetPostNotifiedService';
+import ICacheProvider from '../../../../container/providers/models/ICacheProvider';
 
 @injectable()
-export default class SendMentionNotificationService {
+export default class SendTrackedBoardNotificationService {
   constructor(
     @inject('CacheRepository')
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async execute(telegram_id: string, post: Post, history?: boolean): Promise<boolean> {
+  public async execute(telegram_id: string, post: Post, trackedBoard: TrackedBoard): Promise<boolean> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
-    const setPostHistoryNotified = container.resolve(SetPostHistoryNotifiedService);
     const postLength = (await this.cacheRepository.recover<number>(`${telegram_id}:postLength`)) ?? 150;
 
     const { post_id, topic_id, title, author, boards, content } = post;
+    const { board } = trackedBoard;
 
     const $ = cheerio.load(content);
     const data = $('body');
@@ -34,11 +34,10 @@ export default class SendMentionNotificationService {
     const contentFiltered = data.text().replace(/\s\s+/g, ' ').trim();
 
     const titleWithBoards = boards.length ? `${boards[boards.length - 1]} / ${title}` : title;
-    const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
 
     let message = '';
-    message += `💬 You have been mentioned by <b>${escape(author)}</b> `;
-    message += `in <a href="${postUrl}">`;
+    message += `📝 There is a new topic by <b>${escape(author)}</b> `;
+    message += `in the tracked board <b>${board.name}</b>: <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`;
     message += `${escape(titleWithBoards)}`;
     message += `</a>\n`;
     message += `<pre>`;
@@ -49,18 +48,12 @@ export default class SendMentionNotificationService {
     return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
       .then(async () => {
-        logger.info({ telegram_id, post_id, history, message }, 'Mention notification was sent');
-
-        if (history) {
-          await setPostHistoryNotified.execute(post.post_id, telegram_id);
-        } else {
-          await setPostNotified.execute(post.post_id, telegram_id);
-        }
-
+        logger.info({ telegram_id, post_id, message }, 'Tracked Board notification was sent');
+        await setPostNotified.execute(post.post_id, telegram_id);
         return true;
       })
       .catch(async error => {
-        await checkBotNotificationError(error, telegram_id, { post_id, message, history });
+        await checkBotNotificationError(error, telegram_id, { post_id, trackedBoard, message });
         return false;
       });
   }

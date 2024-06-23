@@ -2,12 +2,12 @@ import { container } from 'tsyringe';
 import escape from 'escape-html';
 import { Bot, InlineKeyboard } from 'grammy';
 
-import bot from '../index';
-import logger from '../../../services/logger';
-import RedisProvider from '../../../container/providers/implementations/RedisProvider';
-import Topic from '../../../../modules/posts/infra/typeorm/entities/Topic';
-import AddTrackedTopicService from '../../../../modules/posts/services/AddTrackedTopicService';
-import { checkBotNotificationError } from '../../../services/utils';
+import bot from '../../index';
+import logger from '../../../../services/logger';
+import RedisProvider from '../../../../container/providers/implementations/RedisProvider';
+import Topic from '../../../../../modules/posts/infra/typeorm/entities/Topic';
+import AddTrackedTopicService from '../../../../../modules/posts/services/AddTrackedTopicService';
+import { checkBotNotificationError } from '../../../../services/utils';
 
 const trackTopicRepliesMenu = new InlineKeyboard().text('Yes, add to tracked topics', 'add-tt');
 const redis = container.resolve(RedisProvider);

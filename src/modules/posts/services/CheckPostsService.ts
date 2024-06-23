@@ -10,11 +10,28 @@ import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService'
 import GetIgnoredTopicsService from './GetIgnoredTopicsService';
 import GetTrackedTopicsService from './GetTrackedTopicsService';
 import GetTrackedPhrasesService from './GetTrackedPhrasesService';
-import FindTrackedTopicUsersService from '../../../shared/infra/telegram/services/FindTrackedTopicUsersService';
 import TrackedBoardsRepository from '../infra/typeorm/repositories/TrackedBoardsRepository';
 import TopicRepository from '../infra/typeorm/repositories/TopicRepository';
 import TrackedUsersRepository from '../infra/typeorm/repositories/TrackedUsersRepository';
-import NotificationRepository from '../../notifications/infra/typeorm/repositories/NotificationRepository';
+import { telegramMentionsChecker } from './checkers/posts/telegram/mentions';
+import { telegramTrackedPhrasesChecker } from './checkers/posts/telegram/trackedPhrases';
+import { telegramTrackedTopicsChecker } from './checkers/posts/telegram/trackedTopics';
+import { telegramTrackedUsersChecker } from './checkers/posts/telegram/trackedUsers';
+import { telegramTrackedBoardTopicsChecker } from './checkers/posts/telegram/trackedBoardTopics';
+import { telegramTrackedUserTopicsChecker } from './checkers/posts/telegram/trackedUserTopics';
+import { RecipeNames } from '../../../shared/infra/bull/types/telegram';
+import { telegramAutoTrackTopicsChecker } from './checkers/posts/telegram/autoTrackTopics';
+
+type NotificationType =
+  | 'post_mention'
+  | 'tracked_phrase'
+  | 'auto_track_topic_request'
+  | 'tracked_board'
+  | 'tracked_phrase'
+  | 'tracked_topic'
+  | 'tracked_user';
+
+type NotificationData<T> = { userId: string; type: NotificationType; metadata: T };
 
 @injectable()
 export default class CheckPostsService {
@@ -45,7 +62,6 @@ export default class CheckPostsService {
     const topicRepository = container.resolve(TopicRepository);
     const uncheckedTopics = await topicRepository.findUncheckedAndUnnotified();
 
-    const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
     const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
     const getIgnoredTopics = container.resolve(GetIgnoredTopicsService);
 
@@ -54,294 +70,71 @@ export default class CheckPostsService {
     const ignoredUsers = await getIgnoredUsers.execute();
     const ignoredTopics = await getIgnoredTopics.execute();
 
-    const notificationRepository = new NotificationRepository();
+    const processors: Array<{ checker: Promise<NotificationData<any>[]>; jobName: RecipeNames }> = [];
 
-    const escapeRegexText = (text: string) => text.replace(/([<>*()?])/g, '\\$1');
-
-    const postsCheckingCache =
-      [] ?? (await this.cacheProvider.recoverMany<number>(posts.map(post => `postChecking:${post.post_id}`)));
-    const uncheckedPosts = posts.filter(post => !postsCheckingCache.includes(post.post_id));
-
-    await this.cacheProvider.saveMany(
-      posts.map(({ post_id }) => ({
-        key: `postChecking:${post_id}`,
-        value: post_id,
-        arg: 'EX',
-        time: 300
-      }))
-    );
-
-    const postsNotified = new Set<string>();
-
-    for await (const post of uncheckedPosts) {
+    for (const post of posts) {
       // Mentions
-      for await (const user of users) {
-        if (!user.username) {
-          continue;
-        }
-
-        const usernameRegex = new RegExp(`(?<!\\w)${escapeRegexText(user.username)}(?!\\w)`, 'gi');
-        const altUsernameRegex = user.alternative_usernames.length
-          ? new RegExp(`(?<!\\w)${escapeRegexText(user.alternative_usernames[0])}(?!\\w)`, 'gi')
-          : null;
-        const backupAtSignRegex = new RegExp(`@${escapeRegexText(user.username)}`, 'gi');
-        const backupQuotedRegex = new RegExp(`Quote from: ${escapeRegexText(user.username)} on`, 'gi');
-
-        const regexList = [usernameRegex, altUsernameRegex, backupAtSignRegex, backupQuotedRegex];
-
-        if (!regexList.find(regex => post.content.match(regex))) {
-          continue;
-        }
-
-        const notificationData = {
-          telegram_id: user.telegram_id,
-          type: 'post_mention',
-          metadata: { post_id: post.post_id }
-        };
-
-        const isSameUsername = post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = post.author_uid === user.user_id;
-        const isAlreadyNotified =
-          post.notified_to.includes(user.telegram_id) ||
-          postsNotified.has(`${post.post_id}:${user.telegram_id}`) ||
-          (await notificationRepository.findOne({ where: notificationData }));
-        const isAuthorIgnored = ignoredUsers
-          .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
-          ?.ignoring.includes(user.telegram_id);
-        const isTopicIgnored = ignoredTopics
-          .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
-          ?.ignoring.includes(user.telegram_id);
-
-        if (isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored) {
-          continue;
-        }
-
-        const notification = notificationRepository.create(notificationData);
-        await notificationRepository.save(notification);
-
-        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await addTelegramJob('sendMentionNotification', { post, user, history: false });
-      }
+      processors.push({
+        checker: telegramMentionsChecker(post, users, ignoredUsers, ignoredTopics),
+        jobName: 'sendMentionNotification'
+      });
 
       // Tracked Phrases
-      for await (const trackedPhrase of trackedPhrases) {
-        const { user, phrase } = trackedPhrase;
-        const phraseRegex = new RegExp(`(?<!\\w)${escapeRegexText(phrase)}(?!\\w)`, 'gi');
-
-        if (!post.content.match(phraseRegex)) {
-          continue;
-        }
-
-        const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = user.user_id && post.author_uid === user.user_id;
-        const isAlreadyNotified =
-          post.notified_to.includes(user.telegram_id) ||
-          postsNotified.has(`${post.post_id}:${user.telegram_id}`) ||
-          (await notificationRepository.findOne({
-            where: {
-              type: 'tracked_phrase',
-              telegram_id: user.telegram_id,
-              metadata: { post_id: post.post_id, tracked_phrase_id: trackedPhrase.id }
-            }
-          }));
-        const isAuthorIgnored = ignoredUsers
-          .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
-          ?.ignoring.includes(user.telegram_id);
-        const isTopicIgnored = ignoredTopics
-          .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
-          ?.ignoring.includes(user.telegram_id);
-
-        if (isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored) {
-          continue;
-        }
-
-        const notification = notificationRepository.create({
-          telegram_id: user.telegram_id,
-          type: 'tracked_phrase',
-          metadata: { post_id: post.post_id, tracked_phrase_id: trackedPhrase.id }
-        });
-        await notificationRepository.save(notification);
-
-        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await addTelegramJob('sendPhraseTrackingNotification', {
-          post,
-          user,
-          trackedPhrase
-        });
-      }
+      processors.push({
+        checker: telegramTrackedPhrasesChecker(post, trackedPhrases, ignoredUsers, ignoredTopics),
+        jobName: 'sendPhraseTrackingNotification'
+      });
 
       // Tracked Topics
-      const trackedTopic = trackedTopics.find(_trackedTopic => _trackedTopic.topic_id === post.topic_id);
-      if (trackedTopic) {
-        for await (const trackingTelegramId of trackedTopic.tracking) {
-          const user = await this.usersRepository.findByTelegramId(trackingTelegramId);
-
-          const notificationData = {
-            telegram_id: user.telegram_id,
-            type: 'tracked_topic',
-            metadata: { post_id: post.post_id }
-          };
-
-          const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
-          const isSameUid = user.user_id && post.author_uid === user.user_id;
-          const isAlreadyNotified =
-            post.notified_to.includes(user.telegram_id) ||
-            postsNotified.has(`${post.post_id}:${user.telegram_id}`) ||
-            (await notificationRepository.findOne({ where: notificationData }));
-          const isAuthorIgnored = ignoredUsers
-            .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
-            ?.ignoring.includes(user.telegram_id);
-
-          if (isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored) {
-            continue;
-          }
-
-          const trackedTopicUsers = await findTrackedTopicUsers.execute({
-            telegram_id: user.telegram_id,
-            topic_id: post.topic_id
-          });
-
-          const isAuthorWhitelisted = trackedTopicUsers.find(
-            trackedTopicUser => trackedTopicUser.username.toLowerCase() === post.author.toLowerCase()
-          );
-
-          if (trackedTopicUsers.length && !isAuthorWhitelisted) {
-            continue;
-          }
-
-          const notification = notificationRepository.create(notificationData);
-          await notificationRepository.save(notification);
-
-          postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-          await addTelegramJob('sendTopicTrackingNotification', { post, user });
-        }
-      }
+      processors.push({
+        checker: telegramTrackedTopicsChecker(post, trackedTopics, ignoredUsers),
+        jobName: 'sendTopicTrackingNotification'
+      });
 
       // Tracked Users (Posts)
-      const trackedUsersWithMatchingPosts = trackedUsers.filter(
-        trackedUser => !trackedUser.only_topics && trackedUser.username.toLowerCase() === post.author.toLowerCase()
-      );
-      for await (const trackedUser of trackedUsersWithMatchingPosts) {
-        const { user } = trackedUser;
-
-        const notificationData = {
-          telegram_id: user.telegram_id,
-          type: 'tracked_user',
-          metadata: { post_id: post.post_id }
-        };
-
-        const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = user.user_id && post.author_uid === user.user_id;
-        const isAlreadyNotified =
-          post.notified_to.includes(user.telegram_id) ||
-          postsNotified.has(`${post.post_id}:${user.telegram_id}`) ||
-          (await notificationRepository.findOne({ where: notificationData }));
-
-        if (isSameUsername || isSameUid || isAlreadyNotified) {
-          continue;
-        }
-
-        const notification = notificationRepository.create(notificationData);
-        await notificationRepository.save(notification);
-
-        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await addTelegramJob('sendTrackedUserNotification', { post, user });
-      }
+      processors.push({
+        checker: telegramTrackedUsersChecker(post, trackedUsers),
+        jobName: 'sendTrackedUserNotification'
+      });
     }
 
     for await (const topic of uncheckedTopics) {
       // Tracked Boards
-      const trackedBoardsWithMatchingTopics = trackedBoards.filter(
-        trackedBoard => trackedBoard.board_id === topic.post.board_id
-      );
-      for await (const trackedBoard of trackedBoardsWithMatchingTopics) {
-        const { user } = trackedBoard;
-        const { post } = topic;
-
-        const notificationData = {
-          telegram_id: user.telegram_id,
-          type: 'tracked_board',
-          metadata: { post_id: post.post_id, tracked_board_id: trackedBoard.id }
-        };
-
-        const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = user.user_id && post.author_uid === user.user_id;
-        const isAlreadyNotified =
-          post.notified_to.includes(user.telegram_id) ||
-          postsNotified.has(`${post.post_id}:${user.telegram_id}`) ||
-          (await notificationRepository.findOne({ where: notificationData }));
-
-        const isAuthorIgnored = ignoredUsers
-          .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
-          ?.ignoring.includes(user.telegram_id);
-
-        if (isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored) {
-          continue;
-        }
-
-        const notification = notificationRepository.create(notificationData);
-        await notificationRepository.save(notification);
-
-        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await addTelegramJob('sendTrackedBoardNotification', { post, user, trackedBoard });
-      }
+      processors.push({
+        checker: telegramTrackedBoardTopicsChecker(topic, trackedBoards, ignoredUsers),
+        jobName: 'sendTrackedBoardNotification'
+      });
 
       // Tracked Users (Topics)
-      const trackedUsersWithMatchingTopics = trackedUsers.filter(
-        trackedUser => trackedUser.only_topics && trackedUser.username.toLowerCase() === topic.post.author.toLowerCase()
-      );
-      for await (const trackedUser of trackedUsersWithMatchingTopics) {
-        const { user } = trackedUser;
-        const { post } = topic;
+      processors.push({
+        checker: telegramTrackedUserTopicsChecker(topic, trackedUsers),
+        jobName: 'sendTrackedUserNotification'
+      });
 
-        const notificationData = {
-          telegram_id: user.telegram_id,
-          type: 'tracked_user',
-          metadata: { post_id: post.post_id }
-        };
+      // Auto Track Own Topic
+      processors.push({
+        checker: telegramAutoTrackTopicsChecker(topic, users),
+        jobName: 'sendAutoTrackTopicRequestNotification'
+      });
+    }
 
-        const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
-        const isSameUid = user.user_id && post.author_uid === user.user_id;
-        const isAlreadyNotified =
-          post.notified_to.includes(user.telegram_id) ||
-          postsNotified.has(`${post.post_id}:${user.telegram_id}`) ||
-          (await notificationRepository.findOne({ where: notificationData }));
+    const postNotificationSet = new Set<string>();
 
-        if (isSameUsername || isSameUid || isAlreadyNotified) {
-          continue;
+    for await (const { checker, jobName } of processors) {
+      const results = await Promise.resolve(checker);
+
+      for await (const result of results) {
+        const key = `${result.userId}:${result.metadata.post.id}`;
+        const isPostNotificationDuplicate = postNotificationSet.has(key);
+
+        if (!isPostNotificationDuplicate && result.metadata.user.telegram_id) {
+          postNotificationSet.add(key);
+          await addTelegramJob(jobName, result.metadata);
         }
-
-        const notification = notificationRepository.create(notificationData);
-        await notificationRepository.save(notification);
-
-        postsNotified.add(`${post.post_id}:${user.telegram_id}`);
-        await addTelegramJob('sendTrackedUserNotification', { post, user });
-      }
-
-      const usersWithAutoTrackTopicsAndMatchingTopic = users.filter(
-        user => user.enable_auto_track_topics && topic.post.author_uid === user.user_id
-      );
-      for await (const user of usersWithAutoTrackTopicsAndMatchingTopic) {
-        const notificationData = {
-          telegram_id: user.telegram_id,
-          type: 'auto_track_topic_request',
-          metadata: { topic: topic.topic_id }
-        };
-
-        const isAlreadyNotified = await notificationRepository.findOne({ where: notificationData });
-
-        if (isAlreadyNotified) {
-          continue;
-        }
-
-        const notification = notificationRepository.create(notificationData);
-        await notificationRepository.save(notification);
-
-        await addTelegramJob('sendAutoTrackTopicRequestNotification', { topic, user });
       }
     }
 
-    for await (const post of uncheckedPosts) {
+    for await (const post of posts) {
       post.checked = true;
       await this.postsRepository.save(post);
     }

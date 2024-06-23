@@ -33,12 +33,6 @@ export default class ModLogRepository implements IModLogRepository {
     });
   }
 
-  public async findOneRemoveTopicByTopicId(topic_id: number): Promise<ModLog | undefined> {
-    return this.ormRepository.findOne({
-      where: { topic_id }
-    });
-  }
-
   public async findUnchecked(type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user'): Promise<ModLog[]> {
     const where = {
       checked: false,
