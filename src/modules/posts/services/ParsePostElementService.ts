@@ -9,12 +9,11 @@ import CreatePostService from './CreatePostService';
 
 interface Data {
   html: string;
-  topic_id: number;
   post_id: number;
 }
 
 export default class ParsePostElementService {
-  public execute({ html, topic_id, post_id }: Data): Post | null {
+  public execute({ html, post_id }: Data): Post | null {
     const createPost = container.resolve(CreatePostService);
 
     const $ = cheerio.load(html, { decodeEntities: true });
@@ -31,7 +30,7 @@ export default class ParsePostElementService {
         .includes('The topic or board you are looking for appears to be either missing or off limits to you.');
 
     if (topicNotFound || topicOffLimit) {
-      logger.info(`[ParsePostElementService] Topic ${topic_id} of post ${post_id} was not found or is off limit`);
+      logger.info(`[ParsePostElementService] Topic of post ${post_id} was not found or is off limit`);
       return null;
     }
 
@@ -42,16 +41,22 @@ export default class ParsePostElementService {
       .toArray()
       .find(postContainer => {
         const postHeader = $(postContainer).find("td.td_headerandpost td > div[id*='subject'] > a");
-        return postHeader.length && $(postHeader).attr('href').includes(`topic=${topic_id}.msg${post_id}`);
+        return postHeader.length && $(postHeader).attr('href').includes(`.msg${post_id}`);
       });
 
     if (!postElement) {
-      logger.info(`[ParsePostElementService] Post ${post_id} not found on topic ${topic_id}`);
+      logger.info(`[ParsePostElementService] Post of id ${post_id} not found`);
       return null;
     }
 
     const postHeader = $(postElement).find("td.td_headerandpost td > div[id*='subject'] > a");
     const title = postHeader.text().trim();
+    const topicId = Number(
+      postHeader
+        .attr('href')
+        .match(/topic=(\d+)/)
+        ?.at(1)
+    );
 
     const authorElement = $(postElement).find('td.poster_info > b > a');
     const author = authorElement.html();
@@ -102,7 +107,7 @@ export default class ParsePostElementService {
 
     const post = createPost.execute({
       post_id,
-      topic_id,
+      topic_id: topicId,
       title,
       author,
       author_uid: authorUid,

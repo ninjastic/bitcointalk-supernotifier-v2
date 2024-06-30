@@ -22,10 +22,10 @@ export default class ScrapePostsRepository implements IScrapePostsRepository {
     private cacheRepository: ICacheProvider
   ) {}
 
-  public async scrapePost({ topic_id, post_id }: ScrapePostDTO): Promise<Post | undefined> {
+  public async scrapePost({ post_id }: ScrapePostDTO): Promise<Post | undefined> {
     const scrapePostService = container.resolve(ScrapePostService);
 
-    const post = await scrapePostService.execute({ topic_id, post_id });
+    const post = await scrapePostService.execute({ post_id });
     return post;
   }
 

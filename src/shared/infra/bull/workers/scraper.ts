@@ -50,7 +50,6 @@ const jobRecipes: JobRecipes = {
     const scrapePostsRepository = container.resolve(ScrapePostsRepository);
     const savePostService = container.resolve(SavePostService);
     const post = await scrapePostsRepository.scrapePost({
-      topic_id: job.data.topic_id,
       post_id: job.data.post_id
     });
 
@@ -68,9 +67,9 @@ const jobRecipes: JobRecipes = {
     return result;
   },
   scrapePostForChanges: async (job: Job) => {
-    const { topic_id, post_id } = job.data;
+    const { post_id } = job.data;
     const scrapePostForEdits = container.resolve(ScrapePostForEditsService);
-    const result = await scrapePostForEdits.execute({ topic_id, post_id });
+    const result = await scrapePostForEdits.execute({ post_id });
     return result;
   }
 };

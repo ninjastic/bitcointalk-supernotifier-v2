@@ -15,12 +15,13 @@ export default class ScrapePostService {
     this.parsePostElement = container.resolve(ParsePostElementService);
   }
 
-  public async execute({ topic_id, post_id }: ScrapePostDTO): Promise<Post | null> {
-    const response = await api.get(`index.php?topic=${topic_id ?? '*'}.msg${post_id}`);
+  public async execute({ post_id }: ScrapePostDTO): Promise<Post | null> {
+    const response = await api.get(`index.php?topic=*.msg${post_id}`, {
+      validateStatus: status => (status >= 200 && status < 300) || status === 404
+    });
 
     const post = this.parsePostElement.execute({
       html: response.data,
-      topic_id,
       post_id
     });
 

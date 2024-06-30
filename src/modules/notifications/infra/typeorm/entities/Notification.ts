@@ -8,7 +8,7 @@ class Notification {
   @Column({ type: 'bigint' })
   telegram_id: string;
 
-  @Column()
+  @Column('varchar')
   type: string;
 
   @Column('simple-json', { nullable: false })

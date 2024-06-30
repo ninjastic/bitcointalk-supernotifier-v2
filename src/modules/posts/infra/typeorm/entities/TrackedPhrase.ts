@@ -15,7 +15,7 @@ class TrackedPhrase {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('varchar')
   phrase: string;
 
   @Column({ type: 'bigint' })

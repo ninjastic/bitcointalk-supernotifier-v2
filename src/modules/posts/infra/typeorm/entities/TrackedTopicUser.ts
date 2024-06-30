@@ -16,7 +16,7 @@ class TrackedTopicUser {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('integer')
   tracked_topic_id: number;
 
   @Column({ type: 'bigint' })
@@ -30,7 +30,7 @@ class TrackedTopicUser {
   @JoinColumn({ name: 'telegram_id', referencedColumnName: 'telegram_id' })
   user: User;
 
-  @Column()
+  @Column('varchar')
   username: string;
 
   @CreateDateColumn()

@@ -16,8 +16,8 @@ class NotificationApiKey {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
   @Index({ unique: true })
+  @Column('varchar')
   api_key: string;
 
   @Column({ type: 'bigint' })

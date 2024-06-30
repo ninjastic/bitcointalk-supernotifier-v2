@@ -40,7 +40,7 @@ export default class ParseRecentPostElementService {
 
     if (!post) {
       const scrapePostJob = new ScrapePostJob();
-      post = await scrapePostJob.start({ topic_id, post_id });
+      post = await scrapePostJob.start({ post_id });
     }
 
     if (post) {

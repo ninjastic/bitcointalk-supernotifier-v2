@@ -22,10 +22,10 @@ class TrackedUser {
   @JoinColumn({ name: 'telegram_id', referencedColumnName: 'telegram_id' })
   user: User;
 
-  @Column()
+  @Column('varchar')
   username: string;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   only_topics: boolean;
 
   @CreateDateColumn()

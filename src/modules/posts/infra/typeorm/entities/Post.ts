@@ -5,30 +5,30 @@ class Post {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
   @Index({ unique: true })
+  @Column('integer')
   post_id: number;
 
-  @Column()
   @Index()
+  @Column('integer')
   topic_id: number;
 
-  @Column()
+  @Column('varchar')
   title: string;
 
-  @Column()
   @Index()
+  @Column('varchar')
   author: string;
 
-  @Column()
   @Index()
+  @Column('integer')
   author_uid: number;
 
-  @Column()
   @Index()
+  @Column('varchar')
   content: string;
 
-  @Column()
+  @Column('timestamp with time zone')
   date: Date;
 
   edited?: Date;
@@ -40,19 +40,19 @@ class Post {
   @Column({ type: 'varchar', array: true, default: [] })
   boards: string[];
 
-  @Column({ nullable: true })
+  @Column({ type: 'integer', nullable: true })
   board_id?: number;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   notified: boolean;
 
   @Column({ type: 'bigint', array: true, default: [] })
   notified_to: string[];
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   checked: boolean;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   archive?: boolean;
 
   @CreateDateColumn()

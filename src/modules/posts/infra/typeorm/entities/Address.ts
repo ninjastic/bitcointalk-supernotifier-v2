@@ -5,10 +5,10 @@ class Address {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('varchar')
   coin: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   address: string;
 
   @Column({ type: 'integer', array: true })

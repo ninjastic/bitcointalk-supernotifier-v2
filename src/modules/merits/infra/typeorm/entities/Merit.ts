@@ -16,45 +16,45 @@ class Merit {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('integer')
   amount: number;
 
-  @Column()
   @Index()
+  @Column('varchar')
   sender: string;
 
-  @Column()
   @Index()
+  @Column('integer')
   sender_uid: number;
 
-  @Column()
   @Index()
+  @Column('varchar')
   receiver: string;
 
-  @Column()
   @Index()
+  @Column('integer')
   receiver_uid: number;
 
-  @Column()
+  @Column('timestamp with time zone')
   date: Date;
 
-  @Column()
+  @Column('integer')
   post_id: number;
 
   @OneToOne(() => Post)
   @JoinColumn({ name: 'post_id', referencedColumnName: 'post_id' })
   post: Post;
 
-  @Column()
+  @Column('integer')
   topic_id: number;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   notified: boolean;
 
-  @Column({ type: 'int', array: true, default: [] })
+  @Column({ type: 'integer', array: true, default: [] })
   notified_to: string[];
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   checked: boolean;
 
   @CreateDateColumn()

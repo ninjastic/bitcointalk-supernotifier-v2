@@ -24,7 +24,6 @@ export default class CheckPostsRescraperForChangesService {
 
     for await (const job of jobsToRun) {
       await forumScraperQueue.add('scrapePostForChanges', {
-        topic_id: job.topic_id,
         post_id: job.post_id
       });
 

@@ -16,11 +16,11 @@ class TrackedTopic {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
   @Index({ unique: true })
+  @Column('integer')
   topic_id: number;
 
-  @Column()
+  @Column('integer')
   post_id: number;
 
   @OneToOne(() => Post)

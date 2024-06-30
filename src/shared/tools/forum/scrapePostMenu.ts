@@ -17,14 +17,14 @@ export const scrapePostMenu = async (): Promise<void> => {
         name: 'data',
         message: 'URL of post',
         filter: value => {
-          const [, topicId, postId] = value.match(/topic=(\d+)\.msg(\d+)/);
-          return [topicId, postId];
+          const [, postId] = value.match(/\.msg(\d+)/);
+          return [postId];
         },
         validate: data => data.length === 2
       }
     ])
-    .then(async ({ data: [topic_id, post_id] }) => {
-      const post = await scrapePost.execute({ post_id, topic_id });
+    .then(async ({ data: [post_id] }) => {
+      const post = await scrapePost.execute({ post_id });
 
       if (!post) {
         console.info('Post not found!');

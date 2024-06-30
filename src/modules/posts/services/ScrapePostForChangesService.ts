@@ -15,11 +15,11 @@ export default class ScrapePostForChangesService {
     private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
-  public async execute({ topic_id, post_id }: ScrapePostDTO): Promise<boolean> {
+  public async execute({ post_id }: ScrapePostDTO): Promise<boolean> {
     const scrapePost = container.resolve(ScrapePostService);
     const getPost = container.resolve(GetPostService);
 
-    const currentPost = await scrapePost.execute({ topic_id, post_id });
+    const currentPost = await scrapePost.execute({ post_id });
     const savedPost = await getPost.execute({ post_id }, { skipCache: true });
 
     if (!currentPost?.title) {

@@ -29,7 +29,7 @@ export default class GetPostService {
   ) {}
 
   public async execute(data: Data, options?: Options): Promise<Post> {
-    const { post_id, topic_id } = data;
+    const { post_id } = data;
     const { skipCache, skipScraping } = options || {};
 
     if (!skipCache) {
@@ -49,8 +49,7 @@ export default class GetPostService {
         const scrapePost = container.resolve(ScrapePostService);
 
         const updatedPost = await scrapePost.execute({
-          post_id: foundPost.post_id,
-          topic_id: foundPost.topic_id
+          post_id: foundPost.post_id
         });
 
         if (updatedPost.title && updatedPost.date) {
@@ -68,13 +67,9 @@ export default class GetPostService {
       return foundPost;
     }
 
-    if (!topic_id) {
-      throw new Error('The post does not exist in the DB and a topic_id has not been provided');
-    }
-
     const job = await forumScraperQueue.add(
       'scrapePost',
-      { topic_id, post_id },
+      { post_id },
       {
         removeOnComplete: true,
         removeOnFail: true

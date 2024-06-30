@@ -16,12 +16,12 @@ class IgnoredTopic {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
   @Index({ unique: true })
+  @Column('integer')
   topic_id: number;
 
-  @Column()
   @Index({ unique: true })
+  @Column('integer')
   post_id: number;
 
   @OneToOne(() => Post)

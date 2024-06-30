@@ -15,13 +15,13 @@ class PostAddress {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('varchar')
   address: string;
 
-  @Column()
+  @Column('varchar')
   coin: string;
 
-  @Column()
+  @Column('integer')
   post_id: number;
 
   @OneToOne(() => Post)

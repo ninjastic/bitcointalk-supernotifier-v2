@@ -16,7 +16,7 @@ class TrackedBoard {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('integer')
   board_id: number;
 
   @OneToOne(() => Board)

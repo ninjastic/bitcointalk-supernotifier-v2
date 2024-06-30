@@ -5,25 +5,25 @@ class ModLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('varchar')
   type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user';
 
-  @Column({ nullable: true })
+  @Column({ type: 'integer', nullable: true })
   topic_id: number;
 
-  @Column()
+  @Column('integer')
   user_id: number;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   title: string;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   notified: boolean;
 
   @Column({ type: 'bigint', array: true, default: [] })
   notified_to: string[];
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   checked: boolean;
 
   @CreateDateColumn()

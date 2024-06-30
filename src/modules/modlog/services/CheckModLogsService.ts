@@ -31,7 +31,7 @@ export default class CheckModLogsService {
       const topicPosts = await this.postsRepository.findPosts({ topic_id: modLog.topic_id });
 
       for await (const user of users) {
-        const postsDeleted = topicPosts.filter(topicPost => topicPost.author_uid === user.user_id)
+        const postsDeleted = topicPosts.filter(topicPost => topicPost.author_uid === user.user_id);
 
         if (postsDeleted.length === 0) {
           continue;

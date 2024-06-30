@@ -14,10 +14,10 @@ class Topic {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'integer', unique: true })
   topic_id: number;
 
-  @Column()
+  @Column('integer')
   post_id: number;
 
   @OneToOne(() => Post)

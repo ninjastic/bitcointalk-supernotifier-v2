@@ -6,38 +6,38 @@ class User {
   id: string;
 
   @Index({ unique: false })
-  @Column({ nullable: true })
+  @Column({ type: 'integer', nullable: true })
   user_id?: number;
 
   @Index({ unique: false })
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   username?: string;
 
   @Column({ type: 'varchar', array: true, default: [] })
   alternative_usernames: string[];
 
-  @Column({ default: 'en' })
+  @Column({ type: 'varchar', default: 'en' })
   language: string;
 
-  @Column()
+  @Column('bigint')
   telegram_id: string;
 
-  @Column()
+  @Column('boolean')
   enable_mentions: boolean;
 
-  @Column()
+  @Column('boolean')
   enable_merits: boolean;
 
-  @Column()
+  @Column('boolean')
   enable_modlogs: boolean;
 
-  @Column()
+  @Column('boolean')
   enable_auto_track_topics: boolean;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   blocked: boolean;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   is_group: boolean;
 
   @CreateDateColumn()

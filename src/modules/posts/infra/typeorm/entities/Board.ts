@@ -5,13 +5,13 @@ class Board {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('integer')
   board_id: number;
 
-  @Column()
+  @Column('varchar')
   name: string;
 
-  @Column()
+  @Column('integer')
   parent_id: number;
 }
 

@@ -159,8 +159,7 @@ export const scrapeMeritDump = async (shouldScrapeLoyce: boolean) => {
     const scrapePostsJob = postsMissingInDb.map(postMissing =>
       queue.add(async () => {
         const post = await scrapePost.execute({
-          post_id: postMissing.post_id,
-          topic_id: postMissing.topic_id
+          post_id: postMissing.post_id
         });
 
         if (!post) {

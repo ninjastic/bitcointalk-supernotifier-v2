@@ -210,9 +210,9 @@ export default class PostsRepository implements IPostsRepository {
       .where(author ? `lower(author) = :author` : '1=1', {
         author: author
           ? {
-            value: author,
-            case_insensitive: true
-          }
+              value: author,
+              case_insensitive: true
+            }
           : undefined
       })
       .andWhere(last ? `post_id < :last` : '1=1', {

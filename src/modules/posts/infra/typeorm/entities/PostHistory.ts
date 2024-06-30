@@ -16,42 +16,42 @@ class PostHistory {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column('integer')
   post_id: number;
 
   @OneToOne(() => Post)
   @JoinColumn({ name: 'post_id', referencedColumnName: 'post_id' })
   post: Post;
 
-  @Column()
+  @Column('varchar')
   title: string;
 
-  @Column()
   @Index()
+  @Column('varchar')
   content: string;
 
-  @Column()
+  @Column('timestamp with time zone')
   date: Date;
 
   @Column({ type: 'varchar', array: true, default: [] })
   boards: string[];
 
-  @Column({ nullable: true })
+  @Column({ type: 'integer', nullable: true })
   board_id?: number;
 
-  @Column()
+  @Column('integer')
   version: number;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   notified: boolean;
 
   @Column({ type: 'bigint', array: true, default: [] })
   notified_to: string[];
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   checked: boolean;
 
-  @Column({ default: false })
+  @Column({ type: 'boolean', default: false })
   deleted: boolean;
 
   @CreateDateColumn()

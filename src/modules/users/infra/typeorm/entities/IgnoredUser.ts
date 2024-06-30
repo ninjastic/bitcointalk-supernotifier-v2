@@ -5,8 +5,8 @@ class IgnoredUser {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
   @Index({ unique: true })
+  @Column('varchar')
   username: string;
 
   @Column({ type: 'bigint', array: true, default: [] })
