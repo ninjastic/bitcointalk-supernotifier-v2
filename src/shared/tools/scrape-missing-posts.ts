@@ -91,7 +91,7 @@ const scrape = async () => {
       const loycePost = await scrapeLoyceArchivePost(id);
 
       if (forumPost) {
-        const post: Post = { ...forumPost, content: loycePost.content ?? forumPost.content };
+        const post: Post = { ...forumPost, content: loycePost?.content ?? forumPost.content };
         postsToInsert.push(post);
         continue;
       }
