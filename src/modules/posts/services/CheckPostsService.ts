@@ -124,13 +124,14 @@ export default class CheckPostsService {
       const results = await checkerPromise;
 
       for await (const result of results) {
-        const key = `${result.userId}:${result.metadata.post.id}`;
-        const isPostNotificationDuplicate = postNotificationSet.has(key);
-
-        if (!isPostNotificationDuplicate && result.metadata.user.telegram_id) {
+        if (result.metadata.post) {
+          const key = `${result.userId}:${result.metadata.post.id}`;
+          if (postNotificationSet.has(key)) continue;
           postNotificationSet.add(key);
-          await addTelegramJob(jobName, result.metadata);
         }
+
+        if (!result.metadata.user.telegram_id) continue;
+        await addTelegramJob(jobName, result.metadata);
       }
     }
 

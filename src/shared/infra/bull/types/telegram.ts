@@ -19,15 +19,16 @@ export type RecipeNames =
   | 'sendAutoTrackTopicRequestNotification';
 
 export type RecipeData = {
-  sendMentionNotification: { post: Post; user: User; history: boolean };
   sendMeritNotification: { merit: Merit; user: User };
+  sendMentionNotification: { post: Post; user: User; history: boolean };
   sendTopicTrackingNotification: { post: Post; user: User };
-  sendRemovedTopicNotification: { postsDeleted: Post[]; user: User; modLog: ModLog };
   sendPhraseTrackingNotification: { post: Post; user: User; trackedPhrase: TrackedPhrase };
   sendTrackedBoardNotification: { post: Post; user: User; trackedBoard: TrackedBoard };
   sendTrackedUserNotification: { post: Post; user: User };
-  sendApiNotification: { telegram_id: string; message: string };
+  sendRemovedTopicNotification: { postsDeleted: Post[]; user: User; modLog: ModLog };
   sendAutoTrackTopicRequestNotification: { topic: Topic; user: User };
+
+  sendApiNotification: { telegram_id: string; message: string };
 };
 
 export type JobRecipe = {
