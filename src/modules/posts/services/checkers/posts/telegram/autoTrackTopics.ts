@@ -1,10 +1,11 @@
 import Topic from '../../../../infra/typeorm/entities/Topic';
 import User from '../../../../../users/infra/typeorm/entities/User';
+import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
 
 type TelegramAutoTrackTopicsCheckerNotificationData = {
   userId: string;
   type: 'auto_track_topic_request';
-  metadata: { topic: number };
+  metadata: RecipeData['sendAutoTrackTopicRequestNotification'];
 };
 
 export const telegramAutoTrackTopicsChecker = async (
@@ -27,7 +28,7 @@ export const telegramAutoTrackTopicsChecker = async (
     data.push({
       userId: user.id,
       type: 'auto_track_topic_request',
-      metadata: { topic: topic.topic_id }
+      metadata: { topic, user }
     });
   }
 
