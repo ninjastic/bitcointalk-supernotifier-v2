@@ -18,7 +18,6 @@ addressesRouter.get('/', addressesController.index);
 addressesRouter.get('/authors', addressesAuthorsController.index);
 addressesRouter.get('/unique', addressesUniqueController.index);
 addressesRouter.get('/unique/top', addressesTopUniqueController.index);
-addressesRouter.get('/:address', addressesController.show);
 addressesRouter.get('/:address/details', addressDetailsController.show);
 
 export default addressesRouter;

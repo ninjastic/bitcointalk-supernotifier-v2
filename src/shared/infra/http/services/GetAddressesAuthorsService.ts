@@ -3,6 +3,7 @@ import esClient from '../../../services/elastic';
 import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import { getCensorJSON } from '../../../services/utils';
 
 interface Author {
   author: string;
@@ -20,6 +21,7 @@ export default class GetAddressesAuthorsService {
     const { address, author, coin, post_id, topic_id, board, child_boards, limit } = query || {};
 
     const must = [];
+    const must_not = [];
 
     if (address) {
       must.push({ match: { address } });
@@ -60,6 +62,11 @@ export default class GetAddressesAuthorsService {
       }
     }
 
+    const censor = getCensorJSON();
+    if (censor && censor.postAddresses) {
+      must_not.push({ terms: { address: censor.postAddresses } });
+    }
+
     const results = await esClient.search({
       index: 'posts_addresses',
       track_total_hits: true,
@@ -67,7 +74,8 @@ export default class GetAddressesAuthorsService {
       body: {
         query: {
           bool: {
-            must
+            must,
+            must_not
           }
         },
         aggs: {

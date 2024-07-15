@@ -11,3 +11,4 @@ ormconfig.js
 telegram_sessions.json
 docker/
 .uptime.config.json
+censor.json

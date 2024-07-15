@@ -5,6 +5,7 @@ import esClient from '../../../services/elastic';
 import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import { getCensorJSON } from '../../../services/utils';
 
 interface Address {
   address: string;
@@ -33,6 +34,7 @@ export default class GetAddressesService {
       conditions || {};
 
     const must = [];
+    const must_not = [];
 
     if (address) {
       must.push({ match: { address } });
@@ -81,6 +83,11 @@ export default class GetAddressesService {
       must.push({ range: { post_id: { lt: last } } });
     }
 
+    const censor = getCensorJSON();
+    if (censor && censor.postAddresses) {
+      must_not.push({ terms: { address: censor.postAddresses } });
+    }
+
     const results = await esClient.search({
       index: 'posts_addresses',
       track_total_hits: true,
@@ -88,7 +95,8 @@ export default class GetAddressesService {
       body: {
         query: {
           bool: {
-            must
+            must,
+            must_not
           }
         },
         sort: [{ date: { order: order || 'DESC' } }]

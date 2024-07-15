@@ -1,6 +1,8 @@
 import bs58 from 'bs58';
 import JSsha from 'jssha';
 import { container } from 'tsyringe';
+import fs from 'fs';
+import path from 'path';
 
 import logger from './logger';
 import SetUserBlockedService from '../infra/telegram/services/SetUserBlockedService';
@@ -53,5 +55,20 @@ export async function queueRepeatableFunction(fn: () => Promise<any>, ms: number
     logger.error(error, `[${fn.name}] queueRepeatableFunction error`);
   } finally {
     setTimeout(async () => queueRepeatableFunction(fn, ms), ms);
+  }
+}
+
+type CensorJsonType = {
+  postAddresses: string[];
+  postIds: number[];
+};
+
+export function getCensorJSON(): CensorJsonType {
+  try {
+    const absolutePath = path.resolve(path.resolve(__dirname, '..', '..', '..', 'censor.json'));
+    const fileContent = fs.readFileSync(absolutePath, 'utf-8');
+    return JSON.parse(fileContent) as CensorJsonType;
+  } catch (error) {
+    return {} as CensorJsonType;
   }
 }

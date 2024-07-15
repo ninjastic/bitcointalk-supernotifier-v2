@@ -6,6 +6,7 @@ import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddre
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import { getCensorJSON } from '../../../services/utils';
 
 interface Address {
   address: string;
@@ -32,6 +33,7 @@ export default class GetAddressesTopUniqueService {
     }
 
     const must = [];
+    const must_not = [];
 
     if (address) {
       must.push({ match: { address } });
@@ -76,6 +78,11 @@ export default class GetAddressesTopUniqueService {
       }
     }
 
+    const censor = getCensorJSON();
+    if (censor && censor.postAddresses) {
+      must_not.push({ terms: { address: censor.postAddresses } });
+    }
+
     const results = await esClient.search({
       index: 'posts_addresses',
       track_total_hits: true,
@@ -83,7 +90,8 @@ export default class GetAddressesTopUniqueService {
       body: {
         query: {
           bool: {
-            must
+            must,
+            must_not
           }
         },
         aggs: {
