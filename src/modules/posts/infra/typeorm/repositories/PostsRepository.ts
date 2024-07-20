@@ -3,6 +3,7 @@ import { sub } from 'date-fns';
 import { ApiResponse } from '@elastic/elasticsearch';
 
 import esClient from '../../../../../shared/services/elastic';
+import { getCensorJSON } from '../../../../../shared/services/utils';
 
 import Post from '../entities/Post';
 
@@ -65,6 +66,7 @@ export default class PostsRepository implements IPostsRepository {
 
   public async findPostsByAuthor(author: string, limit: number): Promise<ApiResponse> {
     const actual_limit = Math.min(limit || 20, 200);
+    const censor = getCensorJSON();
 
     const results = await esClient.search<Post>({
       index: 'posts',
@@ -72,8 +74,21 @@ export default class PostsRepository implements IPostsRepository {
       size: actual_limit,
       body: {
         query: {
-          match: {
-            author
+          bool: {
+            must: [
+              {
+                match: {
+                  author
+                }
+              }
+            ],
+            must_not: [
+              {
+                terms: {
+                  post_id: censor.postIds ?? []
+                }
+              }
+            ]
           }
         },
         sort: [{ date: { order: 'DESC' } }]
@@ -99,8 +114,8 @@ export default class PostsRepository implements IPostsRepository {
       limit,
       order
     } = conditions;
-
     const must = [];
+    const must_not = [];
 
     if (author) {
       must.push({
@@ -174,6 +189,11 @@ export default class PostsRepository implements IPostsRepository {
       }
     }
 
+    const censor = getCensorJSON();
+    if (censor && censor.postIds) {
+      must_not.push({ terms: { post_id: censor.postIds } });
+    }
+
     const results = await esClient.search<Post>({
       index: 'posts',
       track_total_hits: true,
@@ -181,7 +201,8 @@ export default class PostsRepository implements IPostsRepository {
       body: {
         query: {
           bool: {
-            must
+            must,
+            must_not
           }
         },
         sort: [{ date: { order: order || 'DESC' } }]
@@ -254,14 +275,29 @@ export default class PostsRepository implements IPostsRepository {
   }
 
   public async findPostsFromListES(ids: number[]): Promise<any> {
+    const censor = getCensorJSON();
+
     const results = await esClient.search({
       index: 'posts',
       track_total_hits: true,
       size: ids.length,
       body: {
         query: {
-          terms: {
-            post_id: ids
+          bool: {
+            must: [
+              {
+                terms: {
+                  post_id: ids
+                }
+              }
+            ],
+            must_not: [
+              {
+                terms: {
+                  post_id: censor.postIds ?? []
+                }
+              }
+            ]
           }
         },
         sort: [{ date: { order: 'DESC' } }]
