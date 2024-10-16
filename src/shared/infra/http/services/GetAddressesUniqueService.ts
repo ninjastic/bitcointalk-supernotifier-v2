@@ -128,7 +128,8 @@ export default class GetAddressesUniqueService {
     }));
 
     const data = {
-      after_key: data_addresses.length < actual_limit ? null : (results.aggregations.addresses as any).after_key.address,
+      after_key:
+        data_addresses.length < actual_limit ? null : (results.aggregations.addresses as any).after_key.address,
       addresses: data_addresses
     };
 

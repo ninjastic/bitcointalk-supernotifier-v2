@@ -142,7 +142,7 @@ class TelegramBot {
     this.instance.hears(/\/?length (.*)/i, lengthCommand);
     this.instance.hears(/\/?image/i, imageCommand);
     this.instance.hears(/\/?auth/i, authCommand);
-    this.instance.hears(/\/?minposts/i, minPostsCommand);
+    this.instance.hears(/\/?minposts? (.*)/i, minPostsCommand);
 
     this.instance.command('dev', devCommand);
 
