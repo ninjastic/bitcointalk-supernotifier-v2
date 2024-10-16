@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { container } from 'tsyringe';
 
+import { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
 import esClient from '../../../services/elastic';
 import ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
@@ -14,16 +15,14 @@ metaRouter.get('/', async (request: Request, response: Response): Promise<Respon
     return response.json(cached);
   }
 
-  const result1 = await esClient.search({
+  const result1 = await esClient.search<PostFromES>({
     index: 'posts',
-    body: {
-      aggs: {
-        posts_notifications_sum: {
-          sum: {
-            script: {
-              lang: 'painless',
-              source: "doc['notified_to'].length"
-            }
+    aggs: {
+      posts_notifications_sum: {
+        sum: {
+          script: {
+            lang: 'painless',
+            source: "doc['notified_to'].length"
           }
         }
       }
@@ -32,25 +31,25 @@ metaRouter.get('/', async (request: Request, response: Response): Promise<Respon
 
   const result2 = await esClient.search({
     index: 'merits',
-    body: {
-      aggs: {
-        merits_notifications_sum: {
-          sum: {
-            script: {
-              lang: 'painless',
-              source: "doc['notified_to'].length"
-            }
+    aggs: {
+      merits_notifications_sum: {
+        sum: {
+          script: {
+            lang: 'painless',
+            source: "doc['notified_to'].length"
           }
         }
       }
     }
   });
 
+  const { value: result1Value } = result1.aggregations.posts_notifications_sum as { value: number };
+  const { value: result2Value } = result2.aggregations.merits_notifications_sum as { value: number };
+
   const data = {
-    mentions: result1.body.aggregations.posts_notifications_sum.value,
-    merits: result2.body.aggregations.merits_notifications_sum.value,
-    total:
-      result1.body.aggregations.posts_notifications_sum.value + result2.body.aggregations.merits_notifications_sum.value
+    mentions: result1Value,
+    merits: result2Value,
+    total: result1Value + result2Value
   };
 
   const result = {

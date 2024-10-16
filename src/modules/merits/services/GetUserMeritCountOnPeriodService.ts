@@ -1,4 +1,5 @@
 import { container } from 'tsyringe';
+import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
 import esClient from '../../../shared/services/elastic';
 
@@ -10,7 +11,7 @@ interface Params {
   from: string;
   to: string;
   type: string;
-  interval: string;
+  interval: AggregationsCalendarInterval;
 }
 
 interface Date {
@@ -41,62 +42,60 @@ export default class GetUserMeritCountOnPeriodService {
     const results = await esClient.search({
       index: 'merits',
       track_total_hits: true,
-      body: {
-        query: {
-          bool: {
-            must: [
-              {
-                match: {
-                  [type === 'receiver' ? 'receiver_uid' : 'sender_uid']: author_uid
-                }
-              },
-              {
-                range: {
-                  date: {
-                    from,
-                    to
-                  }
-                }
-              }
-            ]
-          }
-        },
-        aggs: {
-          merits: {
-            value_count: {
-              field: 'id.keyword'
-            }
-          },
-          date: {
-            date_histogram: {
-              field: 'date',
-              calendar_interval: interval,
-              extended_bounds: {
-                min: from,
-                max: to
+      query: {
+        bool: {
+          must: [
+            {
+              match: {
+                [type === 'receiver' ? 'receiver_uid' : 'sender_uid']: author_uid
               }
             },
-            aggs: {
-              count: {
-                sum: {
-                  field: 'amount'
+            {
+              range: {
+                date: {
+                  from,
+                  to
                 }
               }
             }
-          },
-          total_sum_merits: {
-            sum_bucket: {
-              buckets_path: 'date.count'
+          ]
+        }
+      },
+      aggs: {
+        merits: {
+          value_count: {
+            field: 'id.keyword'
+          }
+        },
+        date: {
+          date_histogram: {
+            field: 'date',
+            calendar_interval: interval,
+            extended_bounds: {
+              min: from,
+              max: to
             }
+          },
+          aggs: {
+            count: {
+              sum: {
+                field: 'amount'
+              }
+            }
+          }
+        },
+        total_sum_merits: {
+          sum_bucket: {
+            buckets_path: 'date.count'
           }
         }
       }
     });
 
     const data = {
-      total_transactions: results.body.aggregations.merits.value,
-      total_sum_merits: results.body.aggregations.total_sum_merits.value,
-      dates: results.body.aggregations.date.buckets.map(b => ({
+      total_transactions: (results.aggregations.merits as { value: number }).value,
+      total_sum_merits: (results.aggregations.total_sum_merits as { value: number }).value,
+      dates: (results.aggregations.date as any).buckets.map(b => ({
         key: b.key,
         transactions: b.doc_count,
         total_sum: b.count.value

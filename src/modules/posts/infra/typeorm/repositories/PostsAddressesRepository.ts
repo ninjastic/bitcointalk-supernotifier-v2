@@ -29,7 +29,7 @@ export default class PostsAddressesRepository implements IPostsAddressesReposito
       where: rest,
       take: limit || 100,
       order: {
-        post_id: order
+        post_id: order.toUpperCase() as 'ASC' | 'DESC'
       }
     });
   }
@@ -40,7 +40,7 @@ export default class PostsAddressesRepository implements IPostsAddressesReposito
     return this.ormRepository.findOne({
       where: rest,
       order: {
-        post_id: order
+        post_id: order.toUpperCase() as 'ASC' | 'DESC'
       }
     });
   }

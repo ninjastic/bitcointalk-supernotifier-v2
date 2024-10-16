@@ -12,7 +12,7 @@ export default class GetPostsFromTopicIdService {
   public async execute({ topic_id }: { topic_id: number }): Promise<any> {
     const results = await this.postsRepository.findPostsByTopicId(topic_id);
 
-    const data = results.body.hits.hits.map(post => {
+    const data = results.hits.hits.map(post => {
       const postData = post._source;
 
       return {

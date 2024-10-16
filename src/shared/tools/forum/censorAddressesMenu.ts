@@ -23,24 +23,22 @@ export const censorAddressesMenu = async (): Promise<void> => {
         validate: async value => {
           const search = await esClient.search({
             index: 'posts_addresses',
-            body: {
-              query: {
-                match: {
-                  address: value
-                }
+            query: {
+              match: {
+                address: value
               }
             }
           });
 
-          if (!search.body.hits.hits.length) {
+          if (!search.hits.hits.length) {
             return false;
           }
 
-          for (const match of search.body.hits.hits) {
+          for (const match of search.hits.hits) {
             matches.push(match._source);
           }
 
-          return search.body.hits.hits.length > 0;
+          return search.hits.hits.length > 0;
         }
       }
     ])

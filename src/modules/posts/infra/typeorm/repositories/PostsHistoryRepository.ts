@@ -85,28 +85,23 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       must.push({ terms: { board_id: boardsIdList } });
     }
 
-    const results = await esClient.search({
+    const results = await esClient.search<PostHistory>({
       index: 'posts_history',
       track_total_hits: true,
       size: limit,
-      body: {
-        query: {
-          bool: {
-            must
-          }
-        },
-        sort: [{ date: { order: 'DESC' } }]
-      }
+      query: {
+        bool: {
+          must
+        }
+      },
+      sort: [{ date: { order: 'desc' } }]
     });
 
-    const posts_history = results.body.hits.hits.map(post => {
+    const posts_history = results.hits.hits.map(post => {
       const postData = post._source;
 
       return {
         post_id: postData.post_id,
-        topic_id: postData.topic_id,
-        author: postData.author,
-        author_uid: postData.author_uid,
         title: postData.title,
         content: postData.content,
         date: postData.date,
@@ -118,7 +113,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     });
 
     const data = {
-      total_results: results.body.hits.total.value,
+      total_results: (results.hits.total as { value: number }).value,
       posts_history
     };
 

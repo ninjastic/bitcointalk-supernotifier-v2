@@ -1,14 +1,15 @@
 import { container } from 'tsyringe';
+import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
 import esClient from '../../../services/elastic';
 
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
 
-interface Params {
+export interface GetPostsCountPeriodParams {
   from: string;
   to: string;
-  interval: string;
+  interval: AggregationsCalendarInterval;
 }
 
 interface Data {
@@ -18,7 +19,7 @@ interface Data {
 }
 
 export default class GetPostsCountPeriodService {
-  public async execute({ from, to, interval }: Params): Promise<Data[]> {
+  public async execute({ from, to, interval }: GetPostsCountPeriodParams): Promise<Data[]> {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
@@ -32,36 +33,34 @@ export default class GetPostsCountPeriodService {
       index: 'posts',
       track_total_hits: true,
       size: 0,
-      body: {
-        query: {
-          range: {
-            date: {
-              from,
-              to
-            }
+      query: {
+        range: {
+          date: {
+            from,
+            to
+          }
+        }
+      },
+      aggs: {
+        posts: {
+          value_count: {
+            field: 'post_id'
           }
         },
-        aggs: {
-          posts: {
-            value_count: {
-              field: 'post_id'
-            }
-          },
-          date: {
-            date_histogram: {
-              field: 'date',
-              calendar_interval: interval,
-              extended_bounds: {
-                min: from,
-                max: to
-              }
+        date: {
+          date_histogram: {
+            field: 'date',
+            calendar_interval: interval,
+            extended_bounds: {
+              min: from,
+              max: to
             }
           }
         }
       }
     });
 
-    const data = results.body.aggregations.date.buckets;
+    const data = (results.aggregations.date as any).buckets;
 
     await saveCache.execute(`postsCountPeriod:${from}-${to}-${interval}`, data, 'EX', 180);
 

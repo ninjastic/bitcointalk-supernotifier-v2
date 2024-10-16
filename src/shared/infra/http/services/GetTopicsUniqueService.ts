@@ -38,35 +38,33 @@ export default class GetTopicsUniqueService {
       index: 'posts',
       track_total_hits: true,
       size: 0,
-      body: {
-        query: {
-          bool: {
-            must: [
-              {
-                match: {
-                  author_uid
-                }
-              },
-              {
-                range: {
-                  date: { gte: from || null, lte: to || null }
-                }
+      query: {
+        bool: {
+          must: [
+            {
+              match: {
+                author_uid
               }
-            ]
-          }
-        },
-        aggs: {
-          unique_topics: {
-            cardinality: {
-              field: 'topic_id'
+            },
+            {
+              range: {
+                date: { gte: from || null, lte: to || null }
+              }
             }
+          ]
+        }
+      },
+      aggs: {
+        unique_topics: {
+          cardinality: {
+            field: 'topic_id'
           }
         }
       }
     });
 
     const data = {
-      unique_topics: results.body.aggregations.unique_topics.value
+      unique_topics: (results.aggregations.unique_topics as { value: number }).value
     };
 
     await saveCache.execute(`users:Topics:${author_uid}:${from}:${to}`, data, 'EX', 600);

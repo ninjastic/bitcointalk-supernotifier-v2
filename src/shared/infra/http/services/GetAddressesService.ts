@@ -88,24 +88,22 @@ export default class GetAddressesService {
       must_not.push({ terms: { address: censor.postAddresses } });
     }
 
-    const results = await esClient.search({
+    const results = await esClient.search<Address>({
       index: 'posts_addresses',
       track_total_hits: true,
       size: limit || 100,
-      body: {
-        query: {
-          bool: {
-            must,
-            must_not
-          }
-        },
-        sort: [{ date: { order: order || 'DESC' } }]
-      }
+      query: {
+        bool: {
+          must,
+          must_not
+        }
+      },
+      sort: [{ date: { order: order || 'desc' } }]
     });
 
     const boards = await getBoardsList.execute(true);
 
-    const addresses = results.body.hits.hits.map(({ _source: record }) => ({
+    const addresses = results.hits.hits.map(({ _source: record }) => ({
       address: record.address,
       coin: record.coin,
       post_id: record.post_id,
@@ -120,7 +118,7 @@ export default class GetAddressesService {
     }));
 
     const data = {
-      total_results: results.body.hits.total.value,
+      total_results: (results.hits.total as { value: number }).value,
       addresses
     };
 

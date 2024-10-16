@@ -106,7 +106,7 @@ export default class MeritsTopUsersController {
         body
       });
 
-      const data = results.body.aggregations.topUsers.buckets.map(bucket => ({
+      const data = (results.aggregations.topUsers as any).buckets.map(bucket => ({
         sender: bucket.top_hit.hits.hits[0]._source.sender,
         sender_uid: bucket.key[0],
         receiver: bucket.top_hit.hits.hits[0]._source.receiver,

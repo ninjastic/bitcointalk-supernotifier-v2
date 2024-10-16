@@ -87,26 +87,24 @@ export default class GetAddressesTopUniqueService {
       index: 'posts_addresses',
       track_total_hits: true,
       size: 0,
-      body: {
-        query: {
-          bool: {
-            must,
-            must_not
-          }
-        },
-        aggs: {
-          addresses: {
-            terms: {
-              field: 'address.keyword',
-              size: Math.min(limit || 10, 100)
-            },
-            aggs: {
-              coin: {
-                top_hits: {
-                  size: 1,
-                  _source: {
-                    includes: ['coin']
-                  }
+      query: {
+        bool: {
+          must,
+          must_not
+        }
+      },
+      aggs: {
+        addresses: {
+          terms: {
+            field: 'address.keyword',
+            size: Math.min(limit || 10, 100)
+          },
+          aggs: {
+            coin: {
+              top_hits: {
+                size: 1,
+                _source: {
+                  includes: ['coin']
                 }
               }
             }
@@ -115,7 +113,7 @@ export default class GetAddressesTopUniqueService {
       }
     });
 
-    const addresses = results.body.aggregations.addresses.buckets.map(record => ({
+    const addresses = (results.aggregations.addresses as any).buckets.map(record => ({
       address: record.key,
       coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
       count: record.doc_count

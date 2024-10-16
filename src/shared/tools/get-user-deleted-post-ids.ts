@@ -30,29 +30,27 @@ const main = async () => {
     index: 'posts',
     track_total_hits: true,
     size: 10000,
-    body: {
-      query: {
-        bool: {
-          must: [
-            {
-              term: {
-                author_uid: {
-                  value: USER_ID
-                }
-              }
-            },
-            {
-              range: {
-                date: {
-                  gte: '2023-08-01'
-                }
+    query: {
+      bool: {
+        must: [
+          {
+            term: {
+              author_uid: {
+                value: USER_ID
               }
             }
-          ],
-          must_not: {
-            terms: {
-              post_id: data
+          },
+          {
+            range: {
+              date: {
+                gte: '2023-08-01'
+              }
             }
+          }
+        ],
+        must_not: {
+          terms: {
+            post_id: data
           }
         }
       }

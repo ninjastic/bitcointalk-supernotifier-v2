@@ -1,13 +1,13 @@
 import { Repository, MoreThanOrEqual, getRepository } from 'typeorm';
 import { sub } from 'date-fns';
-import { ApiResponse } from '@elastic/elasticsearch';
+import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
 import esClient from '../../../../../shared/services/elastic';
 import { getCensorJSON } from '../../../../../shared/services/utils';
 
 import Post from '../entities/Post';
 
-import IPostsRepository from '../../../repositories/IPostsRepository';
+import IPostsRepository, { PostFromES } from '../../../repositories/IPostsRepository';
 
 import CreatePostDTO from '../../../dtos/CreatePostDTO';
 import IFindPostsConditionsDTO from '../../../dtos/IFindPostsConditionsDTO';
@@ -47,58 +47,54 @@ export default class PostsRepository implements IPostsRepository {
     });
   }
 
-  public async findPostsByTopicId(topic_id: number): Promise<ApiResponse> {
-    const results = await esClient.search<Post>({
+  public async findPostsByTopicId(topic_id: number): Promise<SearchResponse<PostFromES>> {
+    const results = await esClient.search<PostFromES>({
       index: 'posts',
       track_total_hits: true,
-      body: {
-        query: {
-          match: {
-            topic_id
-          }
-        },
-        sort: [{ date: { order: 'DESC' } }]
-      }
+      query: {
+        match: {
+          topic_id
+        }
+      },
+      sort: [{ date: { order: 'desc' } }]
     });
 
     return results;
   }
 
-  public async findPostsByAuthor(author: string, limit: number): Promise<ApiResponse> {
+  public async findPostsByAuthor(author: string, limit: number): Promise<SearchResponse<PostFromES>> {
     const actual_limit = Math.min(limit || 20, 200);
     const censor = getCensorJSON();
 
-    const results = await esClient.search<Post>({
+    const results = await esClient.search<PostFromES>({
       index: 'posts',
       scroll: '1m',
       size: actual_limit,
-      body: {
-        query: {
-          bool: {
-            must: [
-              {
-                match: {
-                  author
-                }
+      query: {
+        bool: {
+          must: [
+            {
+              match: {
+                author
               }
-            ],
-            must_not: [
-              {
-                terms: {
-                  post_id: censor.postIds ?? []
-                }
+            }
+          ],
+          must_not: [
+            {
+              terms: {
+                post_id: censor.postIds ?? []
               }
-            ]
-          }
-        },
-        sort: [{ date: { order: 'DESC' } }]
-      }
+            }
+          ]
+        }
+      },
+      sort: [{ date: { order: 'desc' } }]
     });
 
     return results;
   }
 
-  public async findPostsES(conditions: IFindPostsConditionsDTO): Promise<ApiResponse<Post>> {
+  public async findPostsES(conditions: IFindPostsConditionsDTO): Promise<SearchResponse<PostFromES>> {
     const {
       author,
       author_uid,
@@ -194,19 +190,17 @@ export default class PostsRepository implements IPostsRepository {
       must_not.push({ terms: { post_id: censor.postIds } });
     }
 
-    const results = await esClient.search<Post>({
+    const results = await esClient.search<PostFromES>({
       index: 'posts',
       track_total_hits: true,
       size: limit,
-      body: {
-        query: {
-          bool: {
-            must,
-            must_not
-          }
-        },
-        sort: [{ date: { order: order || 'DESC' } }]
-      }
+      query: {
+        bool: {
+          must,
+          must_not
+        }
+      },
+      sort: [{ date: { order: (order as 'asc' | 'desc') || 'desc' } }]
     });
 
     return results;
@@ -277,34 +271,32 @@ export default class PostsRepository implements IPostsRepository {
   public async findPostsFromListES(ids: number[]): Promise<any> {
     const censor = getCensorJSON();
 
-    const results = await esClient.search({
+    const results = await esClient.search<Post>({
       index: 'posts',
       track_total_hits: true,
       size: ids.length,
-      body: {
-        query: {
-          bool: {
-            must: [
-              {
-                terms: {
-                  post_id: ids
-                }
+      query: {
+        bool: {
+          must: [
+            {
+              terms: {
+                post_id: ids
               }
-            ],
-            must_not: [
-              {
-                terms: {
-                  post_id: censor.postIds ?? []
-                }
+            }
+          ],
+          must_not: [
+            {
+              terms: {
+                post_id: censor.postIds ?? []
               }
-            ]
-          }
-        },
-        sort: [{ date: { order: 'DESC' } }]
-      }
+            }
+          ]
+        }
+      },
+      sort: [{ date: { order: 'desc' } }]
     });
 
-    const data = results.body.hits.hits.map(post => {
+    const data = results.hits.hits.map(post => {
       const postData = post._source;
 
       return {

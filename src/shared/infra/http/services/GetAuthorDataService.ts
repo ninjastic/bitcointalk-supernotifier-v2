@@ -5,12 +5,12 @@ import esClient from '../../../services/elastic';
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
 import GetAuthorBaseDataService from './GetAuthorBaseDataService';
+import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 interface Data {
   author: string;
   author_uid: number;
   posts_count: number;
-  other_usernames: string[];
 }
 
 interface Params {
@@ -35,28 +35,26 @@ export default class GetUserDataService {
       return null;
     }
 
-    const results = await esClient.search({
+    const results = await esClient.search<Post>({
       index: 'posts',
       track_total_hits: true,
       _source: ['author', 'author_uid'],
       size: 1,
-      body: {
-        query: {
-          match: {
-            author_uid: authorInfo.author_uid
+      query: {
+        match: {
+          author_uid: authorInfo.author_uid
+        }
+      },
+      aggs: {
+        posts: {
+          value_count: {
+            field: 'post_id'
           }
         },
-        aggs: {
-          posts: {
-            value_count: {
-              field: 'post_id'
-            }
-          },
-          usernames: {
-            terms: {
-              field: 'author.keyword',
-              size: 10
-            }
+        usernames: {
+          terms: {
+            field: 'author.keyword',
+            size: 10
           }
         }
       }
@@ -64,8 +62,8 @@ export default class GetUserDataService {
 
     const data = {
       ...authorInfo,
-      ...results.body.hits.hits[0]?._source,
-      posts_count: results.body.hits.total.value
+      ...results.hits.hits[0]?._source,
+      posts_count: (results.hits.total as { value: number }).value
     };
 
     await saveCache.execute(`userData:${author_uid}`, data, 'EX', 180);

@@ -28,20 +28,18 @@ export const censorPostsMenu = async (): Promise<void> => {
 
           const search = await esClient.search({
             index: 'posts',
-            body: {
-              query: {
-                match: {
-                  post_id: value
-                }
+            query: {
+              match: {
+                post_id: value
               }
             }
           });
 
-          if (!search.body.hits.hits.length) {
+          if (!search.hits.hits.length) {
             return false;
           }
 
-          post = search.body.hits.hits.at(0);
+          post = search.hits.hits.at(0);
           return post !== null;
         }
       },
@@ -75,10 +73,8 @@ export const censorPostsMenu = async (): Promise<void> => {
     await esClient.update({
       index: post._index,
       id: post._id,
-      body: {
-        doc: {
-          content: newContent
-        }
+      doc: {
+        content: newContent
       }
     });
   } else {

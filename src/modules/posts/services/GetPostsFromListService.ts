@@ -1,7 +1,7 @@
 import { container, inject, injectable } from 'tsyringe';
-import { ApiResponse } from '@elastic/elasticsearch';
+import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
-import IPostsRepository from '../repositories/IPostsRepository';
+import IPostsRepository, { PostFromES } from '../repositories/IPostsRepository';
 
 import GetBoardsListService from './GetBoardsListService';
 
@@ -16,7 +16,7 @@ export default class GetPostsService {
     private postsRepository: IPostsRepository
   ) {}
 
-  public async execute({ id_list }: Params): Promise<ApiResponse> {
+  public async execute({ id_list }: Params): Promise<SearchResponse<PostFromES>> {
     const getBoardsList = container.resolve(GetBoardsListService);
 
     const results = await this.postsRepository.findPostsFromListES(id_list);

@@ -71,24 +71,22 @@ export default class GetAddressesAuthorsService {
       index: 'posts_addresses',
       track_total_hits: true,
       size: 0,
-      body: {
-        query: {
-          bool: {
-            must,
-            must_not
-          }
-        },
-        aggs: {
-          authors: {
-            terms: {
-              field: 'author.keyword',
-              size: Math.min(limit || 1000, 10000000)
-            },
-            aggs: {
-              author_uid: {
-                terms: {
-                  field: 'author_uid'
-                }
+      query: {
+        bool: {
+          must,
+          must_not
+        }
+      },
+      aggs: {
+        authors: {
+          terms: {
+            field: 'author.keyword',
+            size: Math.min(limit || 1000, 10000000)
+          },
+          aggs: {
+            author_uid: {
+              terms: {
+                field: 'author_uid'
               }
             }
           }
@@ -96,7 +94,7 @@ export default class GetAddressesAuthorsService {
       }
     });
 
-    const authors = results.body.aggregations.authors.buckets.map(record => ({
+    const authors = (results.aggregations.authors as any).buckets.map(record => ({
       author: record.key,
       author_uid: record.author_uid.buckets[0].key,
       count: record.doc_count

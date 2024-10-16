@@ -1,3 +1,5 @@
+import { SortOrder } from '@elastic/elasticsearch/lib/api/types';
+
 export default interface IFindPostAddressesDTO {
   address?: string;
   addresses?: Array<string>;
@@ -9,7 +11,7 @@ export default interface IFindPostAddressesDTO {
   board?: number;
   child_boards?: string;
   last?: number;
-  order?: 'ASC' | 'DESC';
+  order?: SortOrder;
   after?: string;
   limit?: number;
 }

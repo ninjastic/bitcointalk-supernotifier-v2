@@ -34,41 +34,39 @@ export default class GetUserTopTopicsService {
       index: 'posts',
       size: 0,
       track_total_hits: true,
-      body: {
-        query: {
-          bool: {
-            must: [
-              {
-                term: {
-                  author_uid: {
-                    value: author_uid
-                  }
-                }
-              },
-              {
-                range: {
-                  date: {
-                    gte: from,
-                    lte: to
-                  }
+      query: {
+        bool: {
+          must: [
+            {
+              term: {
+                author_uid: {
+                  value: author_uid
                 }
               }
-            ]
-          }
-        },
-        aggs: {
-          topics: {
-            terms: {
-              field: 'topic_id',
-              size: actualLimit
             },
-            aggs: {
-              data: {
-                top_hits: {
-                  size: 1,
-                  _source: {
-                    includes: ['title']
-                  }
+            {
+              range: {
+                date: {
+                  gte: from,
+                  lte: to
+                }
+              }
+            }
+          ]
+        }
+      },
+      aggs: {
+        topics: {
+          terms: {
+            field: 'topic_id',
+            size: actualLimit
+          },
+          aggs: {
+            data: {
+              top_hits: {
+                size: 1,
+                _source: {
+                  includes: ['title']
                 }
               }
             }
@@ -77,7 +75,7 @@ export default class GetUserTopTopicsService {
       }
     });
 
-    const data = dataRaw.body.aggregations.topics.buckets.map(topic => ({
+    const data = (dataRaw.aggregations.topics as any).buckets.map(topic => ({
       title: topic.data.hits.hits[0]._source.title,
       topic_id: topic.key,
       count: topic.doc_count

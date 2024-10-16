@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
 import Joi from 'joi';
+import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
 import logger from '../../../services/logger';
 
@@ -22,7 +23,7 @@ export default class MeritsCountController {
     const query = {
       from: from || startOfHour(sub(dateUTC, { days: 1 })).toISOString(),
       to: to || endOfHour(sub(dateUTC, { hours: 1 })).toISOString(),
-      interval: interval || '1h'
+      interval: (interval || '1h') as AggregationsCalendarInterval
     };
 
     const schemaValidation = Joi.object({

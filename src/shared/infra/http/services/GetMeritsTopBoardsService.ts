@@ -64,10 +64,10 @@ export default class GetMeritsTopBoardsService {
     const results = await esClient.search({
       index: 'merits',
       track_total_hits: true,
-      body
+      ...body
     });
 
-    const data = results.body.aggregations.boards.buckets.map(b => ({
+    const data = (results.aggregations.boards as any).buckets.map(b => ({
       board_id: b.key,
       count: b.count.value
     }));

@@ -29,7 +29,7 @@ export default class CheckPostsService {
 
     if (!lastId) {
       const last = await this.postsAddressesRepository.findOne({
-        order: 'DESC'
+        order: 'desc'
       });
       lastId = last?.post_id;
     }

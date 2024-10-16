@@ -4,7 +4,7 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetPostsBoardsPeriodService from '../services/GetPostsBoardsPeriodService';
+import GetPostsBoardsPeriodService, { GetPostsBoardsPeriodParams } from '../services/GetPostsBoardsPeriodService';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
 export default class PostsBoardsPeriodController {
@@ -43,7 +43,7 @@ export default class PostsBoardsPeriodController {
     }
 
     try {
-      const results = await getPostsBoardsPeriod.execute(query);
+      const results = await getPostsBoardsPeriod.execute(query as GetPostsBoardsPeriodParams);
       const boards = await getBoardsListService.execute(true);
 
       const data = results.map(result => ({

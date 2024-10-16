@@ -42,25 +42,23 @@ export default class GetPostsTopicsPeriodService {
       index: 'posts',
       size: 0,
       track_total_hits: true,
-      body: {
-        query: {
-          bool: {
-            must: matches
-          }
-        },
-        aggs: {
-          topics: {
-            terms: {
-              field: 'topic_id',
-              size: Math.min(limit ?? 10, 1000)
-            },
-            aggs: {
-              title: {
-                top_hits: {
-                  size: 1,
-                  _source: {
-                    includes: ['title']
-                  }
+      query: {
+        bool: {
+          must: matches
+        }
+      },
+      aggs: {
+        topics: {
+          terms: {
+            field: 'topic_id',
+            size: Math.min(limit ?? 10, 1000)
+          },
+          aggs: {
+            title: {
+              top_hits: {
+                size: 1,
+                _source: {
+                  includes: ['title']
                 }
               }
             }
@@ -69,7 +67,7 @@ export default class GetPostsTopicsPeriodService {
       }
     });
 
-    const data = dataRaw.body.aggregations.topics.buckets.map(topic => ({
+    const data = (dataRaw.aggregations.topics as any).buckets.map(topic => ({
       title: topic.title.hits.hits[0]._source.title,
       topic_id: topic.key
     }));

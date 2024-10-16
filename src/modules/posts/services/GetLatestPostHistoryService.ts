@@ -1,5 +1,5 @@
 import { inject, injectable } from 'tsyringe';
-import { ApiResponse } from '@elastic/elasticsearch';
+import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
 import IFindAllPostsHistoryDTO from '../dtos/IFindAllPostsHistoryDTO';
 
@@ -12,7 +12,7 @@ export default class GetLatestPostHistoryService {
     private postsHistoryRepository: IPostsHistoryRepository
   ) {}
 
-  public async execute(query: IFindAllPostsHistoryDTO): Promise<ApiResponse> {
+  public async execute(query: IFindAllPostsHistoryDTO): Promise<SearchResponse> {
     const limit = Math.min(query.limit || 20, 200);
 
     return this.postsHistoryRepository.findAll({

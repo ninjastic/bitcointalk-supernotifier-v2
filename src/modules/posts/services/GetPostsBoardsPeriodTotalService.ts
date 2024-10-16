@@ -32,38 +32,36 @@ export default class GetPostsBoardsPeriodTotalService {
       index: 'posts',
       size: 0,
       track_total_hits: true,
-      body: {
-        query: {
-          bool: {
-            must: [
-              {
-                range: {
-                  date: {
-                    gte: from,
-                    lte: to
-                  }
+      query: {
+        bool: {
+          must: [
+            {
+              range: {
+                date: {
+                  gte: from,
+                  lte: to
                 }
               }
-            ]
+            }
+          ]
+        }
+      },
+      aggs: {
+        posts: {
+          value_count: {
+            field: 'post_id'
           }
         },
-        aggs: {
-          posts: {
-            value_count: {
-              field: 'post_id'
-            }
-          },
-          boards: {
-            terms: {
-              field: 'board_id',
-              size: limit || 10
-            }
+        boards: {
+          terms: {
+            field: 'board_id',
+            size: limit || 10
           }
         }
       }
     });
 
-    const boardsData = results.body.aggregations.boards.buckets;
+    const boardsData = (results.aggregations.boards as any).buckets;
 
     const boards = await Promise.all(
       boardsData.map(async board => {
@@ -88,24 +86,22 @@ export default class GetPostsBoardsPeriodTotalService {
     );
 
     const organized = {
-      body: {
-        hits: results.body.hits,
-        aggregations: {
-          boards: {
-            buckets: boards
-          }
+      hits: results.hits,
+      aggregations: {
+        boards: {
+          buckets: boards
         }
       }
     };
 
-    const posts_count = organized.body.aggregations.boards.buckets.reduce(
+    const posts_count = organized.aggregations.boards.buckets.reduce(
       (accum: number, curr: { count: number }) => accum + curr.count,
       0
     );
 
     const data = {
       total_results: posts_count,
-      boards: organized.body.aggregations.boards.buckets
+      boards: organized.aggregations.boards.buckets
     } as unknown as Data;
 
     return data;

@@ -16,7 +16,7 @@
       "experimentalDecorators": true,
       "sourceMap": true,
       "esModuleInterop": true,
-      "skipLibCheck": true
+      "skipLibCheck": true,
    },
    "exclude": ["node_modules"]
 }

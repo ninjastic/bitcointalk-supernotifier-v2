@@ -2,28 +2,13 @@ import { container, inject, injectable } from 'tsyringe';
 
 import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
 
-import IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
+import IPostsRepository, { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
 
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
-interface Post {
-  post_id: number;
-  topic_id: number;
-  author: string;
-  author_uid: number;
-  title: string;
-  content: string;
-  date: string;
-  board_id: number;
-  board_name: string;
-  archive: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 interface Data {
   total_results: number;
-  posts: Post[];
+  posts: PostFromES[];
 }
 
 @injectable()
@@ -41,7 +26,7 @@ export default class GetPostSearchService {
     const getBoardsList = container.resolve(GetBoardsListService);
     const boards = await getBoardsList.execute(true);
 
-    const data = results.body.hits.hits.map(post => {
+    const data = results.hits.hits.map(post => {
       const boardName = boards.find(board => board.board_id === post._source.board_id)?.name;
 
       const postData = { ...post._source, board_name: boardName };
@@ -63,7 +48,7 @@ export default class GetPostSearchService {
     });
 
     const response = {
-      total_results: results.body.hits.total.value,
+      total_results: (results.hits.total as { value: number }).value,
       posts: data
     };
 

@@ -1,4 +1,4 @@
-import { ApiResponse } from '@elastic/elasticsearch';
+import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
 import PostHistory from '../infra/typeorm/entities/PostHistory';
 
@@ -11,5 +11,5 @@ export default interface IPostsHistoryRepository {
   save(post: PostHistory): Promise<PostHistory>;
   findOne(conditions: IFindOnePostHistoryDTO): Promise<PostHistory | undefined>;
   findLatestUncheckedPosts(limit?: number): Promise<PostHistory[]>;
-  findAll(conditions?: IFindAllPostsHistoryDTO): Promise<ApiResponse>;
+  findAll(conditions?: IFindAllPostsHistoryDTO): Promise<SearchResponse<PostHistory>>;
 }

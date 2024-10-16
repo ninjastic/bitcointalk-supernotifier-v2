@@ -1,4 +1,5 @@
 import { container } from 'tsyringe';
+import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
 import esClient from '../../../shared/services/elastic';
 
@@ -9,7 +10,7 @@ interface Params {
   author_uid: number;
   from: string;
   to: string;
-  interval: string;
+  interval: AggregationsCalendarInterval;
 }
 
 interface Data {
@@ -34,49 +35,45 @@ export default class GetUserPostsOnPeriodService {
       _source: ['author', 'author_uid'],
       track_total_hits: true,
       size: 1,
-      body: {
-        size: 1,
-        _source: ['author', 'author_uid'],
-        query: {
-          bool: {
-            must: [
-              {
-                match: {
-                  author_uid
-                }
-              },
-              {
-                range: {
-                  date: {
-                    from,
-                    to
-                  }
+      query: {
+        bool: {
+          must: [
+            {
+              match: {
+                author_uid
+              }
+            },
+            {
+              range: {
+                date: {
+                  from,
+                  to
                 }
               }
-            ]
+            }
+          ]
+        }
+      },
+      aggs: {
+        posts: {
+          value_count: {
+            field: 'post_id'
           }
         },
-        aggs: {
-          posts: {
-            value_count: {
-              field: 'post_id'
-            }
-          },
-          date: {
-            date_histogram: {
-              field: 'date',
-              calendar_interval: interval,
-              extended_bounds: {
-                min: from,
-                max: to
-              }
+        date: {
+          date_histogram: {
+            field: 'date',
+            calendar_interval: interval,
+            extended_bounds: {
+              min: from,
+              max: to
             }
           }
         }
       }
     });
 
-    const data = results.body.aggregations.date.buckets;
+    const data = (results.aggregations.date as any).buckets;
 
     await saveCache.execute(`userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`, data, 'EX', 180);
 

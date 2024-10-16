@@ -4,7 +4,7 @@ import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetPostsCountPeriodService from '../services/GetPostsCountPeriodService';
+import GetPostsCountPeriodService, { GetPostsCountPeriodParams } from '../services/GetPostsCountPeriodService';
 
 export default class PostsCountPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {
@@ -44,7 +44,7 @@ export default class PostsCountPeriodController {
     }
 
     try {
-      const data = await getPostsDataOnPeriod.execute(query);
+      const data = await getPostsDataOnPeriod.execute(query as GetPostsCountPeriodParams);
 
       const result = {
         result: 'success',

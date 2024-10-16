@@ -71,7 +71,7 @@ export default class GetMeritsTopFansService {
       body
     });
 
-    const data = results.body.aggregations.friends.buckets.map(b => ({
+    const data = (results.aggregations.friends as any).buckets.map(b => ({
       key: b.key,
       count: b.count.value
     }));

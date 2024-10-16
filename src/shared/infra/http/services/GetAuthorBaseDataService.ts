@@ -2,6 +2,7 @@ import { injectable, inject } from 'tsyringe';
 import esClient from '../../../services/elastic';
 
 import ICacheProvider from '../../../container/providers/models/ICacheProvider';
+import { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
 
 interface Response {
   author: string;
@@ -26,27 +27,25 @@ export default class GetAuthorBaseDataService {
       return cachedData;
     }
 
-    const results = await esClient.search({
+    const results = await esClient.search<PostFromES>({
       index: 'posts',
       track_total_hits: true,
       _source: ['author', 'author_uid'],
       size: 1,
-      body: {
-        query: {
-          match: {
-            author_uid: Number(author_uid)
-          }
+      query: {
+        match: {
+          author_uid: Number(author_uid)
         }
       }
     });
 
-    if (!results.body.hits.hits.length) {
+    if (!results.hits.hits.length) {
       return null;
     }
 
     const data = {
-      author: results.body.hits.hits[0]._source.author.toLowerCase(),
-      author_uid: results.body.hits.hits[0]._source.author_uid
+      author: results.hits.hits[0]._source.author.toLowerCase(),
+      author_uid: results.hits.hits[0]._source.author_uid
     };
 
     await this.cacheRepository.save(`authorBaseData:${author_uid}`, data, 'EX', 604800);

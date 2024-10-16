@@ -2,6 +2,7 @@ import { container } from 'tsyringe';
 import { Request as ExpressRequest, Response } from 'express';
 import { sub, addMinutes, startOfDay, endOfDay } from 'date-fns';
 import Joi from 'joi';
+import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
 import logger from '../../../services/logger';
 
@@ -41,7 +42,7 @@ export default class UserMeritsCountController {
       from: request.query.from || defaultFrom,
       to: request.query.to || defaultTo,
       type: request.query.type || 'receiver',
-      interval: request.query.interval || '1d'
+      interval: (request.query.interval || '1d') as AggregationsCalendarInterval
     };
 
     try {

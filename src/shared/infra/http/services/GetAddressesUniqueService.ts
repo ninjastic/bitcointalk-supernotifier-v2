@@ -79,42 +79,40 @@ export default class GetAddressesUniqueService {
       index: 'posts_addresses',
       track_total_hits: true,
       size: 0,
-      body: {
-        query: {
-          bool: {
-            must,
-            must_not
-          }
-        },
-        aggs: {
-          addresses: {
-            composite: {
-              size: actual_limit,
-              sources: [
-                {
-                  address: {
-                    terms: {
-                      field: 'address.keyword'
-                    }
+      query: {
+        bool: {
+          must,
+          must_not
+        }
+      },
+      aggs: {
+        addresses: {
+          composite: {
+            size: actual_limit,
+            sources: [
+              {
+                address: {
+                  terms: {
+                    field: 'address.keyword'
                   }
                 }
-              ],
-              after: {
-                address: last || ''
+              }
+            ],
+            after: {
+              address: last || ''
+            }
+          },
+          aggs: {
+            authors: {
+              terms: {
+                field: 'author.keyword',
+                size: 100
               }
             },
-            aggs: {
-              authors: {
-                terms: {
-                  field: 'author.keyword',
-                  size: 100
-                }
-              },
-              coin: {
-                top_hits: {
-                  size: 1,
-                  _source: ['coin']
-                }
+            coin: {
+              top_hits: {
+                size: 1,
+                _source: ['coin']
               }
             }
           }
@@ -122,7 +120,7 @@ export default class GetAddressesUniqueService {
       }
     });
 
-    const data_addresses = results.body.aggregations.addresses.buckets.map(record => ({
+    const data_addresses = (results.aggregations.addresses as any).buckets.map(record => ({
       address: record.key.address,
       coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
       count: record.doc_count,
@@ -130,7 +128,7 @@ export default class GetAddressesUniqueService {
     }));
 
     const data = {
-      after_key: data_addresses.length < actual_limit ? null : results.body.aggregations.addresses.after_key.address,
+      after_key: data_addresses.length < actual_limit ? null : (results.aggregations.addresses as any).after_key.address,
       addresses: data_addresses
     };
 

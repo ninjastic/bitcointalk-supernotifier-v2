@@ -99,7 +99,7 @@ export default class GetMeritsService {
 
     const body = queryBuilder.build();
 
-    const results = await esClient.search({
+    const results = await esClient.search<Merit>({
       index: 'merits',
       track_total_hits: true,
       body
@@ -108,22 +108,22 @@ export default class GetMeritsService {
     const getBoardsList = container.resolve(GetBoardsListService);
     const boards = await getBoardsList.execute(true);
 
-    const data = results.body.hits.hits.map(merit => {
+    const data = results.hits.hits.map(merit => {
       const boardName = boards.find(board => board.board_id === merit._source.board_id)?.name;
 
       const meritData = { ...merit._source, board_name: boardName };
 
       delete meritData['@timestamp'];
       delete meritData['@version'];
-      delete meritData.notified_to;
-      delete meritData.checked;
-      delete meritData.notified;
+      // delete meritData.notified_to;
+      // delete meritData.checked;
+      // delete meritData.notified;
 
       return meritData;
     });
 
     const response = {
-      total_results: results.body.hits.total.value,
+      total_results: (results.hits.total as { value: number }).value,
       merits: data
     };
 
