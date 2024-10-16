@@ -12,3 +12,7 @@ telegram_sessions.json
 docker/
 .uptime.config.json
 censor.json
+sync_state.json
+user-posts.*.json
+user-topics.*.json
+user-posts-deleted-ids.*.json

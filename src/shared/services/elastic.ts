@@ -5,7 +5,9 @@ const esClient = new Client({
   auth: {
     username: process.env.ELASTIC_SEARCH_USER,
     password: process.env.ELASTIC_SEARCH_PASSWORD
-  }
+  },
+  compression: true,
+  requestTimeout: 5 * 60 * 1000
 });
 
 export default esClient;

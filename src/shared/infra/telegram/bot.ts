@@ -42,6 +42,7 @@ import resetCommand from './commands/resetCommand';
 import lengthCommand from './commands/lengthCommand';
 import imageCommand from './commands/imageCommand';
 import authCommand from './commands/authCommand';
+import minPostsCommand from './commands/minPostsCommand';
 
 export function initialSession(): ISession {
   return {
@@ -141,6 +142,7 @@ class TelegramBot {
     this.instance.hears(/\/?length (.*)/i, lengthCommand);
     this.instance.hears(/\/?image/i, imageCommand);
     this.instance.hears(/\/?auth/i, authCommand);
+    this.instance.hears(/\/?minposts/i, minPostsCommand);
 
     this.instance.command('dev', devCommand);
 
