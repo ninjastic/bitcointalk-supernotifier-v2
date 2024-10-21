@@ -46,7 +46,7 @@ export const telegramTrackedBoardTopicsChecker = async (
 
     if (minAuthorPostCount > 0) {
       const authorPostCount = (
-        await container.resolve(PostsRepository).findPosts({ author_uid: user.user_id, limit: 500 })
+        await container.resolve(PostsRepository).findPosts({ author_uid: post.author_uid, limit: 500 })
       ).length;
       if (authorPostCount < minAuthorPostCount) {
         continue;
