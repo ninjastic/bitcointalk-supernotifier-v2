@@ -4,8 +4,8 @@ import Topic from '../../../../infra/typeorm/entities/Topic';
 import TrackedBoard from '../../../../infra/typeorm/entities/TrackedBoard';
 import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
 import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
-import RedisProvider from '../../../../../../shared/container/providers/implementations/RedisProvider';
 import PostsRepository from '../../../../infra/typeorm/repositories/PostsRepository';
+import ICacheProvider from '../../../../../../shared/container/providers/models/ICacheProvider';
 
 type TelegramTrackedBoardTopicsCheckerNotificationData = {
   userId: string;
@@ -40,9 +40,10 @@ export const telegramTrackedBoardTopicsChecker = async (
       continue;
     }
 
+    const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
+
     const minAuthorPostCount =
-      (await container.resolve(RedisProvider).recover<number>(`${user.telegram_id}:minTrackedBoardAuthorPostCount`)) ??
-      0;
+      (await cacheRepository.recover<number>(`${user.telegram_id}:minTrackedBoardAuthorPostCount`)) ?? 0;
 
     if (minAuthorPostCount > 0) {
       const authorPostCount = (
