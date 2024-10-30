@@ -106,9 +106,6 @@ export default class CheckPostsHistoryService {
               content: history.content
             };
 
-            const notification = notificationRepository.create(notificationData);
-            await notificationRepository.save(notification);
-
             return addTelegramJob('sendMentionNotification', {
               post: postToNotify,
               user,
