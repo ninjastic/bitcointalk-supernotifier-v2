@@ -61,6 +61,7 @@ export async function queueRepeatableFunction(fn: () => Promise<any>, ms: number
 type CensorJsonType = {
   postAddresses: string[];
   postIds: number[];
+  topicIds: number[];
 };
 
 export function getCensorJSON(): CensorJsonType {

@@ -84,6 +84,11 @@ export default class PostsRepository implements IPostsRepository {
               terms: {
                 post_id: censor.postIds ?? []
               }
+            },
+            {
+              terms: {
+                topic_id: censor.topicIds ?? []
+              }
             }
           ]
         }
@@ -190,6 +195,10 @@ export default class PostsRepository implements IPostsRepository {
       must_not.push({ terms: { post_id: censor.postIds } });
     }
 
+    if (censor && censor.topicIds) {
+      must_not.push({ terms: { topic_id: censor.topicIds } });
+    }
+
     const results = await esClient.search<PostFromES>({
       index: 'posts',
       track_total_hits: true,
@@ -288,6 +297,11 @@ export default class PostsRepository implements IPostsRepository {
             {
               terms: {
                 post_id: censor.postIds ?? []
+              }
+            },
+            {
+              terms: {
+                topic_id: censor.topicIds ?? []
               }
             }
           ]
