@@ -1,10 +1,11 @@
 import { container, inject, injectable } from 'tsyringe';
 
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
+import logger from '../../../shared/services/logger';
 
+import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import IPostsRepository from '../repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
 import GetIgnoredTopicsService from './GetIgnoredTopicsService';
@@ -43,7 +44,7 @@ export default class CheckPostsService {
     private usersRepository: IUsersRepository,
 
     @inject('CacheRepository')
-    private cacheProvider: ICacheProvider
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(): Promise<void> {
@@ -124,13 +125,22 @@ export default class CheckPostsService {
       const results = await checkerPromise;
 
       for await (const result of results) {
-        if (result.metadata.post) {
-          const key = `${result.userId}:${result.metadata.post.id}`;
-          if (postNotificationSet.has(key)) continue;
-          postNotificationSet.add(key);
-        }
+        const postUserKey = `CheckPostsService:${result.userId}:${result.metadata.post.id}`;
 
         if (!result.metadata.user.telegram_id) continue;
+        if (!result.metadata.post) continue;
+        if (postNotificationSet.has(postUserKey)) continue;
+        postNotificationSet.add(postUserKey);
+
+        const isJobAlreadyInQueue = await this.cacheRepository.recover(postUserKey);
+        if (isJobAlreadyInQueue) continue;
+
+        const redisAnswer = await this.cacheRepository.save(postUserKey, true, 'EX', 1800);
+        if (redisAnswer !== 'OK') {
+          logger.error('CheckPostsService Job lock did not return OK', { postUserKey, redisAnswer });
+          continue;
+        }
+
         await addTelegramJob(jobName, result.metadata);
       }
     }

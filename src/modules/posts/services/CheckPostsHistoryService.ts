@@ -1,5 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
 
+import { NotificationType } from 'modules/notifications/infra/typeorm/entities/Notification';
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IUsersRepository from '../../users/repositories/IUsersRepository';
@@ -25,12 +26,13 @@ export default class CheckPostsHistoryService {
   ) {}
 
   public async execute(): Promise<void> {
+    const notificationRepository = container.resolve(NotificationRepository);
+
     const histories = await this.postsHistoryRepository.findLatestUncheckedPosts();
     const users = await this.usersRepository.getUsersWithMentions();
 
     const getIgnoredUsers = container.resolve(GetIgnoredUsersService);
     const getIgnoredTopics = container.resolve(GetIgnoredTopicsService);
-    const notificationRepository = new NotificationRepository();
 
     const ignoredUsers = await getIgnoredUsers.execute();
     const ignoredTopics = await getIgnoredTopics.execute();
@@ -44,12 +46,6 @@ export default class CheckPostsHistoryService {
             if (!history.post) {
               return Promise.resolve();
             }
-
-            const notificationData = {
-              telegram_id: user.telegram_id,
-              type: 'post_mention',
-              metadata: { post_id: history.post.post_id }
-            };
 
             if (history.post.author.toLowerCase() === user.username.toLowerCase()) {
               return Promise.resolve();
@@ -92,7 +88,13 @@ export default class CheckPostsHistoryService {
 
             const postNotified =
               (await this.cacheProvider.recover<boolean>(`notified:${history.post_id}:${user.telegram_id}`)) ||
-              (await notificationRepository.findOne({ where: notificationData }));
+              (await notificationRepository.findOne({
+                where: {
+                  type: NotificationType.POST_MENTION,
+                  telegram_id: user.telegram_id,
+                  metadata: metadata => metadata.post_id === history.post_id
+                }
+              }));
 
             if (postNotified) {
               return Promise.resolve();

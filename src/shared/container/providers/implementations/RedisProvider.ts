@@ -17,12 +17,12 @@ export default class RedisProvider implements ICacheProvider {
     this.client = new Redis(cacheConfig.config.redis);
   }
 
-  public async save(key: string, value: any, arg?: string, time?: number): Promise<void> {
+  public async save(key: string, value: any, arg?: string, time?: number): Promise<Redis.Ok | null> {
     if (arg) {
-      await this.client.set(key, JSON.stringify(value), arg, time);
-    } else {
-      await this.client.set(key, JSON.stringify(value));
+      return this.client.set(key, JSON.stringify(value), arg, time);
     }
+
+    return this.client.set(key, JSON.stringify(value));
   }
 
   public async saveMany(values: SaveManyData[]): Promise<void> {

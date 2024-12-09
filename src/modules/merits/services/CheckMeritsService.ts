@@ -1,10 +1,13 @@
 import { inject, injectable } from 'tsyringe';
 
+import logger from '../../../shared/services/logger';
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 
+import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
 import NotificationRepository from '../../notifications/infra/typeorm/repositories/NotificationRepository';
+import { NotificationType } from '../../notifications/infra/typeorm/entities/Notification';
 
 @injectable()
 export default class CheckMeritsService {
@@ -13,7 +16,10 @@ export default class CheckMeritsService {
     private meritsRepository: IMeritsRepository,
 
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository
+    private usersRepository: IUsersRepository,
+
+    @inject('CacheRepository')
+    private cacheRepository: ICacheProvider
   ) {}
 
   public async execute(): Promise<void> {
@@ -30,14 +36,24 @@ export default class CheckMeritsService {
       }
 
       for await (const receiverUser of receiverUsers) {
+        const meritUserKey = `CheckMeritsService:${merit.post_id}:${merit.id}`;
         const notificationData = {
           telegram_id: receiverUser.telegram_id,
-          type: 'merit',
+          type: NotificationType.MERIT,
           metadata: {
             post_id: merit.post_id,
             merit_id: merit.id
           }
         };
+
+        const isJobAlreadyInQueue = await this.cacheRepository.recover(meritUserKey);
+        if (isJobAlreadyInQueue) continue;
+
+        const redisAnswer = await this.cacheRepository.save(meritUserKey, true, 'EX', 1800);
+        if (redisAnswer !== 'OK') {
+          logger.error('CheckMeritsService Job lock did not return OK', { meritUserKey, redisAnswer });
+          continue;
+        }
 
         const isAlreadyNotified =
           merit.notified_to.includes(receiverUser.telegram_id) ||
