@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import pluralize from 'pluralize';
 import escape from 'escape-html';
 
-import { sponsorText } from 'config/sponsor';
+import { sponsorText } from '../../../../../config/sponsor';
 import logger from '../../../../services/logger';
 
 import bot from '../../index';

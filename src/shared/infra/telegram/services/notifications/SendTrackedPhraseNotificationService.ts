@@ -2,7 +2,7 @@ import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 
-import { sponsorText } from 'config/sponsor';
+import { sponsorText } from '../../../../../config/sponsor';
 import logger from '../../../../services/logger';
 import Post from '../../../../../modules/posts/infra/typeorm/entities/Post';
 
