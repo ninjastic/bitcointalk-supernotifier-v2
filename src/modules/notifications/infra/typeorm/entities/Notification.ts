@@ -1,5 +1,10 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
+export enum NotificationType {
+  POST_MENTION = 'post_mention',
+  MERIT = 'merit'
+}
+
 @Entity('notifications')
 class Notification {
   @PrimaryGeneratedColumn('uuid')

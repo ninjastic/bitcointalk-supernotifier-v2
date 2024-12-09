@@ -1,6 +1,6 @@
 import { Repository, getRepository } from 'typeorm';
 
-import FindOneUserDTO from 'modules/users/dtos/FindOneUserDTO';
+import FindOneUserDTO from '../../../dtos/FindOneUserDTO';
 import CreateUserDTO from '../../../dtos/CreateUserDTO';
 
 import User from '../entities/User';

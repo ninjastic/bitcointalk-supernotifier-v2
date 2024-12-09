@@ -1,4 +1,5 @@
 import { container, inject, injectable } from 'tsyringe';
+import { getRepository } from 'typeorm';
 
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 import logger from '../../../shared/services/logger';
@@ -7,6 +8,7 @@ import ICacheProvider from '../../../shared/container/providers/models/ICachePro
 import IPostsRepository from '../repositories/IPostsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
 
+import Notification from '../../notifications/infra/typeorm/entities/Notification';
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
 import GetIgnoredTopicsService from './GetIgnoredTopicsService';
 import GetTrackedTopicsService from './GetTrackedTopicsService';
@@ -140,6 +142,15 @@ export default class CheckPostsService {
           logger.error('CheckPostsService Job lock did not return OK', { postUserKey, redisAnswer });
           continue;
         }
+
+        const postNotified = await getRepository(Notification)
+          .createQueryBuilder('notification')
+          .where('notification.type = :type', { type: 'post_mention' })
+          .andWhere('notification.telegram_id = :telegramId', { telegramId: result.metadata.user.telegram_id })
+          .andWhere(`notification.metadata->>'post_id' = :postId`, { postId: result.metadata.post.post_id })
+          .getOne();
+
+        if (postNotified) continue;
 
         await addTelegramJob(jobName, result.metadata);
       }

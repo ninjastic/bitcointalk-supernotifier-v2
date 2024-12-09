@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import telegramQueue from '../infra/bull/queues/telegramQueue';
 
 async function clearQueue() {
@@ -12,5 +13,5 @@ async function clearQueue() {
 }
 
 clearQueue().then(() => {
-  process.exit(1);
+  process.exit(0);
 });

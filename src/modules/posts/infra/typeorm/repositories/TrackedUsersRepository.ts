@@ -1,5 +1,5 @@
-import { ICreateTrackedUserDTO } from 'modules/posts/dtos/ICreateTrackedUserDTO';
 import { DeleteResult, getRepository, Repository } from 'typeorm';
+import { ICreateTrackedUserDTO } from '../../../dtos/ICreateTrackedUserDTO';
 
 import TrackedUser from '../entities/TrackedUser';
 

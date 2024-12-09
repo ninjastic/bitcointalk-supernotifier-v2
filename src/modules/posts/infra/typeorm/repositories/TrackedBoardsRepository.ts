@@ -1,5 +1,5 @@
-import { ICreateTrackedBoardDTO } from 'modules/posts/dtos/ICreateTrackedBoardDTO';
 import { DeleteResult, getRepository, Repository } from 'typeorm';
+import { ICreateTrackedBoardDTO } from '../../../dtos/ICreateTrackedBoardDTO';
 
 import TrackedBoard from '../entities/TrackedBoard';
 

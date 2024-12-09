@@ -1,12 +1,12 @@
+import { getRepository } from 'typeorm';
 import { container, inject, injectable } from 'tsyringe';
 
-import { NotificationType } from 'modules/notifications/infra/typeorm/entities/Notification';
+import Notification, { NotificationType } from '../../notifications/infra/typeorm/entities/Notification';
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 
 import IUsersRepository from '../../users/repositories/IUsersRepository';
 import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import NotificationRepository from '../../notifications/infra/typeorm/repositories/NotificationRepository';
 
 import SetPostHistoryCheckedService from './SetPostHistoryCheckedService';
 import GetIgnoredUsersService from '../../users/services/GetIgnoredUsersService';
@@ -26,8 +26,6 @@ export default class CheckPostsHistoryService {
   ) {}
 
   public async execute(): Promise<void> {
-    const notificationRepository = container.resolve(NotificationRepository);
-
     const histories = await this.postsHistoryRepository.findLatestUncheckedPosts();
     const users = await this.usersRepository.getUsersWithMentions();
 
@@ -88,13 +86,12 @@ export default class CheckPostsHistoryService {
 
             const postNotified =
               (await this.cacheProvider.recover<boolean>(`notified:${history.post_id}:${user.telegram_id}`)) ||
-              (await notificationRepository.findOne({
-                where: {
-                  type: NotificationType.POST_MENTION,
-                  telegram_id: user.telegram_id,
-                  metadata: metadata => metadata.post_id === history.post_id
-                }
-              }));
+              (await getRepository(Notification)
+                .createQueryBuilder('notification')
+                .where('notification.type = :type', { type: NotificationType.POST_MENTION })
+                .andWhere('notification.telegram_id = :telegramId', { telegramId: user.telegram_id })
+                .andWhere(`notification.metadata->>'post_id' = :postId`, { postId: history.post_id })
+                .getOne());
 
             if (postNotified) {
               return Promise.resolve();

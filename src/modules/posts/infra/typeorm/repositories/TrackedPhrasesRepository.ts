@@ -1,7 +1,7 @@
 import { DeleteResult, getRepository, Repository } from 'typeorm';
 
-import ICreateTrackedPhraseDTO from 'modules/posts/dtos/ICreateTrackedPhraseDTO';
-import IFindTrackedPhraseDTO from 'modules/posts/dtos/IFindTrackedPhraseDTO';
+import ICreateTrackedPhraseDTO from '../../../dtos/ICreateTrackedPhraseDTO';
+import IFindTrackedPhraseDTO from '../../../dtos/IFindTrackedPhraseDTO';
 import TrackedPhrase from '../entities/TrackedPhrase';
 
 import ITrackedPhrasesRepository from '../../../repositories/ITrackedPhrasesRepository';

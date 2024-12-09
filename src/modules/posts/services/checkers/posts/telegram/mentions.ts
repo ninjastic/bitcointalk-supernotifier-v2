@@ -1,10 +1,8 @@
-import { container } from 'tsyringe';
 import Post from '../../../../infra/typeorm/entities/Post';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
 import IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
 import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
-import NotificationRepository from '../../../../../notifications/infra/typeorm/repositories/NotificationRepository';
 import { NotificationType } from '../../../../../notifications/infra/typeorm/entities/Notification';
 
 type TelegramMentionsCheckerNotificationData = {
@@ -46,16 +44,6 @@ export const telegramMentionsChecker = async (
       ?.ignoring.includes(user.telegram_id);
 
     if (isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored) continue;
-
-    const postNotified = await container.resolve(NotificationRepository).findOne({
-      where: {
-        type: NotificationType.POST_MENTION,
-        telegram_id: user.telegram_id,
-        metadata: metadata => metadata.post_id === post.post_id
-      }
-    });
-
-    if (postNotified) continue;
 
     data.push({
       userId: user.id,
