@@ -1,8 +1,9 @@
 import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
-import logger from '../../../../services/logger';
 
+import { sponsorText } from 'config/sponsor';
+import logger from '../../../../services/logger';
 import bot from '../../index';
 
 import Post from '../../../../../modules/posts/infra/typeorm/entities/Post';
@@ -44,6 +45,7 @@ export default class SendTrackedBoardNotificationService {
     message += `${escape(contentFiltered.substring(0, postLength))}`;
     message += `${contentFiltered.length > postLength ? '...' : ''}`;
     message += `</pre>`;
+    message += sponsorText;
 
     return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })

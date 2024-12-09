@@ -2,6 +2,7 @@ import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 
+import { sponsorText } from 'config/sponsor';
 import bot from '../../index';
 import logger from '../../../../services/logger';
 
@@ -42,6 +43,7 @@ export default class SendTrackedUserNotificationService {
     message += `${escape(contentFiltered.substring(0, postLength))}`;
     message += `${contentFiltered.length > postLength ? '...' : ''}`;
     message += `</pre>`;
+    message += sponsorText;
 
     return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })

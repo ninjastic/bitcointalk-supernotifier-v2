@@ -2,6 +2,7 @@ import { container, injectable, inject } from 'tsyringe';
 import pluralize from 'pluralize';
 import escape from 'escape-html';
 
+import { sponsorText } from 'config/sponsor';
 import logger from '../../../../services/logger';
 
 import bot from '../../index';
@@ -57,6 +58,7 @@ export default class SendMeritNotificationService {
     message += `for <a href="${postUrl}">`;
     message += `${escape(title)}`;
     message += `</a>`;
+    message += sponsorText;
 
     return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })

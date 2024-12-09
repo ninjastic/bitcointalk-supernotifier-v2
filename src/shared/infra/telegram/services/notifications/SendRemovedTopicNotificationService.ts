@@ -2,6 +2,7 @@ import { container } from 'tsyringe';
 import pluralize from 'pluralize';
 import escape from 'escape-html';
 
+import { sponsorText } from 'config/sponsor';
 import logger from '../../../../services/logger';
 
 import bot from '../../index';
@@ -25,6 +26,7 @@ export default class SendRemovedTopicNotificationService {
     message += `<b>Archived Topic:</b> <a href="https://ninjastic.space/topic/${modLog.topic_id}">`;
     message += `${escape(modLog.title)}`;
     message += `</a>`;
+    message += sponsorText;
 
     return bot.instance.api
       .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
