@@ -17,7 +17,7 @@ export const telegramMentionsChecker = async (
   ignoredUsers: IgnoredUser[],
   ignoredTopics: IgnoredTopic[]
 ): Promise<TelegramMentionsCheckerNotificationData[]> => {
-  const escapeRegexText = (text: string) => text.replace(/([<>*()?])/g, '\\$1');
+  const escapeRegexText = (text: string) => text.replace(/([.*+?^${}()|[\]\\<>])/g, '\\$1');
   const data: TelegramMentionsCheckerNotificationData[] = [];
 
   for await (const user of users) {

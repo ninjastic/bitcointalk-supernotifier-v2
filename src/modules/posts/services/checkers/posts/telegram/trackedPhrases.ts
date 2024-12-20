@@ -16,7 +16,7 @@ export const telegramTrackedPhrasesChecker = async (
   ignoredUsers: IgnoredUser[],
   ignoredTopics: IgnoredTopic[]
 ): Promise<TelegramTrackedPhrasesCheckerNotificationData[]> => {
-  const escapeRegexText = (text: string) => text.replace(/([<>*()?])/g, '\\$1');
+  const escapeRegexText = (text: string) => text.replace(/([.*+?^${}()|[\]\\<>])/g, '\\$1');
   const data: TelegramTrackedPhrasesCheckerNotificationData[] = [];
 
   for (const trackedPhrase of trackedPhrases) {
