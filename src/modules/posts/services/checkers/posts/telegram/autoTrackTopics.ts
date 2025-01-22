@@ -8,10 +8,15 @@ type TelegramAutoTrackTopicsCheckerNotificationData = {
   metadata: RecipeData['sendAutoTrackTopicRequestNotification'];
 };
 
-export const telegramAutoTrackTopicsChecker = async (
-  topic: Topic,
-  users: User[]
-): Promise<TelegramAutoTrackTopicsCheckerNotificationData[]> => {
+type TelegramAutoTrackTopicsCheckerParams = {
+  topic: Topic;
+  users: User[];
+};
+
+export const telegramAutoTrackTopicsChecker = async ({
+  topic,
+  users
+}: TelegramAutoTrackTopicsCheckerParams): Promise<TelegramAutoTrackTopicsCheckerNotificationData[]> => {
   const data: TelegramAutoTrackTopicsCheckerNotificationData[] = [];
 
   const usersWithAutoTrackTopicsAndMatchingTopic = users.filter(

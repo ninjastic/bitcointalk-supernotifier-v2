@@ -10,12 +10,19 @@ type TelegramTrackedPhrasesCheckerNotificationData = {
   metadata: RecipeData['sendPhraseTrackingNotification'];
 };
 
-export const telegramTrackedPhrasesChecker = async (
-  post: Post,
-  trackedPhrases: TrackedPhrase[],
-  ignoredUsers: IgnoredUser[],
-  ignoredTopics: IgnoredTopic[]
-): Promise<TelegramTrackedPhrasesCheckerNotificationData[]> => {
+type TelegramTrackedPhrasesCheckerParams = {
+  post: Post;
+  trackedPhrases: TrackedPhrase[];
+  ignoredUsers: IgnoredUser[];
+  ignoredTopics: IgnoredTopic[];
+};
+
+export const telegramTrackedPhrasesChecker = async ({
+  post,
+  trackedPhrases,
+  ignoredUsers,
+  ignoredTopics
+}: TelegramTrackedPhrasesCheckerParams): Promise<TelegramTrackedPhrasesCheckerNotificationData[]> => {
   const escapeRegexText = (text: string) => text.replace(/([.*+?^${}()|[\]\\<>])/g, '\\$1');
   const data: TelegramTrackedPhrasesCheckerNotificationData[] = [];
 

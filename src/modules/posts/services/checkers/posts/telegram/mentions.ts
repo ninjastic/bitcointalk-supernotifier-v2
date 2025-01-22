@@ -11,12 +11,19 @@ type TelegramMentionsCheckerNotificationData = {
   metadata: RecipeData['sendMentionNotification'];
 };
 
-export const telegramMentionsChecker = async (
-  post: Post,
-  users: User[],
-  ignoredUsers: IgnoredUser[],
-  ignoredTopics: IgnoredTopic[]
-): Promise<TelegramMentionsCheckerNotificationData[]> => {
+type TelegramMentionsCheckerParams = {
+  post: Post;
+  users: User[];
+  ignoredUsers: IgnoredUser[];
+  ignoredTopics: IgnoredTopic[];
+};
+
+export const telegramMentionsChecker = async ({
+  post,
+  users,
+  ignoredUsers,
+  ignoredTopics
+}: TelegramMentionsCheckerParams): Promise<TelegramMentionsCheckerNotificationData[]> => {
   const escapeRegexText = (text: string) => text.replace(/([.*+?^${}()|[\]\\<>])/g, '\\$1');
   const data: TelegramMentionsCheckerNotificationData[] = [];
 

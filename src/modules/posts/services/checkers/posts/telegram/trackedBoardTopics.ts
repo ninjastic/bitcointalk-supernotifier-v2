@@ -13,11 +13,17 @@ type TelegramTrackedBoardTopicsCheckerNotificationData = {
   metadata: RecipeData['sendTrackedBoardNotification'];
 };
 
-export const telegramTrackedBoardTopicsChecker = async (
-  topic: Topic,
-  trackedBoards: TrackedBoard[],
-  ignoredUsers: IgnoredUser[]
-): Promise<TelegramTrackedBoardTopicsCheckerNotificationData[]> => {
+type TelegramTrackedBoardTopicsCheckerParams = {
+  topic: Topic;
+  trackedBoards: TrackedBoard[];
+  ignoredUsers: IgnoredUser[];
+};
+
+export const telegramTrackedBoardTopicsChecker = async ({
+  topic,
+  trackedBoards,
+  ignoredUsers
+}: TelegramTrackedBoardTopicsCheckerParams): Promise<TelegramTrackedBoardTopicsCheckerNotificationData[]> => {
   const data: TelegramTrackedBoardTopicsCheckerNotificationData[] = [];
 
   const trackedBoardsWithMatchingTopics = trackedBoards.filter(

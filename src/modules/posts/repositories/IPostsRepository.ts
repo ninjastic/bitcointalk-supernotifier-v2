@@ -1,4 +1,3 @@
-
 import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 import Post from '../infra/typeorm/entities/Post';
 import CreatePostDTO from '../dtos/CreatePostDTO';

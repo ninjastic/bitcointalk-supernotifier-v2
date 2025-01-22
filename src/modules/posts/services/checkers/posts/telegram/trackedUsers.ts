@@ -8,10 +8,15 @@ type TelegramTrackedUsersCheckerNotificationData = {
   metadata: RecipeData['sendTrackedUserNotification'];
 };
 
-export const telegramTrackedUsersChecker = async (
-  post: Post,
-  trackedUsers: TrackedUser[]
-): Promise<TelegramTrackedUsersCheckerNotificationData[]> => {
+type TelegramTrackedUsersCheckerParams = {
+  post: Post;
+  trackedUsers: TrackedUser[];
+};
+
+export const telegramTrackedUsersChecker = async ({
+  post,
+  trackedUsers
+}: TelegramTrackedUsersCheckerParams): Promise<TelegramTrackedUsersCheckerNotificationData[]> => {
   const data: TelegramTrackedUsersCheckerNotificationData[] = [];
 
   const trackedUsersWithMatchingPosts = trackedUsers.filter(
