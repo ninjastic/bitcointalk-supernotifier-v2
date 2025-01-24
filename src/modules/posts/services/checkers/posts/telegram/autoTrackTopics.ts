@@ -1,6 +1,7 @@
 import Topic from '../../../../infra/typeorm/entities/Topic';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
+import logger from '../../../../../../shared/services/logger';
 
 type TelegramAutoTrackTopicsCheckerNotificationData = {
   userId: string;
@@ -9,32 +10,54 @@ type TelegramAutoTrackTopicsCheckerNotificationData = {
 };
 
 type TelegramAutoTrackTopicsCheckerParams = {
-  topic: Topic;
+  topics: Topic[];
   users: User[];
 };
 
+const getUsersWithAutoTrackAndMatchingTopic = (topic: Topic, users: User[]): User[] =>
+  users.filter(user => user.enable_auto_track_topics && topic.post.author_uid === user.user_id);
+
+const isUserAlreadyNotified = (topic: Topic, user: User): boolean => topic.post.notified_to.includes(user.telegram_id);
+
+const processTopic = (topic: Topic, users: User[]): TelegramAutoTrackTopicsCheckerNotificationData[] => {
+  const data: TelegramAutoTrackTopicsCheckerNotificationData[] = [];
+  const matchingUsers = getUsersWithAutoTrackAndMatchingTopic(topic, users);
+
+  for (const user of matchingUsers) {
+    try {
+      if (isUserAlreadyNotified(topic, user)) {
+        continue;
+      }
+
+      data.push({
+        userId: user.id,
+        type: 'auto_track_topic_request',
+        metadata: { topic, user }
+      });
+    } catch (error) {
+      logger.error(
+        { error, telegram_id: user.telegram_id, topic_id: topic.topic_id },
+        `Error processing user ${user.telegram_id} for topic ${topic.topic_id}`
+      );
+    }
+  }
+
+  return data;
+};
+
 export const telegramAutoTrackTopicsChecker = async ({
-  topic,
+  topics,
   users
 }: TelegramAutoTrackTopicsCheckerParams): Promise<TelegramAutoTrackTopicsCheckerNotificationData[]> => {
   const data: TelegramAutoTrackTopicsCheckerNotificationData[] = [];
 
-  const usersWithAutoTrackTopicsAndMatchingTopic = users.filter(
-    user => user.enable_auto_track_topics && topic.post.author_uid === user.user_id
-  );
-
-  for await (const user of usersWithAutoTrackTopicsAndMatchingTopic) {
-    const isAlreadyNotified = topic.post.notified_to.includes(user.telegram_id);
-
-    if (isAlreadyNotified) {
-      continue;
+  for (const topic of topics) {
+    try {
+      const notifications = processTopic(topic, users);
+      data.push(...notifications);
+    } catch (error) {
+      logger.error({ error, topic_id: topic.topic_id }, `Error processing topic ${topic.id}`);
     }
-
-    data.push({
-      userId: user.id,
-      type: 'auto_track_topic_request',
-      metadata: { topic, user }
-    });
   }
 
   return data;
