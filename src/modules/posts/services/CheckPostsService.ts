@@ -25,10 +25,11 @@ import { telegramTrackedUserTopicsChecker } from './checkers/posts/telegram/trac
 import { RecipeNames } from '../../../shared/infra/bull/types/telegram';
 import { telegramAutoTrackTopicsChecker } from './checkers/posts/telegram/autoTrackTopics';
 
-type ProcessorItem<CheckerFunction extends (data: object) => Promise<any>> = {
-  checkerPromise: CheckerFunction;
+type CheckerFunction<T> = (data: T) => Promise<{ userId: string; metadata: any }[]>;
+type ProcessorItem<T extends CheckerFunction<any>> = {
+  checkerPromise: T;
   jobName: RecipeNames;
-  data: Parameters<CheckerFunction>[0];
+  data: Parameters<T>[0];
 };
 
 @injectable()
@@ -117,62 +118,55 @@ export default class CheckPostsService {
 
       logger.debug({ postsCount: posts.length, usersCount: users.length }, 'Fetched data');
 
-      const processors: ProcessorItem<any>[] = [];
+      const processors = [
+        {
+          checkerPromise: telegramMentionsChecker,
+          jobName: 'sendMentionNotification',
+          data: { posts, users, ignoredUsers, ignoredTopics }
+        } as ProcessorItem<typeof telegramMentionsChecker>,
 
-      // Mentions
-      processors.push({
-        checkerPromise: telegramMentionsChecker,
-        jobName: 'sendMentionNotification',
-        data: { posts, users, ignoredUsers, ignoredTopics }
-      } as ProcessorItem<typeof telegramMentionsChecker>);
+        {
+          checkerPromise: telegramTrackedPhrasesChecker,
+          jobName: 'sendPhraseTrackingNotification',
+          data: { posts, trackedPhrases, ignoredUsers, ignoredTopics }
+        } as ProcessorItem<typeof telegramTrackedPhrasesChecker>,
 
-      // Tracked Phrases
-      processors.push({
-        checkerPromise: telegramTrackedPhrasesChecker,
-        jobName: 'sendPhraseTrackingNotification',
-        data: { posts, trackedPhrases, ignoredUsers, ignoredTopics }
-      } as ProcessorItem<typeof telegramTrackedPhrasesChecker>);
+        {
+          checkerPromise: telegramTrackedTopicsChecker,
+          jobName: 'sendTopicTrackingNotification',
+          data: { posts, trackedTopics, ignoredUsers }
+        } as ProcessorItem<typeof telegramTrackedTopicsChecker>,
 
-      // Tracked Topics
-      processors.push({
-        checkerPromise: telegramTrackedTopicsChecker,
-        jobName: 'sendTopicTrackingNotification',
-        data: { posts, trackedTopics, ignoredUsers }
-      } as ProcessorItem<typeof telegramTrackedTopicsChecker>);
+        {
+          checkerPromise: telegramTrackedUsersChecker,
+          jobName: 'sendTrackedUserNotification',
+          data: { posts, trackedUsers }
+        } as ProcessorItem<typeof telegramTrackedUsersChecker>,
 
-      // Tracked Users (Posts)
-      processors.push({
-        checkerPromise: telegramTrackedUsersChecker,
-        jobName: 'sendTrackedUserNotification',
-        data: { posts, trackedUsers }
-      } as ProcessorItem<typeof telegramTrackedUsersChecker>);
+        {
+          checkerPromise: telegramTrackedBoardTopicsChecker,
+          jobName: 'sendTrackedBoardNotification',
+          data: { topics: uncheckedTopics, trackedBoards, ignoredUsers }
+        } as ProcessorItem<typeof telegramTrackedBoardTopicsChecker>,
 
-      // Tracked Boards
-      processors.push({
-        checkerPromise: telegramTrackedBoardTopicsChecker,
-        jobName: 'sendTrackedBoardNotification',
-        data: { topics: uncheckedTopics, trackedBoards, ignoredUsers }
-      } as ProcessorItem<typeof telegramTrackedBoardTopicsChecker>);
+        {
+          checkerPromise: telegramTrackedUserTopicsChecker,
+          jobName: 'sendTrackedUserNotification',
+          data: { topics: uncheckedTopics, trackedUsers }
+        } as ProcessorItem<typeof telegramTrackedUserTopicsChecker>,
 
-      // Tracked Users (Topics)
-      processors.push({
-        checkerPromise: telegramTrackedUserTopicsChecker,
-        jobName: 'sendTrackedUserNotification',
-        data: { topics: uncheckedTopics, trackedUsers }
-      } as ProcessorItem<typeof telegramTrackedUserTopicsChecker>);
-
-      // Auto Track Own Topic
-      processors.push({
-        checkerPromise: telegramAutoTrackTopicsChecker,
-        jobName: 'sendAutoTrackTopicRequestNotification',
-        data: { topics: uncheckedTopics, users }
-      } as ProcessorItem<typeof telegramAutoTrackTopicsChecker>);
+        {
+          checkerPromise: telegramAutoTrackTopicsChecker,
+          jobName: 'sendAutoTrackTopicRequestNotification',
+          data: { topics: uncheckedTopics, users }
+        } as ProcessorItem<typeof telegramAutoTrackTopicsChecker>
+      ];
 
       const postNotificationSet = new Set<string>();
 
       for await (const { checkerPromise, data, jobName } of processors) {
         try {
-          const results = await checkerPromise(data);
+          const results = await checkerPromise(data as any);
           await this.processResults(results, jobName, postNotificationSet);
         } catch (err) {
           logger.error({ err, data, jobName }, `${jobName} errored`);

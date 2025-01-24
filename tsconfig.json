@@ -17,6 +17,9 @@
       "sourceMap": true,
       "esModuleInterop": true,
       "skipLibCheck": true,
+      "paths": {
+         "@/*": ["*"],
+      }
    },
    "exclude": ["node_modules"]
 }
