@@ -31,7 +31,7 @@ const isUserMentionedInPost = (post: Post, user: User): boolean => {
   const backupQuotedRegex = new RegExp(`Quote from: ${escapeRegexText(user.username)} on`, 'gi');
 
   const regexList = [usernameRegex, altUsernameRegex, backupAtSignRegex, backupQuotedRegex];
-  return regexList.some(regex => post.content.match(regex));
+  return regexList.some(regex => regex && post.content.match(regex));
 };
 
 const shouldNotifyUser = (
