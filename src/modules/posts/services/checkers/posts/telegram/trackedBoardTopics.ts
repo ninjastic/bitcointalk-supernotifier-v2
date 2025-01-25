@@ -1,4 +1,6 @@
 import { container } from 'tsyringe';
+
+import { NotificationType } from '@/modules/notifications/infra/typeorm/entities/Notification';
 import Post from '../../../../infra/typeorm/entities/Post';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import Topic from '../../../../infra/typeorm/entities/Topic';
@@ -11,7 +13,7 @@ import logger from '../../../../../../shared/services/logger';
 
 type TelegramTrackedBoardTopicsCheckerNotificationData = {
   userId: string;
-  type: 'tracked_board';
+  type: NotificationType.TRACKED_BOARD;
   metadata: RecipeData['sendTrackedBoardNotification'];
 };
 
@@ -71,7 +73,7 @@ const processTopic = async (
 
       data.push({
         userId: user.id,
-        type: 'tracked_board',
+        type: NotificationType.TRACKED_BOARD,
         metadata: { post, user, trackedBoard }
       });
     } catch (error) {

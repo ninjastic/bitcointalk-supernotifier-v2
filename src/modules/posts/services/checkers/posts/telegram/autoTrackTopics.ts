@@ -1,3 +1,4 @@
+import { NotificationType } from '@/modules/notifications/infra/typeorm/entities/Notification';
 import Topic from '../../../../infra/typeorm/entities/Topic';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
@@ -5,7 +6,7 @@ import logger from '../../../../../../shared/services/logger';
 
 type TelegramAutoTrackTopicsCheckerNotificationData = {
   userId: string;
-  type: 'auto_track_topic_request';
+  type: NotificationType.AUTO_TRACK_TOPIC_REQUEST;
   metadata: RecipeData['sendAutoTrackTopicRequestNotification'];
 };
 
@@ -31,7 +32,7 @@ const processTopic = (topic: Topic, users: User[]): TelegramAutoTrackTopicsCheck
 
       data.push({
         userId: user.id,
-        type: 'auto_track_topic_request',
+        type: NotificationType.AUTO_TRACK_TOPIC_REQUEST,
         metadata: { topic, user }
       });
     } catch (error) {

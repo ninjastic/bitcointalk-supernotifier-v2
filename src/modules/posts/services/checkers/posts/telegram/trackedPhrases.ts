@@ -1,14 +1,15 @@
+import { NotificationType } from '@/modules/notifications/infra/typeorm/entities/Notification';
 import Post from '../../../../infra/typeorm/entities/Post';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
 import IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
 import TrackedPhrase from '../../../../infra/typeorm/entities/TrackedPhrase';
 import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
-import logger from '../../../../../../shared/services/logger'; // Importe o logger corretamente
+import logger from '../../../../../../shared/services/logger';
 
 type TelegramTrackedPhrasesCheckerNotificationData = {
   userId: string;
-  type: 'tracked_phrase';
+  type: NotificationType.TRACKED_PHRASE;
   metadata: RecipeData['sendPhraseTrackingNotification'];
 };
 
@@ -63,7 +64,7 @@ const processPost = (
       if (shouldNotifyUser(post, user, ignoredUsers, ignoredTopics)) {
         data.push({
           userId: user.id,
-          type: 'tracked_phrase',
+          type: NotificationType.TRACKED_PHRASE,
           metadata: { post, user, trackedPhrase }
         });
       }

@@ -1,3 +1,4 @@
+import { NotificationType } from '@/modules/notifications/infra/typeorm/entities/Notification';
 import Post from '../../../../infra/typeorm/entities/Post';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import Topic from '../../../../infra/typeorm/entities/Topic';
@@ -7,7 +8,7 @@ import logger from '../../../../../../shared/services/logger';
 
 type TelegramTrackedUserTopicsCheckerNotificationData = {
   userId: string;
-  type: 'tracked_user';
+  type: NotificationType.TRACKED_USER;
   metadata: RecipeData['sendTrackedUserNotification'];
 };
 
@@ -42,7 +43,7 @@ const processTopic = (
       if (shouldNotifyUser(post, user)) {
         data.push({
           userId: user.id,
-          type: 'tracked_user',
+          type: NotificationType.TRACKED_USER,
           metadata: { post, user }
         });
       }
