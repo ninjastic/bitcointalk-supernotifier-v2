@@ -1,7 +1,8 @@
 import { inject, injectable } from 'tsyringe';
 
+import { NotificationType, PostMentionNotification } from '@/modules/notifications/infra/typeorm/entities/Notification';
 import IPostsRepository from '../repositories/IPostsRepository';
-import NotificationRepository from '../../notifications/infra/typeorm/repositories/NotificationRepository';
+import { NotificationService } from './notification-service';
 
 @injectable()
 export default class SetPostNotifiedService {
@@ -12,20 +13,20 @@ export default class SetPostNotifiedService {
 
   public async execute(post_id: number, telegram_id: string): Promise<void> {
     const post = await this.postsRepository.findOneByPostId(post_id);
-    const notificationRepository = new NotificationRepository();
+    const notificationService = new NotificationService();
 
     post.notified = true;
     post.notified_to.push(telegram_id);
 
     await this.postsRepository.save(post);
 
-    const notificationData = {
+    await notificationService.createNotification<PostMentionNotification>({
+      type: NotificationType.POST_MENTION,
       telegram_id,
-      type: 'post_mention',
-      metadata: { post_id }
-    };
-
-    const notification = notificationRepository.create(notificationData);
-    await notificationRepository.save(notification);
+      metadata: {
+        post_id,
+        history: false
+      }
+    });
   }
 }
