@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import 'module-alias/register';
 import 'dotenv/config.js';
 import { Job, Worker } from 'bullmq';
 import { container } from 'tsyringe';

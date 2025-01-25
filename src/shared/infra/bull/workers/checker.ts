@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import 'module-alias/register';
 import 'dotenv/config.js';
 import { container } from 'tsyringe';
 import { createConnection } from 'typeorm';

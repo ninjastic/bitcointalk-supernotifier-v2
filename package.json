@@ -68,7 +68,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-config-prettier": "^8.6.0",
-    "eslint-import-resolver-typescript": "^3.5.3",
+    "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^4.2.1",
     "husky": "^4.2.5",
@@ -121,6 +121,7 @@
     "jsonwebtoken": "^9.0.2",
     "jssha": "^3.3.0",
     "lzma-native": "^8.0.6",
+    "module-alias": "^2.2.3",
     "node-fetch": "^2.6.1",
     "ora": "5.4.1",
     "pg": "^8.3.0",
@@ -135,5 +136,8 @@
     "typeorm": "0.2.25",
     "user-agents": "^1.0.1294",
     "zod": "^3.21.4"
+  },
+  "_moduleAliases": {
+    "@": "./dist"
   }
 }

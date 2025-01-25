@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import 'module-alias/register';
 import 'dotenv/config.js';
 import { Bot, Context, session, SessionFlavor } from 'grammy';
 import { RedisAdapter } from '@grammyjs/storage-redis';
