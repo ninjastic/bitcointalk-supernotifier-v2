@@ -3,7 +3,7 @@ import type { MessageEntity } from '@grammyjs/types';
 import { container } from 'tsyringe';
 
 import puppeteer from 'puppeteer';
-import Post from 'modules/posts/infra/typeorm/entities/Post';
+import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 import IMenuContext from '../@types/IMenuContext';
 import GetPostService from '../../../../modules/posts/services/GetPostService';
 

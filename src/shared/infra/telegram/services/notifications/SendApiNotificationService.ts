@@ -1,19 +1,24 @@
-import logger from '../../../../services/logger';
-import bot from '../../index';
+import { injectable } from 'tsyringe';
+import logger from '@/shared/services/logger';
+import bot from '@/shared/infra/telegram';
+import { checkBotNotificationError } from '@/shared/services/utils';
 
-import { checkBotNotificationError } from '../../../../services/utils';
+type ApiNotificationData = {
+  telegramId: string;
+  message: string;
+};
 
+@injectable()
 export default class SendApiNotificationService {
-  public async execute(telegram_id: string, message: string): Promise<boolean> {
-    return bot.instance.api
-      .sendMessage(telegram_id, message, { parse_mode: 'HTML' })
-      .then(async () => {
-        logger.info({ telegram_id, message }, 'API notification was sent');
-        return true;
-      })
-      .catch(async error => {
-        await checkBotNotificationError(error, telegram_id, { message });
-        return false;
-      });
+  public async execute({ telegramId, message }: ApiNotificationData): Promise<boolean> {
+    try {
+      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+
+      logger.info({ telegramId, message }, 'API notification was sent');
+      return true;
+    } catch (error) {
+      await checkBotNotificationError(error, telegramId, { message });
+      return false;
+    }
   }
 }

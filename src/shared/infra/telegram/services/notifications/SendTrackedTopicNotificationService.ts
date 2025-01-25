@@ -17,33 +17,17 @@ import SetPostNotifiedService from '../../../../../modules/posts/services/SetPos
 import { checkBotNotificationError } from '../../../../services/utils';
 import ICacheProvider from '../../../../container/providers/models/ICacheProvider';
 
+type TrackedTopicNotificationData = {
+  telegramId: string;
+  post: Post;
+};
+
 @injectable()
 export default class SendTrackedTopicNotificationService {
   constructor(
     @inject('CacheRepository')
     private cacheRepository: ICacheProvider
   ) {}
-
-  public async execute(telegramId: string, post: Post): Promise<boolean> {
-    const setPostNotified = container.resolve(SetPostNotifiedService);
-    const postLength = await this.getPostLength(telegramId);
-
-    const { post_id, topic_id, title, author, boards, content } = post;
-    const filteredContent = this.filterPostContent(content);
-    const formattedTitle = this.formatTitle(boards, title);
-    const message = this.buildMessage(author, topic_id, post_id, formattedTitle, filteredContent, postLength);
-
-    try {
-      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
-      logger.info({ telegramId, post_id, message }, 'Tracked Topic notification was sent');
-      await setPostNotified.execute(post.post_id, telegramId);
-      await this.createNotification(telegramId, { post_id });
-      return true;
-    } catch (error) {
-      await checkBotNotificationError(error, telegramId, { post_id, message });
-      return false;
-    }
-  }
 
   private async getPostLength(telegramId: string): Promise<number> {
     return (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
@@ -57,8 +41,13 @@ export default class SendTrackedTopicNotificationService {
     return data.text().replace(/\s\s+/g, ' ').trim();
   }
 
-  private formatTitle(boards: string[], title: string): string {
-    return boards.length ? `${boards[boards.length - 1]} / ${title}` : title;
+  private async createNotification(telegramId: string, metadata: TrackedTopicNotification['metadata']) {
+    const notificationService = new NotificationService();
+    await notificationService.createNotification<TrackedTopicNotification>({
+      type: NotificationType.TRACKED_TOPIC,
+      telegram_id: telegramId,
+      metadata
+    });
   }
 
   private buildMessage(
@@ -81,12 +70,26 @@ export default class SendTrackedTopicNotificationService {
     );
   }
 
-  private async createNotification(telegramId: string, metadata: TrackedTopicNotification['metadata']) {
-    const notificationService = new NotificationService();
-    await notificationService.createNotification<TrackedTopicNotification>({
-      type: NotificationType.TRACKED_TOPIC,
-      telegram_id: telegramId,
-      metadata
-    });
+  public async execute({ telegramId, post }: TrackedTopicNotificationData): Promise<boolean> {
+    const setPostNotified = container.resolve(SetPostNotifiedService);
+    const postLength = await this.getPostLength(telegramId);
+
+    const { post_id, topic_id, title, author, content } = post;
+    const filteredContent = this.filterPostContent(content);
+    const message = this.buildMessage(author, topic_id, post_id, title, filteredContent, postLength);
+
+    try {
+      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+
+      logger.info({ telegramId, post_id, message }, 'Tracked Topic notification was sent');
+
+      await setPostNotified.execute(post.post_id, telegramId);
+      await this.createNotification(telegramId, { post_id });
+
+      return true;
+    } catch (error) {
+      await checkBotNotificationError(error, telegramId, { post_id, message });
+      return false;
+    }
   }
 }

@@ -7,7 +7,7 @@ export default class NotificationRepository {
   private ormRepository: Repository<Notification>;
 
   constructor() {
-    this.ormRepository = getRepository(Notification);
+    this.ormRepository = getRepository(Notification<object>);
   }
 
   public create(notification: CreateNotificationDTO): Notification {

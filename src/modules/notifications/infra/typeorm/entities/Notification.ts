@@ -41,7 +41,7 @@ type TrackedBoardData = {
 
 type TrackedUserData = {
   post_id: number;
-  author: number;
+  author: string;
 };
 
 type TrackedPhraseData = {
