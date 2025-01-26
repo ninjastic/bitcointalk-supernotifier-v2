@@ -1,0 +1,1 @@
+export const ADMIN_TELEGRAM_ID = 608520255;

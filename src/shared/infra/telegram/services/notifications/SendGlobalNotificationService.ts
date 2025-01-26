@@ -7,6 +7,7 @@ import IUsersRepository from '@/modules/users/repositories/IUsersRepository';
 import RedisProvider from '@/shared/container/providers/implementations/RedisProvider';
 
 import { checkBotNotificationError } from '@/shared/services/utils';
+import { ADMIN_TELEGRAM_ID } from '@/config/admin';
 
 type MessageSent = {
   telegramId: string;
@@ -52,7 +53,7 @@ export default class SendGlobalNotificationService {
     let successed = 0;
     let errored = 0;
 
-    await bot.instance.api.sendMessage(608520255, `Starting to send the messages...`);
+    await bot.instance.api.sendMessage(ADMIN_TELEGRAM_ID, `Starting to send the messages...`);
 
     const promises = unblockedUsers.map(
       async (user, index) =>

@@ -1,5 +1,4 @@
 import 'reflect-metadata';
-import 'module-alias/register';
 import 'dotenv/config.js';
 import { Api, Bot, Context, RawApi, session, SessionFlavor } from 'grammy';
 import { RedisAdapter } from '@grammyjs/storage-redis';
@@ -56,7 +55,7 @@ export function initialSession(): ISession {
 }
 
 class TelegramBot {
-  public instance: Bot<Context & SessionFlavor<ISession>>;
+  public instance: Bot<Context & SessionFlavor<ISession>, Api<RawApi>>;
 
   public runner: RunnerHandle;
 

@@ -216,7 +216,7 @@ export default class PostsRepository implements IPostsRepository {
   }
 
   public async findPosts(conditions: IFindPostsConditionsDTO): Promise<Post[]> {
-    const { author, topic_id, last, after, after_date, before_date, limit, order } = conditions;
+    const { author, author_uid, topic_id, last, after, after_date, before_date, limit, order } = conditions;
 
     return this.ormRepository
       .createQueryBuilder('posts')
@@ -238,6 +238,9 @@ export default class PostsRepository implements IPostsRepository {
               case_insensitive: true
             }
           : undefined
+      })
+      .andWhere(author_uid ? `author_uid = :author_uid` : '1=1', {
+        author_uid
       })
       .andWhere(last ? `post_id < :last` : '1=1', {
         last
