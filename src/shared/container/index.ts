@@ -1,6 +1,5 @@
 import { container } from 'tsyringe';
 
-import TelegramBot from '@/shared/infra/telegram/bot';
 import IUsersRepository from '../../modules/users/repositories/IUsersRepository';
 import UsersRepository from '../../modules/users/infra/typeorm/repositories/UsersRepository';
 
@@ -65,5 +64,3 @@ container.registerSingleton<IPostsAddressesRepository>('PostsAddressesRepository
 container.registerSingleton<IPostsHistoryRepository>('PostsHistoryRepository', PostsHistoryRepository);
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);
-
-container.registerSingleton('TelegramBot', TelegramBot);
