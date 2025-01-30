@@ -40,11 +40,11 @@ export async function checkBotNotificationError(error: any, telegram_id: string,
   ].some(patternMessage => errorMessage.match(new RegExp(patternMessage, 'i')));
 
   if (isBotBlocked) {
-    logger.info({ telegram_id, ...meta }, 'Telegram user marked as blocked');
+    logger.info({ telegram_id, meta }, 'Telegram user marked as blocked');
     await setUserBlocked.execute(telegram_id);
     return true;
   }
-  logger.error({ error: errorMessage, telegram_id, ...meta }, 'Error while sending telegram message');
+  logger.error({ error: errorMessage, telegram_id, meta }, 'Error while sending telegram message');
   return false;
 }
 
