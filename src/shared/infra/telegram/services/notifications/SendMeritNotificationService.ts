@@ -92,9 +92,13 @@ export default class SendMeritNotificationService {
       const totalMeritCount = await this.getTotalMeritCount(telegramId, receiver_uid, amount);
       const message = await this.buildNotificationMessage(title, sender, amount, totalMeritCount, topic_id, post_id);
 
-      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-      logger.info({ telegram_id: telegramId, post_id, message }, 'Merit notification was sent');
+      if (messageSent) {
+        logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Merit notification was sent');
+      } else {
+        logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get merit notification data');
+      }
 
       await setMeritNotified.execute(merit, telegramId);
       await this.createNotification(telegramId, { post_id, merit_id });

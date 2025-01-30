@@ -77,12 +77,19 @@ export default class SendMentionNotificationService {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
       const message = await this.buildNotificationMessage(post, postLength);
 
-      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-      logger.info(
-        { telegram_id: telegramId, post_id: post.post_id, history, message },
-        'Mention notification was sent'
-      );
+      if (messageSent) {
+        logger.info(
+          { telegram_id: telegramId, post_id: post.post_id, history, message, messageSent },
+          'Mention notification was sent'
+        );
+      } else {
+        logger.info(
+          { telegram_id: telegramId, post_id: post.post_id, history, message },
+          'Could not get mention notification data'
+        );
+      }
 
       await this.markPostAsNotified(post, telegramId, history);
       await this.createNotification(telegramId, { post_id: post.post_id, history });
