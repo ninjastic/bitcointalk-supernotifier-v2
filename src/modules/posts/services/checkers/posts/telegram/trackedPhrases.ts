@@ -42,8 +42,9 @@ const shouldNotifyUser = (
   const isTopicIgnored = ignoredTopics
     .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
     ?.ignoring.includes(user.telegram_id);
+  const isUserBlocked = user.blocked;
 
-  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored);
+  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored || isUserBlocked);
 };
 
 const processPost = (
