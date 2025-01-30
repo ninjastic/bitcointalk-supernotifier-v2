@@ -36,7 +36,7 @@ export default class CheckMeritsService {
       }
 
       for await (const receiverUser of receiverUsers) {
-        const meritUserKey = `CheckMeritsService:${merit.post_id}:${merit.id}`;
+        const meritUserKey = `CheckMeritsService:${receiverUser.telegram_id}:${merit.id}`;
         const notificationData = {
           telegram_id: receiverUser.telegram_id,
           type: NotificationType.MERIT,
@@ -46,20 +46,20 @@ export default class CheckMeritsService {
           }
         };
 
+        const isAlreadyNotified =
+          merit.notified_to.includes(receiverUser.telegram_id) ||
+          (await notificationRepository.findOne({ where: notificationData }));
+
+        if (isAlreadyNotified) {
+          continue;
+        }
+
         const isJobAlreadyInQueue = await this.cacheRepository.recover(meritUserKey);
         if (isJobAlreadyInQueue) continue;
 
         const redisAnswer = await this.cacheRepository.save(meritUserKey, true, 'EX', 1800);
         if (redisAnswer !== 'OK') {
           logger.error('CheckMeritsService Job lock did not return OK', { meritUserKey, redisAnswer });
-          continue;
-        }
-
-        const isAlreadyNotified =
-          merit.notified_to.includes(receiverUser.telegram_id) ||
-          (await notificationRepository.findOne({ where: notificationData }));
-
-        if (isAlreadyNotified) {
           continue;
         }
 
