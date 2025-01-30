@@ -42,8 +42,8 @@ export const censorAddressesMenu = async (): Promise<void> => {
         }
       }
     ])
-    .catch(err => {
-      logger.error(err);
+    .catch(error => {
+      logger.error({ error });
       process.exit();
     });
 

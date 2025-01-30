@@ -67,8 +67,7 @@ export default class UserMeritsCountController {
       return response.json(result);
     } catch (error) {
       logger.error({
-        error: error.message,
-        stack: error.stack,
+        error,
         controller: 'UserMeritsDataController'
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });

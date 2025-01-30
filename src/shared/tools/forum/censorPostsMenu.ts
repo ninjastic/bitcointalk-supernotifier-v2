@@ -49,8 +49,8 @@ export const censorPostsMenu = async (): Promise<void> => {
         default: defaultNewContent
       }
     ])
-    .catch(err => {
-      logger.error(err);
+    .catch(error => {
+      logger.error({ error });
       process.exit();
     });
 

@@ -50,8 +50,7 @@ export default class UserPostsBoardsController {
       return response.json(result);
     } catch (error) {
       logger.error({
-        error: error.message,
-        stack: error.stack,
+        error,
         controller: 'UserPostsBoardsController'
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });

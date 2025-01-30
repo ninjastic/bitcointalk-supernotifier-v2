@@ -127,6 +127,7 @@
     "pg": "^8.3.0",
     "pino": "^8.10.0",
     "pino-http": "^8.3.3",
+    "pino-std-serializers": "^7.0.0",
     "pluralize": "^8.0.0",
     "promise-queue": "^2.2.5",
     "puppeteer": "^19.7.1",

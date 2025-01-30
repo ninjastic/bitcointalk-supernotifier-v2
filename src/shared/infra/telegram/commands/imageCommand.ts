@@ -28,7 +28,7 @@ const imageCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
 
   try {
     post = await getPostService.execute({ post_id: postId });
-  } catch (err) {
+  } catch (error) {
     await ctx.reply(`Could not get post ${postId}, please contact TryNinja.`);
     return;
   }

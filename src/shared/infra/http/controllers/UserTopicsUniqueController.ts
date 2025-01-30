@@ -56,8 +56,7 @@ export default class UserTopicsUniqueController {
       return response.json(result);
     } catch (error) {
       logger.error({
-        error: error.message,
-        stack: error.stack,
+        error,
         controller: 'UserTopicsUniqueController'
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });

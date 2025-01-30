@@ -51,8 +51,7 @@ export default class PostsBoardsPeriodTotalController {
     } catch (error) {
       logger.error(
         {
-          error: error.message,
-          stack: error.stack,
+          error,
           controller: 'PostsBoardsPeriodTotalController'
         },
         'Error on '

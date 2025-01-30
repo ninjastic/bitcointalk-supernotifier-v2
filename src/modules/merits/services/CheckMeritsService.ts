@@ -59,7 +59,7 @@ export default class CheckMeritsService {
 
         const redisAnswer = await this.cacheRepository.save(meritUserKey, true, 'EX', 1800);
         if (redisAnswer !== 'OK') {
-          logger.error('CheckMeritsService Job lock did not return OK', { meritUserKey, redisAnswer });
+          logger.error({ meritUserKey, redisAnswer }, 'CheckMeritsService Job lock did not return OK');
           continue;
         }
 

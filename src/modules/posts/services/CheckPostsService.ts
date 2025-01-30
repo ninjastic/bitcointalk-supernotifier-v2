@@ -83,7 +83,7 @@ export default class CheckPostsService {
 
       const redisAnswer = await this.cacheRepository.save(postUserKey, true, 'EX', 1800);
       if (redisAnswer !== 'OK') {
-        logger.error('CheckPostsService Job lock did not return OK', { postUserKey, redisAnswer });
+        logger.error({ postUserKey, redisAnswer }, 'CheckPostsService Job lock did not return OK');
         continue;
       }
 
@@ -168,8 +168,8 @@ export default class CheckPostsService {
         try {
           const results = await checkerPromise(data as any);
           await this.processResults(results, jobName, postNotificationSet);
-        } catch (err) {
-          logger.error({ err, data, jobName }, `${jobName} errored`);
+        } catch (error) {
+          logger.error({ error, data, jobName }, `${jobName} errored`);
         }
       }
 
@@ -180,9 +180,9 @@ export default class CheckPostsService {
       }
 
       logger.info('CheckPostsService completed successfully');
-    } catch (err) {
-      logger.error({ err }, 'CheckPostsService failed');
-      throw err;
+    } catch (error) {
+      logger.error({ error }, 'CheckPostsService failed');
+      throw error;
     }
   }
 }

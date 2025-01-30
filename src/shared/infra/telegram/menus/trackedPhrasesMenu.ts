@@ -92,7 +92,7 @@ const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (c
       return;
     }
 
-    logger.error({ telegram_id: ctx.chat.id, error: error.message }, 'Error while adding Tracked Phrase.');
+    logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Tracked Phrase.');
 
     await ctx.reply('Something went wrong...', {
       reply_markup: { remove_keyboard: true }
