@@ -2,6 +2,7 @@ import { injectable, inject, container } from 'tsyringe';
 
 import logger from '@/shared/services/logger';
 import bot from '@/shared/infra/telegram';
+import { ADMIN_TELEGRAM_ID } from '@/config/admin';
 
 import IUsersRepository from '@/modules/users/repositories/IUsersRepository';
 import RedisProvider from '@/shared/container/providers/implementations/RedisProvider';
@@ -52,7 +53,7 @@ export default class SendGlobalNotificationService {
     let successed = 0;
     let errored = 0;
 
-    await bot.instance.api.sendMessage(608520255, `Starting to send the messages...`);
+    await bot.instance.api.sendMessage(ADMIN_TELEGRAM_ID, `Starting to send the messages...`);
 
     const promises = unblockedUsers.map(
       async (user, index) =>
