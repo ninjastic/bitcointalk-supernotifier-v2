@@ -83,11 +83,11 @@ const telegram = async () => {
   );
 
   worker.on('active', async (job: Job) => {
-    logger.info({ jobId: job.id, data: job.data }, `[${worker.name}][Worker][${job.id}] Active ${job.name}`);
+    logger.debug({ jobId: job.id, data: job.data }, `[${worker.name}][Worker][${job.id}] Active ${job.name}`);
   });
 
   worker.on('completed', async (job: Job) => {
-    logger.info(
+    logger.debug(
       { jobId: job.id, value: job.returnvalue, data: job.data },
       `[${worker.name}][Worker][${job.id}] Completed ${job.name}`
     );

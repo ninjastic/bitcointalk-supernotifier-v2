@@ -93,11 +93,11 @@ const scraper = async () => {
   );
 
   worker.on('active', async (job: Job) => {
-    logger.info({ jobId: job.id, data: job.data }, `[${worker.name}][Worker] Active ${job.name}`);
+    logger.debug({ jobId: job.id, data: job.data }, `[${worker.name}][Worker] Active ${job.name}`);
   });
 
   worker.on('completed', async (job: Job) => {
-    logger.info(
+    logger.debug(
       { jobId: job.id, value: job.returnvalue, data: job.data },
       `[${worker.name}][Worker] Completed ${job.name}`
     );
