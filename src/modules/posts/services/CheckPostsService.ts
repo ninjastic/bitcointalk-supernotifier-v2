@@ -1,8 +1,9 @@
 import { container, inject, injectable } from 'tsyringe';
 import { getRepository } from 'typeorm';
 
-import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
+import Post from '@/modules/posts/infra/typeorm/entities/Post';
 import logger from '../../../shared/services/logger';
+import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import IPostsRepository from '../repositories/IPostsRepository';
@@ -25,12 +26,24 @@ import { telegramTrackedUserTopicsChecker } from './checkers/posts/telegram/trac
 import { RecipeNames } from '../../../shared/infra/bull/types/telegram';
 import { telegramAutoTrackTopicsChecker } from './checkers/posts/telegram/autoTrackTopics';
 
+type ProcessorResultData<T extends CheckerFunction<any>> = Awaited<ReturnType<T>>;
+type ProcessorParams<T extends CheckerFunction<any>> = Parameters<T>[0];
 type CheckerFunction<T> = (data: T) => Promise<{ userId: string; metadata: any }[]>;
 type ProcessorItem<T extends CheckerFunction<any>> = {
   checkerPromise: T;
   jobName: RecipeNames;
-  data: Parameters<T>[0];
+  data: ProcessorParams<T>[0];
 };
+
+type ProcessorResults = ProcessorResultData<
+  | typeof telegramMentionsChecker
+  | typeof telegramTrackedPhrasesChecker
+  | typeof telegramTrackedTopicsChecker
+  | typeof telegramTrackedUsersChecker
+  | typeof telegramTrackedBoardTopicsChecker
+  | typeof telegramTrackedUserTopicsChecker
+  | typeof telegramAutoTrackTopicsChecker
+>;
 
 @injectable()
 export default class CheckPostsService {
@@ -69,11 +82,21 @@ export default class CheckPostsService {
     };
   }
 
-  private async processResults(results: any[], jobName: RecipeNames, postNotificationSet: Set<string>) {
+  private async processResults(results: ProcessorResults, jobName: RecipeNames, postNotificationSet: Set<string>) {
     for await (const result of results) {
-      if (!('post' in result.metadata) || !result.metadata.user.telegram_id) continue;
+      let metadataPost: Post;
 
-      const postUserKey = `CheckPostsService:${result.userId}:${result.metadata.post.id}`;
+      if ('post' in result.metadata) {
+        metadataPost = result.metadata.post;
+      }
+
+      if ('topic' in result.metadata && 'post' in result.metadata.topic) {
+        metadataPost = result.metadata.topic.post;
+      }
+
+      if (!metadataPost || !result.metadata.user.telegram_id) continue;
+
+      const postUserKey = `CheckPostsService:${result.userId}:${metadataPost.id}`;
       if (postNotificationSet.has(postUserKey)) continue;
 
       postNotificationSet.add(postUserKey);
@@ -91,7 +114,7 @@ export default class CheckPostsService {
         .createQueryBuilder('notification')
         .where('notification.type = :type', { type: result.type })
         .andWhere('notification.telegram_id = :telegramId', { telegramId: result.metadata.user.telegram_id })
-        .andWhere(`notification.metadata->>'post_id' = :postId`, { postId: result.metadata.post.post_id })
+        .andWhere(`notification.metadata->>'post_id' = :postId`, { postId: metadataPost.post_id })
         .getOne();
 
       if (postNotified) continue;
