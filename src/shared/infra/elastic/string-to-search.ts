@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import 'dotenv/config.js';
+import 'dotenv/config';
 import esClient from 'shared/services/elastic';
 
 interface ElasticsearchQuery {

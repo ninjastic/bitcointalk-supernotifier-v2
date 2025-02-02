@@ -2,20 +2,20 @@ import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 
-import { sponsorText } from '@/config/sponsor';
-import logger from '@/shared/services/logger';
-import bot from '@/shared/infra/telegram';
+import { sponsorText } from '##/config/sponsor';
+import logger from '##/shared/services/logger';
+import bot from '##/shared/infra/telegram';
 
-import Post from '@/modules/posts/infra/typeorm/entities/Post';
+import Post from '##/modules/posts/infra/typeorm/entities/Post';
 
-import { checkBotNotificationError } from '@/shared/services/utils';
-import SetPostNotifiedService from '@/modules/posts/services/SetPostNotifiedService';
-import ICacheProvider from '@/shared/container/providers/models/ICacheProvider';
+import { checkBotNotificationError } from '##/shared/services/utils';
+import SetPostNotifiedService from '##/modules/posts/services/SetPostNotifiedService';
+import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 import {
   NotificationType,
   TrackedPhraseNotification
-} from '@/modules/notifications/infra/typeorm/entities/Notification';
-import { NotificationService } from '@/modules/posts/services/notification-service';
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationService } from '##/modules/posts/services/notification-service';
 
 type TrackedPhraseNotificationData = {
   telegramId: string;

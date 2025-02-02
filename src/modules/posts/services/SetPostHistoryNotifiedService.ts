@@ -1,6 +1,9 @@
 import { inject, injectable } from 'tsyringe';
 
-import { NotificationType, PostMentionNotification } from '@/modules/notifications/infra/typeorm/entities/Notification';
+import {
+  NotificationType,
+  PostMentionNotification
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
 import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 import { NotificationService } from './notification-service';
 

@@ -19,7 +19,7 @@
   "plugins": ["@typescript-eslint", "prettier"],
   "rules": {
     "prettier/prettier": "error",
-    "import/extensions": ["error", "ignorePackages", { "ts": "never" }],
+    "import/extensions": ["error", "ignorePackages", { "ts": "never", "js": "never" }],
     "class-methods-use-this": "off",
     "camelcase": "off",
     "no-useless-constructor": "off",

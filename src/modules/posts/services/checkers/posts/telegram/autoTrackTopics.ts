@@ -1,4 +1,4 @@
-import { NotificationType } from '@/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import Topic from '../../../../infra/typeorm/entities/Topic';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';

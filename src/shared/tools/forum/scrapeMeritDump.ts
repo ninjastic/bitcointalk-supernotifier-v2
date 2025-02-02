@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import 'reflect-metadata';
-import 'dotenv/config.js';
+import 'dotenv/config';
 import axios from 'axios';
 import lzma from 'lzma-native';
 import { format, isEqual, getUnixTime } from 'date-fns';

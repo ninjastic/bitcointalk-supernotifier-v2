@@ -1,4 +1,4 @@
-import { NotificationType } from '@/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import Post from '../../../../infra/typeorm/entities/Post';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import TrackedUser from '../../../../infra/typeorm/entities/TrackedUser';

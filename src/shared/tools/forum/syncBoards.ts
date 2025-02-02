@@ -1,4 +1,4 @@
-import 'dotenv/config.js';
+import 'dotenv/config';
 import cheerio from 'cheerio';
 import { createConnection, createQueryBuilder } from 'typeorm';
 import { container } from 'tsyringe';

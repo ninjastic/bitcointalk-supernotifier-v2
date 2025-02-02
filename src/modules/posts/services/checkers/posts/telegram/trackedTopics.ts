@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
 
-import { NotificationType } from '@/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import Post from '../../../../infra/typeorm/entities/Post';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';

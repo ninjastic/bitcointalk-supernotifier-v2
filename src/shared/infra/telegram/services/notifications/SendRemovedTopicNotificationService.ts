@@ -2,17 +2,20 @@ import { container, injectable } from 'tsyringe';
 import pluralize from 'pluralize';
 import escape from 'escape-html';
 
-import { sponsorText } from '@/config/sponsor';
-import logger from '@/shared/services/logger';
-import bot from '@/shared/infra/telegram';
+import { sponsorText } from '##/config/sponsor';
+import logger from '##/shared/services/logger';
+import bot from '##/shared/infra/telegram';
 
-import Post from '@/modules/posts/infra/typeorm/entities/Post';
-import ModLog from '@/modules/modlog/infra/typeorm/entities/ModLog';
+import Post from '##/modules/posts/infra/typeorm/entities/Post';
+import ModLog from '##/modules/modlog/infra/typeorm/entities/ModLog';
 
-import { checkBotNotificationError } from '@/shared/services/utils';
-import SetModLogNotifiedService from '@/modules/modlog/services/SetModLogNotifiedService';
-import { NotificationService } from '@/modules/posts/services/notification-service';
-import { NotificationType, RemoveTopicNotification } from '@/modules/notifications/infra/typeorm/entities/Notification';
+import { checkBotNotificationError } from '##/shared/services/utils';
+import SetModLogNotifiedService from '##/modules/modlog/services/SetModLogNotifiedService';
+import { NotificationService } from '##/modules/posts/services/notification-service';
+import {
+  NotificationType,
+  RemoveTopicNotification
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
 
 type RemovedTopicNotificationData = {
   telegram_id: string;

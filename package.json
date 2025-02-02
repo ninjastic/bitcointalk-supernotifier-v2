@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "babel src -d dist --extensions \".ts,.tsx\"",
     "release": "standard-version",
     "test": "jest",
     "start:scraper": "cross-env NODE_ENV=production node dist/shared/infra/bull/workers/scraper.js",
@@ -27,7 +27,12 @@
     }
   },
   "devDependencies": {
-    "@babel/preset-typescript": "^7.21.4",
+    "@babel/cli": "^7.26.4",
+    "@babel/core": "^7.26.7",
+    "@babel/plugin-proposal-decorators": "^7.25.9",
+    "@babel/plugin-transform-class-properties": "^7.25.9",
+    "@babel/preset-env": "^7.26.7",
+    "@babel/preset-typescript": "^7.26.0",
     "@commitlint/cli": "^9.1.2",
     "@commitlint/config-conventional": "^9.1.2",
     "@grammyjs/types": "^2.12.1",
@@ -64,6 +69,8 @@
     "@types/user-agents": "^1.0.2",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "@typescript-eslint/parser": "^5.52.0",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "babel-plugin-transform-typescript-metadata": "^0.3.2",
     "eslint": "^8.34.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-airbnb-typescript": "^17.0.0",
@@ -138,7 +145,7 @@
     "user-agents": "^1.0.1294",
     "zod": "^3.21.4"
   },
-  "_moduleAliases": {
-    "@": "./dist"
+  "imports": {
+    "##/*": "./dist/*"
   }
 }

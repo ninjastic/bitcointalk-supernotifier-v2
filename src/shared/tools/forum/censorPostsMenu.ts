@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import 'dotenv/config.js';
+import 'dotenv/config';
 import 'reflect-metadata';
 import inquirer from 'inquirer';
 import chalk from 'chalk';

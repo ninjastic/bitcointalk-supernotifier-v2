@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import 'dotenv/config.js';
+import 'dotenv/config';
 import { container } from 'tsyringe';
 import { createConnection } from 'typeorm';
 import inquirer from 'inquirer';

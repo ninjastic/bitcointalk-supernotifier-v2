@@ -1,7 +1,7 @@
 import { container, inject, injectable } from 'tsyringe';
 import { getRepository } from 'typeorm';
 
-import Post from '@/modules/posts/infra/typeorm/entities/Post';
+import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import logger from '../../../shared/services/logger';
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 

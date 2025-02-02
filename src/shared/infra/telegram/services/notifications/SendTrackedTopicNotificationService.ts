@@ -2,11 +2,11 @@ import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 
-import { NotificationService } from '@/modules/posts/services/notification-service';
+import { NotificationService } from '##/modules/posts/services/notification-service';
 import {
   NotificationType,
   TrackedTopicNotification
-} from '@/modules/notifications/infra/typeorm/entities/Notification';
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { sponsorText } from '../../../../../config/sponsor';
 import logger from '../../../../services/logger';
 import bot from '../../index';

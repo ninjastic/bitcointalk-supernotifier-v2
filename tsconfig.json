@@ -9,6 +9,7 @@
       "module": "commonjs",
       "moduleResolution": "node",
       "resolveJsonModule": true,
+      "rootDir": "./src",
       "baseUrl": "./src",
       "outDir": "./dist",
       "strictPropertyInitialization": false,
@@ -18,8 +19,9 @@
       "esModuleInterop": true,
       "skipLibCheck": true,
       "paths": {
-         "@/*": ["*"],
+         "##/*": ["./*"],
       }
    },
+   "include": ["src/**/*.ts"],
    "exclude": ["node_modules"]
 }

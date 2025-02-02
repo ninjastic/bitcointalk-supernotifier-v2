@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import 'dotenv/config.js';
+import 'dotenv/config';
 import 'reflect-metadata';
 import { getManager } from 'typeorm';
 import inquirer from 'inquirer';

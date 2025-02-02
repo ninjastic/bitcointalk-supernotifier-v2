@@ -1,4 +1,4 @@
-import 'dotenv/config.js';
+import 'dotenv/config';
 import fs from 'fs';
 import { createConnection } from 'typeorm';
 

@@ -1,13 +1,13 @@
 import { injectable, inject, container } from 'tsyringe';
 
-import logger from '@/shared/services/logger';
-import bot from '@/shared/infra/telegram';
-import { ADMIN_TELEGRAM_ID } from '@/config/admin';
+import logger from '##/shared/services/logger';
+import bot from '##/shared/infra/telegram';
+import { ADMIN_TELEGRAM_ID } from '##/config/admin';
 
-import IUsersRepository from '@/modules/users/repositories/IUsersRepository';
-import RedisProvider from '@/shared/container/providers/implementations/RedisProvider';
+import IUsersRepository from '##/modules/users/repositories/IUsersRepository';
+import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 
-import { checkBotNotificationError } from '@/shared/services/utils';
+import { checkBotNotificationError } from '##/shared/services/utils';
 
 type MessageSent = {
   telegramId: string;

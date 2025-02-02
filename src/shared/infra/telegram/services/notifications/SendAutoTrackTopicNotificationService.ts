@@ -2,17 +2,17 @@ import { container, injectable } from 'tsyringe';
 import escape from 'escape-html';
 import { Bot, InlineKeyboard } from 'grammy';
 
-import bot from '@/shared/infra/telegram';
-import logger from '@/shared/services/logger';
-import RedisProvider from '@/shared/container/providers/implementations/RedisProvider';
-import Topic from '@/modules/posts/infra/typeorm/entities/Topic';
-import AddTrackedTopicService from '@/modules/posts/services/AddTrackedTopicService';
-import { checkBotNotificationError } from '@/shared/services/utils';
+import bot from '##/shared/infra/telegram';
+import logger from '##/shared/services/logger';
+import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
+import AddTrackedTopicService from '##/modules/posts/services/AddTrackedTopicService';
+import { checkBotNotificationError } from '##/shared/services/utils';
 import {
   AutoTrackTopicRequestNotification,
   NotificationType
-} from '@/modules/notifications/infra/typeorm/entities/Notification';
-import { NotificationService } from '@/modules/posts/services/notification-service';
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationService } from '##/modules/posts/services/notification-service';
 
 type AutoTrackTopicRequestNotificationData = {
   telegramId: string;

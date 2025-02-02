@@ -1,6 +1,6 @@
 /* eslint-disable no-await-in-loop */
 import 'reflect-metadata';
-import 'dotenv/config.js';
+import 'dotenv/config';
 import { container } from 'tsyringe';
 import { createConnection, getManager, InsertResult } from 'typeorm';
 import cheerio from 'cheerio';

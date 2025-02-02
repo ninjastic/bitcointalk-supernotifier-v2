@@ -8,7 +8,7 @@ import Notification, {
   TrackedPhraseNotification,
   TrackedTopicNotification,
   TrackedUserNotification
-} from '@/modules/notifications/infra/typeorm/entities/Notification';
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { DeepPartial, getRepository, Repository } from 'typeorm';
 
 export class NotificationService {

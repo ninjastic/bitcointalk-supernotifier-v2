@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import 'dotenv/config.js';
+import 'dotenv/config';
 import fs from 'fs-extra';
 import { Connection, createConnection } from 'typeorm';
 import Post from 'modules/posts/infra/typeorm/entities/Post';

@@ -1,7 +1,7 @@
 import { injectable } from 'tsyringe';
-import logger from '@/shared/services/logger';
-import bot from '@/shared/infra/telegram';
-import { checkBotNotificationError } from '@/shared/services/utils';
+import logger from '##/shared/services/logger';
+import bot from '##/shared/infra/telegram';
+import { checkBotNotificationError } from '##/shared/services/utils';
 
 type ApiNotificationData = {
   telegramId: string;

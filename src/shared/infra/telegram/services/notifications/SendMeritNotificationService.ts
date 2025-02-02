@@ -2,19 +2,19 @@ import { container, injectable, inject } from 'tsyringe';
 import pluralize from 'pluralize';
 import escape from 'escape-html';
 
-import { sponsorText } from '@/config/sponsor';
-import logger from '@/shared/services/logger';
-import bot from '@/shared/infra/telegram';
+import { sponsorText } from '##/config/sponsor';
+import logger from '##/shared/services/logger';
+import bot from '##/shared/infra/telegram';
 
-import ICacheProvider from '@/shared/container/providers/models/ICacheProvider';
-import Merit from '@/modules/merits/infra/typeorm/entities/Merit';
+import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
+import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 
-import { checkBotNotificationError } from '@/shared/services/utils';
-import forumScraperQueue, { queueEvents } from '@/shared/infra/bull/queues/forumScraperQueue';
-import SetMeritNotifiedService from '@/modules/merits/services/SetMeritNotifiedService';
-import GetPostService from '@/modules/posts/services/GetPostService';
-import { MeritNotification, NotificationType } from '@/modules/notifications/infra/typeorm/entities/Notification';
-import { NotificationService } from '@/modules/posts/services/notification-service';
+import { checkBotNotificationError } from '##/shared/services/utils';
+import forumScraperQueue, { queueEvents } from '##/shared/infra/bull/queues/forumScraperQueue';
+import SetMeritNotifiedService from '##/modules/merits/services/SetMeritNotifiedService';
+import GetPostService from '##/modules/posts/services/GetPostService';
+import { MeritNotification, NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationService } from '##/modules/posts/services/notification-service';
 
 type MeritNoficationData = {
   telegramId: string;
