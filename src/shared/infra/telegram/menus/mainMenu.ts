@@ -11,10 +11,14 @@ import ignoredTopicsMenu from './ignoredTopicsMenu';
 import notificationsMenu from './notificationsMenu';
 import aboutMenu from './aboutMenu';
 
+function getUsername(ctx: IMenuContext): string {
+  if (ctx.session.isGroup) return ctx.from.username || ctx.from.first_name;
+  if (ctx.session.username) return ctx.session.username;
+  return ctx.from.username || ctx.from.first_name;
+}
+
 const mainMenu = new MenuTemplate<IMenuContext>(async (ctx: IMenuContext) => ({
-  text: `Hello, <b>${
-    ctx.session.isGroup || !ctx.session.username ? ctx.from.username : ctx.session.username
-  }</b>.\nNice to see you. What do you want to do now?`,
+  text: `Hello, <b>${getUsername(ctx)}</b>.\nNice to see you. What do you want to do now?`,
   parse_mode: 'HTML'
 }));
 
