@@ -1,7 +1,7 @@
 import { injectable, inject, container } from 'tsyringe';
 
 import logger from '##/shared/services/logger';
-import bot from '##/shared/infra/telegram';
+import TelegramBot from '##/shared/infra/telegram/bot';
 import { ADMIN_TELEGRAM_ID } from '##/config/admin';
 
 import IUsersRepository from '##/modules/users/repositories/IUsersRepository';
@@ -18,11 +18,14 @@ type MessageSent = {
 export default class SendGlobalNotificationService {
   constructor(
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository
+    private usersRepository: IUsersRepository,
+
+    @inject('TelegramBot')
+    private bot: TelegramBot
   ) {}
 
   private async sendMessageToUser(userTelegramId: string, message: string): Promise<MessageSent> {
-    const messageSent = await bot.instance.api.sendMessage(userTelegramId, message, {
+    const messageSent = await this.bot.instance.api.sendMessage(userTelegramId, message, {
       parse_mode: 'HTML',
       link_preview_options: { is_disabled: true },
       reply_markup: { remove_keyboard: true }
@@ -40,7 +43,7 @@ export default class SendGlobalNotificationService {
   }
 
   private async sendStatusMessage(successed: number, errored: number, totalUsers: number, id: string): Promise<void> {
-    await bot.instance.api.sendMessage(
+    await this.bot.instance.api.sendMessage(
       608520255,
       `The messages were sent!\n\nID: ${id}\n\n<b>${successed}/${totalUsers} successed (${errored} failed)</b>`,
       { parse_mode: 'HTML' }
@@ -53,7 +56,7 @@ export default class SendGlobalNotificationService {
     let successed = 0;
     let errored = 0;
 
-    await bot.instance.api.sendMessage(ADMIN_TELEGRAM_ID, `Starting to send the messages...`);
+    await this.bot.instance.api.sendMessage(ADMIN_TELEGRAM_ID, `Starting to send the messages...`);
 
     const promises = unblockedUsers.map(
       async (user, index) =>

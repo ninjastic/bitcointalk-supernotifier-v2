@@ -4,7 +4,7 @@ import escape from 'escape-html';
 
 import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
-import bot from '##/shared/infra/telegram';
+import TelegramBot from '##/shared/infra/telegram/bot';
 
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 
@@ -74,6 +74,7 @@ export default class SendTrackedPhraseNotificationService {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
       const message = await this.buildNotificationMessage(post, phrase, postLength);
 
+      const bot = container.resolve(TelegramBot);
       await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
       logger.info({ telegram_id: telegramId, post_id: post.post_id, message }, 'Tracked Phrase notification was sent');

@@ -4,7 +4,7 @@ import escape from 'escape-html';
 
 import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
-import bot from '##/shared/infra/telegram';
+import TelegramBot from '##/shared/infra/telegram/bot';
 
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import TrackedBoard from '##/modules/posts/infra/typeorm/entities/TrackedBoard';
@@ -94,6 +94,7 @@ export default class SendTrackedBoardNotificationService {
         post_id
       );
 
+      const bot = container.resolve(TelegramBot);
       await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
       logger.info({ telegram_id: telegramId, post_id, message }, 'Tracked Board notification was sent');

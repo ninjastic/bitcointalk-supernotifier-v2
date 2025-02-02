@@ -125,7 +125,7 @@ export default class CheckPostsService {
 
   public async execute(): Promise<void> {
     try {
-      logger.info('Starting CheckPostsService');
+      logger.debug('Starting CheckPostsService');
 
       const {
         posts,
@@ -202,7 +202,7 @@ export default class CheckPostsService {
         logger.debug({ post }, 'Saved checked post');
       }
 
-      logger.info('CheckPostsService completed successfully');
+      logger.debug('CheckPostsService completed successfully');
     } catch (error) {
       logger.error({ error }, 'CheckPostsService failed');
       throw error;

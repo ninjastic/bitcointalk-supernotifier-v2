@@ -2,7 +2,7 @@ import { container, injectable } from 'tsyringe';
 import escape from 'escape-html';
 import { Bot, InlineKeyboard } from 'grammy';
 
-import bot from '##/shared/infra/telegram';
+import TelegramBot from '##/shared/infra/telegram/bot';
 import logger from '##/shared/services/logger';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
@@ -55,6 +55,7 @@ export default class SendAutoTrackTopicNotificationService {
     try {
       const message = await this.buildNotificationMessage(topic);
 
+      const bot = container.resolve(TelegramBot);
       const sentMessage = await bot.instance.api.sendMessage(telegramId, message, {
         parse_mode: 'HTML',
         reply_markup: trackTopicRepliesMenu

@@ -1,14 +1,9 @@
-import 'reflect-metadata';
-import 'module-alias/register';
-import 'dotenv/config';
 import { Api, Bot, Context, RawApi, session, SessionFlavor } from 'grammy';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { run, RunnerHandle } from '@grammyjs/runner';
 import { container } from 'tsyringe';
 import IORedis from 'ioredis';
-
-import '../../container';
 
 import cache from '../../../config/cache';
 import logger from '../../services/logger';

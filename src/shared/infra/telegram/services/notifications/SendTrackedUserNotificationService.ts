@@ -4,7 +4,7 @@ import escape from 'escape-html';
 
 import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
-import bot from '##/shared/infra/telegram';
+import TelegramBot from '##/shared/infra/telegram/bot';
 
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 
@@ -72,6 +72,7 @@ export default class SendTrackedUserNotificationService {
       const postLength = (await this.cacheRepository.recover<number>(`${telegram_id}:postLength`)) ?? 150;
       const message = await this.buildNotificationMessage(post, postLength);
 
+      const bot = container.resolve(TelegramBot);
       await bot.instance.api.sendMessage(telegram_id, message, { parse_mode: 'HTML' });
 
       logger.info({ telegram_id, post_id: post.post_id, message }, 'Tracked User notification was sent');

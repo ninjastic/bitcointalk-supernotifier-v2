@@ -4,7 +4,7 @@ import escape from 'escape-html';
 
 import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
-import bot from '##/shared/infra/telegram';
+import TelegramBot from '##/shared/infra/telegram/bot';
 
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 
@@ -80,6 +80,7 @@ export default class SendMentionNotificationService {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
       const message = await this.buildNotificationMessage(post, postLength);
 
+      const bot = container.resolve(TelegramBot);
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
       if (messageSent) {

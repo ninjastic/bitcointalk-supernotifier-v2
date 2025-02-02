@@ -4,7 +4,7 @@ import escape from 'escape-html';
 
 import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
-import bot from '##/shared/infra/telegram';
+import TelegramBot from '##/shared/infra/telegram/bot';
 
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import ModLog from '##/modules/modlog/infra/typeorm/entities/ModLog';
@@ -56,6 +56,7 @@ export default class SendRemovedTopicNotificationService {
     try {
       const message = await this.buildNotificationMessage(posts, modLog);
 
+      const bot = container.resolve(TelegramBot);
       await bot.instance.api.sendMessage(telegram_id, message, { parse_mode: 'HTML' });
 
       logger.info({ telegram_id, topic_id: modLog.topic_id, message }, 'Removed Topic notification was sent');

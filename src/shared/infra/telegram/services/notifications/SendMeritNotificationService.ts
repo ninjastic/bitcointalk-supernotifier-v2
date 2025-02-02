@@ -4,7 +4,7 @@ import escape from 'escape-html';
 
 import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
-import bot from '##/shared/infra/telegram';
+import TelegramBot from '##/shared/infra/telegram/bot';
 
 import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
@@ -92,6 +92,7 @@ export default class SendMeritNotificationService {
       const totalMeritCount = await this.getTotalMeritCount(telegramId, receiver_uid, amount);
       const message = await this.buildNotificationMessage(title, sender, amount, totalMeritCount, topic_id, post_id);
 
+      const bot = container.resolve(TelegramBot);
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
       if (messageSent) {

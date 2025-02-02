@@ -7,9 +7,9 @@ import {
   NotificationType,
   TrackedTopicNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import TelegramBot from '##/shared/infra/telegram/bot';
 import { sponsorText } from '../../../../../config/sponsor';
 import logger from '../../../../services/logger';
-import bot from '../../index';
 
 import Post from '../../../../../modules/posts/infra/typeorm/entities/Post';
 
@@ -77,6 +77,8 @@ export default class SendTrackedTopicNotificationService {
     const { post_id, topic_id, title, author, content } = post;
     const filteredContent = this.filterPostContent(content);
     const message = this.buildMessage(author, topic_id, post_id, title, filteredContent, postLength);
+
+    const bot = container.resolve(TelegramBot);
 
     try {
       await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
