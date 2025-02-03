@@ -2,7 +2,6 @@ import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 
-import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
 import TelegramBot from '##/shared/infra/telegram/bot';
 
@@ -17,8 +16,10 @@ import {
   PostMentionNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
+import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
 
 type MentionNotificationData = {
+  bot: TelegramBot;
   post: Post;
   telegramId: string;
   history: boolean;
@@ -62,25 +63,27 @@ export default class SendMentionNotificationService {
     });
   }
 
-  private async buildNotificationMessage(post: Post, postLength: number): Promise<string> {
-    const { topic_id, post_id, title, author } = post;
+  private async buildNotificationMessage(post: Post, postLength: number, telegramId: string): Promise<string> {
+    const { topic_id, post_id, title, content, author } = post;
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
-    const contentFiltered = await this.getPostContentFiltered(post.content);
+    const contentFiltered = await this.getPostContentFiltered(content);
+    const sponsor = getSponsorPhrase(telegramId);
 
     return (
       `💬 You have been mentioned by <b>${escape(author)}</b> ` +
       `in <a href="${postUrl}">${escape(title)}</a>\n` +
       `<pre>${escape(contentFiltered.substring(0, postLength))}` +
-      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsorText}`
+      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsor}`
     );
   }
 
-  public async execute({ post, telegramId, history }: MentionNotificationData): Promise<boolean> {
+  public async execute({ bot, post, telegramId, history }: MentionNotificationData): Promise<boolean> {
+    let message: string;
+
     try {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
-      const message = await this.buildNotificationMessage(post, postLength);
+      message = await this.buildNotificationMessage(post, postLength, telegramId);
 
-      const bot = container.resolve(TelegramBot);
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
       if (messageSent) {
@@ -102,7 +105,7 @@ export default class SendMentionNotificationService {
     } catch (error) {
       await checkBotNotificationError(error, telegramId, {
         post_id: post.post_id,
-        message: await this.buildNotificationMessage(post, 150),
+        message,
         history
       });
       return false;

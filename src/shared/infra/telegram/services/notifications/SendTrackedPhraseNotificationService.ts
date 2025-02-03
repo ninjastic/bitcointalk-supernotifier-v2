@@ -2,7 +2,6 @@ import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 
-import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
 import TelegramBot from '##/shared/infra/telegram/bot';
 
@@ -16,8 +15,10 @@ import {
   TrackedPhraseNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
+import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
 
 type TrackedPhraseNotificationData = {
+  bot: TelegramBot;
   telegramId: string;
   post: Post;
   phrase: string;
@@ -55,26 +56,33 @@ export default class SendTrackedPhraseNotificationService {
     });
   }
 
-  private async buildNotificationMessage(post: Post, phrase: string, postLength: number): Promise<string> {
+  private async buildNotificationMessage(
+    post: Post,
+    phrase: string,
+    postLength: number,
+    telegramId: string
+  ): Promise<string> {
     const { topic_id, post_id, title, author, content } = post;
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
     const contentFiltered = await this.getPostContentFiltered(content);
+    const sponsor = getSponsorPhrase(telegramId);
 
     return (
       `🔠 New post with matched phrase <b>${phrase}</b> ` +
       `by <b>${escape(author)}</b> ` +
       `in the topic <a href="${postUrl}">${escape(title)}</a>\n` +
       `<pre>${escape(contentFiltered.substring(0, postLength))}` +
-      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsorText}`
+      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsor}`
     );
   }
 
-  public async execute({ telegramId, post, phrase }: TrackedPhraseNotificationData): Promise<boolean> {
+  public async execute({ bot, telegramId, post, phrase }: TrackedPhraseNotificationData): Promise<boolean> {
+    let message: string;
+
     try {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
-      const message = await this.buildNotificationMessage(post, phrase, postLength);
+      message = await this.buildNotificationMessage(post, phrase, postLength, telegramId);
 
-      const bot = container.resolve(TelegramBot);
       await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
       logger.info({ telegram_id: telegramId, post_id: post.post_id, message }, 'Tracked Phrase notification was sent');
@@ -90,7 +98,7 @@ export default class SendTrackedPhraseNotificationService {
       await checkBotNotificationError(error, telegramId, {
         post_id: post.post_id,
         phrase,
-        message: await this.buildNotificationMessage(post, phrase, 150)
+        message
       });
       return false;
     }

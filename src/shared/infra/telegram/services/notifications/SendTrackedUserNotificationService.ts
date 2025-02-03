@@ -2,7 +2,6 @@ import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 
-import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
 import TelegramBot from '##/shared/infra/telegram/bot';
 
@@ -16,9 +15,11 @@ import {
   TrackedUserNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
+import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
 
 type TrackedUserNotificationData = {
-  telegram_id: string;
+  bot: TelegramBot;
+  telegramId: string;
   post: Post;
 };
 
@@ -54,37 +55,39 @@ export default class SendTrackedUserNotificationService {
     });
   }
 
-  private async buildNotificationMessage(post: Post, postLength: number): Promise<string> {
+  private async buildNotificationMessage(post: Post, postLength: number, telegramId: string): Promise<string> {
     const { topic_id, post_id, title, author, content } = post;
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
     const contentFiltered = await this.getPostContentFiltered(content);
+    const sponsor = getSponsorPhrase(telegramId);
 
     return (
       `👤 There is a new post by the tracked user <b>${escape(author)}</b>: ` +
       `<a href="${postUrl}">${escape(title)}</a>\n` +
       `<pre>${escape(contentFiltered.substring(0, postLength))}` +
-      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsorText}`
+      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsor}`
     );
   }
 
-  public async execute({ telegram_id, post }: TrackedUserNotificationData): Promise<boolean> {
+  public async execute({ bot, telegramId, post }: TrackedUserNotificationData): Promise<boolean> {
+    let message: string;
+
     try {
-      const postLength = (await this.cacheRepository.recover<number>(`${telegram_id}:postLength`)) ?? 150;
-      const message = await this.buildNotificationMessage(post, postLength);
+      const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
+      message = await this.buildNotificationMessage(post, postLength, telegramId);
 
-      const bot = container.resolve(TelegramBot);
-      await bot.instance.api.sendMessage(telegram_id, message, { parse_mode: 'HTML' });
+      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-      logger.info({ telegram_id, post_id: post.post_id, message }, 'Tracked User notification was sent');
+      logger.info({ telegram_id: telegramId, post_id: post.post_id, message }, 'Tracked User notification was sent');
 
-      await this.markPostAsNotified(post, telegram_id);
-      await this.createNotification(telegram_id, { post_id: post.post_id, author: post.author });
+      await this.markPostAsNotified(post, telegramId);
+      await this.createNotification(telegramId, { post_id: post.post_id, author: post.author });
 
       return true;
     } catch (error) {
-      await checkBotNotificationError(error, telegram_id, {
+      await checkBotNotificationError(error, telegramId, {
         post_id: post.post_id,
-        message: await this.buildNotificationMessage(post, 150)
+        message
       });
       return false;
     }

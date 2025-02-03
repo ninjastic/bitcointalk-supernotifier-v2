@@ -8,7 +8,7 @@ import {
   TrackedTopicNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import TelegramBot from '##/shared/infra/telegram/bot';
-import { sponsorText } from '../../../../../config/sponsor';
+import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
 import logger from '../../../../services/logger';
 
 import Post from '../../../../../modules/posts/infra/typeorm/entities/Post';
@@ -18,6 +18,7 @@ import { checkBotNotificationError } from '../../../../services/utils';
 import ICacheProvider from '../../../../container/providers/models/ICacheProvider';
 
 type TrackedTopicNotificationData = {
+  bot: TelegramBot;
   telegramId: string;
   post: Post;
 };
@@ -50,35 +51,28 @@ export default class SendTrackedTopicNotificationService {
     });
   }
 
-  private buildMessage(
-    author: string,
-    topicId: number,
-    postId: number,
-    title: string,
-    content: string,
-    postLength: number
-  ): string {
+  private buildMessage(post: Post, postLength: number, telegramId: string): string {
+    const { author, title, content, post_id, topic_id } = post;
+
     const escapedAuthor = escape(author);
     const escapedTitle = escape(title);
     const truncatedContent = escape(content.substring(0, postLength)) + (content.length > postLength ? '...' : '');
+    const sponsor = getSponsorPhrase(telegramId);
 
     return (
       `📄 There is a new reply by <b>${escapedAuthor}</b> ` +
-      `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topicId}.msg${postId}#msg${postId}">` +
+      `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">` +
       `${escapedTitle}</a>\n` +
-      `<pre>${truncatedContent}</pre>${sponsorText}`
+      `<pre>${truncatedContent}</pre>${sponsor}`
     );
   }
 
-  public async execute({ telegramId, post }: TrackedTopicNotificationData): Promise<boolean> {
+  public async execute({ bot, telegramId, post }: TrackedTopicNotificationData): Promise<boolean> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
+
+    const { post_id } = post;
     const postLength = await this.getPostLength(telegramId);
-
-    const { post_id, topic_id, title, author, content } = post;
-    const filteredContent = this.filterPostContent(content);
-    const message = this.buildMessage(author, topic_id, post_id, title, filteredContent, postLength);
-
-    const bot = container.resolve(TelegramBot);
+    const message = this.buildMessage(post, postLength, telegramId);
 
     try {
       await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });

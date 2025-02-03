@@ -1,7 +1,12 @@
+import 'reflect-metadata';
+import 'module-alias/register';
+import 'dotenv/config';
 import { createConnection } from 'typeorm';
 import { container } from 'tsyringe';
 import { Job, Worker } from 'bullmq';
 
+import '##/shared/container';
+import TelegramBot from '##/shared/infra/telegram/bot';
 import logger from '../../../services/logger';
 import cacheConfig from '../../../../config/cache';
 import telegramQueue from '../queues/telegramQueue';
@@ -17,51 +22,59 @@ import SendTrackedUserNotificationService from '../../telegram/services/notifica
 import SendApiNotificationService from '../../telegram/services/notifications/SendApiNotificationService';
 import SendAutoTrackTopicNotificationService from '../../telegram/services/notifications/SendAutoTrackTopicNotificationService';
 
+container.registerSingleton('TelegramBot', TelegramBot);
+const bot = container.resolve(TelegramBot);
+
 const jobRecipes: JobRecipe = {
   sendMentionNotification: async job => {
     const { user, post, history } = job.data;
     const sendMentionNotification = container.resolve(SendMentionNotificationService);
-    await sendMentionNotification.execute({ telegramId: user.telegram_id, post, history });
+    await sendMentionNotification.execute({ bot, telegramId: user.telegram_id, post, history });
   },
   sendMeritNotification: async job => {
     const { merit, user } = job.data;
     const sendMeritNotification = container.resolve(SendMeritNotificationService);
-    await sendMeritNotification.execute({ telegramId: user.telegram_id, merit });
+    await sendMeritNotification.execute({ bot, telegramId: user.telegram_id, merit });
   },
   sendTopicTrackingNotification: async job => {
     const { post, user } = job.data;
     const sendTrackedTopicNotification = container.resolve(SendTrackedTopicNotificationService);
-    await sendTrackedTopicNotification.execute({ telegramId: user.telegram_id, post });
+    await sendTrackedTopicNotification.execute({ bot, telegramId: user.telegram_id, post });
   },
   sendRemovedTopicNotification: async job => {
     const { postsDeleted, user, modLog } = job.data;
     const sendRemovedTopicNotification = container.resolve(SendRemovedTopicNotificationService);
-    await sendRemovedTopicNotification.execute({ telegram_id: user.telegram_id, posts: postsDeleted, modLog });
+    await sendRemovedTopicNotification.execute({ bot, telegramId: user.telegram_id, posts: postsDeleted, modLog });
   },
   sendPhraseTrackingNotification: async job => {
     const { post, user, trackedPhrase } = job.data;
     const sendTrackedPhraseNotification = container.resolve(SendTrackedPhraseNotificationService);
-    await sendTrackedPhraseNotification.execute({ telegramId: user.telegram_id, post, phrase: trackedPhrase.phrase });
+    await sendTrackedPhraseNotification.execute({
+      bot,
+      telegramId: user.telegram_id,
+      post,
+      phrase: trackedPhrase.phrase
+    });
   },
   sendTrackedBoardNotification: async job => {
     const { post, user, trackedBoard } = job.data;
     const sendTrackedBoardNotification = container.resolve(SendTrackedBoardNotificationService);
-    await sendTrackedBoardNotification.execute({ telegramId: user.telegram_id, post, trackedBoard });
+    await sendTrackedBoardNotification.execute({ bot, telegramId: user.telegram_id, post, trackedBoard });
   },
   sendTrackedUserNotification: async job => {
     const { post, user } = job.data;
     const sendTrackedBoardNotification = container.resolve(SendTrackedUserNotificationService);
-    await sendTrackedBoardNotification.execute({ telegram_id: user.telegram_id, post });
+    await sendTrackedBoardNotification.execute({ bot, telegramId: user.telegram_id, post });
   },
   sendApiNotification: async job => {
     const { telegram_id, message } = job.data;
     const sendApiNotification = container.resolve(SendApiNotificationService);
-    await sendApiNotification.execute({ telegramId: telegram_id, message });
+    await sendApiNotification.execute({ bot, telegramId: telegram_id, message });
   },
   sendAutoTrackTopicRequestNotification: async job => {
     const { topic, user } = job.data;
     const sendAutoTrackTopicRequestNotification = container.resolve(SendAutoTrackTopicNotificationService);
-    await sendAutoTrackTopicRequestNotification.execute({ telegramId: user.telegram_id, topic });
+    await sendAutoTrackTopicRequestNotification.execute({ bot, telegramId: user.telegram_id, topic });
   }
 };
 
@@ -99,6 +112,14 @@ const telegram = async () => {
 
   worker.on('error', async error => {
     logger.error(error, `[${worker.name}][Worker] Error`);
+  });
+
+  process.on('SIGINT', async () => {
+    if (process.env.NODE_ENV === 'production' && bot.runner.isRunning()) {
+      await bot.runner.stop();
+    }
+
+    process.exit(0);
   });
 };
 

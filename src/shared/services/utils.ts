@@ -44,7 +44,7 @@ export async function checkBotNotificationError(error: any, telegram_id: string,
     await setUserBlocked.execute(telegram_id);
     return true;
   }
-  logger.error({ error: errorMessage, telegram_id, meta }, 'Error while sending telegram message');
+  logger.error({ error, telegram_id, meta }, 'Error while sending telegram message');
   return false;
 }
 

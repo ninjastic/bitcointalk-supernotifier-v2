@@ -15,6 +15,7 @@ import {
 import { NotificationService } from '##/modules/posts/services/notification-service';
 
 type AutoTrackTopicRequestNotificationData = {
+  bot: TelegramBot;
   telegramId: string;
   topic: Topic;
 };
@@ -51,11 +52,12 @@ export default class SendAutoTrackTopicNotificationService {
     await this.redis.save(`autoTrackTopic:${messageId}`, { telegram_id: telegramId, topic_id: topicId });
   }
 
-  public async execute({ telegramId, topic }: AutoTrackTopicRequestNotificationData): Promise<boolean> {
-    try {
-      const message = await this.buildNotificationMessage(topic);
+  public async execute({ bot, telegramId, topic }: AutoTrackTopicRequestNotificationData): Promise<boolean> {
+    let message: string;
 
-      const bot = container.resolve(TelegramBot);
+    try {
+      message = await this.buildNotificationMessage(topic);
+
       const sentMessage = await bot.instance.api.sendMessage(telegramId, message, {
         parse_mode: 'HTML',
         reply_markup: trackTopicRepliesMenu
@@ -70,7 +72,6 @@ export default class SendAutoTrackTopicNotificationService {
       );
       return true;
     } catch (error) {
-      const message = await this.buildNotificationMessage(topic);
       await checkBotNotificationError(error, telegramId, { topic_id: topic.topic_id, message });
       return false;
     }

@@ -43,6 +43,7 @@ export default class MeritsRepository implements IMeritsRepository {
         checked: false,
         date: MoreThanOrEqual(sub(new Date(), { hours: 24 }))
       },
+      relations: ['post'],
       order: { created_at: -1 },
       take: limit
     });

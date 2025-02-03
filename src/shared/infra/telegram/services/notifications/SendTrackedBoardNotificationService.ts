@@ -2,7 +2,6 @@ import { container, inject, injectable } from 'tsyringe';
 import cheerio from 'cheerio';
 import escape from 'escape-html';
 
-import { sponsorText } from '##/config/sponsor';
 import logger from '##/shared/services/logger';
 import TelegramBot from '##/shared/infra/telegram/bot';
 
@@ -17,8 +16,10 @@ import {
   NotificationType,
   TrackedBoardNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
 
 type TrackedBoardNotificationData = {
+  bot: TelegramBot;
   telegramId: string;
   post: Post;
   trackedBoard: TrackedBoard;
@@ -43,22 +44,24 @@ export default class SendTrackedBoardNotificationService {
   }
 
   private async buildNotificationMessage(
-    author: string,
-    boardName: string,
-    titleWithBoards: string,
-    contentFiltered: string,
+    post: Post,
+    trackedBoard: TrackedBoard,
     postLength: number,
-    topic_id: number,
-    post_id: number
+    telegramId: string
   ): Promise<string> {
+    const { author, title, content, topic_id, post_id } = post;
+    const { board } = trackedBoard;
+    const contentFiltered = await this.getPostContentFiltered(content);
+
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
+    const sponsor = getSponsorPhrase(telegramId);
 
     return (
       `📝 There is a new topic by <b>${escape(author)}</b> ` +
-      `in the tracked board <b>${boardName}</b>: ` +
-      `<a href="${postUrl}">${escape(titleWithBoards)}</a>\n` +
+      `in the tracked board <b>${board.name}</b>: ` +
+      `<a href="${postUrl}">${escape(title)}</a>\n` +
       `<pre>${escape(contentFiltered.substring(0, postLength))}` +
-      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsorText}`
+      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsor}`
     );
   }
 
@@ -74,27 +77,17 @@ export default class SendTrackedBoardNotificationService {
     });
   }
 
-  public async execute({ telegramId, post, trackedBoard }: TrackedBoardNotificationData): Promise<boolean> {
+  public async execute({ bot, telegramId, post, trackedBoard }: TrackedBoardNotificationData): Promise<boolean> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
+    let message: string;
 
     try {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
-      const { post_id, topic_id, title, author, content } = post;
+      const { post_id } = post;
       const { board } = trackedBoard;
 
-      const contentFiltered = await this.getPostContentFiltered(content);
+      message = await this.buildNotificationMessage(post, trackedBoard, postLength, telegramId);
 
-      const message = await this.buildNotificationMessage(
-        author,
-        board.name,
-        title,
-        contentFiltered,
-        postLength,
-        topic_id,
-        post_id
-      );
-
-      const bot = container.resolve(TelegramBot);
       await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
       logger.info({ telegram_id: telegramId, post_id, message }, 'Tracked Board notification was sent');
@@ -107,15 +100,7 @@ export default class SendTrackedBoardNotificationService {
       await checkBotNotificationError(error, telegramId, {
         post_id: post.post_id,
         trackedBoard,
-        message: await this.buildNotificationMessage(
-          post.author,
-          trackedBoard.board.name,
-          post.title,
-          await this.getPostContentFiltered(post.content),
-          150,
-          post.topic_id,
-          post.post_id
-        )
+        message
       });
       return false;
     }

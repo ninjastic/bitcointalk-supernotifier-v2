@@ -56,7 +56,9 @@ class TelegramBot {
   public runner: RunnerHandle;
 
   constructor() {
-    this.instance = new Bot(process.env.TELEGRAM_BOT_TOKEN);
+    this.instance = new Bot(process.env.TELEGRAM_BOT_TOKEN, {
+      client: { environment: process.env.NODE_ENV === 'development' ? 'test' : 'prod' }
+    });
 
     this.middlewares();
     this.inlineMenus();
