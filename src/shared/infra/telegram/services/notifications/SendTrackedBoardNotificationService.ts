@@ -88,7 +88,10 @@ export default class SendTrackedBoardNotificationService {
 
       message = await this.buildNotificationMessage(post, trackedBoard, postLength, telegramId);
 
-      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true }
+      });
 
       if (messageSent) {
         logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Tracked Board notification was sent');

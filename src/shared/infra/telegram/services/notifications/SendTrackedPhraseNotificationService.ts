@@ -83,7 +83,10 @@ export default class SendTrackedPhraseNotificationService {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
       message = await this.buildNotificationMessage(post, phrase, postLength, telegramId);
 
-      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true }
+      });
 
       if (messageSent) {
         logger.info(

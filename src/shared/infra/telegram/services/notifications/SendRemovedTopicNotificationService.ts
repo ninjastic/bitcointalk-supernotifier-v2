@@ -60,7 +60,10 @@ export default class SendRemovedTopicNotificationService {
     try {
       message = await this.buildNotificationMessage(posts, modLog, telegramId);
 
-      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true }
+      });
 
       if (messageSent) {
         logger.info(

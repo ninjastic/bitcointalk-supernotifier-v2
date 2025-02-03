@@ -75,7 +75,10 @@ export default class SendTrackedTopicNotificationService {
     const message = this.buildMessage(post, postLength, telegramId);
 
     try {
-      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
+        parse_mode: 'HTML',
+        link_preview_options: { is_disabled: true }
+      });
 
       if (messageSent) {
         logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Tracked Topic notification was sent');
