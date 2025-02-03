@@ -75,9 +75,13 @@ export default class SendTrackedTopicNotificationService {
     const message = this.buildMessage(post, postLength, telegramId);
 
     try {
-      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-      logger.info({ telegramId, post_id, message }, 'Tracked Topic notification was sent');
+      if (messageSent) {
+        logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Tracked Topic notification was sent');
+      } else {
+        logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get Tracked Topic notification data');
+      }
 
       await setPostNotified.execute(post.post_id, telegramId);
       await this.createNotification(telegramId, { post_id });

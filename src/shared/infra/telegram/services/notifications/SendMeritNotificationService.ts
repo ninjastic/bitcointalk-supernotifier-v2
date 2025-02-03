@@ -88,7 +88,7 @@ export default class SendMeritNotificationService {
       if (messageSent) {
         logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Merit notification was sent');
       } else {
-        logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get merit notification data');
+        logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get Merit notification data');
       }
 
       await setMeritNotified.execute(merit, telegramId);

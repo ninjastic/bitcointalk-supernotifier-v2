@@ -94,7 +94,7 @@ export default class SendMentionNotificationService {
       } else {
         logger.info(
           { telegram_id: telegramId, post_id: post.post_id, history, message },
-          'Could not get mention notification data'
+          'Could not get Mention notification data'
         );
       }
 

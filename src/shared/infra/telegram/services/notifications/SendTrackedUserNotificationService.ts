@@ -76,9 +76,19 @@ export default class SendTrackedUserNotificationService {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
       message = await this.buildNotificationMessage(post, postLength, telegramId);
 
-      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-      logger.info({ telegram_id: telegramId, post_id: post.post_id, message }, 'Tracked User notification was sent');
+      if (messageSent) {
+        logger.info(
+          { telegram_id: telegramId, post_id: post.post_id, message, messageSent },
+          'Tracked User notification was sent'
+        );
+      } else {
+        logger.warn(
+          { telegram_id: telegramId, post_id: post.post_id, message },
+          'Could not get Tracked User notification data'
+        );
+      }
 
       await this.markPostAsNotified(post, telegramId);
       await this.createNotification(telegramId, { post_id: post.post_id, author: post.author });

@@ -60,12 +60,19 @@ export default class SendRemovedTopicNotificationService {
     try {
       message = await this.buildNotificationMessage(posts, modLog, telegramId);
 
-      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-      logger.info(
-        { telegram_id: telegramId, topic_id: modLog.topic_id, message },
-        'Removed Topic notification was sent'
-      );
+      if (messageSent) {
+        logger.info(
+          { telegram_id: telegramId, topic_id: modLog.topic_id, message, messageSent },
+          'Removed Topic notification was sent'
+        );
+      } else {
+        logger.warn(
+          { telegram_id: telegramId, topic_id: modLog.topic_id, message },
+          'Could not get Removed Topic notification data'
+        );
+      }
 
       await this.markModLogAsNotified(modLog, telegramId);
       await this.createNotification(telegramId, {

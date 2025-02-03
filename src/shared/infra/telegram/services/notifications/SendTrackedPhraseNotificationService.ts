@@ -83,9 +83,19 @@ export default class SendTrackedPhraseNotificationService {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
       message = await this.buildNotificationMessage(post, phrase, postLength, telegramId);
 
-      await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
+      const messageSent = await bot.instance.api.sendMessage(telegramId, message, { parse_mode: 'HTML' });
 
-      logger.info({ telegram_id: telegramId, post_id: post.post_id, message }, 'Tracked Phrase notification was sent');
+      if (messageSent) {
+        logger.info(
+          { telegram_id: telegramId, post_id: post.post_id, message, messageSent },
+          'Tracked Phrase notification was sent'
+        );
+      } else {
+        logger.warn(
+          { telegram_id: telegramId, post_id: post.post_id, message },
+          'Could not get Tracked Phrase notification data'
+        );
+      }
 
       await this.markPostAsNotified(post, telegramId);
       await this.createNotification(telegramId, {
