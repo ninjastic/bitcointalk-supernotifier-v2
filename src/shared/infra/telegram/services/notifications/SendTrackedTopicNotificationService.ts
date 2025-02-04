@@ -56,7 +56,9 @@ export default class SendTrackedTopicNotificationService {
 
     const escapedAuthor = escape(author);
     const escapedTitle = escape(title);
-    const truncatedContent = escape(content.substring(0, postLength)) + (content.length > postLength ? '...' : '');
+    const contentFiltered = this.filterPostContent(content);
+    const truncatedContent =
+      escape(contentFiltered.substring(0, postLength)) + (contentFiltered.length > postLength ? '...' : '');
     const sponsor = getSponsorPhrase(telegramId);
 
     return (

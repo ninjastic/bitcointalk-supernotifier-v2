@@ -32,14 +32,11 @@ export default class SendTrackedBoardNotificationService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  private async getPostContentFiltered(content: string): Promise<string> {
+  private filterPostContent(content: string): string {
     const $ = cheerio.load(content);
     const data = $('body');
-
-    data.children('div.quote').remove();
-    data.children('div.quoteheader').remove();
+    data.children('div.quote, div.quoteheader').remove();
     data.find('br').replaceWith('&nbsp;');
-
     return data.text().replace(/\s\s+/g, ' ').trim();
   }
 
@@ -51,7 +48,7 @@ export default class SendTrackedBoardNotificationService {
   ): Promise<string> {
     const { author, title, content, topic_id, post_id } = post;
     const { board } = trackedBoard;
-    const contentFiltered = await this.getPostContentFiltered(content);
+    const contentFiltered = this.filterPostContent(content);
 
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
     const sponsor = getSponsorPhrase(telegramId);

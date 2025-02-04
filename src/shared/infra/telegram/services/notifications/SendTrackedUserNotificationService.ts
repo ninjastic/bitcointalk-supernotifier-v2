@@ -30,15 +30,12 @@ export default class SendTrackedUserNotificationService {
     private cacheRepository: ICacheProvider
   ) {}
 
-  private async getPostContentFiltered(content: string): Promise<string> {
+  private filterPostContent(content: string): string {
     const $ = cheerio.load(content);
-    const html = $('body');
-
-    html.children('div.quote').remove();
-    html.children('div.quoteheader').remove();
-    html.find('br').replaceWith('&nbsp;');
-
-    return html.text().replace(/\s\s+/g, ' ').trim();
+    const data = $('body');
+    data.children('div.quote, div.quoteheader').remove();
+    data.find('br').replaceWith('&nbsp;');
+    return data.text().replace(/\s\s+/g, ' ').trim();
   }
 
   private async markPostAsNotified(post: Post, telegramId: string): Promise<void> {
@@ -58,7 +55,7 @@ export default class SendTrackedUserNotificationService {
   private async buildNotificationMessage(post: Post, postLength: number, telegramId: string): Promise<string> {
     const { topic_id, post_id, title, author, content } = post;
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
-    const contentFiltered = await this.getPostContentFiltered(content);
+    const contentFiltered = this.filterPostContent(content);
     const sponsor = getSponsorPhrase(telegramId);
 
     return (
