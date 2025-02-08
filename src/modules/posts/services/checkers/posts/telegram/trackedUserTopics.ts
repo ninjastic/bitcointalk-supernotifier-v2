@@ -21,8 +21,9 @@ const shouldNotifyUser = (post: Post, user: User): boolean => {
   const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
   const isSameUid = user.user_id && post.author_uid === user.user_id;
   const isAlreadyNotified = post.notified_to.includes(user.telegram_id);
+  const isUserBlocked = user.blocked;
 
-  return !(isSameUsername || isSameUid || isAlreadyNotified);
+  return !(isSameUsername || isSameUid || isAlreadyNotified || isUserBlocked);
 };
 
 const processTopic = (
@@ -40,13 +41,13 @@ const processTopic = (
       const { user } = trackedUser;
       const { post } = topic;
 
-      if (shouldNotifyUser(post, user)) {
-        data.push({
-          userId: user.id,
-          type: NotificationType.TRACKED_USER,
-          metadata: { post, user }
-        });
-      }
+      if (!shouldNotifyUser(post, user)) continue;
+
+      data.push({
+        userId: user.id,
+        type: NotificationType.TRACKED_USER,
+        metadata: { post, user }
+      });
     } catch (error) {
       logger.error(
         { error, topic_id: topic.topic_id, telegram_id: trackedUser.user.telegram_id },

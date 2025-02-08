@@ -30,8 +30,9 @@ const shouldNotifyUser = (post: Post, user: User, ignoredUsers: IgnoredUser[]): 
   const isAuthorIgnored = ignoredUsers
     .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
     ?.ignoring.includes(user.telegram_id);
+  const isUserBlocked = user.blocked;
 
-  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored);
+  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isUserBlocked);
 };
 
 const checkMinAuthorPostCount = async (user: User, authorUid: number, minAuthorPostCount: number): Promise<boolean> => {
@@ -59,17 +60,13 @@ const processTopic = async (
       const { user } = trackedBoard;
       const { post } = topic;
 
-      if (!shouldNotifyUser(post, user, ignoredUsers)) {
-        continue;
-      }
+      if (!shouldNotifyUser(post, user, ignoredUsers)) continue;
 
       const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
       const minAuthorPostCount =
         (await cacheRepository.recover<number>(`${user.telegram_id}:minTrackedBoardAuthorPostCount`)) ?? 0;
 
-      if (!(await checkMinAuthorPostCount(user, post.author_uid, minAuthorPostCount))) {
-        continue;
-      }
+      if (!(await checkMinAuthorPostCount(user, post.author_uid, minAuthorPostCount))) continue;
 
       data.push({
         userId: user.id,

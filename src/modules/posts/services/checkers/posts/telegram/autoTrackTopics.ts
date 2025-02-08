@@ -18,6 +18,12 @@ type TelegramAutoTrackTopicsCheckerParams = {
 const getUsersWithAutoTrackAndMatchingTopic = (topic: Topic, users: User[]): User[] =>
   users.filter(user => user.enable_auto_track_topics && topic.post.author_uid === user.user_id);
 
+const shouldNotifyUser = (user: User): boolean => {
+  const isUserBlocked = user.blocked;
+
+  return !isUserBlocked;
+};
+
 const isUserAlreadyNotified = (topic: Topic, user: User): boolean => topic.post.notified_to.includes(user.telegram_id);
 
 const processTopic = (topic: Topic, users: User[]): TelegramAutoTrackTopicsCheckerNotificationData[] => {
@@ -26,9 +32,8 @@ const processTopic = (topic: Topic, users: User[]): TelegramAutoTrackTopicsCheck
 
   for (const user of matchingUsers) {
     try {
-      if (isUserAlreadyNotified(topic, user)) {
-        continue;
-      }
+      if (isUserAlreadyNotified(topic, user)) continue;
+      if (!shouldNotifyUser(user)) continue;
 
       data.push({
         userId: user.id,

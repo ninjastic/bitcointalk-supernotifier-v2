@@ -29,8 +29,9 @@ const shouldNotifyUser = (post: Post, user: User, ignoredUsers: IgnoredUser[]): 
   const isAuthorIgnored = ignoredUsers
     .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
     ?.ignoring.includes(user.telegram_id);
+  const isUserBlocked = user.blocked;
 
-  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored);
+  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isUserBlocked);
 };
 
 const processPost = async (
@@ -60,9 +61,7 @@ const processPost = async (
         continue;
       }
 
-      if (!shouldNotifyUser(post, user, ignoredUsers)) {
-        continue;
-      }
+      if (!shouldNotifyUser(post, user, ignoredUsers)) continue;
 
       const trackedTopicUsers = await findTrackedTopicUsers.execute({
         telegram_id: user.telegram_id,
@@ -73,9 +72,7 @@ const processPost = async (
         trackedTopicUser => trackedTopicUser.username.toLowerCase() === post.author.toLowerCase()
       );
 
-      if (trackedTopicUsers.length && !isAuthorWhitelisted) {
-        continue;
-      }
+      if (trackedTopicUsers.length && !isAuthorWhitelisted) continue;
 
       data.push({
         userId: user.id,
@@ -93,7 +90,6 @@ const processPost = async (
   return data;
 };
 
-// Função principal
 export const telegramTrackedTopicsChecker = async ({
   posts,
   trackedTopics,

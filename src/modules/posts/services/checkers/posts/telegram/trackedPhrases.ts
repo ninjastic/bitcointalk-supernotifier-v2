@@ -61,14 +61,13 @@ const processPost = (
       const phraseRegex = createTrackedPhraseRegex(phrase);
 
       if (!isPhraseInPost(post, phraseRegex)) continue;
+      if (!shouldNotifyUser(post, user, ignoredUsers, ignoredTopics)) continue;
 
-      if (shouldNotifyUser(post, user, ignoredUsers, ignoredTopics)) {
-        data.push({
-          userId: user.id,
-          type: NotificationType.TRACKED_PHRASE,
-          metadata: { post, user, trackedPhrase }
-        });
-      }
+      data.push({
+        userId: user.id,
+        type: NotificationType.TRACKED_PHRASE,
+        metadata: { post, user, trackedPhrase }
+      });
     } catch (error) {
       logger.error(
         { error, post_id: post.post_id, telegram_id: trackedPhrase.user.telegram_id },

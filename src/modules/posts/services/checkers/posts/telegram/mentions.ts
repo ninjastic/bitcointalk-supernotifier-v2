@@ -49,8 +49,9 @@ const shouldNotifyUser = (
   const isTopicIgnored = ignoredTopics
     .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
     ?.ignoring.includes(user.telegram_id);
+  const isUserBlocked = user.blocked;
 
-  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored);
+  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isTopicIgnored || isUserBlocked);
 };
 
 const processPost = (
@@ -64,14 +65,13 @@ const processPost = (
   for (const user of users) {
     try {
       if (!user.username || !isUserMentionedInPost(post, user)) continue;
+      if (!shouldNotifyUser(post, user, ignoredUsers, ignoredTopics)) continue;
 
-      if (shouldNotifyUser(post, user, ignoredUsers, ignoredTopics)) {
-        data.push({
-          userId: user.id,
-          type: NotificationType.POST_MENTION,
-          metadata: { post, user, history: false }
-        });
-      }
+      data.push({
+        userId: user.id,
+        type: NotificationType.POST_MENTION,
+        metadata: { post, user, history: false }
+      });
     } catch (error) {
       logger.error(
         { error, post_id: post.post_id, telegram_id: user.telegram_id },

@@ -20,8 +20,9 @@ const shouldNotifyUser = (post: Post, user: User): boolean => {
   const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
   const isSameUid = user.user_id && post.author_uid === user.user_id;
   const isAlreadyNotified = post.notified_to.includes(user.telegram_id);
+  const isUserBlocked = user.blocked;
 
-  return !(isSameUsername || isSameUid || isAlreadyNotified);
+  return !(isSameUsername || isSameUid || isAlreadyNotified || isUserBlocked);
 };
 
 const processPost = (post: Post, trackedUsers: TrackedUser[]): TelegramTrackedUsersCheckerNotificationData[] => {
@@ -35,13 +36,13 @@ const processPost = (post: Post, trackedUsers: TrackedUser[]): TelegramTrackedUs
     try {
       const { user } = trackedUser;
 
-      if (shouldNotifyUser(post, user)) {
-        data.push({
-          userId: user.id,
-          type: NotificationType.TRACKED_USER,
-          metadata: { post, user }
-        });
-      }
+      if (!shouldNotifyUser(post, user)) continue;
+
+      data.push({
+        userId: user.id,
+        type: NotificationType.TRACKED_USER,
+        metadata: { post, user }
+      });
     } catch (error) {
       logger.error(
         { error, post_id: post.post_id, telegram_id: trackedUser.user.telegram_id },
@@ -53,7 +54,6 @@ const processPost = (post: Post, trackedUsers: TrackedUser[]): TelegramTrackedUs
   return data;
 };
 
-// Função principal
 export const telegramTrackedUsersChecker = async ({
   posts,
   trackedUsers
