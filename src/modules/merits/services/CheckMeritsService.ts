@@ -1,4 +1,5 @@
 import { inject, injectable } from 'tsyringe';
+import { getRepository } from 'typeorm';
 
 import logger from '../../../shared/services/logger';
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
@@ -6,8 +7,7 @@ import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue'
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import IMeritsRepository from '../repositories/IMeritsRepository';
 import IUsersRepository from '../../users/repositories/IUsersRepository';
-import NotificationRepository from '../../notifications/infra/typeorm/repositories/NotificationRepository';
-import { NotificationType } from '../../notifications/infra/typeorm/entities/Notification';
+import { MeritNotification, NotificationType } from '../../notifications/infra/typeorm/entities/Notification';
 
 @injectable()
 export default class CheckMeritsService {
@@ -26,7 +26,7 @@ export default class CheckMeritsService {
     const merits = await this.meritsRepository.getLatestUncheckedMerits();
     const users = await this.usersRepository.getUsersWithMerits();
 
-    const notificationRepository = new NotificationRepository();
+    const notificationRepository = getRepository(MeritNotification);
 
     for await (const merit of merits) {
       const receiverUsers = users.filter(user => user.user_id === merit.receiver_uid);
@@ -62,9 +62,6 @@ export default class CheckMeritsService {
           logger.error({ meritUserKey, redisAnswer }, 'CheckMeritsService Job lock did not return OK');
           continue;
         }
-
-        const notification = notificationRepository.create(notificationData);
-        await notificationRepository.save(notification);
 
         await addTelegramJob('sendMeritNotification', { merit, user: receiverUser });
       }
