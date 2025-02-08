@@ -87,7 +87,6 @@ const processTopic = async (
   return data;
 };
 
-// Função principal
 export const telegramTrackedBoardTopicsChecker = async ({
   topics,
   trackedBoards,
