@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
 import { sub } from 'date-fns';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 import api from '../../../shared/services/api';
 import Post from '../infra/typeorm/entities/Post';
@@ -11,7 +11,7 @@ import ForumLoginService from '../../merits/services/ForumLoginService';
 
 const getRequestPageSelector = async () => {
   const response = await api.get('index.php?action=recent');
-  const $ = cheerio.load(response.data, { decodeEntities: true });
+  const $ = load(response.data, { decodeEntities: true });
   return $;
 };
 

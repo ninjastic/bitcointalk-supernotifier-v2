@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import 'reflect-metadata';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { container } from 'tsyringe';
 import { createConnection, getManager } from 'typeorm';
 import iconv from 'iconv-lite';
@@ -22,7 +22,7 @@ const sleep = ms =>
 const scrapePostFromBuffer = buffer => {
   const utf8String = iconv.decode(buffer, 'ISO-8859-1');
 
-  const $ = cheerio.load(utf8String, { decodeEntities: true });
+  const $ = load(utf8String, { decodeEntities: true });
 
   const notFound = $('body > h3:nth-child(2) > strong').text();
 

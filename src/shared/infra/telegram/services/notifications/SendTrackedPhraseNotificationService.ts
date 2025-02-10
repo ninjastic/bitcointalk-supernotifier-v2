@@ -1,5 +1,5 @@
 import { container, inject, injectable } from 'tsyringe';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import escape from 'escape-html';
 
 import logger from '##/shared/services/logger';
@@ -32,7 +32,7 @@ export default class SendTrackedPhraseNotificationService {
   ) {}
 
   private filterPostContent(content: string): string {
-    const $ = cheerio.load(content);
+    const $ = load(content);
     const data = $('body');
     data.children('div.quote, div.quoteheader').remove();
     data.find('br').replaceWith('&nbsp;');

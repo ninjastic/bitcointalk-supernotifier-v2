@@ -7,7 +7,7 @@ import { format, isEqual, getUnixTime } from 'date-fns';
 import { container } from 'tsyringe';
 import { createConnection, createQueryBuilder, getManager } from 'typeorm';
 import Queue from 'promise-queue';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 import '../../container';
 
@@ -21,7 +21,7 @@ type MeritPartial = Pick<Merit, MeritPartialKeys>;
 
 const scrapeUserProfile = async (userId: number): Promise<string> => {
   const res = await api.get(`index.php?action=profile;u=${userId}`);
-  const $ = cheerio.load(res.data, { decodeEntities: true });
+  const $ = load(res.data, { decodeEntities: true });
 
   const username = $(
     '#bodyarea  tr:nth-child(2) > td:nth-child(1) > table > tbody > tr:nth-child(1) > td:nth-child(2)'

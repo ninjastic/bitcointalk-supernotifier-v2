@@ -3,7 +3,7 @@ import 'reflect-metadata';
 import 'dotenv/config';
 import { container } from 'tsyringe';
 import { createConnection, getManager, InsertResult } from 'typeorm';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import validate from 'bitcoin-address-validation';
 
 import '../../container';
@@ -39,7 +39,7 @@ createConnection().then(async () => {
     const operations = [];
 
     posts.forEach(post => {
-      const $ = cheerio.load(post.content);
+      const $ = load(post.content);
       const data = $('body');
       data.children('div.quoteheader').remove();
       data.children('div.quote').remove();

@@ -1,4 +1,4 @@
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { container } from 'tsyringe';
 import { sub } from 'date-fns';
 
@@ -12,7 +12,7 @@ import ScrapePostJob from '../../posts/infra/jobs/ScrapePostJob';
 
 const getRequestPageSelector = async () => {
   const response = await api.get('index.php?action=merit;stats=recent');
-  const $ = cheerio.load(response.data, { decodeEntities: true });
+  const $ = load(response.data, { decodeEntities: true });
   return $;
 };
 

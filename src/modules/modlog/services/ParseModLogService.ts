@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { injectable, inject } from 'tsyringe';
 
 import IModLogRepository from '../repositories/IModLogRepository';
@@ -15,7 +15,7 @@ export default class ParseModLogService {
   ) {}
 
   public execute(element: cheerio.Element): ModLog | false {
-    const $ = cheerio.load(element, { decodeEntities: true });
+    const $ = load(element, { decodeEntities: true });
 
     const topic = $('a:nth-child(2)');
     const user = $('a:nth-child(3)');

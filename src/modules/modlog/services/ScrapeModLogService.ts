@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { container } from 'tsyringe';
 
 import api from '../../../shared/services/api';
@@ -12,7 +12,7 @@ export default class ScrapeModLogService {
   public async execute(): Promise<number> {
     const response = await api.get('modlog.php');
 
-    const $ = cheerio.load(response.data, { decodeEntities: true });
+    const $ = load(response.data, { decodeEntities: true });
 
     const logsToScrape = $('#helpmain > ul > li')
       .toArray()

@@ -1,4 +1,4 @@
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { inject, injectable } from 'tsyringe';
 
 import ScrapePostJob from '../../posts/infra/jobs/ScrapePostJob';
@@ -19,7 +19,7 @@ export default class ParseRecentPostElementService {
   ) {}
 
   public async execute(element: cheerio.Element): Promise<Merit> {
-    const $ = cheerio.load(element, { decodeEntities: true });
+    const $ = load(element, { decodeEntities: true });
 
     const amount = Number($.html().match(/: (\d*) from/)[1]);
     const sender = $.html().match(/">(.*)<\/a> for/)[1];

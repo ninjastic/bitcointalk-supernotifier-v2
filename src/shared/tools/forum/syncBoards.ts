@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { createConnection, createQueryBuilder } from 'typeorm';
 import { container } from 'tsyringe';
 import ora from 'ora';
@@ -14,7 +14,7 @@ const spinner = ora();
 const requestBoardsUrl = async () => {
   spinner.text = 'Getting forum boards';
   const response = await api.get('/sitemap.php?t=b');
-  const $ = cheerio.load(response.data);
+  const $ = load(response.data);
 
   const boards = $('loc');
 
@@ -59,7 +59,7 @@ const scrapeBoards = async (
   for await (const board of boards) {
     const response = await api.get(board.url);
 
-    const $ = cheerio.load(response.data, { decodeEntities: true });
+    const $ = load(response.data, { decodeEntities: true });
 
     const titleBoard = $('#bodyarea > div:nth-child(1) > div');
     const boardsList = $(titleBoard).find('b');

@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 
 import api from '../../../shared/services/api';
 import Merit from '../infra/typeorm/entities/Merit';
@@ -16,7 +16,7 @@ export default class ScrapeMeritsService {
 
   public async execute(): Promise<Merit[]> {
     const response = await api.get('index.php?action=merit;stats=recent');
-    const $ = cheerio.load(response.data, { decodeEntities: true });
+    const $ = load(response.data, { decodeEntities: true });
 
     const isLogged = !!$('#hellomember').length;
 

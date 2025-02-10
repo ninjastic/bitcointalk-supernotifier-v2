@@ -1,4 +1,4 @@
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { container } from 'tsyringe';
 
 import Post from '../infra/typeorm/entities/Post';
@@ -14,7 +14,7 @@ export default class ParseTopicService {
   public execute({ html, topic_id }: Data): Post {
     const createPost = container.resolve(CreatePostService);
 
-    const $ = cheerio.load(html, { decodeEntities: true });
+    const $ = load(html, { decodeEntities: true });
     const posts = $('#quickModForm > table.bordercolor');
 
     let post = {} as Post;

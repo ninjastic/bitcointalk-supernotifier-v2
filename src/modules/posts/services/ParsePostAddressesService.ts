@@ -1,4 +1,4 @@
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import validate from 'bitcoin-address-validation';
 
 import Address from '../infra/typeorm/entities/Address';
@@ -12,7 +12,7 @@ export default class ParsePostAddressesService {
     const ethereumRegex = /0x[a-fA-F0-9]{40}/g;
     const tronRegex = /\bT[A-Za-z1-9]{33}\b/g;
 
-    const $ = cheerio.load(post.content);
+    const $ = load(post.content);
     const data = $('body');
     data.children('div.quoteheader').remove();
     data.children('div.quote').remove();

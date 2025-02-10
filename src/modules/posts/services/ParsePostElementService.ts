@@ -1,4 +1,4 @@
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { container } from 'tsyringe';
 import { isValid } from 'date-fns';
 
@@ -16,7 +16,7 @@ export default class ParsePostElementService {
   public execute({ html, post_id }: Data): Post | null {
     const createPost = container.resolve(CreatePostService);
 
-    const $ = cheerio.load(html, { decodeEntities: true });
+    const $ = load(html, { decodeEntities: true });
 
     const topicNotFound =
       $('#bodyarea > div:nth-child(1) > table > tbody > tr.windowbg > td')?.text()?.trim() ===

@@ -1,5 +1,5 @@
 import { container, inject, injectable } from 'tsyringe';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import escape from 'escape-html';
 
 import { NotificationService } from '##/modules/posts/services/notification-service';
@@ -35,7 +35,7 @@ export default class SendTrackedTopicNotificationService {
   }
 
   private filterPostContent(content: string): string {
-    const $ = cheerio.load(content);
+    const $ = load(content);
     const data = $('body');
     data.children('div.quote, div.quoteheader').remove();
     data.find('br').replaceWith('&nbsp;');

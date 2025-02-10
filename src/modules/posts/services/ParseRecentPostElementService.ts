@@ -1,4 +1,4 @@
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { inject, injectable } from 'tsyringe';
 
 import IPostsRepository from '../repositories/IPostsRepository';
@@ -16,7 +16,7 @@ export default class ParseRecentPostElementService {
 
   public execute(recentPost: RecentPostWithFooter, currentDate: Date): Post {
     const { postElement, footerElement } = recentPost;
-    let $ = cheerio.load(postElement, { decodeEntities: true });
+    let $ = load(postElement, { decodeEntities: true });
 
     const fullTitleWithBoards = $('tbody > tr.titlebg2 > td > div:nth-child(2)');
 
@@ -79,7 +79,7 @@ export default class ParseRecentPostElementService {
       }
     }
 
-    $ = cheerio.load(footerElement);
+    $ = load(footerElement);
 
     const topicReplies = Number(
       $('td.maintab_back > a:nth-child(1)')

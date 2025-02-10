@@ -1,6 +1,6 @@
 import axios from 'axios';
 import iconv from 'iconv-lite';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { sub } from 'date-fns';
 
 import CreatePostDTO from '../../../modules/posts/dtos/CreatePostDTO';
@@ -23,7 +23,7 @@ export const scrapeLoyceArchivePost = async (postId: number): Promise<CreatePost
   }
 
   const decodedResponse = iconv.decode(response.data, 'WINDOWS-1252');
-  const $ = cheerio.load(decodedResponse, { decodeEntities: true });
+  const $ = load(decodedResponse, { decodeEntities: true });
 
   const post_id = Number($('body > b > a:nth-child(1)').text());
   const post_url = $('body > b > a:nth-child(1)').attr('href');

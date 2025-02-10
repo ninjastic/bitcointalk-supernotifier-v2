@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import 'dotenv/config';
 import 'reflect-metadata';
-import cheerio from 'cheerio';
+import { load } from 'cheerio';
 import path from 'path';
 import fs from 'fs-extra';
 
@@ -36,7 +36,7 @@ const readDir = async dir => {
 const scrapePostFromBuffer = buffer => {
   const utf8String = iconv.decode(buffer, 'ISO-8859-1');
 
-  const $ = cheerio.load(utf8String, { decodeEntities: true });
+  const $ = load(utf8String, { decodeEntities: true });
 
   const post_id = Number($('body > b > a:nth-child(1)').text());
   const post_url = $('body > b > a:nth-child(1)').attr('href');
