@@ -35,13 +35,20 @@ const shouldNotifyUser = (post: Post, user: User, ignoredUsers: IgnoredUser[]): 
   return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isUserBlocked);
 };
 
-const checkMinAuthorPostCount = async (user: User, authorUid: number, minAuthorPostCount: number): Promise<boolean> => {
-  if (minAuthorPostCount <= 0) return true;
+const checkMinAuthorPostCount = async (user: User, authorUid: number): Promise<boolean> => {
+  const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
+  let userMinAuthorPostCount = await cacheRepository.recover<number>(
+    `${user.telegram_id}:minTrackedBoardAuthorPostCount`
+  );
+
+  if (!userMinAuthorPostCount) {
+    userMinAuthorPostCount = 1; // default value
+  }
 
   const postsRepository = container.resolve(PostsRepository);
-  const authorPostCount = (await postsRepository.findPosts({ author_uid: authorUid, limit: 500 })).length;
+  const authorPostCount = (await postsRepository.findPosts({ author_uid: authorUid, limit: 100 })).length;
 
-  return authorPostCount >= minAuthorPostCount;
+  return authorPostCount > userMinAuthorPostCount;
 };
 
 const processTopic = async (
@@ -62,11 +69,8 @@ const processTopic = async (
 
       if (!shouldNotifyUser(post, user, ignoredUsers)) continue;
 
-      const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
-      const minAuthorPostCount =
-        (await cacheRepository.recover<number>(`${user.telegram_id}:minTrackedBoardAuthorPostCount`)) ?? 0;
-
-      if (!(await checkMinAuthorPostCount(user, post.author_uid, minAuthorPostCount))) continue;
+      const isAuthorPostCountEnough = await checkMinAuthorPostCount(user, post.author_uid);
+      if (!isAuthorPostCountEnough) continue;
 
       data.push({
         userId: user.id,
