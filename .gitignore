@@ -9,7 +9,9 @@ temp/
 ormconfig.js
 *.log
 telegram_sessions.json
-docker/
+docker/postgres/data/
+docker/postgres/backups/
+docker/redis/data/
 .uptime.config.json
 censor.json
 sync_state.json
