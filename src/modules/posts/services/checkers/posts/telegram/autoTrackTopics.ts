@@ -1,14 +1,12 @@
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import Topic from '../../../../infra/typeorm/entities/Topic';
 import User from '../../../../../users/infra/typeorm/entities/User';
-import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
+import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import logger from '../../../../../../shared/services/logger';
 
-type TelegramAutoTrackTopicsCheckerNotificationData = {
-  userId: string;
-  type: NotificationType.AUTO_TRACK_TOPIC_REQUEST;
-  metadata: RecipeData['sendAutoTrackTopicRequestNotification'];
-};
+type TelegramAutoTrackTopicsCheckerNotificationResult = NotificationResult<
+  RecipeMetadata['sendAutoTrackTopicRequestNotification']
+>;
 
 type TelegramAutoTrackTopicsCheckerParams = {
   topics: Topic[];
@@ -20,14 +18,13 @@ const getUsersWithAutoTrackAndMatchingTopic = (topic: Topic, users: User[]): Use
 
 const shouldNotifyUser = (user: User): boolean => {
   const isUserBlocked = user.blocked;
-
   return !isUserBlocked;
 };
 
 const isUserAlreadyNotified = (topic: Topic, user: User): boolean => topic.post.notified_to.includes(user.telegram_id);
 
-const processTopic = (topic: Topic, users: User[]): TelegramAutoTrackTopicsCheckerNotificationData[] => {
-  const data: TelegramAutoTrackTopicsCheckerNotificationData[] = [];
+const processTopic = (topic: Topic, users: User[]): TelegramAutoTrackTopicsCheckerNotificationResult[] => {
+  const data: TelegramAutoTrackTopicsCheckerNotificationResult[] = [];
   const matchingUsers = getUsersWithAutoTrackAndMatchingTopic(topic, users);
 
   for (const user of matchingUsers) {
@@ -54,8 +51,8 @@ const processTopic = (topic: Topic, users: User[]): TelegramAutoTrackTopicsCheck
 export const telegramAutoTrackTopicsChecker = async ({
   topics,
   users
-}: TelegramAutoTrackTopicsCheckerParams): Promise<TelegramAutoTrackTopicsCheckerNotificationData[]> => {
-  const data: TelegramAutoTrackTopicsCheckerNotificationData[] = [];
+}: TelegramAutoTrackTopicsCheckerParams): Promise<TelegramAutoTrackTopicsCheckerNotificationResult[]> => {
+  const data: TelegramAutoTrackTopicsCheckerNotificationResult[] = [];
 
   for (const topic of topics) {
     try {

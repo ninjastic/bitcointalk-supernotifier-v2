@@ -1,4 +1,6 @@
 import { Job } from 'bullmq';
+
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 import User from '../../../../modules/users/infra/typeorm/entities/User';
 import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
@@ -18,19 +20,34 @@ export type RecipeNames =
   | 'sendApiNotification'
   | 'sendAutoTrackTopicRequestNotification';
 
-export type RecipeData = {
-  sendMeritNotification: { merit: Merit; user: User };
-  sendMentionNotification: { post: Post; user: User; history: boolean };
-  sendTopicTrackingNotification: { post: Post; user: User };
-  sendPhraseTrackingNotification: { post: Post; user: User; trackedPhrase: TrackedPhrase };
-  sendTrackedBoardNotification: { post: Post; user: User; trackedBoard: TrackedBoard };
-  sendTrackedUserNotification: { post: Post; user: User };
-  sendRemovedTopicNotification: { postsDeleted: Post[]; user: User; modLog: ModLog };
-  sendAutoTrackTopicRequestNotification: { topic: Topic; user: User };
+type SendMeritNotificationMetadata = { merit: Merit; user: User };
+type SendMentionNotificationMetadata = { post: Post; user: User; history: boolean };
+type SendTopicTrackingNotificationMetadata = { post: Post; user: User };
+type SendPhraseTrackingNotificationMetadata = { post: Post; user: User; trackedPhrase: TrackedPhrase };
+type SendTrackedBoardNotificationMetadata = { post: Post; user: User; trackedBoard: TrackedBoard };
+type SendTrackedUserNotificationMetadata = { post: Post; user: User };
+type SendRemovedTopicNotificationMetadata = { postsDeleted: Post[]; user: User; modLog: ModLog };
+type SendAutoTrackTopicRequestNotificationMetadata = { topic: Topic; user: User };
+type SendApiNotificationMetadata = { telegram_id: string; message: string };
 
-  sendApiNotification: { telegram_id: string; message: string };
+export type RecipeMetadata = {
+  sendMeritNotification: SendMeritNotificationMetadata;
+  sendMentionNotification: SendMentionNotificationMetadata;
+  sendTopicTrackingNotification: SendTopicTrackingNotificationMetadata;
+  sendPhraseTrackingNotification: SendPhraseTrackingNotificationMetadata;
+  sendTrackedBoardNotification: SendTrackedBoardNotificationMetadata;
+  sendTrackedUserNotification: SendTrackedUserNotificationMetadata;
+  sendRemovedTopicNotification: SendRemovedTopicNotificationMetadata;
+  sendAutoTrackTopicRequestNotification: SendAutoTrackTopicRequestNotificationMetadata;
+  sendApiNotification: SendApiNotificationMetadata;
 };
 
 export type JobRecipe = {
-  [K in keyof RecipeData]: (job: Job<RecipeData[K], any, K>) => Promise<void>;
+  [K in keyof RecipeMetadata]: (job: Job<RecipeMetadata[K], any, K>) => Promise<void>;
 };
+
+export interface NotificationResult<T extends RecipeMetadata[keyof RecipeMetadata]> {
+  userId: string;
+  type: NotificationType;
+  metadata: T;
+}

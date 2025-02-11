@@ -1,36 +1,24 @@
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import Post from '../../../../infra/typeorm/entities/Post';
-import User from '../../../../../users/infra/typeorm/entities/User';
+import { shouldNotifyUser } from '##/shared/services/utils';
 import Topic from '../../../../infra/typeorm/entities/Topic';
 import TrackedUser from '../../../../infra/typeorm/entities/TrackedUser';
-import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
+import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import logger from '../../../../../../shared/services/logger';
 
-type TelegramTrackedUserTopicsCheckerNotificationData = {
-  userId: string;
-  type: NotificationType.TRACKED_USER;
-  metadata: RecipeData['sendTrackedUserNotification'];
-};
+type TelegramTrackedUserTopicsCheckerNotificationResult = NotificationResult<
+  RecipeMetadata['sendTrackedUserNotification']
+>;
 
 type TelegramTrackedUserTopicsCheckerParams = {
   topics: Topic[];
   trackedUsers: TrackedUser[];
 };
 
-const shouldNotifyUser = (post: Post, user: User): boolean => {
-  const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
-  const isSameUid = user.user_id && post.author_uid === user.user_id;
-  const isAlreadyNotified = post.notified_to.includes(user.telegram_id);
-  const isUserBlocked = user.blocked;
-
-  return !(isSameUsername || isSameUid || isAlreadyNotified || isUserBlocked);
-};
-
 const processTopic = (
   topic: Topic,
   trackedUsers: TrackedUser[]
-): TelegramTrackedUserTopicsCheckerNotificationData[] => {
-  const data: TelegramTrackedUserTopicsCheckerNotificationData[] = [];
+): TelegramTrackedUserTopicsCheckerNotificationResult[] => {
+  const data: TelegramTrackedUserTopicsCheckerNotificationResult[] = [];
 
   const trackedUsersWithMatchingTopics = trackedUsers.filter(
     trackedUser => trackedUser.only_topics && trackedUser.username.toLowerCase() === topic.post.author.toLowerCase()
@@ -41,7 +29,7 @@ const processTopic = (
       const { user } = trackedUser;
       const { post } = topic;
 
-      if (!shouldNotifyUser(post, user)) continue;
+      if (!shouldNotifyUser(post, user, [], [])) continue;
 
       data.push({
         userId: user.id,
@@ -62,8 +50,8 @@ const processTopic = (
 export const telegramTrackedUserTopicsChecker = async ({
   topics,
   trackedUsers
-}: TelegramTrackedUserTopicsCheckerParams): Promise<TelegramTrackedUserTopicsCheckerNotificationData[]> => {
-  const data: TelegramTrackedUserTopicsCheckerNotificationData[] = [];
+}: TelegramTrackedUserTopicsCheckerParams): Promise<TelegramTrackedUserTopicsCheckerNotificationResult[]> => {
+  const data: TelegramTrackedUserTopicsCheckerNotificationResult[] = [];
 
   for (const topic of topics) {
     try {

@@ -6,7 +6,7 @@ import ICacheProvider from '../../../shared/container/providers/models/ICachePro
 import IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
 
 @injectable()
-export default class GetIgnoredUsersService {
+export default class GetIgnoredTopicsService {
   constructor(
     @inject('IgnoredTopicsRepository')
     private ignoredTopicsRepository: IIgnoredTopicsRepository,

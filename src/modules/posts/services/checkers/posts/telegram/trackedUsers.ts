@@ -2,14 +2,10 @@ import { NotificationType } from '##/modules/notifications/infra/typeorm/entitie
 import Post from '../../../../infra/typeorm/entities/Post';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import TrackedUser from '../../../../infra/typeorm/entities/TrackedUser';
-import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
+import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import logger from '../../../../../../shared/services/logger';
 
-type TelegramTrackedUsersCheckerNotificationData = {
-  userId: string;
-  type: NotificationType.TRACKED_USER;
-  metadata: RecipeData['sendTrackedUserNotification'];
-};
+type TelegramTrackedUsersCheckerNotificationResult = NotificationResult<RecipeMetadata['sendTrackedUserNotification']>;
 
 type TelegramTrackedUsersCheckerParams = {
   posts: Post[];
@@ -25,8 +21,8 @@ const shouldNotifyUser = (post: Post, user: User): boolean => {
   return !(isSameUsername || isSameUid || isAlreadyNotified || isUserBlocked);
 };
 
-const processPost = (post: Post, trackedUsers: TrackedUser[]): TelegramTrackedUsersCheckerNotificationData[] => {
-  const data: TelegramTrackedUsersCheckerNotificationData[] = [];
+const processPost = (post: Post, trackedUsers: TrackedUser[]): TelegramTrackedUsersCheckerNotificationResult[] => {
+  const data: TelegramTrackedUsersCheckerNotificationResult[] = [];
 
   const trackedUsersWithMatchingPosts = trackedUsers.filter(
     trackedUser => !trackedUser.only_topics && trackedUser.username.toLowerCase() === post.author.toLowerCase()
@@ -57,8 +53,8 @@ const processPost = (post: Post, trackedUsers: TrackedUser[]): TelegramTrackedUs
 export const telegramTrackedUsersChecker = async ({
   posts,
   trackedUsers
-}: TelegramTrackedUsersCheckerParams): Promise<TelegramTrackedUsersCheckerNotificationData[]> => {
-  const data: TelegramTrackedUsersCheckerNotificationData[] = [];
+}: TelegramTrackedUsersCheckerParams): Promise<TelegramTrackedUsersCheckerNotificationResult[]> => {
+  const data: TelegramTrackedUsersCheckerNotificationResult[] = [];
 
   for (const post of posts) {
     try {

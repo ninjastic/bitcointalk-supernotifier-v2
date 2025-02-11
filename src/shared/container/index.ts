@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 
+import { NotificationService } from '##/modules/posts/services/notification-service';
 import IUsersRepository from '../../modules/users/repositories/IUsersRepository';
 import UsersRepository from '../../modules/users/infra/typeorm/repositories/UsersRepository';
 
@@ -64,3 +65,5 @@ container.registerSingleton<IPostsAddressesRepository>('PostsAddressesRepository
 container.registerSingleton<IPostsHistoryRepository>('PostsHistoryRepository', PostsHistoryRepository);
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);
+
+container.registerSingleton<NotificationService>('NotificationService', NotificationService);

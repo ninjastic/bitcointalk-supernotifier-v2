@@ -4,8 +4,12 @@ import { container } from 'tsyringe';
 import fs from 'fs';
 import path from 'path';
 
-import logger from './logger';
+import Post from '##/modules/posts/infra/typeorm/entities/Post';
+import User from '##/modules/users/infra/typeorm/entities/User';
+import IgnoredUser from '##/modules/users/infra/typeorm/entities/IgnoredUser';
+import IgnoredTopic from '##/modules/posts/infra/typeorm/entities/IgnoredTopic';
 import SetUserBlockedService from '../infra/telegram/services/SetUserBlockedService';
+import logger from './logger';
 
 const sha256 = (str: string) => {
   const inst = new JSsha('SHA-256', 'HEX');
@@ -73,3 +77,37 @@ export function getCensorJSON(): CensorJsonType {
     return {} as CensorJsonType;
   }
 }
+
+export const escapeUsername = (text: string): string => text.replace(/([.*+?^${}()|[\]\\<>])/g, '\\$1');
+
+export const createMentionRegex = (username: string): RegExp =>
+  new RegExp(`(?<!\\w)${escapeUsername(username)}(?!\\w)`, 'gi');
+
+export const shouldNotifyUser = (
+  post: Post,
+  user: User,
+  ignoredUsers: IgnoredUser[],
+  ignoredTopics: IgnoredTopic[]
+): boolean => {
+  const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
+  const isSameUid = user.user_id && post.author_uid === user.user_id;
+  const isUserBlocked = user.blocked;
+  const isAuthorIgnored = ignoredUsers
+    .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
+    ?.ignoring.includes(user.telegram_id);
+  const isTopicIgnored = ignoredTopics
+    .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
+    ?.ignoring.includes(user.telegram_id);
+
+  return !(isSameUsername || isSameUid || isAuthorIgnored || isTopicIgnored || isUserBlocked);
+};
+
+export const isUserMentionedInPost = (post: Post, user: User): boolean => {
+  const usernameRegex = createMentionRegex(user.username);
+  const altUsernameRegex = user.alternative_usernames.length ? createMentionRegex(user.alternative_usernames[0]) : null;
+  const backupAtSignRegex = new RegExp(`@${escapeUsername(user.username)}`, 'gi');
+  const backupQuotedRegex = new RegExp(`Quote from: ${escapeUsername(user.username)} on`, 'gi');
+
+  const regexList = [usernameRegex, altUsernameRegex, backupAtSignRegex, backupQuotedRegex];
+  return regexList.some(regex => regex && post.content.match(regex));
+};

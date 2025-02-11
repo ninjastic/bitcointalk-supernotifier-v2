@@ -1,38 +1,24 @@
 import { container } from 'tsyringe';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import Post from '../../../../infra/typeorm/entities/Post';
+import { shouldNotifyUser } from '##/shared/services/utils';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import Topic from '../../../../infra/typeorm/entities/Topic';
 import TrackedBoard from '../../../../infra/typeorm/entities/TrackedBoard';
 import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
-import { RecipeData } from '../../../../../../shared/infra/bull/types/telegram';
+import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import PostsRepository from '../../../../infra/typeorm/repositories/PostsRepository';
 import ICacheProvider from '../../../../../../shared/container/providers/models/ICacheProvider';
 import logger from '../../../../../../shared/services/logger';
 
-type TelegramTrackedBoardTopicsCheckerNotificationData = {
-  userId: string;
-  type: NotificationType.TRACKED_BOARD;
-  metadata: RecipeData['sendTrackedBoardNotification'];
-};
+type TelegramTrackedBoardTopicsCheckerNotificationResult = NotificationResult<
+  RecipeMetadata['sendTrackedBoardNotification']
+>;
 
 type TelegramTrackedBoardTopicsCheckerParams = {
   topics: Topic[];
   trackedBoards: TrackedBoard[];
   ignoredUsers: IgnoredUser[];
-};
-
-const shouldNotifyUser = (post: Post, user: User, ignoredUsers: IgnoredUser[]): boolean => {
-  const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
-  const isSameUid = user.user_id && post.author_uid === user.user_id;
-  const isAlreadyNotified = post.notified_to.includes(user.telegram_id);
-  const isAuthorIgnored = ignoredUsers
-    .find(ignoredUser => ignoredUser.username.toLowerCase() === post.author.toLowerCase())
-    ?.ignoring.includes(user.telegram_id);
-  const isUserBlocked = user.blocked;
-
-  return !(isSameUsername || isSameUid || isAlreadyNotified || isAuthorIgnored || isUserBlocked);
 };
 
 const checkMinAuthorPostCount = async (user: User, authorUid: number): Promise<boolean> => {
@@ -55,8 +41,8 @@ const processTopic = async (
   topic: Topic,
   trackedBoards: TrackedBoard[],
   ignoredUsers: IgnoredUser[]
-): Promise<TelegramTrackedBoardTopicsCheckerNotificationData[]> => {
-  const data: TelegramTrackedBoardTopicsCheckerNotificationData[] = [];
+): Promise<TelegramTrackedBoardTopicsCheckerNotificationResult[]> => {
+  const data: TelegramTrackedBoardTopicsCheckerNotificationResult[] = [];
 
   const trackedBoardsWithMatchingTopics = trackedBoards.filter(
     trackedBoard => trackedBoard.board_id === topic.post.board_id
@@ -67,7 +53,7 @@ const processTopic = async (
       const { user } = trackedBoard;
       const { post } = topic;
 
-      if (!shouldNotifyUser(post, user, ignoredUsers)) continue;
+      if (!shouldNotifyUser(post, user, ignoredUsers, [])) continue;
 
       const isAuthorPostCountEnough = await checkMinAuthorPostCount(user, post.author_uid);
       if (!isAuthorPostCountEnough) continue;
@@ -92,8 +78,8 @@ export const telegramTrackedBoardTopicsChecker = async ({
   topics,
   trackedBoards,
   ignoredUsers
-}: TelegramTrackedBoardTopicsCheckerParams): Promise<TelegramTrackedBoardTopicsCheckerNotificationData[]> => {
-  const data: TelegramTrackedBoardTopicsCheckerNotificationData[] = [];
+}: TelegramTrackedBoardTopicsCheckerParams): Promise<TelegramTrackedBoardTopicsCheckerNotificationResult[]> => {
+  const data: TelegramTrackedBoardTopicsCheckerNotificationResult[] = [];
 
   for await (const topic of topics) {
     try {
