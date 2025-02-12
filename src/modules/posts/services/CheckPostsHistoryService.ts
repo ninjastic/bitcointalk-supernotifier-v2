@@ -87,7 +87,7 @@ export default class CheckPostsHistoryService {
           history: true
         };
 
-        const shouldNotify = this.shouldProcessNotification(notificationMetadata, notificationKey);
+        const shouldNotify = await this.shouldProcessNotification(notificationMetadata, notificationKey);
         if (!shouldNotify) continue;
 
         await addTelegramJob('sendMentionNotification', notificationMetadata);
