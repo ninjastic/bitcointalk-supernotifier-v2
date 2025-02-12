@@ -49,7 +49,7 @@ export default class CheckPostsHistoryService {
     const notificationExists = await this.notificationService.findOne({
       type: NotificationType.POST_MENTION,
       telegram_id: user.telegram_id,
-      metadata: { post_id: post.id }
+      metadata: { post_id: post.post_id }
     });
 
     return !notificationExists;
