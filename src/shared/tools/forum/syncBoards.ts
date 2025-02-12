@@ -55,8 +55,8 @@ const scrapeBoards = async (
     url: string;
   }>
 ) => {
-  spinner.text = `Scraping missing boards (${boards.length})`;
   for await (const board of boards) {
+    spinner.text = `Scraping missing boards (${boards.length}) - ID ${board.id}`;
     const response = await api.get(board.url);
 
     const $ = load(response.data, { decodeEntities: true });
