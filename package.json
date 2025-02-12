@@ -10,6 +10,7 @@
     "start:server": "cross-env NODE_ENV=production node dist/shared/infra/http/server.js",
     "start:telegram": "cross-env NODE_ENV=production node dist/shared/infra/bull/workers/telegram.js",
     "start:checker": "cross-env NODE_ENV=production node dist/shared/infra/bull/workers/checker.js",
+    "start:sync": "cross-env NODE_ENV=production node dist/shared/infra/elastic/sync.js",
     "dev:scraper": "cross-env NODE_ENV=development tsx --watch src/shared/infra/bull/workers/scraper.ts | pino-pretty",
     "dev:server": "cross-env NODE_ENV=development tsx --watch src/shared/infra/http/server.ts | pino-pretty",
     "dev:telegram": "cross-env NODE_ENV=development tsx --watch src/shared/infra/bull/workers/telegram.ts | pino-pretty",

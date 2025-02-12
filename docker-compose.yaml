@@ -18,7 +18,7 @@ services:
     networks:
       - supernotifier
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,11 +36,39 @@ services:
     networks:
       - supernotifier
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
+  elasticsearch:
+    image: elasticsearch:8.16.4
+    container_name: elasticsearch
+    restart: always
+    environment:
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=true"
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - ELASTIC_PASSWORD=${ELASTIC_SEARCH_PASSWORD}
+    volumes:
+      - type: volume
+        source: elasticsearch
+        target: /usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - supernotifier
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9200" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 networks:
   supernotifier:
     name: supernotifier
     driver: bridge
+
+volumes:
+  elasticsearch:

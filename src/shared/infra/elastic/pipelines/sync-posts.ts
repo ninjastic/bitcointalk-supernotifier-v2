@@ -1,18 +1,19 @@
-import 'reflect-metadata';
-import 'dotenv/config';
-import fs from 'fs-extra';
-import { Connection, createConnection } from 'typeorm';
+/* eslint-disable no-await-in-loop */
+import { Connection } from 'typeorm';
 import Post from 'modules/posts/infra/typeorm/entities/Post';
 import esClient from 'shared/services/elastic';
-import 'shared/container';
 import { load } from 'cheerio';
+import { container } from 'tsyringe';
+import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import baseLogger from '##/shared/services/logger';
 
-const INDEX_NAME = 'posts_v2';
-const INDEX_TEMPLATE_NAME = 'posts_v2_template';
-const SYNC_STATE_FILE = 'sync_state.json';
+const logger = baseLogger.child({ pipeline: 'syncPostsPipeline' });
+
+const INDEX_NAME = 'posts';
+const INDEX_TEMPLATE_NAME = 'posts_template';
 const SYNC_BATCH_SIZE = 50000;
 const SYNC_INTERVAL = 5 * 60 * 1000;
-const INDEX_BATCHES = 10;
+const INDEX_BATCH_SIZE = 10;
 
 async function setupElasticsearchTemplate() {
   try {
@@ -39,8 +40,8 @@ async function setupElasticsearchTemplate() {
       },
       mappings: {
         properties: {
-          post_id: { type: 'long' },
-          topic_id: { type: 'long' },
+          post_id: { type: 'integer' },
+          topic_id: { type: 'integer' },
           title: {
             type: 'text',
             fields: {
@@ -56,37 +57,43 @@ async function setupElasticsearchTemplate() {
               }
             }
           },
-          author_uid: { type: 'long' },
-          raw_content: {
-            type: 'text',
-            analyzer: 'html_strip'
-          },
+          author_uid: { type: 'integer' },
           content: {
             type: 'text',
             analyzer: 'html_strip'
           },
-          quotes: {
+          content_without_quotes: {
             type: 'text',
             analyzer: 'html_strip'
           },
-          quoted_users: {
-            type: 'text',
-            fields: {
-              keyword: {
-                type: 'keyword',
-                normalizer: 'keyword_lowercase'
+          quotes: {
+            type: 'nested',
+            properties: {
+              author: {
+                type: 'text',
+                fields: {
+                  keyword: { type: 'keyword' }
+                }
+              },
+              content: {
+                type: 'text',
+                analyzer: 'html_strip'
               }
             }
           },
+          urls: {
+            type: 'text',
+            analyzer: 'standard'
+          },
           date: { type: 'date' },
-          board_id: { type: 'long' },
+          board_id: { type: 'integer' },
           updated_at: { type: 'date' }
         }
       }
     });
-    console.log(`Elasticsearch template '${INDEX_TEMPLATE_NAME}' created or updated successfully.`);
+    logger.info(`Elasticsearch template '${INDEX_TEMPLATE_NAME}' created or updated successfully.`);
   } catch (error) {
-    console.error('Error creating Elasticsearch template:', error);
+    logger.error({ error }, 'Error creating Elasticsearch template');
     throw error;
   }
 }
@@ -99,12 +106,12 @@ async function createOrUpdateIndex() {
       await esClient.indices.create({
         index: INDEX_NAME
       });
-      console.log(`Index '${INDEX_NAME}' created successfully.`);
+      logger.info(`Index '${INDEX_NAME}' created successfully.`);
     } else {
-      console.log(`Index '${INDEX_NAME}' already exists.`);
+      logger.info(`Index '${INDEX_NAME}' already exists.`);
     }
   } catch (error) {
-    console.error('Error creating or checking index:', error);
+    logger.error({ error }, 'Error creating or checking index');
     throw error;
   }
 }
@@ -114,36 +121,25 @@ interface LastSyncState {
   lastPostId: number;
 }
 
-async function getLastSyncState(): Promise<LastSyncState> {
-  try {
-    const data = await fs.readFile(SYNC_STATE_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (error) {
-    if (error.code !== 'ENOENT') {
-      console.error('Error reading sync state file:', error);
-    }
-  }
-  return { lastUpdatedAt: new Date(0).toISOString(), lastPostId: 0 };
-}
-
-async function saveLastSyncState(state: LastSyncState): Promise<void> {
-  await fs.writeFile(SYNC_STATE_FILE, JSON.stringify(state), 'utf8');
-}
-
-type PostContent = {
-  raw_content: string;
+interface QuoteContent {
+  author: string;
   content: string;
-  quoted_users: string[];
-  quotes: string[];
-};
+  topic_id: number;
+  post_id: number;
+}
+
+interface PostContent {
+  content: string;
+  content_without_quotes: string;
+  quotes: QuoteContent[];
+}
 
 function extractPostContent(html: string): PostContent {
   const $ = load(html);
 
   const result: PostContent = {
-    raw_content: html,
-    content: '',
-    quoted_users: [],
+    content: html,
+    content_without_quotes: '',
     quotes: []
   };
 
@@ -169,16 +165,36 @@ function extractPostContent(html: string): PostContent {
 
   function processQuote(element: cheerio.Cheerio) {
     const quoteHeader = element.prev('.quoteheader');
-    if (quoteHeader.length) {
+    if (quoteHeader.length && quoteHeader.find('a').length) {
       const userMatch = quoteHeader.text().match(/Quote from: (.+?) on/);
       if (userMatch) {
-        result.quoted_users.push(userMatch[1]);
-      }
-    }
+        const author = userMatch[1];
+        const quoteContent = extractTextContent(element);
 
-    const quoteContent = extractTextContent(element);
-    if (quoteContent) {
-      result.quotes.push(quoteContent);
+        try {
+          const quoteUrl = new URL(quoteHeader.find('a').attr('href') ?? '');
+          const topicParam = quoteUrl.searchParams.get('topic');
+          const hashPart = quoteUrl.hash;
+
+          if (!topicParam || !hashPart) {
+            return;
+          }
+
+          const topicId = Number(topicParam.split('.')[0]);
+          const postId = Number(hashPart.split('msg')[1]);
+
+          if (Number.isInteger(topicId) && Number.isInteger(postId) && topicId > 0 && postId > 0 && quoteContent) {
+            result.quotes.push({
+              author,
+              content: quoteContent,
+              topic_id: topicId,
+              post_id: postId
+            });
+          }
+        } catch (error) {
+          logger.error({ error, quoteHeaderHtml: quoteHeader.find('a').html() }, 'Error processing quote');
+        }
+      }
     }
 
     element.find('> .quote').each((_, nestedQuote) => {
@@ -191,7 +207,7 @@ function extractPostContent(html: string): PostContent {
     processQuote($(quote));
   });
 
-  result.content = extractTextContent($('body'));
+  result.content_without_quotes = extractTextContent($('body'));
 
   $('.quoteheader').each((_, element) => {
     if ($(element).children('a').length > 0) {
@@ -200,15 +216,14 @@ function extractPostContent(html: string): PostContent {
     }
   });
 
-  result.content = result.content.trim();
-  result.quoted_users = [...new Set(result.quoted_users)];
+  result.content_without_quotes = result.content_without_quotes.trim();
 
   return result;
 }
 
 async function batchProcessPost(posts: Post[]) {
   const esBulkContent = posts.flatMap(post => {
-    const { raw_content, content, quoted_users, quotes } = extractPostContent(post.content);
+    const { content, content_without_quotes, quotes } = extractPostContent(post.content);
 
     return [
       { index: { _index: INDEX_NAME, _id: post.post_id.toString() } },
@@ -218,9 +233,8 @@ async function batchProcessPost(posts: Post[]) {
         title: post.title,
         author: post.author,
         author_uid: post.author_uid,
-        raw_content,
         content,
-        quoted_users,
+        content_without_quotes,
         quotes,
         date: post.date,
         board_id: post.board_id,
@@ -229,7 +243,7 @@ async function batchProcessPost(posts: Post[]) {
     ];
   });
 
-  const batchSize = Math.ceil(esBulkContent.length / 2 / INDEX_BATCHES);
+  const batchSize = Math.ceil(esBulkContent.length / 2 / INDEX_BATCH_SIZE);
 
   const bulkPromises = [];
   for (let i = 0; i < esBulkContent.length; i += batchSize * 2) {
@@ -240,13 +254,16 @@ async function batchProcessPost(posts: Post[]) {
 }
 
 async function syncPosts(connection: Connection) {
+  const cacheRepository = container.resolve(RedisProvider);
   const postRepository = connection.getRepository(Post);
-  let { lastUpdatedAt, lastPostId } = await getLastSyncState();
+
+  let { lastUpdatedAt, lastPostId } = (await cacheRepository.recover<LastSyncState>('posts-sync-state')) ?? {
+    lastUpdatedAt: new Date(0).toISOString(),
+    lastPostId: 0
+  };
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    console.time('SyncBatch');
-    // eslint-disable-next-line no-await-in-loop
     const posts = await postRepository
       .createQueryBuilder('post')
       .where('post.updated_at > :lastUpdatedAt', {
@@ -256,39 +273,33 @@ async function syncPosts(connection: Connection) {
       .limit(SYNC_BATCH_SIZE)
       .getMany();
 
-    // eslint-disable-next-line no-await-in-loop
-    await batchProcessPost(posts);
-    lastUpdatedAt = posts.at(-1).updated_at.toISOString();
-    lastPostId = posts.at(-1).post_id;
+    if (posts.length) {
+      await batchProcessPost(posts);
+      lastUpdatedAt = posts.at(-1).updated_at.toISOString();
+      lastPostId = posts.at(-1).post_id;
 
-    // eslint-disable-next-line no-await-in-loop
-    await saveLastSyncState({ lastUpdatedAt, lastPostId });
-    console.log(`Processed ${posts.length} posts. Last updated_at: ${lastUpdatedAt} | Last post_id: ${lastPostId}`);
-    console.timeEnd('SyncBatch');
+      await cacheRepository.save('posts-sync-state', { lastUpdatedAt, lastPostId });
+      logger.info(`Processed ${posts.length} posts. Last updated_at: ${lastUpdatedAt} | Last post_id: ${lastPostId}`);
+    }
 
     if (posts.length < SYNC_BATCH_SIZE) {
-      console.log('Synchronization is up to date. Waiting...');
-      // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
+      logger.info('Synchronization is up to date. Waiting...');
+      // eslint-disable-next-line no-promise-executor-return
       await new Promise(resolve => setTimeout(resolve, SYNC_INTERVAL));
     }
   }
 }
 
-async function main() {
-  let connection: Connection | undefined;
-
+export async function syncPostsPipeline(connection: Connection) {
   try {
     await setupElasticsearchTemplate();
     await createOrUpdateIndex();
 
-    connection = await createConnection();
     await syncPosts(connection);
   } catch (error) {
-    console.error('Error during synchronization:', error);
+    logger.error({ error }, 'Error during synchronization');
   } finally {
     if (connection) await connection.close();
     await esClient.close();
   }
 }
-
-main();

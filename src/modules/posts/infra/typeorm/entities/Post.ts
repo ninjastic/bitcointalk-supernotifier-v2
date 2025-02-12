@@ -1,4 +1,14 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn, Index, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  Index,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn
+} from 'typeorm';
+import Board from '##/modules/posts/infra/typeorm/entities/Board';
 
 @Entity('posts')
 class Post {
@@ -42,6 +52,10 @@ class Post {
 
   @Column({ type: 'integer', nullable: true })
   board_id?: number;
+
+  @OneToOne(() => Board)
+  @JoinColumn({ name: 'board_id', referencedColumnName: 'board_id' })
+  board: Board;
 
   @Column({ type: 'boolean', default: false })
   notified: boolean;
