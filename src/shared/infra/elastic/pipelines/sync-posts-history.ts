@@ -194,8 +194,5 @@ export async function syncPostsHistoryPipeline(connection: Connection) {
     await syncHistory(connection);
   } catch (error) {
     logger.error({ error }, 'Error during synchronization');
-  } finally {
-    if (connection) await connection.close();
-    await esClient.close();
   }
 }

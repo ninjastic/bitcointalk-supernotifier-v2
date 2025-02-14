@@ -212,8 +212,5 @@ export async function syncPostsAddressesPipeline(connection: Connection) {
     await syncAddresses(connection);
   } catch (error) {
     logger.error({ error }, 'Error during synchronization');
-  } finally {
-    if (connection) await connection.close();
-    await esClient.close();
   }
 }

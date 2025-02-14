@@ -183,8 +183,5 @@ export async function syncTopicsPipeline(connection: Connection) {
     await syncTopics(connection);
   } catch (error) {
     logger.error({ error }, 'Error during synchronization');
-  } finally {
-    if (connection) await connection.close();
-    await esClient.close();
   }
 }
