@@ -131,7 +131,7 @@ async function batchProcessMerit(merits: RawMerit[]) {
       sender_uid: merit.sender_uid,
       board_id: merit.post_board_id,
       date: merit.date,
-      updated_at: merit.updated_at
+      updated_at: new Date(merit.updated_at).toISOString()
     }
   ]);
 
