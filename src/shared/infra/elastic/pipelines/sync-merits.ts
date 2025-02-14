@@ -11,7 +11,6 @@ const logger = baseLogger.child({ pipeline: 'syncMeritsPipeline' });
 const INDEX_NAME = 'merits';
 const INDEX_TEMPLATE_NAME = 'merits_template';
 const SYNC_BATCH_SIZE = 50000;
-const SYNC_INTERVAL = 5 * 60 * 1000;
 const INDEX_BATCHES = 10;
 
 async function setupElasticsearchTemplate() {
@@ -111,7 +110,6 @@ async function createOrUpdateIndex() {
 
 interface LastSyncState {
   lastUpdatedAt: string;
-  lastPostId: number;
 }
 
 async function batchProcessMerit(merits: Merit[]) {
@@ -150,37 +148,36 @@ async function syncMerits(connection: Connection) {
     lastUpdatedAt: new Date(0).toISOString()
   };
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  let stop = false;
+
+  while (!stop) {
     const merits = await meritsRepository
       .createQueryBuilder('merit')
+      .select(['*', 'merit.updated_at::text'])
       .where('merit.updated_at > :lastUpdatedAt', {
         lastUpdatedAt
       })
       .innerJoinAndSelect('merit.post', 'post')
       .orderBy('merit.updated_at', 'ASC')
       .limit(SYNC_BATCH_SIZE)
-      .getMany();
+      .getRawMany();
 
     if (merits.length) {
       await batchProcessMerit(merits);
-      lastUpdatedAt = merits.at(-1).updated_at.toISOString();
+      lastUpdatedAt = merits.at(-1).updated_at;
     }
 
     await cacheRepository.save('merits-sync-state', { lastUpdatedAt });
     logger.info(`Processed ${merits.length} merits. Last updated_at: ${lastUpdatedAt}`);
 
     if (merits.length < SYNC_BATCH_SIZE) {
-      logger.info('Synchronization is up to date. Waiting...');
-      // eslint-disable-next-line no-promise-executor-return
-      await new Promise(resolve => setTimeout(resolve, SYNC_INTERVAL));
+      logger.info('Synchronization is up to date');
+      stop = true;
     }
   }
 }
 
-async function main() {
-  let connection: Connection | undefined;
-
+export async function syncMeritsPipeline(connection: Connection) {
   try {
     await setupElasticsearchTemplate();
     await createOrUpdateIndex();
@@ -193,5 +190,3 @@ async function main() {
     await esClient.close();
   }
 }
-
-main();

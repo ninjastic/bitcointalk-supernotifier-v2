@@ -11,7 +11,6 @@ const logger = baseLogger.child({ pipeline: 'syncPostsHistoryPipeline' });
 const INDEX_NAME = 'posts_history';
 const INDEX_TEMPLATE_NAME = 'posts_history_template';
 const SYNC_BATCH_SIZE = 50000;
-const SYNC_INTERVAL = 5 * 60 * 1000;
 const INDEX_BATCH_SIZE = 10;
 
 async function setupElasticsearchTemplate() {
@@ -160,8 +159,9 @@ async function syncHistory(connection: Connection) {
     lastUpdatedAt: new Date(0).toISOString()
   };
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  let stop = false;
+
+  while (!stop) {
     const histories = await historyRepository.find({
       where: { updated_at: MoreThan(lastUpdatedAt) },
       relations: ['post'],
@@ -180,9 +180,8 @@ async function syncHistory(connection: Connection) {
     }
 
     if (histories.length < SYNC_BATCH_SIZE) {
-      logger.info('Synchronization is up to date. Waiting...');
-      // eslint-disable-next-line no-promise-executor-return
-      await new Promise(resolve => setTimeout(resolve, SYNC_INTERVAL));
+      logger.info('Synchronization is up to date');
+      stop = true;
     }
   }
 }

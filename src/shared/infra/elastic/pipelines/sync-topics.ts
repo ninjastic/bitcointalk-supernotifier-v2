@@ -11,7 +11,6 @@ const logger = baseLogger.child({ pipeline: 'syncTopicsPipeline' });
 const INDEX_NAME = 'topics';
 const INDEX_TEMPLATE_NAME = 'topics_template';
 const SYNC_BATCH_SIZE = 50000;
-const SYNC_INTERVAL = 5 * 60 * 1000;
 const INDEX_BATCH_SIZE = 10;
 
 async function setupElasticsearchTemplate() {
@@ -149,8 +148,9 @@ async function syncTopics(connection: Connection) {
     lastUpdatedAt: new Date(0).toISOString()
   };
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  let stop = false;
+
+  while (!stop) {
     const topics = await topicsRepository.find({
       where: { updated_at: MoreThan(lastUpdatedAt) },
       relations: ['post', 'post.board'],
@@ -169,9 +169,8 @@ async function syncTopics(connection: Connection) {
     }
 
     if (topics.length < SYNC_BATCH_SIZE) {
-      logger.info('Synchronization is up to date. Waiting...');
-      // eslint-disable-next-line no-promise-executor-return
-      await new Promise(resolve => setTimeout(resolve, SYNC_INTERVAL));
+      logger.info('Synchronization is up to date');
+      stop = true;
     }
   }
 }

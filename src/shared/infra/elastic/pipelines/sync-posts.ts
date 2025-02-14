@@ -12,7 +12,6 @@ const logger = baseLogger.child({ pipeline: 'syncPostsPipeline' });
 const INDEX_NAME = 'posts';
 const INDEX_TEMPLATE_NAME = 'posts_template';
 const SYNC_BATCH_SIZE = 50000;
-const SYNC_INTERVAL = 5 * 60 * 1000;
 const INDEX_BATCH_SIZE = 10;
 
 async function setupElasticsearchTemplate() {
@@ -60,11 +59,21 @@ async function setupElasticsearchTemplate() {
           author_uid: { type: 'integer' },
           content: {
             type: 'text',
-            analyzer: 'html_strip'
+            fields: {
+              stripped: {
+                type: 'text',
+                analyzer: 'html_strip'
+              }
+            }
           },
           content_without_quotes: {
             type: 'text',
-            analyzer: 'html_strip'
+            fields: {
+              stripped: {
+                type: 'text',
+                analyzer: 'html_strip'
+              }
+            }
           },
           quotes: {
             type: 'nested',
@@ -77,13 +86,16 @@ async function setupElasticsearchTemplate() {
               },
               content: {
                 type: 'text',
-                analyzer: 'html_strip'
-              }
+                fields: {
+                  stripped: {
+                    type: 'text',
+                    analyzer: 'html_strip'
+                  }
+                }
+              },
+              topic_id: { type: 'integer' },
+              post_id: { type: 'integer' }
             }
-          },
-          urls: {
-            type: 'text',
-            analyzer: 'standard'
           },
           date: { type: 'date' },
           board_id: { type: 'integer' },
@@ -136,94 +148,73 @@ interface PostContent {
 
 function extractPostContent(html: string): PostContent {
   const $ = load(html);
+  const quotes: QuoteContent[] = [];
+  let contentWithoutQuotes = html;
 
-  const result: PostContent = {
-    content: html,
-    content_without_quotes: '',
-    quotes: []
-  };
+  $('div.quoteheader').each((_, quoteHeaderElement) => {
+    const quoteHeader = $(quoteHeaderElement);
+    const quoteDiv = quoteHeader.next('div.quote');
 
-  function extractTextContent(element: cheerio.Cheerio): string {
-    return element
+    const isRegularQuote = quoteHeader.children('a:not(.ul)').length === 0;
+    if (isRegularQuote) return;
+
+    const authorMatch = quoteHeader.text().match(/Quote from: (.*?) on/);
+    if (!authorMatch) return;
+
+    const author = authorMatch[1];
+
+    const quoteText = quoteDiv
       .clone()
       .children('br')
-      .each((_, el) => {
+      .each((_i, el) => {
         $(el).replaceWith(' ');
       })
       .end()
       .children('.quoteheader')
-      .each((_, el) => {
-        if ($(el).children('a').length > 0) {
+      .each((_i, el) => {
+        if ($(el).children('a:not(.ul)').length > 0) {
           $(el.next).remove();
         }
-        $(el).text(' ');
+        $(el).remove();
       })
       .end()
-      .text()
+      .html()
       .trim();
-  }
 
-  function processQuote(element: cheerio.Cheerio) {
-    const quoteHeader = element.prev('.quoteheader');
-    if (quoteHeader.length && quoteHeader.find('a').length) {
-      const userMatch = quoteHeader.text().match(/Quote from: (.+?) on/);
-      if (userMatch) {
-        const author = userMatch[1];
-        const quoteContent = extractTextContent(element);
+    const fullQuoteHtml = quoteHeader.prop('outerHTML') + quoteDiv.prop('outerHTML');
 
-        try {
-          const quoteUrl = new URL(quoteHeader.find('a').attr('href') ?? '');
-          const topicParam = quoteUrl.searchParams.get('topic');
-          const hashPart = quoteUrl.hash;
+    const postUrl = quoteHeader.find('a').attr('href');
+    if (!postUrl) return;
 
-          if (!topicParam || !hashPart) {
-            return;
-          }
+    const url = new URL(postUrl);
+    const topicParam = url.searchParams.get('topic');
+    const hashPart = url.hash;
 
-          const topicId = Number(topicParam.split('.')[0]);
-          const postId = Number(hashPart.split('msg')[1]);
+    if (!topicParam || !hashPart) return;
 
-          if (Number.isInteger(topicId) && Number.isInteger(postId) && topicId > 0 && postId > 0 && quoteContent) {
-            result.quotes.push({
-              author,
-              content: quoteContent,
-              topic_id: topicId,
-              post_id: postId
-            });
-          }
-        } catch (error) {
-          logger.error({ error, quoteHeaderHtml: quoteHeader.find('a').html() }, 'Error processing quote');
-        }
-      }
-    }
+    const topicId = Number(topicParam.split('.')[0]);
+    const postId = Number(hashPart.split('msg')[1]);
 
-    element.find('> .quote').each((_, nestedQuote) => {
-      processQuote($(nestedQuote));
+    quotes.push({
+      content: quoteText.trim(),
+      author,
+      topic_id: topicId,
+      post_id: postId
     });
-  }
 
-  $('.quote').each((_, quote) => {
-    if ($(quote).parent().hasClass('quote') || $(quote).prev('.quoteheader').children('a').length === 0) return;
-    processQuote($(quote));
+    contentWithoutQuotes = contentWithoutQuotes.replace(fullQuoteHtml, '');
   });
 
-  result.content_without_quotes = extractTextContent($('body'));
-
-  $('.quoteheader').each((_, element) => {
-    if ($(element).children('a').length > 0) {
-      const elementText = $(element.next).text();
-      result.content = result.content.replace(elementText, '');
-    }
-  });
-
-  result.content_without_quotes = result.content_without_quotes.trim();
-
-  return result;
+  return {
+    content: html,
+    content_without_quotes: contentWithoutQuotes,
+    quotes
+  };
 }
 
 async function batchProcessPost(posts: Post[]) {
   const esBulkContent = posts.flatMap(post => {
-    const { content, content_without_quotes, quotes } = extractPostContent(post.content);
+    const { content_without_quotes, content, quotes } = extractPostContent(post.content);
 
     return [
       { index: { _index: INDEX_NAME, _id: post.post_id.toString() } },
@@ -238,7 +229,7 @@ async function batchProcessPost(posts: Post[]) {
         quotes,
         date: post.date,
         board_id: post.board_id,
-        updated_at: post.updated_at
+        updated_at: new Date(post.updated_at).toISOString()
       }
     ];
   });
@@ -262,20 +253,22 @@ async function syncPosts(connection: Connection) {
     lastPostId: 0
   };
 
-  // eslint-disable-next-line no-constant-condition
-  while (true) {
+  let stop = false;
+
+  while (!stop) {
     const posts = await postRepository
       .createQueryBuilder('post')
+      .select(['*', 'post.updated_at::text'])
       .where('post.updated_at > :lastUpdatedAt', {
         lastUpdatedAt
       })
       .orderBy('post.updated_at', 'ASC')
       .limit(SYNC_BATCH_SIZE)
-      .getMany();
+      .getRawMany();
 
     if (posts.length) {
       await batchProcessPost(posts);
-      lastUpdatedAt = posts.at(-1).updated_at.toISOString();
+      lastUpdatedAt = posts.at(-1).updated_at;
       lastPostId = posts.at(-1).post_id;
 
       await cacheRepository.save('posts-sync-state', { lastUpdatedAt, lastPostId });
@@ -283,9 +276,8 @@ async function syncPosts(connection: Connection) {
     }
 
     if (posts.length < SYNC_BATCH_SIZE) {
-      logger.info('Synchronization is up to date. Waiting...');
-      // eslint-disable-next-line no-promise-executor-return
-      await new Promise(resolve => setTimeout(resolve, SYNC_INTERVAL));
+      logger.info('Synchronization is up to date');
+      stop = true;
     }
   }
 }
