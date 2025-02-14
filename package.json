@@ -142,7 +142,7 @@
     "puppeteer-cluster": "^0.23.0",
     "reflect-metadata": "^0.1.10",
     "tsyringe": "^4.3.0",
-    "typeorm": "0.2.25",
+    "typeorm": "0.2.45",
     "user-agents": "^1.0.1294",
     "zod": "^3.21.4"
   },
