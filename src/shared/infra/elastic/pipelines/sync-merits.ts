@@ -10,7 +10,7 @@ const logger = baseLogger.child({ pipeline: 'syncMeritsPipeline' });
 
 const INDEX_NAME = 'merits';
 const INDEX_TEMPLATE_NAME = 'merits_template';
-const SYNC_BATCH_SIZE = 50000;
+const SYNC_BATCH_SIZE = 30000;
 const INDEX_BATCHES = 10;
 
 async function setupElasticsearchTemplate() {
@@ -77,7 +77,7 @@ async function setupElasticsearchTemplate() {
           date: {
             type: 'date'
           },
-          created_at: {
+          updated_at: {
             type: 'date'
           }
         }
@@ -126,7 +126,7 @@ async function batchProcessMerit(merits: Merit[]) {
       sender_uid: merit.sender_uid,
       board_id: merit.post.board_id,
       date: merit.date,
-      created_at: merit.created_at
+      updated_at: merit.updated_at
     }
   ]);
 

@@ -10,7 +10,7 @@ const logger = baseLogger.child({ pipeline: 'syncPostsHistoryPipeline' });
 
 const INDEX_NAME = 'posts_history';
 const INDEX_TEMPLATE_NAME = 'posts_history_template';
-const SYNC_BATCH_SIZE = 50000;
+const SYNC_BATCH_SIZE = 30000;
 const INDEX_BATCH_SIZE = 10;
 
 async function setupElasticsearchTemplate() {

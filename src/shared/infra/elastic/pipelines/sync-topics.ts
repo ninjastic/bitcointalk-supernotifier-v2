@@ -10,7 +10,7 @@ const logger = baseLogger.child({ pipeline: 'syncTopicsPipeline' });
 
 const INDEX_NAME = 'topics';
 const INDEX_TEMPLATE_NAME = 'topics_template';
-const SYNC_BATCH_SIZE = 50000;
+const SYNC_BATCH_SIZE = 30000;
 const INDEX_BATCH_SIZE = 10;
 
 async function setupElasticsearchTemplate() {
