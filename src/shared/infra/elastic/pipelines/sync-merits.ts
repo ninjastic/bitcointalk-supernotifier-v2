@@ -6,6 +6,11 @@ import RedisProvider from '##/shared/container/providers/implementations/RedisPr
 import { container } from 'tsyringe';
 import baseLogger from '##/shared/services/logger';
 
+type RawMerit = Merit & {
+  post_title: string;
+  post_board_id: number;
+};
+
 const logger = baseLogger.child({ pipeline: 'syncMeritsPipeline' });
 
 const INDEX_NAME = 'merits';
@@ -112,19 +117,19 @@ interface LastSyncState {
   lastUpdatedAt: string;
 }
 
-async function batchProcessMerit(merits: Merit[]) {
+async function batchProcessMerit(merits: RawMerit[]) {
   const esBulkContent = merits.flatMap(merit => [
     { index: { _index: INDEX_NAME, _id: merit.id.toString() } },
     {
       amount: merit.amount,
       post_id: merit.post_id,
       topic_id: merit.topic_id,
-      title: merit.post.title,
+      title: merit.post_title,
       receiver: merit.receiver,
       receiver_uid: merit.receiver_uid,
       sender: merit.sender,
       sender_uid: merit.sender_uid,
-      board_id: merit.post.board_id,
+      board_id: merit.post_board_id,
       date: merit.date,
       updated_at: merit.updated_at
     }
