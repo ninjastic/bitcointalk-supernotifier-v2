@@ -2,6 +2,7 @@ import { container } from 'tsyringe';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { shouldNotifyUser } from '##/shared/services/utils';
+import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import User from '../../../../../users/infra/typeorm/entities/User';
 import Topic from '../../../../infra/typeorm/entities/Topic';
 import TrackedBoard from '../../../../infra/typeorm/entities/TrackedBoard';
@@ -21,7 +22,7 @@ type TelegramTrackedBoardTopicsCheckerParams = {
   ignoredUsers: IgnoredUser[];
 };
 
-const checkMinAuthorPostCount = async (user: User, authorUid: number): Promise<boolean> => {
+const checkMinAuthorPostCount = async (user: User, post: Post): Promise<boolean> => {
   const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
   let userMinAuthorPostCount = await cacheRepository.recover<number>(
     `${user.telegram_id}:minTrackedBoardAuthorPostCount`
@@ -32,9 +33,14 @@ const checkMinAuthorPostCount = async (user: User, authorUid: number): Promise<b
   }
 
   const postsRepository = container.resolve(PostsRepository);
-  const authorPostCount = (await postsRepository.findPosts({ author_uid: authorUid, limit: 100 })).length;
+  const authorPosts = await postsRepository.findPosts({ author_uid: post.author_uid, limit: 100 });
 
-  return authorPostCount > userMinAuthorPostCount;
+  if (authorPosts.length < 10) {
+    const isEqualTopicTitle = authorPosts.find(authorPost => authorPost.title === post.title);
+    if (isEqualTopicTitle) return false;
+  }
+
+  return authorPosts.length > userMinAuthorPostCount;
 };
 
 const processTopic = async (
@@ -55,7 +61,7 @@ const processTopic = async (
 
       if (!shouldNotifyUser(post, user, ignoredUsers, [])) continue;
 
-      const isAuthorPostCountEnough = await checkMinAuthorPostCount(user, post.author_uid);
+      const isAuthorPostCountEnough = await checkMinAuthorPostCount(user, post);
       if (!isAuthorPostCountEnough) continue;
 
       data.push({
