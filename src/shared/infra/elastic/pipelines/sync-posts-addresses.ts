@@ -83,9 +83,6 @@ async function setupElasticsearchTemplate() {
           archive: {
             type: 'boolean'
           },
-          created_at: {
-            type: 'date'
-          },
           updated_at: {
             type: 'date'
           }
@@ -125,10 +122,10 @@ async function batchProcessAddresses(addresses: any[]) {
   const esBulkContent = addresses.flatMap(address => [
     { index: { _index: INDEX_NAME, _id: `${address.address}_${address.post_id}` } },
     {
-      id: address.id,
-      address: address.address,
-      coin: address.coin,
-      post_id: address.post_id,
+      id: address.posts_addresses_id,
+      address: address.posts_addresses_address,
+      coin: address.posts_addresses_coin,
+      post_id: address.post_post_id,
       topic_id: address.post_topic_id,
       title: address.post_title,
       author: address.post_author,
@@ -136,7 +133,6 @@ async function batchProcessAddresses(addresses: any[]) {
       board_id: address.post_board_id,
       date: address.post_date,
       archive: address.post_archive,
-      created_at: address.created_at,
       updated_at: new Date(address.updated_at).toISOString()
     }
   ]);
@@ -148,7 +144,20 @@ async function batchProcessAddresses(addresses: any[]) {
     bulkPromises.push(esClient.bulk({ operations: esBulkContent.slice(i, i + batchSize * 2), refresh: false }));
   }
 
-  await Promise.all(bulkPromises);
+  const results = await Promise.all(bulkPromises);
+  if (results.some(result => result.errors)) {
+    const erroredItems = results
+      .flatMap(result => result.items)
+      .filter(item => item.index.error || item.create?.error || item.update?.error || item.delete?.error)
+      .map(item => ({
+        id: item.index._id,
+        error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
+        status: item.index.status
+      }));
+
+    logger.error({ errored: erroredItems }, 'Index errored');
+    throw new Error('Index errored');
+  }
 }
 
 async function syncAddresses(connection: Connection) {

@@ -142,7 +142,20 @@ async function batchProcessMerit(merits: RawMerit[]) {
     bulkPromises.push(esClient.bulk({ operations: esBulkContent.slice(i, i + batchSize * 2), refresh: false }));
   }
 
-  await Promise.all(bulkPromises);
+  const results = await Promise.all(bulkPromises);
+  if (results.some(result => result.errors)) {
+    const erroredItems = results
+      .flatMap(result => result.items)
+      .filter(item => item.index.error || item.create?.error || item.update?.error || item.delete?.error)
+      .map(item => ({
+        id: item.index._id,
+        error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
+        status: item.index.status
+      }));
+
+    logger.error({ errored: erroredItems }, 'Index errored');
+    throw new Error('Index errored');
+  }
 }
 
 async function syncMerits(connection: Connection) {
