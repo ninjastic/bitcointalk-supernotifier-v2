@@ -52,22 +52,9 @@ async function setupElasticsearchTemplate() {
               date: {
                 type: 'date'
               },
-              board: {
-                properties: {
-                  board_id: {
-                    type: 'integer'
-                  },
-                  name: {
-                    type: 'text',
-                    fields: {
-                      keyword: {
-                        type: 'keyword',
-                        ignore_above: 256
-                      }
-                    }
-                  }
-                }
-              }
+              board_id: { type: 'integer' },
+              created_at: { type: 'date' },
+              updated_at: { type: 'date' }
             }
           },
           created_at: {
@@ -120,13 +107,10 @@ async function batchProcessTopics(topics: any[]) {
         author: topic.post.author,
         author_uid: topic.post.author_uid,
         date: topic.post.date,
-        board: {
-          board_id: topic.post.board.board_id,
-          name: topic.post.board.name
-        }
-      },
-      created_at: topic.created_at,
-      updated_at: topic.updated_at
+        board_id: topic.post.board_id,
+        created_at: topic.created_at,
+        updated_at: topic.updated_at
+      }
     }
   ]);
 

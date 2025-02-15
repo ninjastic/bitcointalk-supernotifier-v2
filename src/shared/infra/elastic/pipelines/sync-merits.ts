@@ -157,13 +157,13 @@ async function syncMerits(connection: Connection) {
 
   while (!stop) {
     const merits = await meritsRepository
-      .createQueryBuilder('merit')
-      .select(['*', 'merit.updated_at::text'])
-      .where('merit.updated_at > :lastUpdatedAt', {
+      .createQueryBuilder('merits')
+      .select(['*', 'merits.updated_at::text'])
+      .where('merits.updated_at > :lastUpdatedAt', {
         lastUpdatedAt
       })
-      .innerJoinAndSelect('merit.post', 'post')
-      .orderBy('merit.updated_at', 'ASC')
+      .innerJoinAndSelect('merits.post', 'post')
+      .orderBy('merits.updated_at', 'ASC')
       .limit(SYNC_BATCH_SIZE)
       .getRawMany();
 

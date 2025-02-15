@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { Connection, MoreThan } from 'typeorm';
+import { Connection } from 'typeorm';
 import esClient from 'shared/services/elastic';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import { container } from 'tsyringe';
@@ -74,15 +74,6 @@ async function setupElasticsearchTemplate() {
           author_uid: {
             type: 'integer'
           },
-          content: {
-            type: 'text',
-            fields: {
-              keyword: {
-                type: 'keyword',
-                ignore_above: 256
-              }
-            }
-          },
           board_id: {
             type: 'integer'
           },
@@ -92,16 +83,10 @@ async function setupElasticsearchTemplate() {
           archive: {
             type: 'boolean'
           },
-          address_created_at: {
+          created_at: {
             type: 'date'
           },
-          address_updated_at: {
-            type: 'date'
-          },
-          post_created_at: {
-            type: 'date'
-          },
-          post_updated_at: {
+          updated_at: {
             type: 'date'
           }
         }
@@ -144,18 +129,15 @@ async function batchProcessAddresses(addresses: any[]) {
       address: address.address,
       coin: address.coin,
       post_id: address.post_id,
-      topic_id: address.post.topic_id,
-      title: address.post.title,
-      author: address.post.author,
-      author_uid: address.post.author_uid,
-      content: address.post.content,
-      board_id: address.post.board_id,
-      date: address.post.date,
-      archive: address.post.archive,
-      address_created_at: address.created_at,
-      address_updated_at: address.updated_at,
-      post_created_at: address.post.created_at,
-      post_updated_at: address.post.updated_at
+      topic_id: address.post_topic_id,
+      title: address.post_title,
+      author: address.post_author,
+      author_uid: address.post_author_uid,
+      board_id: address.post_board_id,
+      date: address.post_date,
+      archive: address.post_archive,
+      created_at: address.created_at,
+      updated_at: new Date(address.updated_at).toISOString()
     }
   ]);
 
@@ -180,18 +162,33 @@ async function syncAddresses(connection: Connection) {
   let stop = false;
 
   while (!stop) {
-    const addresses = await addressesRepository.find({
-      where: { updated_at: MoreThan(lastUpdatedAt) },
-      relations: ['post'],
-      order: {
-        updated_at: 'ASC'
-      },
-      take: SYNC_BATCH_SIZE
-    });
+    const addresses = await addressesRepository
+      .createQueryBuilder('posts_addresses')
+      .select([
+        'posts_addresses.id',
+        'posts_addresses.address',
+        'posts_addresses.coin',
+        'posts_addresses.updated_at::text',
+        'post.id as post_id',
+        'post.topic_id as post_topic_id',
+        'post.title as post_title',
+        'post.author as post_author',
+        'post.author_uid as post_author_uid',
+        'post.board_id as post_board_id',
+        'post.date as post_date',
+        'post.archive as post_archive'
+      ])
+      .innerJoinAndSelect('posts_addresses.post', 'post')
+      .where('posts_addresses.updated_at > :lastUpdatedAt', {
+        lastUpdatedAt
+      })
+      .orderBy('posts_addresses.updated_at', 'ASC')
+      .limit(SYNC_BATCH_SIZE)
+      .getRawMany();
 
     if (addresses.length) {
       await batchProcessAddresses(addresses);
-      lastUpdatedAt = addresses.at(-1).updated_at.toISOString();
+      lastUpdatedAt = addresses.at(-1).updated_at;
 
       await cacheRepository.save('posts-addresses-sync-state', { lastUpdatedAt });
       logger.info(`Processed ${addresses.length} addresses. Last updated_at: ${lastUpdatedAt}`);
@@ -211,6 +208,6 @@ export async function syncPostsAddressesPipeline(connection: Connection) {
 
     await syncAddresses(connection);
   } catch (error) {
-    logger.error({ error }, 'Error during synchronization');
+    logger.error({ error: error.message }, 'Error during synchronization');
   }
 }

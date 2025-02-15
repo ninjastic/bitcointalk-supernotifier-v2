@@ -1,3 +1,6 @@
+/* eslint-disable no-promise-executor-return */
+/* eslint-disable no-constant-condition */
+/* eslint-disable no-await-in-loop */
 import 'reflect-metadata';
 import 'dotenv/config';
 import { createConnection } from 'typeorm';
@@ -13,11 +16,15 @@ import { syncPostsAddressesPipeline } from './pipelines/sync-posts-addresses';
 async function syncAll() {
   const connection = await createConnection();
 
-  await syncPostsPipeline(connection);
-  await syncMeritsPipeline(connection);
-  await syncTopicsPipeline(connection);
-  await syncPostsHistoryPipeline(connection);
-  await syncPostsAddressesPipeline(connection);
+  while (true) {
+    await syncPostsPipeline(connection);
+    await syncMeritsPipeline(connection);
+    await syncTopicsPipeline(connection);
+    await syncPostsHistoryPipeline(connection);
+    await syncPostsAddressesPipeline(connection);
+
+    await new Promise(resolve => setTimeout(resolve, 1000 * 60 * 1));
+  }
 }
 
 syncAll();

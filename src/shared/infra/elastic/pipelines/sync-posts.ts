@@ -257,12 +257,12 @@ async function syncPosts(connection: Connection) {
 
   while (!stop) {
     const posts = await postRepository
-      .createQueryBuilder('post')
-      .select(['*', 'post.updated_at::text'])
-      .where('post.updated_at > :lastUpdatedAt', {
+      .createQueryBuilder('posts')
+      .select(['*', 'posts.updated_at::text'])
+      .where('posts.updated_at > :lastUpdatedAt', {
         lastUpdatedAt
       })
-      .orderBy('post.updated_at', 'ASC')
+      .orderBy('posts.updated_at', 'ASC')
       .limit(SYNC_BATCH_SIZE)
       .getRawMany();
 
