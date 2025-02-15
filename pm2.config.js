@@ -19,6 +19,11 @@ module.exports = {
       name: 'telegram',
       script: 'yarn start:telegram',
       out_file: './logs/telegram.log'
+    },
+    {
+      name: 'elastic-sync',
+      script: 'yarn start:sync',
+      out_file: './logs/sync.log'
     }
   ]
 };
