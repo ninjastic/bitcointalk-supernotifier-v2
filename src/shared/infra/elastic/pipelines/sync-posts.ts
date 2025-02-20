@@ -1,132 +1,10 @@
 /* eslint-disable no-await-in-loop */
 import { Connection } from 'typeorm';
+import { Client } from '@elastic/elasticsearch';
 import Post from 'modules/posts/infra/typeorm/entities/Post';
-import esClient from 'shared/services/elastic';
 import { load } from 'cheerio';
-import { container } from 'tsyringe';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import baseLogger from '##/shared/services/logger';
-
-const logger = baseLogger.child({ pipeline: 'syncPostsPipeline' });
-
-const INDEX_NAME = 'posts';
-const INDEX_TEMPLATE_NAME = 'posts_template';
-const SYNC_BATCH_SIZE = 30000;
-const INDEX_BATCH_SIZE = 10;
-
-async function setupElasticsearchTemplate() {
-  try {
-    await esClient.indices.putTemplate({
-      name: INDEX_TEMPLATE_NAME,
-      index_patterns: [INDEX_NAME],
-      settings: {
-        analysis: {
-          analyzer: {
-            html_strip: {
-              type: 'custom',
-              tokenizer: 'standard',
-              filter: ['lowercase', 'stop'],
-              char_filter: ['html_strip']
-            }
-          },
-          normalizer: {
-            keyword_lowercase: {
-              type: 'custom',
-              filter: ['lowercase']
-            }
-          }
-        }
-      },
-      mappings: {
-        properties: {
-          post_id: { type: 'integer' },
-          topic_id: { type: 'integer' },
-          title: {
-            type: 'text',
-            fields: {
-              keyword: { type: 'keyword' }
-            }
-          },
-          author: {
-            type: 'text',
-            fields: {
-              keyword: {
-                type: 'keyword',
-                normalizer: 'keyword_lowercase'
-              }
-            }
-          },
-          author_uid: { type: 'integer' },
-          content: {
-            type: 'text',
-            fields: {
-              stripped: {
-                type: 'text',
-                analyzer: 'html_strip'
-              }
-            }
-          },
-          content_without_quotes: {
-            type: 'text',
-            fields: {
-              stripped: {
-                type: 'text',
-                analyzer: 'html_strip'
-              }
-            }
-          },
-          quotes: {
-            type: 'nested',
-            properties: {
-              author: {
-                type: 'text',
-                fields: {
-                  keyword: { type: 'keyword' }
-                }
-              },
-              content: {
-                type: 'text',
-                fields: {
-                  stripped: {
-                    type: 'text',
-                    analyzer: 'html_strip'
-                  }
-                }
-              },
-              topic_id: { type: 'integer' },
-              post_id: { type: 'integer' }
-            }
-          },
-          date: { type: 'date' },
-          board_id: { type: 'integer' },
-          updated_at: { type: 'date' }
-        }
-      }
-    });
-    logger.info(`Elasticsearch template '${INDEX_TEMPLATE_NAME}' created or updated successfully.`);
-  } catch (error) {
-    logger.error({ error }, 'Error creating Elasticsearch template');
-    throw error;
-  }
-}
-
-async function createOrUpdateIndex() {
-  try {
-    const indexExists = await esClient.indices.exists({ index: INDEX_NAME });
-
-    if (!indexExists.valueOf()) {
-      await esClient.indices.create({
-        index: INDEX_NAME
-      });
-      logger.info(`Index '${INDEX_NAME}' created successfully.`);
-    } else {
-      logger.info(`Index '${INDEX_NAME}' already exists.`);
-    }
-  } catch (error) {
-    logger.error({ error }, 'Error creating or checking index');
-    throw error;
-  }
-}
 
 interface LastSyncState {
   lastUpdatedAt: string;
@@ -146,162 +24,294 @@ interface PostContent {
   quotes: QuoteContent[];
 }
 
-function extractPostContent(html: string): PostContent {
-  const $ = load(html);
-  const quotes: QuoteContent[] = [];
-  let contentWithoutQuotes = html;
+export class SyncPostsPipeline {
+  private readonly logger = baseLogger.child({ pipeline: 'syncPostsPipeline' });
 
-  $('div.quoteheader').each((_, quoteHeaderElement) => {
-    const quoteHeader = $(quoteHeaderElement);
-    const quoteDiv = quoteHeader.next('div.quote');
+  private readonly INDEX_NAME = 'posts';
 
-    const isRegularQuote = quoteHeader.children('a:not(.ul)').length === 0;
-    if (isRegularQuote) return;
+  private readonly INDEX_TEMPLATE_NAME = 'posts_template';
 
-    const authorMatch = quoteHeader.text().match(/Quote from: (.*?) on/);
-    if (!authorMatch) return;
+  private readonly SYNC_BATCH_SIZE = 30000;
 
-    const author = authorMatch[1];
+  private readonly INDEX_BATCH_SIZE = 10;
 
-    const quoteText = quoteDiv
-      .clone()
-      .children('br')
-      .each((_i, el) => {
-        $(el).replaceWith(' ');
-      })
-      .end()
-      .children('.quoteheader')
-      .each((_i, el) => {
-        if ($(el).children('a:not(.ul)').length > 0) {
-          $(el.next).remove();
+  constructor(
+    private readonly connection: Connection,
+    private readonly esClient: Client,
+    private readonly cacheRepository: RedisProvider
+  ) {}
+
+  public async execute(): Promise<void> {
+    try {
+      await this.setupElasticsearchTemplate();
+      await this.createOrUpdateIndex();
+      await this.syncPosts();
+    } catch (error) {
+      this.logger.error({ error }, 'Error during synchronization');
+    }
+  }
+
+  private async setupElasticsearchTemplate(): Promise<void> {
+    try {
+      await this.esClient.indices.putTemplate({
+        name: this.INDEX_TEMPLATE_NAME,
+        index_patterns: [this.INDEX_NAME],
+        settings: {
+          analysis: {
+            analyzer: {
+              html_strip: {
+                type: 'custom',
+                tokenizer: 'standard',
+                filter: ['lowercase', 'stop'],
+                char_filter: ['html_strip']
+              }
+            },
+            normalizer: {
+              keyword_lowercase: {
+                type: 'custom',
+                filter: ['lowercase']
+              }
+            }
+          }
+        },
+        mappings: {
+          properties: {
+            post_id: { type: 'integer' },
+            topic_id: { type: 'integer' },
+            title: {
+              type: 'text',
+              fields: {
+                keyword: { type: 'keyword' }
+              }
+            },
+            author: {
+              type: 'text',
+              fields: {
+                keyword: {
+                  type: 'keyword',
+                  normalizer: 'keyword_lowercase'
+                }
+              }
+            },
+            author_uid: { type: 'integer' },
+            content: {
+              type: 'text',
+              fields: {
+                stripped: {
+                  type: 'text',
+                  analyzer: 'html_strip'
+                }
+              }
+            },
+            content_without_quotes: {
+              type: 'text',
+              fields: {
+                stripped: {
+                  type: 'text',
+                  analyzer: 'html_strip'
+                }
+              }
+            },
+            quotes: {
+              type: 'nested',
+              properties: {
+                author: {
+                  type: 'text',
+                  fields: {
+                    keyword: { type: 'keyword' }
+                  }
+                },
+                content: {
+                  type: 'text',
+                  fields: {
+                    stripped: {
+                      type: 'text',
+                      analyzer: 'html_strip'
+                    }
+                  }
+                },
+                topic_id: { type: 'integer' },
+                post_id: { type: 'integer' }
+              }
+            },
+            date: { type: 'date' },
+            board_id: { type: 'integer' },
+            updated_at: { type: 'date' }
+          }
         }
-        $(el).remove();
-      })
-      .end()
-      .html()
-      .trim();
+      });
+      this.logger.info(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
+    } catch (error) {
+      this.logger.error({ error }, 'Error creating Elasticsearch template');
+      throw error;
+    }
+  }
 
-    const fullQuoteHtml = quoteHeader.prop('outerHTML') + quoteDiv.prop('outerHTML');
+  private async createOrUpdateIndex(): Promise<void> {
+    try {
+      const indexExists = await this.esClient.indices.exists({ index: this.INDEX_NAME });
 
-    const postUrl = quoteHeader.find('a').attr('href');
-    if (!postUrl) return;
+      if (!indexExists.valueOf()) {
+        await this.esClient.indices.create({
+          index: this.INDEX_NAME
+        });
+        this.logger.info(`Index '${this.INDEX_NAME}' created successfully.`);
+      } else {
+        this.logger.info(`Index '${this.INDEX_NAME}' already exists.`);
+      }
+    } catch (error) {
+      this.logger.error({ error }, 'Error creating or checking index');
+      throw error;
+    }
+  }
 
-    const url = new URL(postUrl);
-    const topicParam = url.searchParams.get('topic');
-    const hashPart = url.hash;
+  private extractPostContent(html: string): PostContent {
+    const $ = load(html);
+    const quotes: QuoteContent[] = [];
+    let contentWithoutQuotes = html;
 
-    if (!topicParam || !hashPart) return;
+    $('div.quoteheader').each((_, quoteHeaderElement) => {
+      const quoteHeader = $(quoteHeaderElement);
+      const quoteDiv = quoteHeader.next('div.quote');
 
-    const topicId = Number(topicParam.split('.')[0]);
-    const postId = Number(hashPart.split('msg')[1]);
+      const isRegularQuote = quoteHeader.children('a:not(.ul)').length === 0;
+      if (isRegularQuote) return;
 
-    quotes.push({
-      content: quoteText.trim(),
-      author,
-      topic_id: topicId,
-      post_id: postId
+      const authorMatch = quoteHeader.text().match(/Quote from: (.*?) on/);
+      if (!authorMatch) return;
+
+      const author = authorMatch[1];
+
+      const quoteText = quoteDiv
+        .clone()
+        .children('br')
+        .each((_i, el) => {
+          $(el).replaceWith(' ');
+        })
+        .end()
+        .children('.quoteheader')
+        .each((_i, el) => {
+          if ($(el).children('a:not(.ul)').length > 0) {
+            $(el.next).remove();
+          }
+          $(el).remove();
+        })
+        .end()
+        .html()
+        .trim();
+
+      const fullQuoteHtml = quoteHeader.prop('outerHTML') + quoteDiv.prop('outerHTML');
+
+      const postUrl = quoteHeader.find('a').attr('href');
+      if (!postUrl) return;
+
+      const url = new URL(postUrl);
+      const topicParam = url.searchParams.get('topic');
+      const hashPart = url.hash;
+
+      if (!topicParam || !hashPart) return;
+
+      const topicId = Number(topicParam.split('.')[0]);
+      const postId = Number(hashPart.split('msg')[1]);
+
+      quotes.push({
+        content: quoteText.trim(),
+        author,
+        topic_id: topicId,
+        post_id: postId
+      });
+
+      contentWithoutQuotes = contentWithoutQuotes.replace(fullQuoteHtml, '');
     });
 
-    contentWithoutQuotes = contentWithoutQuotes.replace(fullQuoteHtml, '');
-  });
+    return {
+      content: html,
+      content_without_quotes: contentWithoutQuotes,
+      quotes
+    };
+  }
 
-  return {
-    content: html,
-    content_without_quotes: contentWithoutQuotes,
-    quotes
-  };
-}
+  private async batchProcessPost(posts: Post[]): Promise<void> {
+    const esBulkContent = posts.flatMap(post => {
+      const { content_without_quotes, content, quotes } = this.extractPostContent(post.content);
 
-async function batchProcessPost(posts: Post[]) {
-  const esBulkContent = posts.flatMap(post => {
-    const { content_without_quotes, content, quotes } = extractPostContent(post.content);
+      return [
+        { index: { _index: this.INDEX_NAME, _id: post.post_id.toString() } },
+        {
+          post_id: post.post_id,
+          topic_id: post.topic_id,
+          title: post.title,
+          author: post.author,
+          author_uid: post.author_uid,
+          content,
+          content_without_quotes,
+          quotes,
+          date: post.date,
+          board_id: post.board_id,
+          updated_at: new Date(post.updated_at).toISOString()
+        }
+      ];
+    });
 
-    return [
-      { index: { _index: INDEX_NAME, _id: post.post_id.toString() } },
-      {
-        post_id: post.post_id,
-        topic_id: post.topic_id,
-        title: post.title,
-        author: post.author,
-        author_uid: post.author_uid,
-        content,
-        content_without_quotes,
-        quotes,
-        date: post.date,
-        board_id: post.board_id,
-        updated_at: new Date(post.updated_at).toISOString()
+    const batchSize = Math.ceil(esBulkContent.length / 2 / this.INDEX_BATCH_SIZE);
+
+    const bulkPromises = [];
+    for (let i = 0; i < esBulkContent.length; i += batchSize * 2) {
+      bulkPromises.push(this.esClient.bulk({ operations: esBulkContent.slice(i, i + batchSize * 2), refresh: false }));
+    }
+
+    const results = await Promise.all(bulkPromises);
+    if (results.some(result => result.errors)) {
+      const erroredItems = results
+        .flatMap(result => result.items)
+        .filter(item => item.index.error || item.create?.error || item.update?.error || item.delete?.error)
+        .map(item => ({
+          id: item.index._id,
+          error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
+          status: item.index.status
+        }));
+
+      this.logger.error({ errored: erroredItems }, 'Index errored');
+      throw new Error('Index errored');
+    }
+  }
+
+  private async syncPosts(): Promise<void> {
+    const postRepository = this.connection.getRepository(Post);
+
+    let { lastUpdatedAt, lastPostId } = (await this.cacheRepository.recover<LastSyncState>('posts-sync-state')) ?? {
+      lastUpdatedAt: new Date(0).toISOString(),
+      lastPostId: 0
+    };
+
+    let stop = false;
+
+    while (!stop) {
+      const posts = await postRepository
+        .createQueryBuilder('posts')
+        .select(['*', 'posts.updated_at::text'])
+        .where('posts.updated_at > :lastUpdatedAt', {
+          lastUpdatedAt
+        })
+        .orderBy('posts.updated_at', 'ASC')
+        .limit(this.SYNC_BATCH_SIZE)
+        .getRawMany();
+
+      if (posts.length) {
+        await this.batchProcessPost(posts);
+        lastUpdatedAt = posts.at(-1).updated_at;
+        lastPostId = posts.at(-1).post_id;
+
+        await this.cacheRepository.save('posts-sync-state', { lastUpdatedAt, lastPostId });
+        this.logger.info(
+          `Processed ${posts.length} posts. Last updated_at: ${lastUpdatedAt} | Last post_id: ${lastPostId}`
+        );
       }
-    ];
-  });
 
-  const batchSize = Math.ceil(esBulkContent.length / 2 / INDEX_BATCH_SIZE);
-
-  const bulkPromises = [];
-  for (let i = 0; i < esBulkContent.length; i += batchSize * 2) {
-    bulkPromises.push(esClient.bulk({ operations: esBulkContent.slice(i, i + batchSize * 2), refresh: false }));
-  }
-
-  const results = await Promise.all(bulkPromises);
-  if (results.some(result => result.errors)) {
-    const erroredItems = results
-      .flatMap(result => result.items)
-      .filter(item => item.index.error || item.create?.error || item.update?.error || item.delete?.error)
-      .map(item => ({
-        id: item.index._id,
-        error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
-        status: item.index.status
-      }));
-
-    logger.error({ errored: erroredItems }, 'Index errored');
-    throw new Error('Index errored');
-  }
-}
-
-async function syncPosts(connection: Connection) {
-  const cacheRepository = container.resolve(RedisProvider);
-  const postRepository = connection.getRepository(Post);
-
-  let { lastUpdatedAt, lastPostId } = (await cacheRepository.recover<LastSyncState>('posts-sync-state')) ?? {
-    lastUpdatedAt: new Date(0).toISOString(),
-    lastPostId: 0
-  };
-
-  let stop = false;
-
-  while (!stop) {
-    const posts = await postRepository
-      .createQueryBuilder('posts')
-      .select(['*', 'posts.updated_at::text'])
-      .where('posts.updated_at > :lastUpdatedAt', {
-        lastUpdatedAt
-      })
-      .orderBy('posts.updated_at', 'ASC')
-      .limit(SYNC_BATCH_SIZE)
-      .getRawMany();
-
-    if (posts.length) {
-      await batchProcessPost(posts);
-      lastUpdatedAt = posts.at(-1).updated_at;
-      lastPostId = posts.at(-1).post_id;
-
-      await cacheRepository.save('posts-sync-state', { lastUpdatedAt, lastPostId });
-      logger.info(`Processed ${posts.length} posts. Last updated_at: ${lastUpdatedAt} | Last post_id: ${lastPostId}`);
+      if (posts.length < this.SYNC_BATCH_SIZE) {
+        this.logger.info('Synchronization is up to date');
+        stop = true;
+      }
     }
-
-    if (posts.length < SYNC_BATCH_SIZE) {
-      logger.info('Synchronization is up to date');
-      stop = true;
-    }
-  }
-}
-
-export async function syncPostsPipeline(connection: Connection) {
-  try {
-    await setupElasticsearchTemplate();
-    await createOrUpdateIndex();
-
-    await syncPosts(connection);
-  } catch (error) {
-    logger.error({ error }, 'Error during synchronization');
   }
 }
