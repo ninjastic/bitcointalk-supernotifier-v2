@@ -173,11 +173,17 @@ export class SyncMeritsPipeline {
     while (!stop) {
       const merits = await meritsRepository
         .createQueryBuilder('merits')
-        .select(['*', 'merits.updated_at::text'])
+        .select([
+          'merits.*',
+          'merits.updated_at::text',
+          'posts.post_id',
+          'posts.title as post_title',
+          'posts.board_id as post_board_id'
+        ])
         .where('merits.updated_at > :lastUpdatedAt', {
           lastUpdatedAt
         })
-        .innerJoinAndSelect('merits.post', 'post')
+        .innerJoinAndSelect('merits.post', 'posts')
         .orderBy('merits.updated_at', 'ASC')
         .limit(this.SYNC_BATCH_SIZE)
         .getRawMany();
