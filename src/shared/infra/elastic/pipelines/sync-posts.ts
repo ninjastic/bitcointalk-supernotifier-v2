@@ -5,6 +5,7 @@ import Post from 'modules/posts/infra/typeorm/entities/Post';
 import { load } from 'cheerio';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import baseLogger from '##/shared/services/logger';
+import { isValidPostgresInt } from '##/shared/services/utils';
 
 interface LastSyncState {
   lastUpdatedAt: string;
@@ -214,8 +215,16 @@ export class SyncPostsPipeline {
 
       if (!topicParam || !hashPart) return;
 
-      const topicId = Number(topicParam.split('.')[0]);
-      const postId = Number(hashPart.split('msg')[1]);
+      let topicId = Number(topicParam.split('.')[0]);
+      let postId = Number(hashPart.split('msg')[1]);
+
+      if (!isValidPostgresInt(postId)) {
+        postId = null;
+      }
+
+      if (!isValidPostgresInt(topicId)) {
+        topicId = null;
+      }
 
       quotes.push({
         content: quoteText.trim(),
@@ -267,11 +276,11 @@ export class SyncPostsPipeline {
     if (results.some(result => result.errors)) {
       const erroredItems = results
         .flatMap(result => result.items)
-        .filter(item => item.index.error || item.create?.error || item.update?.error || item.delete?.error)
+        .filter(item => item.index?.error || item.create?.error || item.update?.error || item.delete?.error)
         .map(item => ({
-          id: item.index._id,
-          error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index.status
+          id: item.index?._id,
+          error: item.index?.error || item.create?.error || item.update?.error || item.delete?.error,
+          status: item.index?.status
         }));
 
       this.logger.error({ errored: erroredItems }, 'Index errored');

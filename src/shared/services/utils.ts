@@ -111,3 +111,18 @@ export const isUserMentionedInPost = (post: Post, user: User): boolean => {
   const regexList = [usernameRegex, altUsernameRegex, backupAtSignRegex, backupQuotedRegex];
   return regexList.some(regex => regex && post.content.match(regex));
 };
+
+export function isValidPostgresInt(num: number) {
+  const INT_MIN = -2147483648;
+  const INT_MAX = 2147483647;
+
+  if (typeof num !== 'number' || !Number.isInteger(num)) {
+    return false;
+  }
+
+  if (num < INT_MIN || num > INT_MAX) {
+    return false;
+  }
+
+  return true;
+}

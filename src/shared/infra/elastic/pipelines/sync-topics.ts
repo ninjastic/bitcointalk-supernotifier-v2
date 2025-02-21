@@ -2,7 +2,6 @@
 import { Connection, MoreThan } from 'typeorm';
 import { Client } from '@elastic/elasticsearch';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
-import { container } from 'tsyringe';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import baseLogger from '##/shared/services/logger';
 
