@@ -136,6 +136,9 @@ export class SyncPostsPipeline {
             },
             date: { type: 'date' },
             board_id: { type: 'integer' },
+            merit_ids: {
+              type: 'keyword'
+            },
             updated_at: { type: 'date' }
           }
         }

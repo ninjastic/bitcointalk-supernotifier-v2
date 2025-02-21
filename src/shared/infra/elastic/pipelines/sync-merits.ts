@@ -19,6 +19,8 @@ export class SyncMeritsPipeline {
 
   private readonly INDEX_NAME = 'merits';
 
+  private readonly POSTS_INDEX_NAME = 'posts';
+
   private readonly INDEX_TEMPLATE_NAME = 'merits_template';
 
   private readonly SYNC_BATCH_SIZE = 30000;
@@ -121,8 +123,8 @@ export class SyncMeritsPipeline {
   }
 
   private async batchProcessMerit(merits: RawMerit[]): Promise<void> {
-    const esBulkContent = merits.flatMap(merit => [
-      { index: { _index: this.INDEX_NAME, _id: merit.id.toString() } },
+    const esBulkContent: any[] = merits.flatMap(merit => [
+      { index: { _index: this.INDEX_NAME, _id: merit.id } },
       {
         amount: merit.amount,
         post_id: merit.post_id,
@@ -138,6 +140,39 @@ export class SyncMeritsPipeline {
       }
     ]);
 
+    const postsToUpdate = new Map<number, string[]>();
+
+    merits.forEach(merit => {
+      postsToUpdate.set(merit.post_id, [...(postsToUpdate.get(merit.post_id) ?? []), merit.id]);
+    });
+
+    postsToUpdate.forEach((meritIds, postId) => {
+      esBulkContent.push(
+        {
+          update: { _index: this.POSTS_INDEX_NAME, _id: postId.toString() }
+        },
+        {
+          script: {
+            source: `
+              if (ctx._source.merit_ids == null) { 
+                ctx._source.merit_ids = params.newMeritId; 
+              } else { 
+                for (merit in params.newMeritId) { 
+                  if (!ctx._source.merit_ids.contains(merit)) { 
+                    ctx._source.merit_ids.add(merit); 
+                  } 
+                } 
+              }
+            `,
+            lang: 'painless',
+            params: {
+              newMeritId: meritIds
+            }
+          }
+        }
+      );
+    });
+
     const batchSize = Math.ceil(esBulkContent.length / 2 / this.INDEX_BATCHES);
 
     const bulkPromises = [];
@@ -149,11 +184,11 @@ export class SyncMeritsPipeline {
     if (results.some(result => result.errors)) {
       const erroredItems = results
         .flatMap(result => result.items)
-        .filter(item => item.index.error || item.create?.error || item.update?.error || item.delete?.error)
+        .filter(item => item.index?.error || item.create?.error || item.update?.error || item.delete?.error)
         .map(item => ({
-          id: item.index._id,
-          error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index.status
+          id: item.index?._id,
+          error: item.index?.error || item.create?.error || item.update?.error || item.delete?.error,
+          status: item.index?.status
         }));
 
       this.logger.error({ errored: erroredItems }, 'Index errored');
