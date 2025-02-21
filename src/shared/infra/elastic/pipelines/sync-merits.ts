@@ -23,9 +23,9 @@ export class SyncMeritsPipeline {
 
   private readonly INDEX_TEMPLATE_NAME = 'merits_template';
 
-  private readonly SYNC_BATCH_SIZE = 30000;
+  private readonly SYNC_BATCH_SIZE = 100000;
 
-  private readonly INDEX_BATCHES = 10;
+  private readonly INDEX_BATCHES = 50;
 
   constructor(
     private readonly connection: Connection,
