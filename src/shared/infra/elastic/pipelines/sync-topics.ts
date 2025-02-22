@@ -132,7 +132,7 @@ export class SyncTopicsPipeline {
       }
     ]);
 
-    const batchSize = Math.ceil(esBulkContent.length / 2 / this.INDEX_BATCH_SIZE);
+    const batchSize = Math.ceil(esBulkContent.length / this.INDEX_BATCH_SIZE);
 
     const bulkPromises = [];
     for (let i = 0; i < esBulkContent.length; i += batchSize * 2) {

@@ -36,7 +36,7 @@ export class SyncMeritsPipeline {
 
   private readonly SYNC_BATCH_SIZE = 10000;
 
-  private readonly INDEX_BATCHES = 10;
+  private readonly INDEX_BATCH_SIZE = 200;
 
   constructor(
     private readonly connection: Connection,
@@ -134,9 +134,11 @@ export class SyncMeritsPipeline {
   }
 
   private async batchProcessMerit(merits: RawMerit[]): Promise<void> {
-    const esBulkContent: any[] = merits.flatMap(merit => [
-      { index: { _index: this.INDEX_NAME, _id: merit.id } },
-      {
+    const indexChunks = [];
+
+    for (const merit of merits) {
+      const operationInfo = { index: { _index: this.INDEX_NAME, _id: merit.id } };
+      const operationContent = {
         amount: merit.amount,
         post_id: merit.post_id,
         topic_id: merit.topic_id,
@@ -148,62 +150,86 @@ export class SyncMeritsPipeline {
         board_id: merit.post_board_id,
         date: merit.date,
         updated_at: new Date(merit.updated_at).toISOString()
+      };
+
+      if (indexChunks.length === 0) {
+        indexChunks.push([operationInfo, operationContent]);
+        continue;
       }
-    ]);
 
-    const postsToUpdate = new Map<number, PostDocMerit[]>();
+      if (indexChunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
+        indexChunks.push([operationInfo, operationContent]);
+        continue;
+      }
 
-    merits.forEach(merit => {
-      postsToUpdate.set(merit.post_id, [
-        ...(postsToUpdate.get(merit.post_id) ?? []),
-        {
-          id: merit.id,
-          merit: merit.amount,
-          sender: merit.sender,
-          sender_uid: merit.sender_uid,
-          receiver: merit.receiver,
-          receiver_uid: merit.receiver_uid,
-          date: merit.date
-        }
-      ]);
-    });
-
-    postsToUpdate.forEach((newMerits, postId) => {
-      esBulkContent.push(
-        {
-          update: { _index: this.POSTS_INDEX_NAME, _id: postId.toString() }
-        },
-        {
-          script: {
-            source: `
-              if (ctx._source.merits == null) { 
-                ctx._source.merits = params.newMerits; 
-              } else { 
-                def existingMeritIds = new HashSet(ctx._source.merits.stream().map(m -> m.id).collect(Collectors.toList()));
-                for (newMerit in params.newMerits) { 
-                  if (!existingMeritIds.contains(newMerit.id)) { 
-                    ctx._source.merits.add(newMerit); 
-                  } 
-                } 
-              }
-            `,
-            lang: 'painless',
-            params: {
-              newMerits
-            }
-          }
-        }
-      );
-    });
-
-    const batchSize = Math.ceil(esBulkContent.length / 2 / this.INDEX_BATCHES);
-
-    const bulkPromises = [];
-    for (let i = 0; i < esBulkContent.length; i += batchSize * 2) {
-      bulkPromises.push(this.esClient.bulk({ operations: esBulkContent.slice(i, i + batchSize * 2), refresh: false }));
+      indexChunks.at(-1).push(operationInfo, operationContent);
     }
 
-    const results = await Promise.all(bulkPromises);
+    const indexBulkPromises = [];
+    for (const chunk of indexChunks) {
+      indexBulkPromises.push(this.esClient.bulk({ operations: chunk, refresh: false }));
+    }
+
+    const postsToUpdateMap = new Map<number, PostDocMerit[]>();
+
+    for (const merit of merits) {
+      const newMerit = {
+        id: merit.id,
+        merit: merit.amount,
+        sender: merit.sender,
+        sender_uid: merit.sender_uid,
+        receiver: merit.receiver,
+        receiver_uid: merit.receiver_uid,
+        date: merit.date
+      };
+      postsToUpdateMap.set(merit.post_id, [...(postsToUpdateMap.get(merit.post_id) ?? []), newMerit]);
+    }
+
+    const updateChunks = [];
+
+    for (const [postId, newMerits] of postsToUpdateMap.entries()) {
+      const updateOperationInfo = { update: { _index: this.POSTS_INDEX_NAME, _id: postId.toString() } };
+      const updateOperationContent = {
+        script: {
+          source: `
+            if (ctx._source.merits == null) { 
+              ctx._source.merits = params.newMerits; 
+            } else { 
+              def existingMeritIds = new HashSet(ctx._source.merits.stream().map(m -> m.id).collect(Collectors.toList()));
+              for (newMerit in params.newMerits) { 
+                if (!existingMeritIds.contains(newMerit.id)) { 
+                  ctx._source.merits.add(newMerit); 
+                } 
+              } 
+            }
+          `,
+          lang: 'painless',
+          params: {
+            newMerits
+          }
+        }
+      };
+
+      if (updateChunks.length === 0) {
+        updateChunks.push([updateOperationInfo, updateOperationContent]);
+        continue;
+      }
+
+      if (updateChunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
+        updateChunks.push([updateOperationInfo, updateOperationContent]);
+        continue;
+      }
+
+      updateChunks.at(-1).push(updateOperationInfo, updateOperationContent);
+    }
+
+    const updateBulkPromises = [];
+    for (const chunk of updateChunks) {
+      updateBulkPromises.push(this.esClient.bulk({ operations: chunk, refresh: false }));
+    }
+
+    const results = await Promise.all([...indexBulkPromises, ...updateBulkPromises]);
+
     if (results.some(result => result.errors)) {
       const erroredItems = results
         .flatMap(result => result.items)

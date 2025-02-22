@@ -34,7 +34,7 @@ export class SyncPostsPipeline {
 
   private readonly SYNC_BATCH_SIZE = 10000;
 
-  private readonly INDEX_BATCH_SIZE = 10;
+  private readonly INDEX_BATCH_SIZE = 200;
 
   constructor(
     private readonly connection: Connection,
@@ -267,35 +267,46 @@ export class SyncPostsPipeline {
   }
 
   private async batchProcessPost(posts: Post[]): Promise<void> {
-    const esBulkContent = posts.flatMap(post => {
+    const chunks = [];
+
+    for (const post of posts) {
       const { content_without_quotes, content, quotes } = this.extractPostContent(post.content);
+      const operationInfo = { index: { _index: this.INDEX_NAME, _id: post.post_id.toString() } };
+      const operationContent = {
+        post_id: post.post_id,
+        topic_id: post.topic_id,
+        title: post.title,
+        author: post.author,
+        author_uid: post.author_uid,
+        content,
+        content_without_quotes,
+        quotes,
+        date: post.date,
+        board_id: post.board_id,
+        updated_at: new Date(post.updated_at).toISOString()
+      };
 
-      return [
-        { index: { _index: this.INDEX_NAME, _id: post.post_id.toString() } },
-        {
-          post_id: post.post_id,
-          topic_id: post.topic_id,
-          title: post.title,
-          author: post.author,
-          author_uid: post.author_uid,
-          content,
-          content_without_quotes,
-          quotes,
-          date: post.date,
-          board_id: post.board_id,
-          updated_at: new Date(post.updated_at).toISOString()
-        }
-      ];
-    });
+      if (chunks.length === 0) {
+        chunks.push([operationInfo, operationContent]);
+        continue;
+      }
 
-    const batchSize = Math.ceil(esBulkContent.length / 2 / this.INDEX_BATCH_SIZE);
+      if (chunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
+        chunks.push([operationInfo, operationContent]);
+        continue;
+      }
+
+      chunks.at(-1).push(operationInfo, operationContent);
+    }
 
     const bulkPromises = [];
-    for (let i = 0; i < esBulkContent.length; i += batchSize * 2) {
-      bulkPromises.push(this.esClient.bulk({ operations: esBulkContent.slice(i, i + batchSize * 2), refresh: false }));
+
+    for (const chunk of chunks) {
+      bulkPromises.push(this.esClient.bulk({ operations: chunk, refresh: false }));
     }
 
     const results = await Promise.all(bulkPromises);
+
     if (results.some(result => result.errors)) {
       const erroredItems = results
         .flatMap(result => result.items)
