@@ -4,10 +4,12 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import { container } from 'tsyringe';
+import yargs from 'yargs';
 import { createConnection } from 'typeorm';
 import esClient from 'shared/services/elastic';
 
 import 'shared/container';
+import logger from '##/shared/services/logger';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 
 import { SyncPostsPipeline } from './pipelines/sync-posts';
@@ -27,6 +29,28 @@ async function syncAll() {
   const syncPostsHistoryPipeline = new SyncPostsHistoryPipeline(connection, esClient, cacheRepository);
   const syncPostsAddressesPipeline = new SyncPostsAddressesPipeline(connection, esClient, cacheRepository);
   const syncBoardsPipeline = new SyncBoardsPipeline(connection, esClient);
+
+  const argv = yargs
+    .option('bootstrap', {
+      type: 'boolean',
+      default: false
+    })
+    .option('lastPostId', {
+      type: 'number',
+      default: 0,
+      requiresArg: true
+    })
+    .implies('lastPostId', 'bootstrap')
+    .parseSync();
+
+  const { bootstrap, lastPostId } = argv;
+
+  if (bootstrap) {
+    logger.info('Starting bootstrap synchronization');
+    await syncPostsPipeline.execute(bootstrap, lastPostId);
+    await syncMeritsPipeline.execute(bootstrap);
+    logger.info('Bootstrap synchronization completed');
+  }
 
   while (true) {
     await syncPostsPipeline.execute();

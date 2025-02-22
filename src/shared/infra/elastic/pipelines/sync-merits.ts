@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { Connection } from 'typeorm';
+import { Connection, ObjectLiteral } from 'typeorm';
 import { Client } from '@elastic/elasticsearch';
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
@@ -12,6 +12,17 @@ type RawMerit = Merit & {
 
 interface LastSyncState {
   lastUpdatedAt: string;
+  lastDate: string;
+}
+
+interface PostDocMerit {
+  id: string;
+  merit: number;
+  sender: string;
+  sender_uid: number;
+  receiver: string;
+  receiver_uid: number;
+  date: Date;
 }
 
 export class SyncMeritsPipeline {
@@ -23,9 +34,9 @@ export class SyncMeritsPipeline {
 
   private readonly INDEX_TEMPLATE_NAME = 'merits_template';
 
-  private readonly SYNC_BATCH_SIZE = 100000;
+  private readonly SYNC_BATCH_SIZE = 10000;
 
-  private readonly INDEX_BATCHES = 50;
+  private readonly INDEX_BATCHES = 10;
 
   constructor(
     private readonly connection: Connection,
@@ -33,11 +44,11 @@ export class SyncMeritsPipeline {
     private readonly cacheRepository: RedisProvider
   ) {}
 
-  public async execute(): Promise<void> {
+  public async execute(bootstrap?: boolean): Promise<void> {
     try {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
-      await this.syncMerits();
+      await this.syncMerits(bootstrap);
     } catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
@@ -140,13 +151,24 @@ export class SyncMeritsPipeline {
       }
     ]);
 
-    const postsToUpdate = new Map<number, string[]>();
+    const postsToUpdate = new Map<number, PostDocMerit[]>();
 
     merits.forEach(merit => {
-      postsToUpdate.set(merit.post_id, [...(postsToUpdate.get(merit.post_id) ?? []), merit.id]);
+      postsToUpdate.set(merit.post_id, [
+        ...(postsToUpdate.get(merit.post_id) ?? []),
+        {
+          id: merit.id,
+          merit: merit.amount,
+          sender: merit.sender,
+          sender_uid: merit.sender_uid,
+          receiver: merit.receiver,
+          receiver_uid: merit.receiver_uid,
+          date: merit.date
+        }
+      ]);
     });
 
-    postsToUpdate.forEach((meritIds, postId) => {
+    postsToUpdate.forEach((newMerits, postId) => {
       esBulkContent.push(
         {
           update: { _index: this.POSTS_INDEX_NAME, _id: postId.toString() }
@@ -154,19 +176,20 @@ export class SyncMeritsPipeline {
         {
           script: {
             source: `
-              if (ctx._source.merit_ids == null) { 
-                ctx._source.merit_ids = params.newMeritId; 
+              if (ctx._source.merits == null) { 
+                ctx._source.merits = params.newMerits; 
               } else { 
-                for (merit in params.newMeritId) { 
-                  if (!ctx._source.merit_ids.contains(merit)) { 
-                    ctx._source.merit_ids.add(merit); 
+                def existingMeritIds = new HashSet(ctx._source.merits.stream().map(m -> m.id).collect(Collectors.toList()));
+                for (newMerit in params.newMerits) { 
+                  if (!existingMeritIds.contains(newMerit.id)) { 
+                    ctx._source.merits.add(newMerit); 
                   } 
                 } 
               }
             `,
             lang: 'painless',
             params: {
-              newMeritId: meritIds
+              newMerits
             }
           }
         }
@@ -196,40 +219,83 @@ export class SyncMeritsPipeline {
     }
   }
 
-  private async syncMerits(): Promise<void> {
+  private async getMeritsToSync(type: 'updated_at' | 'date', last: string): Promise<any[]> {
     const meritsRepository = this.connection.getRepository(Merit);
 
-    let { lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('merits-sync-state')) ?? {
-      lastUpdatedAt: new Date(0).toISOString()
-    };
+    let where: [string, ObjectLiteral] = ['', {}];
+    let orderBy: [string, 'ASC' | 'DESC'] = ['', 'ASC'];
+
+    if (type === 'updated_at') {
+      where = ['merits.updated_at > :lastUpdatedAt', { lastUpdatedAt: last }];
+      orderBy = ['merits.updated_at', 'ASC'];
+    } else if (type === 'date') {
+      where = ['merits.date > :lastDate', { lastDate: last }];
+      orderBy = ['merits.date', 'ASC'];
+    }
+
+    const merits = await meritsRepository
+      .createQueryBuilder('merits')
+      .select([
+        'merits.*',
+        'merits.updated_at::text',
+        'posts.post_id',
+        'posts.title as post_title',
+        'posts.board_id as post_board_id'
+      ])
+      .where(where[0], where[1])
+      .innerJoinAndSelect('merits.post', 'posts')
+      .orderBy(orderBy[0], orderBy[1])
+      .limit(this.SYNC_BATCH_SIZE)
+      .getRawMany();
+
+    return merits;
+  }
+
+  private async syncMerits(bootstrap?: boolean): Promise<void> {
+    let lastUpdatedAt: string;
+    let lastDate: string;
+
+    if (bootstrap) {
+      lastUpdatedAt = new Date(0).toISOString();
+      lastDate = new Date(0).toISOString();
+    } else {
+      ({ lastUpdatedAt, lastDate } = (await this.cacheRepository.recover<LastSyncState>('merits-sync-state')) ?? {
+        lastUpdatedAt: new Date(0).toISOString(),
+        lastDate: new Date(0).toISOString()
+      });
+    }
+
+    const lastSync = bootstrap
+      ? {
+          type: 'date' as 'date' | 'updated_at',
+          last: lastDate
+        }
+      : {
+          type: 'updated_at' as 'date' | 'updated_at',
+          last: lastUpdatedAt
+        };
 
     let stop = false;
 
     while (!stop) {
-      const merits = await meritsRepository
-        .createQueryBuilder('merits')
-        .select([
-          'merits.*',
-          'merits.updated_at::text',
-          'posts.post_id',
-          'posts.title as post_title',
-          'posts.board_id as post_board_id'
-        ])
-        .where('merits.updated_at > :lastUpdatedAt', {
-          lastUpdatedAt
-        })
-        .innerJoinAndSelect('merits.post', 'posts')
-        .orderBy('merits.updated_at', 'ASC')
-        .limit(this.SYNC_BATCH_SIZE)
-        .getRawMany();
+      const merits = await this.getMeritsToSync(lastSync.type, lastSync.last);
 
       if (merits.length) {
         await this.batchProcessMerit(merits);
         lastUpdatedAt = merits.at(-1).updated_at;
-      }
+        lastDate = merits.at(-1).date;
 
-      await this.cacheRepository.save('merits-sync-state', { lastUpdatedAt });
-      this.logger.info(`Processed ${merits.length} merits. Last updated_at: ${lastUpdatedAt}`);
+        if (lastSync.type === 'updated_at') {
+          lastSync.last = lastUpdatedAt;
+        } else if (lastSync.type === 'date') {
+          lastSync.last = lastDate;
+        }
+
+        await this.cacheRepository.save('merits-sync-state', { lastUpdatedAt, lastDate });
+        this.logger.info(
+          `Processed ${merits.length} merits. Last updated_at: ${lastUpdatedAt} | Last date: ${lastDate}`
+        );
+      }
 
       if (merits.length < this.SYNC_BATCH_SIZE) {
         this.logger.info('Synchronization is up to date');

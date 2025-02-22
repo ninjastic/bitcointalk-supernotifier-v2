@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { Connection } from 'typeorm';
+import { Connection, ObjectLiteral } from 'typeorm';
 import { Client } from '@elastic/elasticsearch';
 import Post from 'modules/posts/infra/typeorm/entities/Post';
 import { load } from 'cheerio';
@@ -32,9 +32,9 @@ export class SyncPostsPipeline {
 
   private readonly INDEX_TEMPLATE_NAME = 'posts_template';
 
-  private readonly SYNC_BATCH_SIZE = 100000;
+  private readonly SYNC_BATCH_SIZE = 10000;
 
-  private readonly INDEX_BATCH_SIZE = 50;
+  private readonly INDEX_BATCH_SIZE = 10;
 
   constructor(
     private readonly connection: Connection,
@@ -42,11 +42,11 @@ export class SyncPostsPipeline {
     private readonly cacheRepository: RedisProvider
   ) {}
 
-  public async execute(): Promise<void> {
+  public async execute(bootstrap?: boolean, lastPostId?: number): Promise<void> {
     try {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
-      await this.syncPosts();
+      await this.syncPosts(bootstrap, lastPostId);
     } catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
@@ -137,8 +137,31 @@ export class SyncPostsPipeline {
             },
             date: { type: 'date' },
             board_id: { type: 'integer' },
-            merit_ids: {
-              type: 'keyword'
+            merits: {
+              type: 'nested',
+              properties: {
+                id: {
+                  type: 'keyword'
+                },
+                amount: {
+                  type: 'integer'
+                },
+                sender: {
+                  type: 'keyword'
+                },
+                sender_uid: {
+                  type: 'integer'
+                },
+                receiver: {
+                  type: 'keyword'
+                },
+                receiver_uid: {
+                  type: 'integer'
+                },
+                date: {
+                  type: 'date'
+                }
+              }
             },
             updated_at: { type: 'date' }
           }
@@ -288,31 +311,70 @@ export class SyncPostsPipeline {
     }
   }
 
-  private async syncPosts(): Promise<void> {
+  private async getPostsToSync(type: 'updated_at' | 'post_id', last: string | number): Promise<any[]> {
     const postRepository = this.connection.getRepository(Post);
 
-    let { lastUpdatedAt, lastPostId } = (await this.cacheRepository.recover<LastSyncState>('posts-sync-state')) ?? {
-      lastUpdatedAt: new Date(0).toISOString(),
-      lastPostId: 0
-    };
+    let where: [string, ObjectLiteral] = ['', {}];
+    let orderBy: [string, 'ASC' | 'DESC'] = ['', 'ASC'];
+
+    if (type === 'updated_at') {
+      where = ['posts.updated_at > :lastUpdatedAt', { lastUpdatedAt: last }];
+      orderBy = ['posts.updated_at', 'ASC'];
+    } else if (type === 'post_id') {
+      where = ['posts.post_id > :lastPostId', { lastPostId: last }];
+      orderBy = ['posts.post_id', 'ASC'];
+    }
+
+    const posts = await postRepository
+      .createQueryBuilder('posts')
+      .select(['*', 'posts.updated_at::text'])
+      .where(where[0], where[1])
+      .orderBy(orderBy[0], orderBy[1])
+      .limit(this.SYNC_BATCH_SIZE)
+      .getRawMany();
+
+    return posts;
+  }
+
+  private async syncPosts(bootstrap?: boolean, bootstrapLastPostId?: number): Promise<void> {
+    let lastUpdatedAt: string;
+    let lastPostId: number;
+
+    if (bootstrap) {
+      lastUpdatedAt = new Date(0).toISOString();
+      lastPostId = bootstrapLastPostId;
+    } else {
+      ({ lastUpdatedAt, lastPostId } = (await this.cacheRepository.recover<LastSyncState>('posts-sync-state')) ?? {
+        lastUpdatedAt: new Date(0).toISOString(),
+        lastPostId: 0
+      });
+    }
+
+    const lastSync = bootstrap
+      ? {
+          type: 'post_id' as 'post_id' | 'updated_at',
+          last: lastPostId
+        }
+      : {
+          type: 'updated_at' as 'post_id' | 'updated_at',
+          last: lastUpdatedAt
+        };
 
     let stop = false;
 
     while (!stop) {
-      const posts = await postRepository
-        .createQueryBuilder('posts')
-        .select(['*', 'posts.updated_at::text'])
-        .where('posts.updated_at > :lastUpdatedAt', {
-          lastUpdatedAt
-        })
-        .orderBy('posts.updated_at', 'ASC')
-        .limit(this.SYNC_BATCH_SIZE)
-        .getRawMany();
+      const posts = await this.getPostsToSync(lastSync.type, lastSync.last);
 
       if (posts.length) {
         await this.batchProcessPost(posts);
         lastUpdatedAt = posts.at(-1).updated_at;
         lastPostId = posts.at(-1).post_id;
+
+        if (lastSync.type === 'updated_at') {
+          lastSync.last = lastUpdatedAt;
+        } else if (lastSync.type === 'post_id') {
+          lastSync.last = lastPostId;
+        }
 
         await this.cacheRepository.save('posts-sync-state', { lastUpdatedAt, lastPostId });
         this.logger.info(

@@ -68,6 +68,7 @@
     "@types/standard-version": "^7.0.0",
     "@types/underscore": "^1.10.22",
     "@types/user-agents": "^1.0.2",
+    "@types/yargs": "^17.0.33",
     "@typescript-eslint/eslint-plugin": "^5.52.0",
     "@typescript-eslint/parser": "^5.52.0",
     "babel-plugin-module-resolver": "^5.0.2",
@@ -144,6 +145,7 @@
     "tsyringe": "^4.3.0",
     "typeorm": "0.2.45",
     "user-agents": "^1.0.1294",
+    "yargs": "^17.7.2",
     "zod": "^3.21.4"
   },
   "imports": {
