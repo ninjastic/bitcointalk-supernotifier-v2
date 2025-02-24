@@ -202,6 +202,13 @@ export class SyncMeritsPipeline {
                 } 
               } 
             }
+            int sum = 0;
+            if (ctx._source.merits != null && ctx._source.merits.size() > 0) {
+              for (merit in ctx._source.merits) {
+                sum += merit.merit;
+              }
+              ctx._source.merits_sum = sum;
+            }
           `,
           lang: 'painless',
           params: {

@@ -163,6 +163,7 @@ export class SyncPostsPipeline {
                 }
               }
             },
+            merits_sum: { type: 'integer' },
             updated_at: { type: 'date' }
           }
         }
