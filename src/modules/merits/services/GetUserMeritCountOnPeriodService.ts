@@ -64,7 +64,7 @@ export default class GetUserMeritCountOnPeriodService {
       aggs: {
         merits: {
           value_count: {
-            field: 'id.keyword'
+            field: 'id'
           }
         },
         date: {

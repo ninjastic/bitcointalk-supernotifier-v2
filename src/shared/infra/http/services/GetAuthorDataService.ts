@@ -53,7 +53,7 @@ export default class GetUserDataService {
         },
         usernames: {
           terms: {
-            field: 'author.keyword',
+            field: 'author',
             size: 10
           }
         }

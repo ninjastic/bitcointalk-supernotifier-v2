@@ -25,7 +25,7 @@ export default class GetPostsAuthorsService {
     if (author) {
       must.push({
         term: {
-          'author.keyword': {
+          author: {
             value: author,
             case_insensitive: true
           }
@@ -97,7 +97,7 @@ export default class GetPostsAuthorsService {
       aggs: {
         authors: {
           terms: {
-            field: 'author.keyword',
+            field: 'author',
             size: Math.min(limit || 1000, 10000000)
           },
           aggs: {

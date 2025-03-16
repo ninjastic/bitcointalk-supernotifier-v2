@@ -50,7 +50,7 @@ export default class GetMeritsCountService {
       aggs: {
         merits: {
           value_count: {
-            field: 'id.keyword'
+            field: 'id'
           }
         },
         date: {

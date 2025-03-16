@@ -121,7 +121,7 @@ export default class PostsRepository implements IPostsRepository {
     if (author) {
       must.push({
         term: {
-          'author.keyword': {
+          author: {
             value: author,
             case_insensitive: true
           }

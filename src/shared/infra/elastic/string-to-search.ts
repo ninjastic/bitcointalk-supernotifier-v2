@@ -74,7 +74,7 @@ function buildElasticsearchQuery(params: SearchParams): ElasticsearchQuery {
 
   if (params.author) {
     query.query.bool.must.push({
-      term: { 'author.keyword': params.author }
+      term: { author: params.author }
     });
   }
 

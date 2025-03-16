@@ -32,7 +32,7 @@ export default class GetAuthorUIDFromUsernameService {
       size: 1,
       query: {
         term: {
-          'author.keyword': {
+          author: {
             value: username,
             case_insensitive: true
           }

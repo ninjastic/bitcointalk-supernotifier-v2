@@ -37,7 +37,7 @@ export default class GetPostsAuthorsPeriodService {
       aggs: {
         authors: {
           terms: {
-            field: 'author.keyword',
+            field: 'author',
             size: 10
           },
           aggs: {
