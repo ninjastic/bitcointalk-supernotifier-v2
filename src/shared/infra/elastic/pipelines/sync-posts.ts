@@ -67,6 +67,12 @@ export class SyncPostsPipeline {
                 char_filter: ['html_strip']
               }
             },
+            normalizer: {
+              lowercase_normalizer: {
+                type: 'custom',
+                filter: ['lowercase']
+              }
+            },
             filter: {
               apostrophe: {
                 type: 'word_delimiter_graph',
@@ -89,7 +95,13 @@ export class SyncPostsPipeline {
               }
             },
             author: {
-              type: 'keyword'
+              type: 'keyword',
+              fields: {
+                lowercase: {
+                  type: 'keyword',
+                  normalizer: 'lowercase_normalizer'
+                }
+              }
             },
             author_uid: { type: 'integer' },
             content: {
@@ -114,7 +126,13 @@ export class SyncPostsPipeline {
               type: 'nested',
               properties: {
                 author: {
-                  type: 'keyword'
+                  type: 'keyword',
+                  fields: {
+                    lowercase: {
+                      type: 'keyword',
+                      normalizer: 'lowercase_normalizer'
+                    }
+                  }
                 },
                 content: {
                   type: 'text',
@@ -141,13 +159,25 @@ export class SyncPostsPipeline {
                   type: 'integer'
                 },
                 sender: {
-                  type: 'keyword'
+                  type: 'keyword',
+                  fields: {
+                    lowercase: {
+                      type: 'keyword',
+                      normalizer: 'lowercase_normalizer'
+                    }
+                  }
                 },
                 sender_uid: {
                   type: 'integer'
                 },
                 receiver: {
-                  type: 'keyword'
+                  type: 'keyword',
+                  fields: {
+                    lowercase: {
+                      type: 'keyword',
+                      normalizer: 'lowercase_normalizer'
+                    }
+                  }
                 },
                 receiver_uid: {
                   type: 'integer'

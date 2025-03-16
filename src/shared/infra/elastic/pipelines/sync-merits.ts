@@ -59,6 +59,16 @@ export class SyncMeritsPipeline {
       await this.esClient.indices.putTemplate({
         name: this.INDEX_TEMPLATE_NAME,
         index_patterns: [this.INDEX_NAME],
+        settings: {
+          analysis: {
+            normalizer: {
+              lowercase_normalizer: {
+                type: 'custom',
+                filter: ['lowercase']
+              }
+            }
+          }
+        },
         mappings: {
           properties: {
             id: {
@@ -77,11 +87,23 @@ export class SyncMeritsPipeline {
               }
             },
             receiver: {
-              type: 'keyword'
+              type: 'keyword',
+              fields: {
+                lowercase: {
+                  type: 'keyword',
+                  normalizer: 'lowercase_normalizer'
+                }
+              }
             },
             receiver_uid: { type: 'integer' },
             sender: {
-              type: 'keyword'
+              type: 'keyword',
+              fields: {
+                lowercase: {
+                  type: 'keyword',
+                  normalizer: 'lowercase_normalizer'
+                }
+              }
             },
             sender_uid: { type: 'integer' },
             board_id: { type: 'integer' },
