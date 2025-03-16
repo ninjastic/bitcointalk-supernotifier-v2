@@ -33,10 +33,7 @@ export class SyncBoardsPipeline {
           properties: {
             board_id: { type: 'integer' },
             name: {
-              type: 'text',
-              fields: {
-                keyword: { type: 'keyword' }
-              }
+              type: 'keyword'
             },
             parent_id: { type: 'integer' }
           }

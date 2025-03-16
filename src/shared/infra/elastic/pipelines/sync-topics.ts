@@ -61,13 +61,7 @@ export class SyncTopicsPipeline {
                   }
                 },
                 author: {
-                  type: 'text',
-                  fields: {
-                    keyword: {
-                      type: 'keyword',
-                      ignore_above: 256
-                    }
-                  }
+                  type: 'keyword'
                 },
                 author_uid: {
                   type: 'integer'

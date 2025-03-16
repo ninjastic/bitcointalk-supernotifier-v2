@@ -17,7 +17,7 @@ interface LastSyncState {
 
 interface PostDocMerit {
   id: string;
-  merit: number;
+  amount: number;
   sender: string;
   sender_uid: number;
   receiver: string;
@@ -30,7 +30,7 @@ export class SyncMeritsPipeline {
 
   private readonly INDEX_NAME = 'merits';
 
-  private readonly POSTS_INDEX_NAME = 'posts';
+  private readonly POSTS_INDEX_NAME = 'posts_v2';
 
   private readonly INDEX_TEMPLATE_NAME = 'merits_template';
 
@@ -62,13 +62,7 @@ export class SyncMeritsPipeline {
         mappings: {
           properties: {
             id: {
-              type: 'text',
-              fields: {
-                keyword: {
-                  type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+              type: 'keyword'
             },
             amount: { type: 'integer' },
             post_id: { type: 'integer' },
@@ -83,23 +77,11 @@ export class SyncMeritsPipeline {
               }
             },
             receiver: {
-              type: 'text',
-              fields: {
-                keyword: {
-                  type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+              type: 'keyword'
             },
             receiver_uid: { type: 'integer' },
             sender: {
-              type: 'text',
-              fields: {
-                keyword: {
-                  type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+              type: 'keyword'
             },
             sender_uid: { type: 'integer' },
             board_id: { type: 'integer' },
@@ -175,7 +157,7 @@ export class SyncMeritsPipeline {
     for (const merit of merits) {
       const newMerit = {
         id: merit.id,
-        merit: merit.amount,
+        amount: merit.amount,
         sender: merit.sender,
         sender_uid: merit.sender_uid,
         receiver: merit.receiver,
@@ -205,7 +187,7 @@ export class SyncMeritsPipeline {
             int sum = 0;
             if (ctx._source.merits != null && ctx._source.merits.size() > 0) {
               for (merit in ctx._source.merits) {
-                sum += merit.merit;
+                sum += merit.amount;
               }
               ctx._source.merits_sum = sum;
             }

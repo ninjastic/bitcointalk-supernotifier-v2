@@ -28,9 +28,9 @@ interface PostContent {
 export class SyncPostsPipeline {
   private readonly logger = baseLogger.child({ pipeline: 'syncPostsPipeline' });
 
-  private readonly INDEX_NAME = 'posts';
+  private readonly INDEX_NAME = 'posts_v2';
 
-  private readonly INDEX_TEMPLATE_NAME = 'posts_template';
+  private readonly INDEX_TEMPLATE_NAME = 'posts_v2_template';
 
   private readonly SYNC_BATCH_SIZE = 10000;
 
@@ -63,14 +63,17 @@ export class SyncPostsPipeline {
               html_strip: {
                 type: 'custom',
                 tokenizer: 'standard',
-                filter: ['lowercase', 'stop'],
+                filter: ['stop', 'asciifolding', 'apostrophe', 'lowercase'],
                 char_filter: ['html_strip']
               }
             },
-            normalizer: {
-              keyword_lowercase: {
-                type: 'custom',
-                filter: ['lowercase']
+            filter: {
+              apostrophe: {
+                type: 'word_delimiter_graph',
+                preserve_original: true,
+                catenate_words: true,
+                split_on_case_change: false,
+                split_on_numerics: false
               }
             }
           }
@@ -86,13 +89,7 @@ export class SyncPostsPipeline {
               }
             },
             author: {
-              type: 'text',
-              fields: {
-                keyword: {
-                  type: 'keyword',
-                  normalizer: 'keyword_lowercase'
-                }
-              }
+              type: 'keyword'
             },
             author_uid: { type: 'integer' },
             content: {
@@ -117,10 +114,7 @@ export class SyncPostsPipeline {
               type: 'nested',
               properties: {
                 author: {
-                  type: 'text',
-                  fields: {
-                    keyword: { type: 'keyword' }
-                  }
+                  type: 'keyword'
                 },
                 content: {
                   type: 'text',
