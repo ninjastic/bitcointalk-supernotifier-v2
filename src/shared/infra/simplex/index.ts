@@ -34,7 +34,7 @@ export class SimpleX {
     await this.chat.apiUpdateProfile(user.profile.profileId, {
       displayName: 'BitcoinTalk SuperNotifier',
       fullName: 'BitcoinTalk SuperNotifier',
-      image: 'https://www.talkimg.com/images/2025/03/18/08xd5.png'
+      image: ''
     });
 
     logger.info({ address: this.address }, 'Bot is ready');
@@ -52,7 +52,9 @@ export class SimpleX {
       return;
     }
 
-    await handlers[r.type](r, this);
+    await handlers[r.type](r, this).catch(err => {
+      logger.fatal(err)
+    });
   }
   
   async sendMessage(contactId: number, text: string) {
