@@ -102,13 +102,22 @@ export const shouldNotifyUser = (
   return !(isSameUsername || isSameUid || isAuthorIgnored || isTopicIgnored || isUserBlocked);
 };
 
-export const isUserMentionedInPost = (post: Post, user: User): boolean => {
+export const isUserMentionedInPost = (post: Post, user: { username?: string; alternative_usernames?: string[] }): boolean => {
+  if (!user.username) return false;
+  
+  const regexList = []
+
   const usernameRegex = createMentionRegex(user.username);
-  const altUsernameRegex = user.alternative_usernames.length ? createMentionRegex(user.alternative_usernames[0]) : null;
   const backupAtSignRegex = new RegExp(`@${escapeUsername(user.username)}`, 'gi');
   const backupQuotedRegex = new RegExp(`Quote from: ${escapeUsername(user.username)} on`, 'gi');
 
-  const regexList = [usernameRegex, altUsernameRegex, backupAtSignRegex, backupQuotedRegex];
+  regexList.push(usernameRegex, backupAtSignRegex, backupQuotedRegex);
+
+  if (user.alternative_usernames?.length) {
+    const altUsernameRegex = createMentionRegex(user.alternative_usernames[0]);
+    regexList.push(altUsernameRegex)
+  }
+
   return regexList.some(regex => regex && post.content.match(regex));
 };
 

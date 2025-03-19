@@ -18,3 +18,6 @@ sync_state.json
 user-posts.*.json
 user-topics.*.json
 user-posts-deleted-ids.*.json
+*.db
+*.db-shm
+*.db-wal

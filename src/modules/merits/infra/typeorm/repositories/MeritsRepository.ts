@@ -1,4 +1,4 @@
-import { getRepository, Repository, MoreThanOrEqual } from 'typeorm';
+import { getRepository, Repository, MoreThanOrEqual, FindManyOptions } from 'typeorm';
 import { sub } from 'date-fns';
 
 import CreateMeritDTO from '../../../dtos/CreateMeritDTO';
@@ -35,6 +35,12 @@ export default class MeritsRepository implements IMeritsRepository {
     });
 
     return merit;
+  }
+
+  public async find(where: FindManyOptions<Merit>['where']): Promise<Merit[]> {
+    const merits = await this.ormRepository.find({ where, relations: ['post'] });
+
+    return merits;
   }
 
   public async getLatestUncheckedMerits(limit?: number): Promise<Merit[]> {

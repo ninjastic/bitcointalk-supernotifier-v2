@@ -1,0 +1,9 @@
+dist
+node_modules
+coverage
+build
+.git
+.github
+*.lock
+*.log
+docker
