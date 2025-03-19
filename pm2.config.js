@@ -24,6 +24,11 @@ module.exports = {
       name: 'elastic-sync',
       script: 'yarn start:sync',
       out_file: './logs/sync.log'
+    },
+    {
+      name: 'simplex',
+      script: 'yarn start:simplex',
+      out_file: './logs/simplex.log'
     }
   ]
 };

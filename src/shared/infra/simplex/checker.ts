@@ -1,5 +1,5 @@
 import { sub } from 'date-fns';
-import Db, { NotificationType, SimpleXUser } from './db';
+import Db, { LastCheckedType, NotificationType, SimpleXUser } from './db';
 import { createMentionRegex, isUserMentionedInPost } from '##/shared/services/utils';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import { SimpleX } from '.';
@@ -47,6 +47,18 @@ class Checker {
   }
 
   async run() {
+    const lastCheckedPost = await this.simpleX.db.getLastChecked({ type: LastCheckedType.POST_ID });
+
+    if (lastCheckedPost) {
+      this.lastPostId = Number(lastCheckedPost.key);
+    }
+
+    const lastCheckedMerit = await this.simpleX.db.getLastChecked({ type: LastCheckedType.MERIT_DATE });
+
+    if (lastCheckedMerit) {
+      this.lastMeritDate = new Date(lastCheckedMerit.key);
+    }
+
     const posts = await this.postsRepository.find({
       where: {
         post_id: MoreThan(this.lastPostId),
@@ -202,6 +214,10 @@ class Checker {
 
     if (posts.length > 0) {
       this.lastPostId = posts[posts.length - 1].post_id;
+      await this.simpleX.db.createLastChecked({
+        type: LastCheckedType.POST_ID,
+        key: this.lastPostId.toString()
+      });
     }
 
     users = await this.simpleX.db.getUsers({ enable_merits: true });
@@ -235,6 +251,10 @@ class Checker {
 
     if (merits.length > 0) {
       this.lastMeritDate = merits[merits.length - 1].date;
+      await this.simpleX.db.createLastChecked({
+        type: LastCheckedType.MERIT_DATE,
+        key: this.lastMeritDate.toISOString()
+      });
     }
   }
 

@@ -68,6 +68,18 @@ export type Notification = {
   created_at: string;
 };
 
+export enum LastCheckedType {
+  POST_ID = 'POST_ID',
+  MERIT_DATE = 'MERIT_DATE'
+}
+
+export type LastChecked = {
+  id: number;
+  type: LastCheckedType;
+  key: string;
+  created_at: string;
+}
+
 class Db {
   db: Knex;
 
@@ -164,6 +176,29 @@ class Db {
         table.timestamp('created_at').defaultTo(this.db.fn.now());
       });
     }
+
+    const lastCheckedTableExists = await this.db.schema.hasTable('last_checked');
+
+    if (!lastCheckedTableExists) {
+      await this.db.schema.createTable('last_checked', table => {
+        table.increments('id').primary();
+        table.string('type').notNullable();
+        table.string('key').notNullable();
+        table.timestamp('created_at').defaultTo(this.db.fn.now());
+      });
+    }
+
+  }
+
+  async getLastChecked(where: Partial<LastChecked>): Promise<LastChecked | undefined> {
+    return (await this.db<LastChecked>('last_checked').where(where).first()) as LastChecked | undefined;
+  }
+
+  async createLastChecked(lastChecked: Omit<LastChecked, 'id' | 'created_at'>): Promise<void> {
+    await this.db<LastChecked>('last_checked').insert({
+      type: lastChecked.type,
+      key: lastChecked.key
+    });
   }
 
   async getNotifications(where: Partial<Notification>): Promise<Notification[]> {
