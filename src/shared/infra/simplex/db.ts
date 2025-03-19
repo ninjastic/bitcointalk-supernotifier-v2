@@ -57,7 +57,7 @@ export enum NotificationType {
   MERIT = 'MERIT',
   TRACKED_PHRASE = 'TRACKED_PHRASE',
   TRACKED_TOPIC = 'TRACKED_TOPIC',
-  TRACKED_USER = 'TRACKED_USER',
+  TRACKED_USER = 'TRACKED_USER'
 }
 
 export type Notification = {
@@ -78,7 +78,7 @@ export type LastChecked = {
   type: LastCheckedType;
   key: string;
   created_at: string;
-}
+};
 
 class Db {
   db: Knex;
@@ -186,19 +186,32 @@ class Db {
         table.string('key').notNullable();
         table.timestamp('created_at').defaultTo(this.db.fn.now());
       });
-    }
 
+      await this.db<LastChecked>('last_checked').insert({
+        type: LastCheckedType.POST_ID,
+        key: '0'
+      });
+
+      await this.db<LastChecked>('last_checked').insert({
+        type: LastCheckedType.MERIT_DATE,
+        key: new Date().toISOString()
+      });
+    }
   }
 
   async getLastChecked(where: Partial<LastChecked>): Promise<LastChecked | undefined> {
     return (await this.db<LastChecked>('last_checked').where(where).first()) as LastChecked | undefined;
   }
 
-  async createLastChecked(lastChecked: Omit<LastChecked, 'id' | 'created_at'>): Promise<void> {
-    await this.db<LastChecked>('last_checked').insert({
-      type: lastChecked.type,
-      key: lastChecked.key
-    });
+  async updateLastChecked(lastChecked: Omit<LastChecked, 'id' | 'created_at'>): Promise<void> {
+    await this.db<LastChecked>('last_checked')
+      .where({
+        type: lastChecked.type
+      })
+      .update({
+        type: lastChecked.type,
+        key: lastChecked.key
+      });
   }
 
   async getNotifications(where: Partial<Notification>): Promise<Notification[]> {
@@ -233,7 +246,9 @@ class Db {
   }
 
   async deleteUser(contact_id: number): Promise<void> {
-    await this.db<SimpleXUser>('users').where({ contact_id }).update({ deleted_at: this.db.fn.now() });
+    await this.db<SimpleXUser>('users')
+      .where({ contact_id })
+      .update({ enable_mentions: false, enable_merits: false, deleted_at: this.db.fn.now() });
   }
 
   async createConversation(conversation: Omit<Conversation, 'id' | 'created_at'>): Promise<void> {
@@ -275,7 +290,9 @@ class Db {
   }
 
   async getTrackedPhrase(contact_id: number, phrase: string): Promise<TrackedPhrase | undefined> {
-    return (await this.db<TrackedPhrase>('tracked_phrases').where({ contact_id, phrase: phrase.toLowerCase() }).first()) as TrackedPhrase | undefined;
+    return (await this.db<TrackedPhrase>('tracked_phrases')
+      .where({ contact_id, phrase: phrase.toLowerCase() })
+      .first()) as TrackedPhrase | undefined;
   }
 
   async getTrackedPhrases(where: Partial<TrackedPhrase> = {}): Promise<TrackedPhrase[]> {
@@ -294,7 +311,9 @@ class Db {
   }
 
   async getTrackedTopic(contact_id: number, topic_id: number): Promise<TrackedTopic | undefined> {
-    return (await this.db<TrackedTopic>('tracked_topics').where({ contact_id, topic_id }).first()) as TrackedTopic | undefined;
+    return (await this.db<TrackedTopic>('tracked_topics').where({ contact_id, topic_id }).first()) as
+      | TrackedTopic
+      | undefined;
   }
 
   async getTrackedTopics(where: Partial<TrackedTopic> = {}): Promise<TrackedTopic[]> {
@@ -313,7 +332,9 @@ class Db {
   }
 
   async getTrackedUser(contact_id: number, username: string): Promise<TrackedUser | undefined> {
-    return (await this.db<TrackedUser>('tracked_users').where({ contact_id, username }).first()) as TrackedUser | undefined;
+    return (await this.db<TrackedUser>('tracked_users').where({ contact_id, username }).first()) as
+      | TrackedUser
+      | undefined;
   }
 
   async getTrackedUsers(where: Partial<TrackedUser> = {}): Promise<TrackedUser[]> {
@@ -332,7 +353,9 @@ class Db {
   }
 
   async getIgnoredUser(contact_id: number, username: string): Promise<IgnoredUser | undefined> {
-    return (await this.db<IgnoredUser>('ignored_users').where({ contact_id, username: username.toLowerCase() }).first()) as IgnoredUser | undefined;
+    return (await this.db<IgnoredUser>('ignored_users')
+      .where({ contact_id, username: username.toLowerCase() })
+      .first()) as IgnoredUser | undefined;
   }
 
   async getIgnoredUsers(where: Partial<IgnoredUser> = {}): Promise<IgnoredUser[]> {

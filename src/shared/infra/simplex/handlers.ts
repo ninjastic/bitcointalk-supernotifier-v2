@@ -17,9 +17,10 @@ export const handlers: Handlers = {
   chatItemsStatusesUpdated: async () => {},
   userContactSubSummary: async () => {},
   pendingSubSummary: async () => {},
+  acceptingContactRequest: async () => {},
   memberSubSummary: async () => {},
   contactsDisconnected: async (r: CRContactsDisconnected, simpleX) => {
-    await simpleX.chat.apiConnect(r.server)
+    await simpleX.chat.apiConnect(r.server);
   },
   chatError: async (r: CRChatError) => {
     if (r.chatError.type === 'error') {
@@ -35,8 +36,7 @@ export const handlers: Handlers = {
       enable_merits: false
     });
 
-    await simpleX.chat.apiSendTextMessage(
-      ChatType.Direct,
+    await simpleX.sendMessage(
       r.contact.contactId,
       'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?'
     );
@@ -74,11 +74,7 @@ export const handlers: Handlers = {
               forum_username: text,
               forum_user_uid: conversation.data.forum_user_uid
             });
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
-              contactId,
-              `Hi, *${text}*! And what's your forum UID?`
-            );
+            await simpleX.sendMessage(contactId, `Hi, *${text}*! And what's your forum UID?`);
             return;
           }
 
@@ -89,8 +85,7 @@ export const handlers: Handlers = {
               forum_user_uid: text
             });
 
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
+            await simpleX.sendMessage(
               contactId,
               `Great!\n\nUsername is *${conversation.data.forum_username}*\nForum UID is *${text}*\n\n*OK* to confirm\n*RESET* to start again`
             );
@@ -99,8 +94,7 @@ export const handlers: Handlers = {
 
           case 'confirm-setup': {
             if (text.toLowerCase() === 'ok') {
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
+              await simpleX.sendMessage(
                 contactId,
                 `Great, you're good to go!\n\nYou will receive notifications for mentions and merits.\n\n- Toggle them with */mentions* and */merits*\n- Use */help* to see all commands.`
               );
@@ -111,6 +105,8 @@ export const handlers: Handlers = {
                 enable_merits: true
               });
               await simpleX.db.deleteConversation(contactId);
+
+              logger.info({ contactId }, 'New contact configured');
             }
 
             if (text.toLowerCase() === 'reset') {
@@ -120,11 +116,7 @@ export const handlers: Handlers = {
                 forum_user_uid: null
               });
 
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                "Let's try again... What is your BitcoinTalk username?"
-              );
+              await simpleX.sendMessage(contactId, "Let's try again... What is your BitcoinTalk username?");
             }
 
             return;
@@ -163,11 +155,11 @@ export const handlers: Handlers = {
             ];
             const message = `Commands:\n\n${commands.join('\n')}`;
 
-            await simpleX.chat.apiSendTextMessage(ChatType.Direct, contactId, message);
+            await simpleX.sendMessage(contactId, message);
             break;
           }
           case '/invite': {
-            await simpleX.chat.apiSendTextMessage(ChatType.Direct, contactId, `\`${simpleX.address}\``);
+            await simpleX.sendMessage(contactId, `\`${simpleX.address}\``);
             break;
           }
           case '/reset': {
@@ -179,8 +171,7 @@ export const handlers: Handlers = {
               enable_merits: false
             });
 
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
+            await simpleX.sendMessage(
               contactId,
               'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?'
             );
@@ -194,13 +185,12 @@ export const handlers: Handlers = {
           }
           case '/info': {
             const user = await simpleX.db.getUser(contactId);
-            await simpleX.chat.apiSendTextMessage(ChatType.Direct, contactId, `\`${JSON.stringify(user)}\``);
+            await simpleX.sendMessage(contactId, `\`${JSON.stringify(user)}\``);
             break;
           }
           case '/mentions': {
             await simpleX.db.updateUser(contactId, { enable_mentions: !user.enable_mentions });
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
+            await simpleX.sendMessage(
               contactId,
               `Mentions notifications are now *${user.enable_mentions ? 'disabled' : 'enabled'}*`
             );
@@ -208,8 +198,7 @@ export const handlers: Handlers = {
           }
           case '/merits': {
             await simpleX.db.updateUser(contactId, { enable_merits: !user.enable_merits });
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
+            await simpleX.sendMessage(
               contactId,
               `Merits notifications are now *${user.enable_merits ? 'disabled' : 'enabled'}*`
             );
@@ -221,43 +210,30 @@ export const handlers: Handlers = {
               let topicId = Number(command[2]);
 
               if (Number.isNaN(topicId)) {
-                const urlRegex = /topic=(\d+)/
+                const urlRegex = /topic=(\d+)/;
                 const match = text.match(urlRegex);
                 if (match && match[1]) {
-                  topicId = Number(match[1])
+                  topicId = Number(match[1]);
                 } else {
-                  await simpleX.chat.apiSendTextMessage(
-                    ChatType.Direct,
-                    contactId,
-                    `Error: Provided topic is invalid`
-                  );
+                  await simpleX.sendMessage(contactId, `Error: Provided topic is invalid`);
                   break;
                 }
               }
 
               const isExistent = await simpleX.db.getTrackedTopic(contactId, topicId);
               if (isExistent) {
-                await simpleX.chat.apiSendTextMessage(
-                  ChatType.Direct,
-                  contactId,
-                  `Error: Topic *${topicId}* already being tracked`
-                );
+                await simpleX.sendMessage(contactId, `Error: Topic *${topicId}* already being tracked`);
                 break;
               }
 
               await simpleX.db.createTrackedTopic({ contact_id: contactId, topic_id: topicId });
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                `Topic *${topicId}* is now being tracked`
-              );
+              await simpleX.sendMessage(contactId, `Topic *${topicId}* is now being tracked`);
             }
             break;
           }
           case '/list_topics': {
             const trackedTopics = await simpleX.db.getTrackedTopics({ contact_id: contactId });
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
+            await simpleX.sendMessage(
               contactId,
               `Tracked topics: ${trackedTopics.map(topic => `*${topic.topic_id}*`).join(', ')}`
             );
@@ -268,11 +244,7 @@ export const handlers: Handlers = {
               const topicId = Number(command[2]);
 
               await simpleX.db.deleteTrackedTopic(contactId, topicId);
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                `Topic *${topicId}* is no longer being tracked`
-              );
+              await simpleX.sendMessage(contactId, `Topic *${topicId}* is no longer being tracked`);
             }
             break;
           }
@@ -283,27 +255,18 @@ export const handlers: Handlers = {
 
               const isExistent = await simpleX.db.getTrackedPhrase(contactId, phrase);
               if (isExistent) {
-                await simpleX.chat.apiSendTextMessage(
-                  ChatType.Direct,
-                  contactId,
-                  `Error: Phrase *${phrase}* already being tracked`
-                );
+                await simpleX.sendMessage(contactId, `Error: Phrase *${phrase}* already being tracked`);
                 break;
               }
 
               await simpleX.db.createTrackedPhrase({ contact_id: contactId, phrase });
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                `Phrase *${phrase}* is now being tracked`
-              );
+              await simpleX.sendMessage(contactId, `Phrase *${phrase}* is now being tracked`);
             }
             break;
           }
           case '/list_phrases': {
             const trackedPhrases = await simpleX.db.getTrackedPhrases({ contact_id: contactId });
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
+            await simpleX.sendMessage(
               contactId,
               `Tracked phrases: ${trackedPhrases.map(phrase => `*${phrase.phrase}*`).join(', ')}`
             );
@@ -314,11 +277,7 @@ export const handlers: Handlers = {
               const phrase = command[2];
 
               await simpleX.db.deleteTrackedPhrase(contactId, phrase);
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                `Phrase *${phrase}* is no longer being tracked`
-              );
+              await simpleX.sendMessage(contactId, `Phrase *${phrase}* is no longer being tracked`);
             }
             break;
           }
@@ -329,27 +288,18 @@ export const handlers: Handlers = {
 
               const isExistent = await simpleX.db.getTrackedUser(contactId, username);
               if (isExistent) {
-                await simpleX.chat.apiSendTextMessage(
-                  ChatType.Direct,
-                  contactId,
-                  `Error: User *${username}* already being tracked`
-                );
+                await simpleX.sendMessage(contactId, `Error: User *${username}* already being tracked`);
                 break;
               }
 
               await simpleX.db.createTrackedUser({ contact_id: contactId, username });
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                `User *${username}* is now being tracked`
-              );
+              await simpleX.sendMessage(contactId, `User *${username}* is now being tracked`);
             }
             break;
           }
           case '/list_users': {
             const trackedUsers = await simpleX.db.getTrackedUsers({ contact_id: contactId });
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
+            await simpleX.sendMessage(
               contactId,
               `Tracked users: ${trackedUsers.map(user => `*${user.username}*`).join(', ')}`
             );
@@ -360,11 +310,7 @@ export const handlers: Handlers = {
               const username = command[2];
 
               await simpleX.db.deleteTrackedUser(contactId, username);
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                `User *${username}* is no longer being tracked`
-              );
+              await simpleX.sendMessage(contactId, `User *${username}* is no longer being tracked`);
             }
             break;
           }
@@ -375,27 +321,18 @@ export const handlers: Handlers = {
 
               const isExistent = await simpleX.db.getIgnoredUser(contactId, username);
               if (isExistent) {
-                await simpleX.chat.apiSendTextMessage(
-                  ChatType.Direct,
-                  contactId,
-                  `Error: User *${username}* already being ignored`
-                );
+                await simpleX.sendMessage(contactId, `Error: User *${username}* already being ignored`);
                 break;
               }
 
               await simpleX.db.createIgnoredUser({ contact_id: contactId, username });
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                `User *${username}* is now being ignored`
-              );
+              await simpleX.sendMessage(contactId, `User *${username}* is now being ignored`);
             }
             break;
           }
           case '/list_ignoreusers': {
             const trackedUsers = await simpleX.db.getIgnoredUsers({ contact_id: contactId });
-            await simpleX.chat.apiSendTextMessage(
-              ChatType.Direct,
+            await simpleX.sendMessage(
               contactId,
               `Ignored users: ${trackedUsers.map(user => `*${user.username}*`).join(', ')}`
             );
@@ -406,11 +343,7 @@ export const handlers: Handlers = {
               const username = command[2];
 
               await simpleX.db.deleteIgnoredUser(contactId, username);
-              await simpleX.chat.apiSendTextMessage(
-                ChatType.Direct,
-                contactId,
-                `User *${username}* is no longer being ignored`
-              );
+              await simpleX.sendMessage(contactId, `User *${username}* is no longer being ignored`);
             }
             break;
           }
@@ -421,5 +354,7 @@ export const handlers: Handlers = {
   contactDeletedByContact: async (r: CRContactDeleted, simpleX) => {
     await simpleX.db.deleteConversation(r.contact.contactId);
     await simpleX.db.deleteUser(r.contact.contactId);
+
+    logger.info({ contactId: r.contact.contactId }, 'Contact deleted');
   }
 };

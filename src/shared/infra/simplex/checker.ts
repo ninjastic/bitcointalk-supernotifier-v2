@@ -1,5 +1,5 @@
 import { sub } from 'date-fns';
-import Db, { LastCheckedType, NotificationType, SimpleXUser } from './db';
+import { LastCheckedType, NotificationType } from './db';
 import { createMentionRegex, isUserMentionedInPost } from '##/shared/services/utils';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import { SimpleX } from '.';
@@ -36,6 +36,8 @@ class Checker {
 
     this.lastPostId = 0;
     this.lastMeritDate = sub(new Date(), { hours: 24 });
+
+    logger.info({ lastPostId: this.lastPostId, lastMeritDate: this.lastMeritDate }, 'Starting checker');
   }
 
   private filterPostContent(content: string): string {
@@ -85,16 +87,19 @@ class Checker {
     const notifiedSet = new Set<string>();
 
     for (const post of posts) {
+      logger.debug(`Checking post ${post.post_id}`);
       const ignoringPostUser = ignoredUsers.filter(ignoredUser => ignoredUser.username.toLowerCase() === post.author);
 
-      logger.debug(`Checking post ${post.post_id}`);
-    for (const user of users) {
-        const key = `mentionNotification:${user.contact_id}:${post.post_id}`;
+      for (const user of users) {
+        const key = `postNotification:${user.contact_id}:${post.post_id}`;
         if (!isUserMentionedInPost(post, { username: user.forum_username })) continue;
         if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
         if (ignoringPostUser.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
         if (await redis.get(key)) continue;
-        const notificationExists = await this.simpleX.db.getNotifications({ contact_id: user.contact_id, type: NotificationType.MENTION, key });
+        const notificationExists = await this.simpleX.db.getNotifications({
+          contact_id: user.contact_id,
+          key
+        });
         if (notificationExists.length > 0) continue;
         if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
 
@@ -102,8 +107,7 @@ class Checker {
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        await this.simpleX.chat.apiSendTextMessage(
-          ChatType.Direct,
+        await this.simpleX.sendMessage(
           user.contact_id,
           `💬 Mentioned by *${post.author}* in *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
             .substring(0, 150)
@@ -117,89 +121,30 @@ class Checker {
         notifiedSet.add(`${user.contact_id}:${post.post_id}`);
       }
 
-      for (const trackedPhrase of trackedPhrases) {
-        const phraseRegex = createMentionRegex(trackedPhrase.phrase);
-        if (post.content.match(phraseRegex) === null) continue;
-        const user = await this.simpleX.db.getUser(trackedPhrase.contact_id)
-        if (!user) continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
-        if (ignoringPostUser.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
-        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
-        const key = `trackedPhraseNotification:${user.contact_id}:${post.post_id}`;
-        if (await redis.get(key)) continue;
-        const notificationExists = await this.simpleX.db.getNotifications({ contact_id: user.contact_id, type: NotificationType.TRACKED_PHRASE, key });
-        if (notificationExists.length > 0) continue;
-
-        logger.info({ contactId: user.contact_id, post }, 'Sending tracked phrase notification');
-
-        const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
-        await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        await this.simpleX.chat.apiSendTextMessage(
-          ChatType.Direct,
-          user.contact_id,
-          `🔠 Found tracked phrase *${trackedPhrase.phrase}* by *${post.author}* in *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
-            .substring(0, 150)
-            .trim()}..._${getSponsorPhrase(user.contact_id)}`
-        );
-        await this.simpleX.db.createNotification({
-          contact_id: user.contact_id,
-          type: NotificationType.TRACKED_PHRASE,
-          key
-        });
-        notifiedSet.add(`${user.contact_id}:${post.post_id}`);
-      }
-
-      for (const trackedTopic of trackedTopics) {
-        if (post.topic_id !== trackedTopic.topic_id) continue;
-        const user = await this.simpleX.db.getUser(trackedTopic.contact_id)
-        if (!user) continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
-        if (ignoringPostUser.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
-        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
-        const key = `trackedTopicNotification:${user.contact_id}:${post.post_id}`;
-        if (await redis.get(key)) continue;
-        const notificationExists = await this.simpleX.db.getNotifications({ contact_id: user.contact_id, type: NotificationType.TRACKED_TOPIC, key });
-        if (notificationExists.length > 0) continue;
-
-        logger.info({ contactId: user.contact_id, post }, 'Sending tracked topic notification');
-
-        const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
-        await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        await this.simpleX.chat.apiSendTextMessage(
-          ChatType.Direct,
-          user.contact_id,
-          `📄 New reply by *${post.author}* on tracked topic *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
-            .substring(0, 150)
-            .trim()}..._${getSponsorPhrase(user.contact_id)}`
-        );
-        await this.simpleX.db.createNotification({
-          contact_id: user.contact_id,
-          type: NotificationType.TRACKED_TOPIC,
-          key
-        });
-        notifiedSet.add(`${user.contact_id}:${post.post_id}`);
-      }
-
       for (const trackedUser of trackedUsers) {
         if (post.author.toLowerCase() !== trackedUser.username.toLowerCase()) continue;
-        const user = await this.simpleX.db.getUser(trackedUser.contact_id)
+        const user = await this.simpleX.db.getUser(trackedUser.contact_id);
         if (!user) continue;
         if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
         if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
 
-        const key = `trackedUserNotification:${user.contact_id}:${post.post_id}`;
+        const key = `postNotification:${user.contact_id}:${post.post_id}`;
         if (await redis.get(key)) continue;
-        const notificationExists = await this.simpleX.db.getNotifications({ contact_id: user.contact_id, type: NotificationType.TRACKED_USER, key });
+        const notificationExists = await this.simpleX.db.getNotifications({
+          contact_id: user.contact_id,
+          key
+        });
         if (notificationExists.length > 0) continue;
-        
+
         logger.info({ contactId: user.contact_id, post }, 'Sending tracked user notification');
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        await this.simpleX.chat.apiSendTextMessage(
-          ChatType.Direct,
+        await this.simpleX.sendMessage(
           user.contact_id,
-          `👤 New reply by *${post.author}* on tracked user *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
+          `👤 New reply by *${post.author}* on tracked user *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(
+            post.content
+          )
             .substring(0, 150)
             .trim()}..._${getSponsorPhrase(user.contact_id)}`
         );
@@ -210,11 +155,82 @@ class Checker {
         });
         notifiedSet.add(`${user.contact_id}:${post.post_id}`);
       }
+
+      for (const trackedTopic of trackedTopics) {
+        if (post.topic_id !== trackedTopic.topic_id) continue;
+        const user = await this.simpleX.db.getUser(trackedTopic.contact_id);
+        if (!user) continue;
+        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (ignoringPostUser.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
+        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
+        const key = `postNotification:${user.contact_id}:${post.post_id}`;
+        if (await redis.get(key)) continue;
+        const notificationExists = await this.simpleX.db.getNotifications({
+          contact_id: user.contact_id,
+          key
+        });
+        if (notificationExists.length > 0) continue;
+
+        logger.info({ contactId: user.contact_id, post }, 'Sending tracked topic notification');
+
+        const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
+        await redis.set(key, '1', 'EX', 60 * 30 * 1000);
+        await this.simpleX.sendMessage(
+          user.contact_id,
+          `📄 New reply by *${post.author}* on tracked topic *${
+            post.title
+          }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
+            user.contact_id
+          )}`
+        );
+        await this.simpleX.db.createNotification({
+          contact_id: user.contact_id,
+          type: NotificationType.TRACKED_TOPIC,
+          key
+        });
+        notifiedSet.add(`${user.contact_id}:${post.post_id}`);
+      }
+
+      for (const trackedPhrase of trackedPhrases) {
+        const phraseRegex = createMentionRegex(trackedPhrase.phrase);
+        if (post.content.match(phraseRegex) === null) continue;
+        const user = await this.simpleX.db.getUser(trackedPhrase.contact_id);
+        if (!user) continue;
+        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (ignoringPostUser.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
+        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
+        const key = `postNotification:${user.contact_id}:${post.post_id}`;
+        if (await redis.get(key)) continue;
+        const notificationExists = await this.simpleX.db.getNotifications({
+          contact_id: user.contact_id,
+          key
+        });
+        if (notificationExists.length > 0) continue;
+
+        logger.info({ contactId: user.contact_id, post }, 'Sending tracked phrase notification');
+
+        const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
+        await redis.set(key, '1', 'EX', 60 * 30 * 1000);
+        await this.simpleX.sendMessage(
+          user.contact_id,
+          `🔠 Found tracked phrase *${trackedPhrase.phrase}* by *${post.author}* in *${
+            post.title
+          }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
+            user.contact_id
+          )}`
+        );
+        await this.simpleX.db.createNotification({
+          contact_id: user.contact_id,
+          type: NotificationType.TRACKED_PHRASE,
+          key
+        });
+        notifiedSet.add(`${user.contact_id}:${post.post_id}`);
+      }
     }
 
     if (posts.length > 0) {
       this.lastPostId = posts[posts.length - 1].post_id;
-      await this.simpleX.db.createLastChecked({
+      await this.simpleX.db.updateLastChecked({
         type: LastCheckedType.POST_ID,
         key: this.lastPostId.toString()
       });
@@ -228,14 +244,16 @@ class Checker {
         const key = `meritNotification:${user.contact_id}:${merit.id}`;
         if (merit.receiver_uid !== user.forum_user_uid) continue;
         if (await redis.get(key)) continue;
-        const notificationExists = await this.simpleX.db.getNotifications({ contact_id: user.contact_id, type: NotificationType.MERIT, key });
+        const notificationExists = await this.simpleX.db.getNotifications({
+          contact_id: user.contact_id,
+          key
+        });
         if (notificationExists.length > 0) continue;
         logger.info({ contactId: user.contact_id, merit }, 'Sending merit notification');
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${merit.topic_id}.msg${merit.post_id}#msg${merit.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 24 * 1000);
-        await this.simpleX.chat.apiSendTextMessage(
-          ChatType.Direct,
+        await this.simpleX.sendMessage(
           user.contact_id,
           `⭐️ Received *${merit.amount}* ${pluralize('merit', merit.amount)} by *${merit.sender}* for *${
             merit.post.title
@@ -251,7 +269,7 @@ class Checker {
 
     if (merits.length > 0) {
       this.lastMeritDate = merits[merits.length - 1].date;
-      await this.simpleX.db.createLastChecked({
+      await this.simpleX.db.updateLastChecked({
         type: LastCheckedType.MERIT_DATE,
         key: this.lastMeritDate.toISOString()
       });

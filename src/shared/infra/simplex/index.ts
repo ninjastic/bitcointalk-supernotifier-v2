@@ -8,6 +8,7 @@ import logger from '##/shared/services/logger';
 import { handlers } from './handlers';
 import Db from './db';
 import Checker from './checker';
+import { ChatType } from 'simplex-chat/dist/command';
 
 export class SimpleX {
   chat: ChatClient;
@@ -53,6 +54,13 @@ export class SimpleX {
 
     await handlers[r.type](r, this);
   }
+  
+  async sendMessage(contactId: number, text: string) {
+    return this.chat.apiSendTextMessage(ChatType.Direct, contactId, text).catch(err => {
+      logger.fatal(err)
+    });
+  }
+  
 }
 
 createConnection().then(() => {
