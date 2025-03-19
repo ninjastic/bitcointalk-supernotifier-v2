@@ -107,7 +107,7 @@ class Checker {
           user.contact_id,
           `💬 Mentioned by *${post.author}* in *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
             .substring(0, 150)
-            .trim()}_${getSponsorPhrase(user.contact_id)}`
+            .trim()}..._${getSponsorPhrase(user.contact_id)}`
         );
         await this.simpleX.db.createNotification({
           contact_id: user.contact_id,
@@ -139,7 +139,7 @@ class Checker {
           user.contact_id,
           `🔠 Found tracked phrase *${trackedPhrase.phrase}* by *${post.author}* in *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
             .substring(0, 150)
-            .trim()}_${getSponsorPhrase(user.contact_id)}`
+            .trim()}..._${getSponsorPhrase(user.contact_id)}`
         );
         await this.simpleX.db.createNotification({
           contact_id: user.contact_id,
@@ -170,7 +170,7 @@ class Checker {
           user.contact_id,
           `📄 New reply by *${post.author}* on tracked topic *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
             .substring(0, 150)
-            .trim()}_${getSponsorPhrase(user.contact_id)}`
+            .trim()}..._${getSponsorPhrase(user.contact_id)}`
         );
         await this.simpleX.db.createNotification({
           contact_id: user.contact_id,
@@ -201,7 +201,7 @@ class Checker {
           user.contact_id,
           `👤 New reply by *${post.author}* on tracked user *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
             .substring(0, 150)
-            .trim()}_${getSponsorPhrase(user.contact_id)}`
+            .trim()}..._${getSponsorPhrase(user.contact_id)}`
         );
         await this.simpleX.db.createNotification({
           contact_id: user.contact_id,
