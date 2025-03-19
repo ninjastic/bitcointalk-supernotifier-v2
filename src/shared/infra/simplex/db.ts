@@ -197,6 +197,8 @@ class Db {
         key: new Date().toISOString()
       });
     }
+
+    this.db.raw('PRAGMA journal_mode=WAL;');
   }
 
   async getLastChecked(where: Partial<LastChecked>): Promise<LastChecked | undefined> {

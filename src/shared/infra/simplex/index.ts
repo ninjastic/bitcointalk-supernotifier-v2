@@ -30,7 +30,7 @@ export class SimpleX {
     }
 
     this.address = (await this.chat.apiGetUserAddress()) || (await this.chat.apiCreateUserAddress());
-    await this.chat.enableAddressAutoAccept(true);
+    await this.chat.enableAddressAutoAccept(false);
     await this.chat.apiUpdateProfile(user.profile.profileId, {
       displayName: 'BitcoinTalk SuperNotifier',
       fullName: 'BitcoinTalk SuperNotifier',
@@ -56,9 +56,8 @@ export class SimpleX {
   }
   
   async sendMessage(contactId: number, text: string) {
-    return this.chat.apiSendTextMessage(ChatType.Direct, contactId, text).catch(err => {
-      logger.fatal(err)
-    });
+    logger.info({ contactId, text }, 'Sending bot message')
+    return this.chat.apiSendTextMessage(ChatType.Direct, contactId, text);
   }
   
 }

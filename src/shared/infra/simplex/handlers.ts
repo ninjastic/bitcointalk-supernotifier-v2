@@ -5,9 +5,7 @@ import {
   CRContactDeleted,
   CRContactConnected,
   CRChatError,
-  CRContactsDisconnected
 } from 'simplex-chat/dist/response';
-import { ChatType } from 'simplex-chat/dist/command';
 import logger from '##/shared/services/logger';
 import type { SimpleX } from './index';
 
@@ -19,9 +17,6 @@ export const handlers: Handlers = {
   pendingSubSummary: async () => {},
   acceptingContactRequest: async () => {},
   memberSubSummary: async () => {},
-  contactsDisconnected: async (r: CRContactsDisconnected, simpleX) => {
-    await simpleX.chat.apiConnect(r.server);
-  },
   chatError: async (r: CRChatError) => {
     if (r.chatError.type === 'error') {
       logger.warn({ type: r.chatError, error: r.chatError }, 'Chat error');
