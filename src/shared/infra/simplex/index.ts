@@ -33,8 +33,7 @@ export class SimpleX {
     await this.chat.enableAddressAutoAccept(false);
     await this.chat.apiUpdateProfile(user.profile.profileId, {
       displayName: 'BitcoinTalk SuperNotifier',
-      fullName: 'BitcoinTalk SuperNotifier',
-      image: ''
+      fullName: 'BitcoinTalk SuperNotifier'
     });
 
     logger.info({ address: this.address }, 'Bot is ready');
