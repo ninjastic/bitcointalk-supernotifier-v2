@@ -65,6 +65,8 @@ export type Notification = {
   contact_id: number;
   type: NotificationType;
   key: string;
+  message: string;
+  sent: boolean;
   created_at: string;
 };
 
@@ -151,6 +153,8 @@ class Db {
         table.integer('contact_id').notNullable();
         table.string('type').notNullable();
         table.string('key').notNullable();
+        table.string('message').notNullable().defaultTo('');
+        table.boolean('sent').notNullable().defaultTo(false);
         table.timestamp('created_at').defaultTo(this.db.fn.now());
       });
     }
@@ -216,8 +220,8 @@ class Db {
       });
   }
 
-  async getNotifications(where: Partial<Notification>): Promise<Notification[]> {
-    return (await this.db<Notification>('notifications').where(where)) as Notification[];
+  async getNotifications(where: Partial<Notification>, order = 'asc'): Promise<Notification[]> {
+    return (await this.db<Notification>('notifications').where(where).orderBy('created_at', order)) as Notification[];
   }
 
   async createNotification(notification: Omit<Notification, 'id' | 'created_at'>): Promise<void> {
@@ -228,11 +232,17 @@ class Db {
     });
   }
 
+  async updateNotification(id: number, notification: Partial<Omit<Notification, 'id' | 'created_at'>>): Promise<void> {
+    await this.db<Notification>('notifications')
+      .where({ id })
+      .update(notification);
+  }
+
   async getUser(contact_id: number): Promise<SimpleXUser | undefined> {
     return (await this.db<SimpleXUser>('users').where({ contact_id }).first()) as SimpleXUser | undefined;
   }
 
-  async getUsers(where: Partial<SimpleXUser>): Promise<SimpleXUser[]> {
+  async getUsers(where: Partial<SimpleXUser> = {}): Promise<SimpleXUser[]> {
     return (await this.db<SimpleXUser>('users').where(where)) as SimpleXUser[];
   }
 

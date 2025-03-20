@@ -3,28 +3,47 @@ import {
   ChatResponse,
   CRNewChatItems,
   CRContactDeleted,
-  CRContactConnected,
   CRChatError,
+  CRContactsDisconnected,
+  CRContactsSubscribed,
+  CRReceivedContactRequest
 } from 'simplex-chat/dist/response';
 import logger from '##/shared/services/logger';
 import type { SimpleX } from './index';
 
+type CRContactConnected = ChatResponse & {
+  type: 'contactConnected';
+  contact: {
+    contactId: number;
+    activeConn: {
+      connId: number;
+      agentConnId: string;
+      localDisplayName: string;
+    };
+  };
+};
+
+type CRContactSubSummary = ChatResponse & {
+  type: 'contactSubSummary';
+  contactSubscriptions: Array<{
+    contactId: number;
+  }>;
+};
+
 type Handlers = Record<string, (r: ChatResponse, simpleX: SimpleX) => Promise<void>>;
 
 export const handlers: Handlers = {
-  chatItemsStatusesUpdated: async () => {},
-  userContactSubSummary: async () => {},
-  pendingSubSummary: async () => {},
-  acceptingContactRequest: async () => {},
-  memberSubSummary: async () => {},
-  chatError: async (r: CRChatError) => {
-    if (r.chatError.type === 'error') {
-      logger.warn({ type: r.chatError, error: r.chatError }, 'Chat error');
+  receivedContactRequest: async (r: CRReceivedContactRequest, simpleX) => {
+    const { contactId } = await simpleX.chat.apiAcceptContactRequest(r.contactRequest.contactRequestId);
+
+    while (!(await simpleX.isContactActive(contactId))) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
-  },
-  contactSndReady: async (r: CRContactConnected, simpleX) => {
+
+    await simpleX.addConnectedUser(contactId);
+
     await simpleX.db.createUser({
-      contact_id: r.contact.contactId,
+      contact_id: contactId,
       forum_username: null,
       forum_user_uid: null,
       enable_mentions: false,
@@ -32,14 +51,42 @@ export const handlers: Handlers = {
     });
 
     await simpleX.sendMessage(
-      r.contact.contactId,
+      contactId,
       'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?'
     );
 
     await simpleX.db.createConversation({
-      contact_id: r.contact.contactId,
+      contact_id: contactId,
       data: { step: 'waiting-for-username', forum_username: null, forum_user_uid: null }
     });
+  },
+  contactConnected: async (r: CRContactConnected, simpleX) => {
+    const { contactId } = r.contact;
+    await simpleX.addConnectedUser(contactId);
+  },
+  contactsDisconnected: async (r: CRContactsDisconnected, simpleX) => {
+    for (const contactRef of r.contactRefs) {
+      await simpleX.removeConnectedUser(contactRef.contactId);
+    }
+  },
+  contactsSubscribed: async (r: CRContactsSubscribed, simpleX) => {
+    for (const contactRef of r.contactRefs) {
+      await simpleX.addConnectedUser(contactRef.contactId);
+    }
+  },
+  chatItemsStatusesUpdated: async () => {},
+  contactSubSummary: async (r: CRContactSubSummary, simpleX) => {
+    for (const contact of r.contactSubscriptions) {
+      await simpleX.addConnectedUser(contact.contactId);
+    }
+  },
+  pendingSubSummary: async () => {},
+  acceptingContactRequest: async () => {},
+  memberSubSummary: async () => {},
+  chatError: async (r: CRChatError) => {
+    if (r.chatError.type === 'error') {
+      logger.warn({ type: r.chatError, error: r.chatError }, 'Chat error');
+    }
   },
   newChatItems: async (r: CRNewChatItems, simpleX) => {
     for (const chatItem of r.chatItems) {
@@ -49,6 +96,11 @@ export const handlers: Handlers = {
 
       const { contactId } = chatItem.chatInfo.contact;
       const { text } = chatItem.chatItem.content.msgContent;
+
+      if (!simpleX.connectedUsers.has(contactId)) {
+        simpleX.connectedUsers.add(contactId);
+        logger.info({ contactId }, `Contact ${contactId} connected`);
+      }
 
       logger.info({ contactId, text }, 'New chat message');
 
@@ -350,6 +402,7 @@ export const handlers: Handlers = {
     await simpleX.db.deleteConversation(r.contact.contactId);
     await simpleX.db.deleteUser(r.contact.contactId);
 
+    simpleX.connectedUsers.delete(r.contact.contactId);
     logger.info({ contactId: r.contact.contactId }, 'Contact deleted');
   }
 };

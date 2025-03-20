@@ -11,7 +11,7 @@ import { getRepository, MoreThan, MoreThanOrEqual, Repository } from 'typeorm';
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import pluralize from 'pluralize';
 import redis from '##/shared/services/redis';
-import { AChatItem } from 'simplex-chat/dist/response';
+import { hasNotificationMessageSent } from './utils';
 
 const userNextSponsorMap = new Map();
 
@@ -20,14 +20,6 @@ function getSponsorPhrase(contactId: number) {
   userNextSponsorMap.set(contactId, sponsorIndex + 1);
 
   return sponsorTextsForSimpleX[sponsorIndex % sponsorTextsForSimpleX.length];
-}
-
-function hasNotificationMessageSent(msg: AChatItem) {
-  const sent = msg.chatItem.meta.itemStatus.type === 'sndNew' || msg.chatItem.meta.itemStatus.type === 'sndSent';
-  if (!sent) {
-    logger.warn({ msg }, 'Notification message not sent');
-  }
-  return sent;
 }
 
 class Checker {
@@ -45,7 +37,7 @@ class Checker {
     this.lastPostId = 0;
     this.lastMeritDate = sub(new Date(), { hours: 24 });
 
-    logger.info({ lastPostId: this.lastPostId, lastMeritDate: this.lastMeritDate }, 'Starting checker');
+    logger.info({ lastPostId: this.lastPostId, lastMeritDate: this.lastMeritDate }, 'Checker initialized');
   }
 
   private filterPostContent(content: string): string {
@@ -115,17 +107,27 @@ class Checker {
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        const msg = await this.simpleX.sendMessage(
-          user.contact_id,
-          `💬 Mentioned by *${post.author}* in *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(post.content)
-            .substring(0, 150)
-            .trim()}..._${getSponsorPhrase(user.contact_id)}`
-        )
+        const messageText = `💬 Mentioned by *${post.author}* in *${
+          post.title
+        }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
+          user.contact_id
+        )}`;
+        const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
         if (hasNotificationMessageSent(msg[0])) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.MENTION,
-            key
+            key,
+            message: messageText,
+            sent: true
+          });
+        } else {
+          await this.simpleX.db.createNotification({
+            contact_id: user.contact_id,
+            type: NotificationType.MENTION,
+            key,
+            message: messageText,
+            sent: false
           });
         }
         notifiedSet.add(`${user.contact_id}:${post.post_id}`);
@@ -150,19 +152,27 @@ class Checker {
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        const msg = await this.simpleX.sendMessage(
-          user.contact_id,
-          `👤 New reply by *${post.author}* on tracked user *${post.title}* \n\n${postUrl}\n\n_${this.filterPostContent(
-            post.content
-          )
-            .substring(0, 150)
-            .trim()}..._${getSponsorPhrase(user.contact_id)}`
-        );
+        const messageText = `👤 New reply by *${post.author}* on tracked user *${
+          post.title
+        }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
+          user.contact_id
+        )}`;
+        const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
         if (hasNotificationMessageSent(msg[0])) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_USER,
-            key
+            key,
+            message: messageText,
+            sent: true
+          });
+        } else {
+          await this.simpleX.db.createNotification({
+            contact_id: user.contact_id,
+            type: NotificationType.TRACKED_USER,
+            key,
+            message: messageText,
+            sent: false
           });
         }
         notifiedSet.add(`${user.contact_id}:${post.post_id}`);
@@ -187,19 +197,27 @@ class Checker {
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        const msg = await this.simpleX.sendMessage(
-          user.contact_id,
-          `📄 New reply by *${post.author}* on tracked topic *${
-            post.title
-          }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
-            user.contact_id
-          )}`
-        );
+        const messageText = `📄 New reply by *${post.author}* on tracked topic *${
+          post.title
+        }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
+          user.contact_id
+        )}`;
+        const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
         if (hasNotificationMessageSent(msg[0])) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_TOPIC,
-            key
+            key,
+            message: messageText,
+            sent: true
+          });
+        } else {
+          await this.simpleX.db.createNotification({
+            contact_id: user.contact_id,
+            type: NotificationType.TRACKED_TOPIC,
+            key,
+            message: messageText,
+            sent: false
           });
         }
         notifiedSet.add(`${user.contact_id}:${post.post_id}`);
@@ -233,19 +251,27 @@ class Checker {
             user.contact_id
           )}`
         );
-        const msg = await this.simpleX.sendMessage(
-          user.contact_id,
-          `🔠 Found tracked phrase *${trackedPhrase.phrase}* by *${post.author}* in *${
-            post.title
-          }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
-            user.contact_id
-          )}`
-        );
+        const messageText = `🔠 Found tracked phrase *${trackedPhrase.phrase}* by *${post.author}* in *${
+          post.title
+        }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
+          user.contact_id
+        )}`;
+        const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
         if (hasNotificationMessageSent(msg[0])) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_PHRASE,
-            key
+            key,
+            message: messageText,
+            sent: true
+          });
+        } else {
+          await this.simpleX.db.createNotification({
+            contact_id: user.contact_id,
+            type: NotificationType.TRACKED_PHRASE,
+            key,
+            message: messageText,
+            sent: false
           });
         }
         notifiedSet.add(`${user.contact_id}:${post.post_id}`);
@@ -277,17 +303,25 @@ class Checker {
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${merit.topic_id}.msg${merit.post_id}#msg${merit.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 24 * 1000);
-        const msg = await this.simpleX.sendMessage(
-          user.contact_id,
-          `⭐️ Received *${merit.amount}* ${pluralize('merit', merit.amount)} by *${merit.sender}* for *${
-            merit.post.title
-          }* \n\n${postUrl}${getSponsorPhrase(user.contact_id)}`
-        );
+        const messageText = `⭐️ Received *${merit.amount}* ${pluralize('merit', merit.amount)} by *${
+          merit.sender
+        }* for *${merit.post.title}* \n\n${postUrl}${getSponsorPhrase(user.contact_id)}`;
+        const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
         if (hasNotificationMessageSent(msg[0])) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.MERIT,
-            key
+            key,
+            message: messageText,
+            sent: true
+          });
+        } else {
+          await this.simpleX.db.createNotification({
+            contact_id: user.contact_id,
+            type: NotificationType.MERIT,
+            key,
+            message: messageText,
+            sent: false
           });
         }
       }
