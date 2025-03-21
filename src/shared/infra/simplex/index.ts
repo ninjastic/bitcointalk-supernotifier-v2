@@ -100,13 +100,16 @@ export class SimpleX {
 
   async sendMessage(contactId: number, text: string) {
     logger.info({ contactId, text }, 'Sending bot message');
-    
+
     if (!this.connectedUsers.has(contactId)) {
       logger.warn({ contactId }, 'Contact not connected');
       return [];
     }
 
-    return this.chat.apiSendTextMessage(ChatType.Direct, contactId, text);
+    return this.chat.apiSendTextMessage(ChatType.Direct, contactId, text).catch(err => {
+      logger.error({ err, contactId, text }, 'Error when sending message');
+      return [];
+    });
   }
 
   async addConnectedUser(contactId: number) {
