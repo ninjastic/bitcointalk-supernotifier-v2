@@ -225,11 +225,7 @@ class Db {
   }
 
   async createNotification(notification: Omit<Notification, 'id' | 'created_at'>): Promise<void> {
-    await this.db<Notification>('notifications').insert({
-      contact_id: notification.contact_id,
-      type: notification.type,
-      key: notification.key
-    });
+    await this.db<Notification>('notifications').insert(notification);
   }
 
   async updateNotification(id: number, notification: Partial<Omit<Notification, 'id' | 'created_at'>>): Promise<void> {
