@@ -6,6 +6,7 @@ export type SimpleXUser = {
   forum_user_uid: number | null;
   enable_mentions: boolean;
   enable_merits: boolean;
+  only_direct: boolean;
   deleted_at: string | null;
   created_at: string;
 };
@@ -107,6 +108,7 @@ class Db {
         table.integer('forum_user_uid');
         table.boolean('enable_mentions').defaultTo(false);
         table.boolean('enable_merits').defaultTo(false);
+        table.boolean('only_direct').defaultTo(false);
         table.timestamp('deleted_at').nullable();
         table.timestamp('created_at').defaultTo(this.db.fn.now());
       });

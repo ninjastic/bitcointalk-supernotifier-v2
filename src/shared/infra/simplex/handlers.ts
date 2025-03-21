@@ -47,7 +47,8 @@ export const handlers: Handlers = {
       forum_username: null,
       forum_user_uid: null,
       enable_mentions: false,
-      enable_merits: false
+      enable_merits: false,
+      only_direct: false
     });
 
     await simpleX.sendMessage(
@@ -180,6 +181,7 @@ export const handlers: Handlers = {
             const commands = [
               '*/mentions* - Toggle mention notifications',
               '*/merits* - Toggle merit notifications',
+              '*/only_direct* - Toggle only direct mentions (@username) and quotes',
               '',
               '*/topic ID* - Adds tracked topic',
               '*/del_topic ID* - Deletes a tracked topic',
@@ -248,6 +250,14 @@ export const handlers: Handlers = {
             await simpleX.sendMessage(
               contactId,
               `Merits notifications are now *${user.enable_merits ? 'disabled' : 'enabled'}*`
+            );
+            break;
+          }
+          case '/only_direct': {
+            await simpleX.db.updateUser(contactId, { only_direct: !user.only_direct });
+            await simpleX.sendMessage(
+              contactId,
+              `Only direct mentions and quotes are now *${user.only_direct ? 'disabled' : 'enabled'}*`
             );
             break;
           }
