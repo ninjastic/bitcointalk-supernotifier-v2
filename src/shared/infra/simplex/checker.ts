@@ -152,7 +152,7 @@ class Checker {
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        const messageText = `👤 New reply by *${post.author}* on tracked user *${
+        const messageText = `👤 New reply by tracked user *${post.author}* on *${
           post.title
         }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
           user.contact_id
