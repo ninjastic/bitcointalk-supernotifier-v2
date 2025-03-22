@@ -243,14 +243,6 @@ class Checker {
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
         await redis.set(key, '1', 'EX', 60 * 30 * 1000);
-        await this.simpleX.sendMessage(
-          user.contact_id,
-          `🔠 Found tracked phrase *${trackedPhrase.phrase}* by *${post.author}* in *${
-            post.title
-          }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
-            user.contact_id
-          )}`
-        );
         const messageText = `🔠 Found tracked phrase *${trackedPhrase.phrase}* by *${post.author}* in *${
           post.title
         }* \n\n${postUrl}\n\n_${this.filterPostContent(post.content).substring(0, 150).trim()}..._${getSponsorPhrase(
