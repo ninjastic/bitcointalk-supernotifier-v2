@@ -39,6 +39,13 @@ export type IgnoredUser = {
   created_at: string;
 };
 
+export type IgnoredTopic = {
+  id: number;
+  contact_id: number;
+  topic_id: number;
+  created_at: string;
+};
+
 export type RawConversation = {
   id: number;
   contact_id: number;
@@ -183,6 +190,17 @@ class Db {
       });
     }
 
+    const ignoredTopicTableExists = await this.db.schema.hasTable('ignored_topics');
+
+    if (!ignoredTopicTableExists) {
+      await this.db.schema.createTable('ignored_topics', table => {
+        table.increments('id').primary();
+        table.integer('contact_id').notNullable();
+        table.integer('topic_id').notNullable();
+        table.timestamp('created_at').defaultTo(this.db.fn.now());
+      });
+    }
+
     const lastCheckedTableExists = await this.db.schema.hasTable('last_checked');
 
     if (!lastCheckedTableExists) {
@@ -231,9 +249,7 @@ class Db {
   }
 
   async updateNotification(id: number, notification: Partial<Omit<Notification, 'id' | 'created_at'>>): Promise<void> {
-    await this.db<Notification>('notifications')
-      .where({ id })
-      .update(notification);
+    await this.db<Notification>('notifications').where({ id }).update(notification);
   }
 
   async getUser(contact_id: number): Promise<SimpleXUser | undefined> {
@@ -328,6 +344,27 @@ class Db {
 
   async getTrackedTopics(where: Partial<TrackedTopic> = {}): Promise<TrackedTopic[]> {
     return (await this.db<TrackedTopic>('tracked_topics').where(where)) as TrackedTopic[];
+  }
+
+  async createIgnoredTopic(ignoredTopic: Omit<IgnoredTopic, 'id' | 'created_at'>): Promise<void> {
+    await this.db<IgnoredTopic>('ignored_topics').insert({
+      contact_id: ignoredTopic.contact_id,
+      topic_id: ignoredTopic.topic_id
+    });
+  }
+
+  async deleteIgnoredTopic(contact_id: number, topic_id: number): Promise<void> {
+    await this.db<IgnoredTopic>('ignored_topics').where({ contact_id, topic_id }).delete();
+  }
+
+  async getIgnoredTopic(contact_id: number, topic_id: number): Promise<IgnoredTopic | undefined> {
+    return (await this.db<IgnoredTopic>('ignored_topics').where({ contact_id, topic_id }).first()) as
+      | IgnoredTopic
+      | undefined;
+  }
+
+  async getIgnoredTopics(where: Partial<IgnoredTopic> = {}): Promise<IgnoredTopic[]> {
+    return (await this.db<IgnoredTopic>('ignored_topics').where(where)) as IgnoredTopic[];
   }
 
   async createTrackedUser(trackedUser: Omit<TrackedUser, 'id' | 'created_at'>): Promise<void> {

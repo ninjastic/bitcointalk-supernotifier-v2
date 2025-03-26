@@ -187,6 +187,10 @@ export const handlers: Handlers = {
               '*/del_topic ID* - Deletes a tracked topic',
               '*/list_topics* - Lists tracked topics',
               '',
+              '*/ignoretopic ID* - Adds tracked topic',
+              '*/del_ignoretopic ID* - Deletes a tracked topic',
+              '*/list_ignoretopics* - Lists tracked topics',
+              '',
               '*/phrase TEXT* - Adds tracked phrase',
               '*/del_phrase TEXT* - Deletes a tracked phrase',
               '*/list_phrases* - Lists tracked phrases',
@@ -302,6 +306,50 @@ export const handlers: Handlers = {
 
               await simpleX.db.deleteTrackedTopic(contactId, topicId);
               await simpleX.sendMessage(contactId, `Topic *${topicId}* is no longer being tracked`);
+            }
+            break;
+          }
+
+          case '/ignoretopic': {
+            if (command[2]) {
+              let topicId = Number(command[2]);
+
+              if (Number.isNaN(topicId)) {
+                const urlRegex = /topic=(\d+)/;
+                const match = text.match(urlRegex);
+                if (match && match[1]) {
+                  topicId = Number(match[1]);
+                } else {
+                  await simpleX.sendMessage(contactId, `Error: Provided topic is invalid`);
+                  break;
+                }
+              }
+
+              const isExistent = await simpleX.db.getIgnoredTopic(contactId, topicId);
+              if (isExistent) {
+                await simpleX.sendMessage(contactId, `Error: Topic *${topicId}* already being ignored`);
+                break;
+              }
+
+              await simpleX.db.createIgnoredTopic({ contact_id: contactId, topic_id: topicId });
+              await simpleX.sendMessage(contactId, `Topic *${topicId}* is now being ignored`);
+            }
+            break;
+          }
+          case '/list_ignoretopics': {
+            const ignoredTopics = await simpleX.db.getIgnoredTopics({ contact_id: contactId });
+            await simpleX.sendMessage(
+              contactId,
+              `Ignored topics: ${ignoredTopics.map(topic => `*${topic.topic_id}*`).join(', ')}`
+            );
+            break;
+          }
+          case '/del_ignoredtopic': {
+            if (command[2]) {
+              const topicId = Number(command[2]);
+
+              await simpleX.db.deleteIgnoredTopic(contactId, topicId);
+              await simpleX.sendMessage(contactId, `Topic *${topicId}* is no longer being ignored`);
             }
             break;
           }

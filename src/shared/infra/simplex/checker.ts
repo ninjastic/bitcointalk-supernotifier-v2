@@ -81,6 +81,7 @@ class Checker {
     const trackedTopics = await this.simpleX.db.getTrackedTopics();
     const trackedUsers = await this.simpleX.db.getTrackedUsers();
     const ignoredUsers = await this.simpleX.db.getIgnoredUsers();
+    const ignoredTopics = await this.simpleX.db.getIgnoredTopics();
 
     let users = await this.simpleX.db.getUsers({ enable_mentions: true });
 
@@ -88,13 +89,15 @@ class Checker {
 
     for (const post of posts) {
       logger.debug(`Checking post ${post.post_id}`);
-      const ignoringPostUser = ignoredUsers.filter(ignoredUser => ignoredUser.username.toLowerCase() === post.author);
+      const ignoringPostAuthor = ignoredUsers.filter(ignoredUser => ignoredUser.username.toLowerCase() === post.author);
+      const ignoringPostTopic = ignoredTopics.filter(ignoredTopic => ignoredTopic.topic_id === post.topic_id);
 
       for (const user of users) {
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
         if (!isUserMentionedInPost(post, { username: user.forum_username }, user.only_direct)) continue;
         if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
-        if (ignoringPostUser.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
+        if (ignoringPostAuthor.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
+        if (ignoringPostTopic.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
         if (await redis.get(key)) continue;
         const notificationExists = await this.simpleX.db.getNotifications({
           contact_id: user.contact_id,
@@ -138,6 +141,7 @@ class Checker {
         const user = await this.simpleX.db.getUser(trackedUser.contact_id);
         if (!user) continue;
         if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (ignoringPostTopic.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
         if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
 
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
@@ -183,7 +187,7 @@ class Checker {
         const user = await this.simpleX.db.getUser(trackedTopic.contact_id);
         if (!user) continue;
         if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
-        if (ignoringPostUser.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
+        if (ignoringPostAuthor.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
         if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
         if (await redis.get(key)) continue;
@@ -229,7 +233,8 @@ class Checker {
         const user = await this.simpleX.db.getUser(trackedPhrase.contact_id);
         if (!user) continue;
         if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
-        if (ignoringPostUser.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
+        if (ignoringPostAuthor.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
+        if (ignoringPostTopic.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
         if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
         if (await redis.get(key)) continue;
