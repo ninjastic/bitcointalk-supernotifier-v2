@@ -307,7 +307,7 @@ class Db {
   async createTrackedPhrase(trackedPhrase: Omit<TrackedPhrase, 'id' | 'created_at'>): Promise<void> {
     await this.db<TrackedPhrase>('tracked_phrases').insert({
       contact_id: trackedPhrase.contact_id,
-      phrase: trackedPhrase.phrase
+      phrase: trackedPhrase.phrase.toLowerCase()
     });
   }
 
@@ -370,16 +370,16 @@ class Db {
   async createTrackedUser(trackedUser: Omit<TrackedUser, 'id' | 'created_at'>): Promise<void> {
     await this.db<TrackedUser>('tracked_users').insert({
       contact_id: trackedUser.contact_id,
-      username: trackedUser.username
+      username: trackedUser.username.toLowerCase()
     });
   }
 
   async deleteTrackedUser(contact_id: number, username: string): Promise<void> {
-    await this.db<TrackedUser>('tracked_users').where({ contact_id, username }).delete();
+    await this.db<TrackedUser>('tracked_users').where({ contact_id, username: username.toLowerCase() }).delete();
   }
 
   async getTrackedUser(contact_id: number, username: string): Promise<TrackedUser | undefined> {
-    return (await this.db<TrackedUser>('tracked_users').where({ contact_id, username }).first()) as
+    return (await this.db<TrackedUser>('tracked_users').where({ contact_id, username: username.toLowerCase() }).first()) as
       | TrackedUser
       | undefined;
   }

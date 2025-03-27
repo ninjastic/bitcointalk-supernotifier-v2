@@ -357,15 +357,16 @@ export const handlers: Handlers = {
           case '/phrase': {
             if (command[2]) {
               const phrase = command[2];
+              const lowercasePhrase = phrase.toLowerCase()
 
-              const isExistent = await simpleX.db.getTrackedPhrase(contactId, phrase);
+              const isExistent = await simpleX.db.getTrackedPhrase(contactId, lowercasePhrase);
               if (isExistent) {
-                await simpleX.sendMessage(contactId, `Error: Phrase *${phrase}* already being tracked`);
+                await simpleX.sendMessage(contactId, `Error: Phrase *${lowercasePhrase}* already being tracked`);
                 break;
               }
 
-              await simpleX.db.createTrackedPhrase({ contact_id: contactId, phrase });
-              await simpleX.sendMessage(contactId, `Phrase *${phrase}* is now being tracked`);
+              await simpleX.db.createTrackedPhrase({ contact_id: contactId, phrase: lowercasePhrase });
+              await simpleX.sendMessage(contactId, `Phrase *${lowercasePhrase}* is now being tracked`);
             }
             break;
           }
@@ -380,8 +381,9 @@ export const handlers: Handlers = {
           case '/del_phrase': {
             if (command[2]) {
               const phrase = command[2];
+              const lowercasePhrase = phrase.toLowerCase()
 
-              await simpleX.db.deleteTrackedPhrase(contactId, phrase);
+              await simpleX.db.deleteTrackedPhrase(contactId, lowercasePhrase);
               await simpleX.sendMessage(contactId, `Phrase *${phrase}* is no longer being tracked`);
             }
             break;
@@ -390,15 +392,16 @@ export const handlers: Handlers = {
           case '/user': {
             if (command[2]) {
               const username = command[2];
+              const lowercaseUser = username.toLowerCase()
 
-              const isExistent = await simpleX.db.getTrackedUser(contactId, username);
+              const isExistent = await simpleX.db.getTrackedUser(contactId, lowercaseUser);
               if (isExistent) {
-                await simpleX.sendMessage(contactId, `Error: User *${username}* already being tracked`);
+                await simpleX.sendMessage(contactId, `Error: User *${lowercaseUser}* already being tracked`);
                 break;
               }
 
-              await simpleX.db.createTrackedUser({ contact_id: contactId, username });
-              await simpleX.sendMessage(contactId, `User *${username}* is now being tracked`);
+              await simpleX.db.createTrackedUser({ contact_id: contactId, username: lowercaseUser });
+              await simpleX.sendMessage(contactId, `User *${lowercaseUser}* is now being tracked`);
             }
             break;
           }
@@ -413,9 +416,10 @@ export const handlers: Handlers = {
           case '/del_user': {
             if (command[2]) {
               const username = command[2];
+              const lowercaseUser = username.toLowerCase()
 
-              await simpleX.db.deleteTrackedUser(contactId, username);
-              await simpleX.sendMessage(contactId, `User *${username}* is no longer being tracked`);
+              await simpleX.db.deleteTrackedUser(contactId, lowercaseUser);
+              await simpleX.sendMessage(contactId, `User *${lowercaseUser}* is no longer being tracked`);
             }
             break;
           }
@@ -423,15 +427,16 @@ export const handlers: Handlers = {
           case '/ignoreuser': {
             if (command[2]) {
               const username = command[2];
+              const lowercaseUser = username.toLowerCase()
 
-              const isExistent = await simpleX.db.getIgnoredUser(contactId, username);
+              const isExistent = await simpleX.db.getIgnoredUser(contactId, lowercaseUser);
               if (isExistent) {
-                await simpleX.sendMessage(contactId, `Error: User *${username}* already being ignored`);
+                await simpleX.sendMessage(contactId, `Error: User *${lowercaseUser}* already being ignored`);
                 break;
               }
 
-              await simpleX.db.createIgnoredUser({ contact_id: contactId, username });
-              await simpleX.sendMessage(contactId, `User *${username}* is now being ignored`);
+              await simpleX.db.createIgnoredUser({ contact_id: contactId, username: lowercaseUser });
+              await simpleX.sendMessage(contactId, `User *${lowercaseUser}* is now being ignored`);
             }
             break;
           }
@@ -446,9 +451,10 @@ export const handlers: Handlers = {
           case '/del_ignoreuser': {
             if (command[2]) {
               const username = command[2];
+              const lowercaseUser = username.toLowerCase()
 
-              await simpleX.db.deleteIgnoredUser(contactId, username);
-              await simpleX.sendMessage(contactId, `User *${username}* is no longer being ignored`);
+              await simpleX.db.deleteIgnoredUser(contactId, lowercaseUser);
+              await simpleX.sendMessage(contactId, `User *${lowercaseUser}* is no longer being ignored`);
             }
             break;
           }
