@@ -86,7 +86,7 @@ export default class SendTrackedUserNotificationService {
     return (
       `👤 There is a new post by the tracked user <b>${escape(author)}</b>: ` +
       `<a href="${postUrl}">${escape(title)}</a>\n\n` +
-      `<b>SuperNotifier Ninja-AI:</b> ${jokeMessage}` +
+      `<a href="https://bitcointalk.org/index.php?topic=5248878.msg65230609#msg65230609">SuperNotifier Ninja-AI:</a> ${jokeMessage}` +
       sponsor
     );
   }

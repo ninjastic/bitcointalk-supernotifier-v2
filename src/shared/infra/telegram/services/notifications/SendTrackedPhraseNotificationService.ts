@@ -96,7 +96,7 @@ export default class SendTrackedPhraseNotificationService {
       `🔠 New post with matched phrase <b>${phrase}</b> ` +
       `by <b>${escape(author)}</b> ` +
       `in the topic <a href="${postUrl}">${escape(title)}</a>\n\n` +
-      `<b>SuperNotifier Ninja-AI:</b> ${jokeMessage}` +
+      `<a href="https://bitcointalk.org/index.php?topic=5248878.msg65230609#msg65230609">SuperNotifier Ninja-AI:</a> ${jokeMessage}` +
       sponsor
     );
   }

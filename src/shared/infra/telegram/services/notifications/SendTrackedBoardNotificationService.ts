@@ -87,7 +87,7 @@ export default class SendTrackedBoardNotificationService {
       `📝 There is a new topic by <b>${escape(author)}</b> ` +
       `in the tracked board <b>${board.name}</b>: ` +
       `<a href="${postUrl}">${escape(title)}</a>\n\n` +
-      `<b>SuperNotifier Ninja-AI:</b> ${jokeMessage}` +
+      `<a href="https://bitcointalk.org/index.php?topic=5248878.msg65230609#msg65230609">SuperNotifier Ninja-AI:</a> ${jokeMessage}` +
       sponsor
     );
   }

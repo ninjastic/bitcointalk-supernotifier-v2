@@ -105,7 +105,7 @@ export default class SendMeritNotificationService {
       }You received <b>${amount}</b> ${pluralize('merit', amount)} ` +
       `from <b>${escape(sender)}</b> ` +
       `for <a href="${postUrl}">${escape(title)}</a>\n\n` +
-      `<b>SuperNotifier Ninja-AI:</b> ${jokeMessage}` +
+      `<a href="https://bitcointalk.org/index.php?topic=5248878.msg65230609#msg65230609">SuperNotifier Ninja-AI:</a> ${jokeMessage}` +
       sponsor
     );
   }
