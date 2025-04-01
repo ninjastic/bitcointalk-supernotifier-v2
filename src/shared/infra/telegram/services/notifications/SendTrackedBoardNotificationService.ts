@@ -8,7 +8,7 @@ import TelegramBot from '##/shared/infra/telegram/bot';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import TrackedBoard from '##/modules/posts/infra/typeorm/entities/TrackedBoard';
 
-import { checkBotNotificationError } from '##/shared/services/utils';
+import { checkBotNotificationError, isAprilFools } from '##/shared/services/utils';
 import SetPostNotifiedService from '##/modules/posts/services/SetPostNotifiedService';
 import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 import { NotificationService } from '##/modules/posts/services/notification-service';
@@ -17,6 +17,7 @@ import {
   TrackedBoardNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
+import { sarcasticAprilFoolsMessage } from '##/shared/services/ai';
 
 type TrackedBoardNotificationData = {
   bot: TelegramBot;
@@ -62,6 +63,35 @@ export default class SendTrackedBoardNotificationService {
     );
   }
 
+  private async buildNotificationMessageAprilFools(
+    post: Post,
+    trackedBoard: TrackedBoard,
+    postLength: number,
+    telegramId: string
+  ): Promise<string> {
+    const { author, title, content, topic_id, post_id } = post;
+    const { board } = trackedBoard;
+    const contentFiltered = this.filterPostContent(content);
+
+    const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
+    const sponsor = getSponsorPhrase(telegramId);
+
+    const jokeMessage = await sarcasticAprilFoolsMessage(
+      `📝 There is a new topic by <b>${escape(author)}</b> ` +
+        `in the tracked board <b>${board.name}</b>: ` +
+        `<a href="${postUrl}">${escape(title)}</a>\n` +
+        contentFiltered
+    );
+
+    return (
+      `📝 There is a new topic by <b>${escape(author)}</b> ` +
+      `in the tracked board <b>${board.name}</b>: ` +
+      `<a href="${postUrl}">${escape(title)}</a>\n\n` +
+      `<b>SuperNotifier Ninja-AI:</b> ${jokeMessage}` +
+      sponsor
+    );
+  }
+
   private async createNotification(
     telegram_id: string,
     metadata: { post_id: number; board_id: number }
@@ -83,7 +113,13 @@ export default class SendTrackedBoardNotificationService {
       const { post_id } = post;
       const { board } = trackedBoard;
 
-      message = await this.buildNotificationMessage(post, trackedBoard, postLength, telegramId);
+      const aprilFools = isAprilFools();
+
+      if (aprilFools) {
+        message = await this.buildNotificationMessageAprilFools(post, trackedBoard, postLength, telegramId);
+      } else {
+        message = await this.buildNotificationMessage(post, trackedBoard, postLength, telegramId);
+      }
 
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
         parse_mode: 'HTML',

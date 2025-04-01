@@ -14,8 +14,9 @@ import logger from '../../../../services/logger';
 import Post from '../../../../../modules/posts/infra/typeorm/entities/Post';
 
 import SetPostNotifiedService from '../../../../../modules/posts/services/SetPostNotifiedService';
-import { checkBotNotificationError } from '../../../../services/utils';
+import { checkBotNotificationError, isAprilFools } from '../../../../services/utils';
 import ICacheProvider from '../../../../container/providers/models/ICacheProvider';
+import { sarcasticAprilFoolsMessage } from '##/shared/services/ai';
 
 type TrackedTopicNotificationData = {
   bot: TelegramBot;
@@ -51,7 +52,7 @@ export default class SendTrackedTopicNotificationService {
     });
   }
 
-  private buildMessage(post: Post, postLength: number, telegramId: string): string {
+  private async buildNotificationMessage(post: Post, postLength: number, telegramId: string): Promise<string> {
     const { author, title, content, post_id, topic_id } = post;
 
     const escapedAuthor = escape(author);
@@ -69,12 +70,51 @@ export default class SendTrackedTopicNotificationService {
     );
   }
 
+  private async buildNotificationMessageAprilFools(
+    post: Post,
+    postLength: number,
+    telegramId: string
+  ): Promise<string> {
+    const { author, title, content, post_id, topic_id } = post;
+
+    const escapedAuthor = escape(author);
+    const escapedTitle = escape(title);
+    const contentFiltered = this.filterPostContent(content);
+    const truncatedContent =
+      escape(contentFiltered.substring(0, postLength)) + (contentFiltered.length > postLength ? '...' : '');
+    const sponsor = getSponsorPhrase(telegramId);
+
+    const jokeMessage = await sarcasticAprilFoolsMessage(
+      `📄 There is a new reply by <b>${escapedAuthor}</b> ` +
+        `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">` +
+        `${escapedTitle}</a>\n` +
+        contentFiltered
+    );
+
+    return (
+      `📄 There is a new reply by <b>${escapedAuthor}</b> ` +
+      `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">` +
+      `${escapedTitle}</a>\n\n` +
+      `<b>SuperNotifier Ninja-AI:</b> ${jokeMessage}` +
+      sponsor
+    );
+  }
+
   public async execute({ bot, telegramId, post }: TrackedTopicNotificationData): Promise<boolean> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
 
+    let message: string;
+
     const { post_id } = post;
     const postLength = await this.getPostLength(telegramId);
-    const message = this.buildMessage(post, postLength, telegramId);
+
+    const aprilFools = isAprilFools();
+
+    if (aprilFools) {
+      message = await this.buildNotificationMessageAprilFools(post, postLength, telegramId);
+    } else {
+      message = await this.buildNotificationMessage(post, postLength, telegramId);
+    }
 
     try {
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, {

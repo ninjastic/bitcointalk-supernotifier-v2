@@ -139,3 +139,14 @@ export function isValidPostgresInt(num: number) {
 
   return true;
 }
+
+export function isAprilFools() {
+  const currentDate = new Date();
+  const dia = currentDate.getDate();
+  const mes = currentDate.getMonth();
+  if (dia === 1 && mes === 3) {
+      return true;
+  } else {
+      return false;
+  }
+}

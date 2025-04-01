@@ -7,7 +7,7 @@ import TelegramBot from '##/shared/infra/telegram/bot';
 
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 
-import { checkBotNotificationError } from '##/shared/services/utils';
+import { checkBotNotificationError, isAprilFools } from '##/shared/services/utils';
 import SetPostNotifiedService from '##/modules/posts/services/SetPostNotifiedService';
 import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 import {
@@ -16,6 +16,7 @@ import {
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
 import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
+import { sarcasticAprilFoolsMessage } from '##/shared/services/ai';
 
 type TrackedUserNotificationData = {
   bot: TelegramBot;
@@ -66,12 +67,43 @@ export default class SendTrackedUserNotificationService {
     );
   }
 
+  private async buildNotificationMessageAprilFools(
+    post: Post,
+    postLength: number,
+    telegramId: string
+  ): Promise<string> {
+    const { topic_id, post_id, title, author, content } = post;
+    const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
+    const contentFiltered = this.filterPostContent(content);
+    const sponsor = getSponsorPhrase(telegramId);
+
+    const jokeMessage = await sarcasticAprilFoolsMessage(
+      `👤 There is a new post by the tracked user <b>${escape(author)}</b>: ` +
+        `<a href="${postUrl}">${escape(title)}</a>\n` +
+        contentFiltered
+    );
+
+    return (
+      `👤 There is a new post by the tracked user <b>${escape(author)}</b>: ` +
+      `<a href="${postUrl}">${escape(title)}</a>\n\n` +
+      `<b>SuperNotifier Ninja-AI:</b> ${jokeMessage}` +
+      sponsor
+    );
+  }
+
   public async execute({ bot, telegramId, post }: TrackedUserNotificationData): Promise<boolean> {
     let message: string;
 
     try {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
-      message = await this.buildNotificationMessage(post, postLength, telegramId);
+
+      const aprilFools = isAprilFools();
+
+      if (aprilFools) {
+        message = await this.buildNotificationMessageAprilFools(post, postLength, telegramId);
+      } else {
+        message = await this.buildNotificationMessage(post, postLength, telegramId);
+      }
 
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
         parse_mode: 'HTML',
