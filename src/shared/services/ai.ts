@@ -7,7 +7,7 @@ const openAi = createOpenAI({
   apiKey: process.env.OPENROUTER_APIKEY
 });
 
-const model = openAi('google/gemini-2.0-flash-001');
+const model = openAi('google/gemini-2.0-flash-lite-001');
 
 export async function sarcasticAprilFoolsMessage(content: string) {
   try {
