@@ -43,7 +43,7 @@ const processPost = (
       });
     } catch (error) {
       logger.error(
-        { error, post_id: post.post_id, telegram_id: trackedPhrase.user.telegram_id },
+        { error, postId: post.post_id, telegramId: trackedPhrase.user.telegram_id },
         `Error processing user ${trackedPhrase.user.telegram_id} for post ${post.post_id}`
       );
     }
@@ -65,7 +65,7 @@ export const telegramTrackedPhrasesChecker = async ({
       const notifications = processPost(post, trackedPhrases, ignoredUsers, ignoredTopics);
       data.push(...notifications);
     } catch (error) {
-      logger.error({ error, post_id: post.post_id }, `Error processing post ${post.post_id}`);
+      logger.error({ error, postId: post.post_id }, `Error processing post ${post.post_id}`);
     }
   }
 

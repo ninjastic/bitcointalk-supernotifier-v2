@@ -2144,6 +2144,11 @@
   resolved "https://registry.yarnpkg.com/@types/diff-match-patch/-/diff-match-patch-1.0.36.tgz#dcef10a69d357fe9d43ac4ff2eca6b85dbf466af"
   integrity sha512-xFdR6tkm0MWvBfO8xXCSsinYxHcqkQUlcHeSpMC2ukzOb6lwQAfDmW+Qt0AvlGd8HpsS28qKsB+oPeJn9I39jg==
 
+"@types/diff@^7.0.2":
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/@types/diff/-/diff-7.0.2.tgz#d638edebf3c97aa4962b6f1164a7921ab3de9f83"
+  integrity sha512-JSWRMozjFKsGlEjiiKajUjIJVKuKdE3oVy2DNtK+fUo8q82nhFZ2CPQwicAIkXrofahDXrWJ7mjelvZphMS98Q==
+
 "@types/engine.io@*":
   version "3.1.7"
   resolved "https://registry.yarnpkg.com/@types/engine.io/-/engine.io-3.1.7.tgz#86e541a5dc52fb7e97735383564a6ae4cfe2e8f5"
@@ -4288,6 +4293,11 @@ diff-sequences@^29.4.3:
   version "29.4.3"
   resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-29.4.3.tgz#9314bc1fabe09267ffeca9cbafc457d8499a13f2"
   integrity sha512-ofrBgwpPhCD85kMKtE9RYFFq6OC1A89oW2vvgWZNCwxrUpRUILopY7lsYyMDSjc8g6U6aiO0Qubg6r4Wgt5ZnA==
+
+diff@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/diff/-/diff-7.0.0.tgz#3fb34d387cd76d803f6eebea67b921dab0182a9a"
+  integrity sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==
 
 dir-glob@^3.0.1:
   version "3.0.1"
@@ -7819,6 +7829,11 @@ pino-http@^8.3.3:
     pino "^8.17.1"
     pino-std-serializers "^6.2.2"
     process-warning "^3.0.0"
+
+pino-noir@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/pino-noir/-/pino-noir-2.2.1.tgz#2f9bb51a8eacda976b26f412ed5af468d8f0106c"
+  integrity sha512-qGIG4fYMqokNb5Ho21YNH9uB4NELYTb9oADiuzoL2+n1gs6QyoUKaTN+7eqT4VDC6syvcyark3YP9o2UmCk32A==
 
 pino-pretty@^4.1.0:
   version "4.8.0"

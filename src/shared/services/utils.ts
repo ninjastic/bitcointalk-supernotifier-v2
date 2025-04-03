@@ -44,11 +44,11 @@ export async function checkBotNotificationError(error: any, telegram_id: string,
   ].some(patternMessage => errorMessage.match(new RegExp(patternMessage, 'i')));
 
   if (isBotBlocked) {
-    logger.info({ telegram_id, meta }, 'Telegram user marked as blocked');
+    logger.info({ telegramId: telegram_id, meta }, 'Telegram user marked as blocked');
     await setUserBlocked.execute(telegram_id);
     return true;
   }
-  logger.error({ error, telegram_id, meta }, 'Error while sending telegram message');
+  logger.error({ error, telegramId: telegram_id, meta }, 'Error while sending telegram message');
   return false;
 }
 
@@ -102,7 +102,7 @@ export const shouldNotifyUser = (
   return !(isSameUsername || isSameUid || isAuthorIgnored || isTopicIgnored || isUserBlocked);
 };
 
-export const isUserMentionedInPost = (post: Post, user: { username?: string; alternative_usernames?: string[] }, onlyDirectAndQuote?: boolean): boolean => {
+export const isUserMentionedInPost = (content: string, user: { username?: string; alternative_usernames?: string[] }, onlyDirectAndQuote?: boolean): boolean => {
   if (!user.username) return false;
   
   const regexList = []
@@ -122,7 +122,7 @@ export const isUserMentionedInPost = (post: Post, user: { username?: string; alt
     regexList.push(altUsernameRegex)
   }
 
-  return regexList.some(regex => regex && post.content.match(regex));
+  return regexList.some(regex => regex && content.match(regex));
 };
 
 export function isValidPostgresInt(num: number) {

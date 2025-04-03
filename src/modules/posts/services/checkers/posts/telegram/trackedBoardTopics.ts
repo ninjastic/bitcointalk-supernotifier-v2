@@ -71,7 +71,7 @@ const processTopic = async (
       });
     } catch (error) {
       logger.error(
-        { error, topic_id: topic.topic_id, telegram_id: trackedBoard.user.telegram_id },
+        { error, topicId: topic.topic_id, telegramId: trackedBoard.user.telegram_id },
         `Error processing user ${trackedBoard.user.telegram_id} for topic ${topic.topic_id}`
       );
     }
@@ -92,7 +92,7 @@ export const telegramTrackedBoardTopicsChecker = async ({
       const notifications = await processTopic(topic, trackedBoards, ignoredUsers);
       data.push(...notifications);
     } catch (error) {
-      logger.error({ error, topic_id: topic.topic_id }, `Error processing topic ${topic.topic_id}`);
+      logger.error({ error, topicId: topic.topic_id }, `Error processing topic ${topic.topic_id}`);
     }
   }
 

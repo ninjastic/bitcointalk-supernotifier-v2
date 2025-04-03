@@ -39,7 +39,7 @@ const processTopic = (topic: Topic, users: User[]): TelegramAutoTrackTopicsCheck
       });
     } catch (error) {
       logger.error(
-        { error, telegram_id: user.telegram_id, topic_id: topic.topic_id },
+        { error, telegramId: user.telegram_id, topicId: topic.topic_id },
         `Error processing user ${user.telegram_id} for topic ${topic.topic_id}`
       );
     }
@@ -59,7 +59,7 @@ export const telegramAutoTrackTopicsChecker = async ({
       const notifications = processTopic(topic, users);
       data.push(...notifications);
     } catch (error) {
-      logger.error({ error, topic_id: topic.topic_id }, `Error processing topic ${topic.id}`);
+      logger.error({ error, topicId: topic.topic_id }, `Error processing topic ${topic.id}`);
     }
   }
 

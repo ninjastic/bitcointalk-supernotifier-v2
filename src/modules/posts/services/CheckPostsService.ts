@@ -25,6 +25,9 @@ import { telegramTrackedBoardTopicsChecker } from './checkers/posts/telegram/tra
 import { telegramTrackedUserTopicsChecker } from './checkers/posts/telegram/trackedUserTopics';
 import { telegramAutoTrackTopicsChecker } from './checkers/posts/telegram/autoTrackTopics';
 import { NotificationResult, RecipeNames } from '../../../shared/infra/bull/types/telegram';
+import { getRepository, IsNull, MoreThanOrEqual, Not } from 'typeorm';
+import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+import { sub } from 'date-fns';
 
 type ProcessorCheckerPromise<T> = (data: T) => Promise<NotificationResult<any>[]>;
 
@@ -40,6 +43,8 @@ type ProcessorResult = NotificationResult<any>;
 
 @injectable()
 export default class CheckPostsService {
+  postsVersionRepository = getRepository(PostVersion);
+
   constructor(
     @inject('PostsRepository')
     private postsRepository: IPostsRepository,
@@ -65,6 +70,15 @@ export default class CheckPostsService {
     const ignoredUsers = await container.resolve(GetIgnoredUsersService).execute();
     const ignoredTopics = await container.resolve(GetIgnoredTopicsService).execute();
 
+    const postsVersions = await this.postsVersionRepository.find({
+      relations: ['post'],
+      where: {
+        new_content: Not(IsNull()),
+        deleted: false,
+        post: { date: MoreThanOrEqual(sub(new Date(), { minutes: 30 })) }
+      }
+    });
+
     return {
       posts,
       users,
@@ -74,7 +88,8 @@ export default class CheckPostsService {
       trackedPhrases,
       trackedTopics,
       ignoredUsers,
-      ignoredTopics
+      ignoredTopics,
+      postsVersions
     };
   }
 
@@ -104,7 +119,7 @@ export default class CheckPostsService {
     const isJobAlreadyInQueue = await this.cacheRepository.recover(notificationKey);
     if (isJobAlreadyInQueue) return false;
 
-    const redisAnswer = await this.cacheRepository.save(notificationKey, true, 'EX', 1800);
+    const redisAnswer = await this.cacheRepository.save(notificationKey, true, 'EX', 60 * 60 * 24);
     if (redisAnswer !== 'OK') {
       logger.error({ notificationKey, redisAnswer }, 'CheckPostsService Job lock did not return OK');
       return false;
@@ -150,7 +165,8 @@ export default class CheckPostsService {
         trackedPhrases,
         trackedTopics,
         ignoredUsers,
-        ignoredTopics
+        ignoredTopics,
+        postsVersions
       } = await this.fetchData();
 
       logger.debug({ postsCount: posts.length, usersCount: users.length }, 'Fetched data');
@@ -159,7 +175,7 @@ export default class CheckPostsService {
         {
           checkerPromise: telegramMentionsChecker,
           jobName: 'sendMentionNotification',
-          data: { posts, users, ignoredUsers, ignoredTopics }
+          data: { posts, users, ignoredUsers, ignoredTopics, postsVersions }
         } as Processor<typeof telegramMentionsChecker>,
 
         {

@@ -10,18 +10,15 @@ import logger from '../../../services/logger';
 import FindIgnoredTopicsByTelegramIdService from '../services/FindIgnoredTopicsByTelegramIdService';
 import AddIgnoredTopicService from '../../../../modules/posts/services/AddIgnoredTopicService';
 import RemoveIgnoredTopicService from '../../../../modules/posts/services/RemoveIgnoredTopicService';
-import GetPostService from '../../../../modules/posts/services/GetPostService';
+import getPost from '##/modules/posts/services/get-post';
 
 const ignoredTopicsMenu = new MenuTemplate<IMenuContext>(() => ({
   text: `<b>Ignored Topics</b>\n\nAdd or remove ignored topics so you don't get notifications from them.`,
   parse_mode: 'HTML'
 }));
 
-const getPostInfo = async (post_id: number) => {
-  const getPost = container.resolve(GetPostService);
-  const post = await getPost.execute({ post_id });
-
-  return post;
+const getPostInfo = async (postId: number) => {
+  return getPost({ postId, shouldCache: true, shouldScrape: false });
 };
 
 const ignoredTopicsMenuInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {

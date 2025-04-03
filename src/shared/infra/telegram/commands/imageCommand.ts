@@ -5,7 +5,8 @@ import { container } from 'tsyringe';
 import puppeteer from 'puppeteer';
 import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 import IMenuContext from '../@types/IMenuContext';
-import GetPostService from '../../../../modules/posts/services/GetPostService';
+import getPost from '##/modules/posts/services/get-post';
+import logger from '##/shared/services/logger';
 
 const imageCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
   if (!ctx.message.reply_to_message) {
@@ -23,13 +24,15 @@ const imageCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
     return;
   }
 
-  const getPostService = container.resolve(GetPostService);
-  let post: Post;
+  const post: Post | null = await getPost({ postId, shouldCache: true, shouldScrape: true })
+    .then(post => post)
+    .catch(async err => {
+      logger.warn({ err }, '[imageCommand] Failed getPost');
+      await ctx.reply(`Could not get post ${postId}, please contact TryNinja.`);
+      return null;
+    });
 
-  try {
-    post = await getPostService.execute({ post_id: postId });
-  } catch (error) {
-    await ctx.reply(`Could not get post ${postId}, please contact TryNinja.`);
+  if (!post) {
     return;
   }
 

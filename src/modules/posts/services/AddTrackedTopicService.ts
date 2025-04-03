@@ -3,9 +3,8 @@ import { injectable, inject } from 'tsyringe';
 import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 import ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
 
-import Post from '../infra/typeorm/entities/Post';
 import TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
-import forumScraperQueue, { queueEvents } from '../../../shared/infra/bull/queues/forumScraperQueue';
+import scrapeTopicJob from '##/modules/posts/infra/jobs/scrape-topic-job';
 
 @injectable()
 export default class AddTrackedTopicService {
@@ -39,8 +38,7 @@ export default class AddTrackedTopicService {
       return topicExists;
     }
 
-    const job = await forumScraperQueue.add('scrapeTopic', { topic_id }, { priority: 1 });
-    const topicPost: Post = await job.waitUntilFinished(queueEvents);
+    const { post: topicPost } = await scrapeTopicJob(topic_id)
 
     const trackedTopic = this.trackedTopicsRepository.create({
       post_id: topicPost.post_id,

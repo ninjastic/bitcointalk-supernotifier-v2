@@ -5,11 +5,11 @@ import { container } from 'tsyringe';
 import { getManager } from 'typeorm';
 
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';
-import ScrapePostService from '../../../modules/posts/services/ScrapePostService';
+import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+
+const postScraper = new PostScraper();
 
 export const scrapePostMenu = async (): Promise<void> => {
-  const scrapePost = container.resolve(ScrapePostService);
-
   await inquirer
     .prompt([
       {
@@ -24,7 +24,7 @@ export const scrapePostMenu = async (): Promise<void> => {
       }
     ])
     .then(async ({ data: [post_id] }) => {
-      const post = await scrapePost.execute({ post_id });
+      const { post } = await postScraper.scrapePost(post_id);
 
       if (!post) {
         console.info('Post not found!');

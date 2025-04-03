@@ -12,7 +12,7 @@ const telegramQueue = new Queue<RecipeMetadata[RecipeNames], any, RecipeNames>('
   }
 });
 
-export const addTelegramJob = <T extends RecipeNames>(recipe: T, data: RecipeMetadata[T]) =>
+export const addTelegramJob = async <T extends RecipeNames>(recipe: T, data: RecipeMetadata[T]) =>
   telegramQueue.add(recipe, data);
 
 export const queueEvents = new QueueEvents(telegramQueue.name, { connection: cacheConfig.config.redis });

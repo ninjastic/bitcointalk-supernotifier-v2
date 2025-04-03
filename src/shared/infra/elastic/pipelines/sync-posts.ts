@@ -188,6 +188,67 @@ export class SyncPostsPipeline {
               }
             },
             merits_sum: { type: 'integer' },
+            versions_count: { type: 'integer' },
+            versions: {
+              type: 'nested',
+              properties: {
+                id: { type: 'keyword' },
+                version_number: { type: 'integer' },
+                post_id: { type: 'integer' },
+                new_title: {
+                  type: 'text',
+                  fields: {
+                    keyword: { type: 'keyword' }
+                  }
+                },
+                new_content: {
+                  type: 'text',
+                  fields: {
+                    stripped: {
+                      type: 'text',
+                      analyzer: 'html_strip'
+                    }
+                  }
+                },
+                new_content_without_quotes: {
+                  type: 'text',
+                  fields: {
+                    stripped: {
+                      type: 'text',
+                      analyzer: 'html_strip'
+                    }
+                  }
+                },
+                quotes: {
+                  type: 'nested',
+                  properties: {
+                    author: {
+                      type: 'keyword',
+                      fields: {
+                        lowercase: {
+                          type: 'keyword',
+                          normalizer: 'lowercase_normalizer'
+                        }
+                      }
+                    },
+                    content: {
+                      type: 'text',
+                      fields: {
+                        stripped: {
+                          type: 'text',
+                          analyzer: 'html_strip'
+                        }
+                      }
+                    },
+                    topic_id: { type: 'integer' },
+                    post_id: { type: 'integer' }
+                  }
+                },
+                edit_date: { type: 'date' },
+                deleted: { type: 'boolean' },
+                created_at: { type: 'boolean' }
+              }
+            },
             updated_at: { type: 'date' }
           }
         }

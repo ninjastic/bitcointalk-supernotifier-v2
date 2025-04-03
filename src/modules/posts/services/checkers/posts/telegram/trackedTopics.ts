@@ -67,7 +67,7 @@ const processPost = async (
       });
     } catch (error) {
       logger.error(
-        { error, post_id: post.post_id, trackingTelegramId },
+        { error, postId: post.post_id, trackingTelegramId },
         `Error processing user ${trackingTelegramId} for post ${post.post_id}`
       );
     }
@@ -88,7 +88,7 @@ export const telegramTrackedTopicsChecker = async ({
       const notifications = await processPost(post, trackedTopics, ignoredUsers);
       data.push(...notifications);
     } catch (error) {
-      logger.error({ error, post_id: post.post_id }, `Error processing post ${post.post_id}`);
+      logger.error({ error, postId: post.post_id }, `Error processing post ${post.post_id}`);
     }
   }
 

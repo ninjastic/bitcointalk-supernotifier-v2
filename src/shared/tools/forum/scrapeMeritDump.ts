@@ -14,7 +14,7 @@ import '../../container';
 import api from '../../services/api';
 import Merit from '../../../modules/merits/infra/typeorm/entities/Merit';
 import MeritsRepository from '../../../modules/merits/infra/typeorm/repositories/MeritsRepository';
-import ScrapePostService from '../../../modules/posts/services/ScrapePostService';
+import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 
 type MeritPartialKeys = 'date' | 'amount' | 'topic_id' | 'post_id' | 'sender_uid' | 'receiver_uid';
 type MeritPartial = Pick<Merit, MeritPartialKeys>;
@@ -119,7 +119,7 @@ const getPostsMissingInDb = async (merits: MeritPartial[]): Promise<Array<{ post
 
 export const scrapeMeritDump = async (shouldScrapeLoyce: boolean) => {
   await createConnection();
-  const scrapePost = container.resolve(ScrapePostService);
+  const postScraper = new PostScraper();
   const queue = new Queue(1);
 
   const startChunkPage = 0;
@@ -158,9 +158,7 @@ export const scrapeMeritDump = async (shouldScrapeLoyce: boolean) => {
 
     const scrapePostsJob = postsMissingInDb.map(postMissing =>
       queue.add(async () => {
-        const post = await scrapePost.execute({
-          post_id: postMissing.post_id
-        });
+        const post = await postScraper.scrapePost(postMissing.post_id);
 
         if (!post) {
           throw new Error('Could not scrape post');
