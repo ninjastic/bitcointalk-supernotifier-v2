@@ -1,20 +1,24 @@
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import ForumLoginService from '##/modules/merits/services/ForumLoginService';
+import scrapePostForChangesJob from '##/modules/posts/infra/jobs/scrape-post-for-changes-job';
 import scrapePostJob from '##/modules/posts/infra/jobs/scrape-post-job';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
+import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import forumScraperQueue from '##/shared/infra/bull/queues/forumScraperQueue';
 import api from '##/shared/services/api';
 import logger from '##/shared/services/logger';
 import Cheerio, { load } from 'cheerio';
 import { sub } from 'date-fns';
 import { container } from 'tsyringe';
-import { getRepository, Repository } from 'typeorm';
+import { getRepository, IsNull, Not, Repository } from 'typeorm';
 
 export class MeritScraper {
   RECENT_MERITS_URL = 'index.php?action=merit;stats=recent';
 
   redisProvider: RedisProvider;
   postsRepository: Repository<Post>;
+  postsVersionsRepository: Repository<PostVersion>;
   meritsRepository: Repository<Merit>;
 
   currentDate: Date;
@@ -22,6 +26,7 @@ export class MeritScraper {
   constructor() {
     this.redisProvider = container.resolve(RedisProvider);
     this.postsRepository = getRepository(Post);
+    this.postsVersionsRepository = getRepository(PostVersion);
     this.meritsRepository = getRepository(Merit);
   }
 
@@ -57,6 +62,8 @@ export class MeritScraper {
     const sender = $.html().match(/">(.*)<\/a> for/)[1];
     const sender_uid = Number($.html().match(/u=(\d*)"/)[1]);
 
+    const meritPostTitle = $('a:last-child').text().trim();
+
     const d = this.currentDate;
     const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
     const withFixedDate = $.html().replace('<b>Today</b> at', today);
@@ -73,6 +80,23 @@ export class MeritScraper {
     if (!post) {
       const result = await scrapePostJob(post_id);
       post = await this.postsRepository.save(result.post);
+    } else {
+      if (post.title !== meritPostTitle) {
+        const latestPostVersionWithNewTitle = await this.postsVersionsRepository.findOne({
+          where: { post_id, new_title: Not(IsNull()) },
+          order: { created_at: 'DESC' }
+        });
+
+        const alreadyHasJob = await forumScraperQueue.getJob(`scrapePostForChanges-${post_id}`);
+
+        if (!alreadyHasJob && !latestPostVersionWithNewTitle) {
+          logger.debug(
+            { post, meritPostTitle },
+            'Merit post title mismatch with archived post title, scheduling version rescrape for post'
+          );
+          await scrapePostForChangesJob(post_id, false);
+        }
+      }
     }
 
     if (post) {
@@ -115,13 +139,13 @@ export class MeritScraper {
 
       if (!existingMeritOnDb) {
         const newMerit = await this.meritsRepository.save(merit);
-        await this.redisProvider.save(meritKey, true, 'EX', 1800); // 30 minutes
+        await this.redisProvider.save(meritKey, true, 'EX', 3600); // 1 hour
         logger.debug(`[MeritScraper] Saved merit ${meritKey}`);
         return newMerit;
-      } else {
-        await this.redisProvider.save(meritKey, true, 'EX', 1800); // 30 minutes
-        logger.debug(`[MeritScraper] Merit ${meritKey} already exists.`);
       }
+      
+      logger.debug(`[MeritScraper] Merit ${meritKey} already exists.`);
+      await this.redisProvider.save(meritKey, true, 'EX', 3600); // 1 hour
     } catch (error) {
       logger.error({ error, meritKey }, `[MeritScraper] Error processing merit ${meritKey}`);
     }
@@ -152,6 +176,6 @@ export class MeritScraper {
   }
 
   getMeritKey(merit: Merit): string {
-    return `merit:${new Date(merit.date)}_${merit.amount}_${merit.post_id}_${merit.sender_uid}`;
+    return `merit:${merit.post_id}:${merit.sender_uid}:${new Date(merit.date).getTime()}:${merit.amount}`;
   }
 }
