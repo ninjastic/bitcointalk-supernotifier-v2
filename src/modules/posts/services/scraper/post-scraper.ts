@@ -201,6 +201,7 @@ export class PostScraper {
 
         await this.schedulePostRescrape(post.post_id, 5);
         await this.schedulePostRescrape(post.post_id, 30);
+        await this.schedulePostRescrape(post.post_id, 60 * 24 * 7); // 1 week
 
         if (post.topicAuthor === post.author && post.topicReplies === 0) {
           const existingTopic = await this.topicsRepository.findOne({ where: { topic_id: post.topic_id } });
