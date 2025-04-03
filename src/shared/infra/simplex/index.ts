@@ -120,7 +120,15 @@ export class SimpleX {
 
     const unsentNotifications = await this.db.getNotifications({ contact_id: contactId, sent: false }, 'asc');
 
-    for (const unsentNotification of unsentNotifications) {
+    const dateThreshold = new Date();
+    dateThreshold.setDate(dateThreshold.getDate() - 2);
+
+    const recentUnsentNotifications = unsentNotifications.filter(unsentNotification => {
+      const unsentNotificationDate = new Date(unsentNotification.created_at);
+      return unsentNotificationDate >= dateThreshold;
+    });
+
+    for (const unsentNotification of recentUnsentNotifications) {
       logger.info({ contactId, unsentNotification }, 'Sending unsent notification');
       const msg = await this.sendMessage(contactId, unsentNotification.message);
       if (hasNotificationMessageSent(msg[0])) {
