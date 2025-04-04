@@ -12,7 +12,7 @@ type GetPostParams = {
 
 const getPost = async (params: GetPostParams): Promise<Post | undefined> => {
   const postsRepository = getRepository(Post);
-  const cacheRepository = container.resolve(RedisProvider);
+  const cacheRepository = container.resolve<RedisProvider>('CacheRepository');
 
   const cacheKey = `post:${params.postId}`;
 

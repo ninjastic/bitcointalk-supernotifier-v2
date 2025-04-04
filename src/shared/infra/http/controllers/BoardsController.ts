@@ -10,7 +10,7 @@ import GetBoardsListService from '../../../../modules/posts/services/GetBoardsLi
 
 export default class BoardsController {
   public async index(request: Request, response: Response): Promise<Response> {
-    const getBoardsList = container.resolve(GetBoardsListService);
+    const getBoardsList = new GetBoardsListService();
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 

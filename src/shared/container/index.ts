@@ -39,6 +39,8 @@ import PostsHistoryRepository from '../../modules/posts/infra/typeorm/repositori
 
 import ICacheRepository from './providers/models/ICacheProvider';
 import RedisProvider from './providers/implementations/RedisProvider';
+import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
 
 container.registerSingleton<IUsersRepository>('UsersRepository', UsersRepository);
 
@@ -67,3 +69,7 @@ container.registerSingleton<IPostsHistoryRepository>('PostsHistoryRepository', P
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);
 
 container.registerSingleton<NotificationService>('NotificationService', NotificationService);
+
+container.registerSingleton<PostScraper>('PostScraper', PostScraper);
+
+container.registerSingleton<MeritScraper>('MeritScraper', MeritScraper);

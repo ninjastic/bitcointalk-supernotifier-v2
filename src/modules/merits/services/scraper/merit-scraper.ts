@@ -24,7 +24,7 @@ export class MeritScraper {
   currentDate: Date;
 
   constructor() {
-    this.redisProvider = container.resolve(RedisProvider);
+    this.redisProvider = container.resolve<RedisProvider>('CacheRepository');
     this.postsRepository = getRepository(Post);
     this.postsVersionsRepository = getRepository(PostVersion);
     this.meritsRepository = getRepository(Merit);
@@ -40,7 +40,7 @@ export class MeritScraper {
     const isLoggedIn = !!$('#hellomember').length;
 
     if (!isLoggedIn) {
-      const forumLoginService = container.resolve(ForumLoginService);
+      const forumLoginService = new ForumLoginService();
       await forumLoginService.execute();
       $ = await this.getPageContent();
     }
@@ -143,7 +143,7 @@ export class MeritScraper {
         logger.debug(`[MeritScraper] Saved merit ${meritKey}`);
         return newMerit;
       }
-      
+
       logger.debug(`[MeritScraper] Merit ${meritKey} already exists.`);
       await this.redisProvider.save(meritKey, true, 'EX', 3600); // 1 hour
     } catch (error) {

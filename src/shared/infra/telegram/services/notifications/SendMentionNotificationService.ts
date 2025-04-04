@@ -103,12 +103,12 @@ export default class SendMentionNotificationService {
     try {
       const postLength = (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
 
-      const aprilFools = isAprilFools()
-      
+      const aprilFools = isAprilFools();
+
       if (aprilFools) {
         message = await this.buildNotificationMessageAprilFools(post, postLength, telegramId);
       } else {
-        message = await this.buildNotificationMessage(post, postLength, telegramId)
+        message = await this.buildNotificationMessage(post, postLength, telegramId);
       }
 
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, {

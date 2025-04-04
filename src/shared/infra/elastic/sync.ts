@@ -22,7 +22,7 @@ import { SyncBoardsPipeline } from './pipelines/sync-boards';
 
 async function syncAll() {
   const connection = await createConnection();
-  const cacheRepository = container.resolve(RedisProvider);
+  const cacheRepository = container.resolve<RedisProvider>('CacheRepository');
 
   const syncPostsPipeline = new SyncPostsPipeline(connection, esClient, cacheRepository);
   const syncPostsVersionsPipeline = new SyncPostsVersionsPipeline(connection, esClient, cacheRepository);

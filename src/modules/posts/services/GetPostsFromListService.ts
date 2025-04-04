@@ -17,7 +17,7 @@ export default class GetPostsService {
   ) {}
 
   public async execute({ id_list }: Params): Promise<SearchResponse<PostFromES>> {
-    const getBoardsList = container.resolve(GetBoardsListService);
+    const getBoardsList = new GetBoardsListService();
 
     const results = await this.postsRepository.findPostsFromListES(id_list);
     const boards = await getBoardsList.execute(true);

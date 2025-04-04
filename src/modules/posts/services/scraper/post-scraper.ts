@@ -33,7 +33,7 @@ export class PostScraper {
   topicsRepository: Repository<Topic>;
 
   constructor() {
-    this.redisProvider = container.resolve(RedisProvider);
+    this.redisProvider = container.resolve<RedisProvider>('CacheRepository');
     this.postsRepository = getRepository(Post);
     this.topicsRepository = getRepository(Topic);
   }
@@ -54,7 +54,7 @@ export class PostScraper {
     const isLoggedIn = !!$('#hellomember').length;
 
     if (!isLoggedIn) {
-      const forumLoginService = container.resolve(ForumLoginService);
+      const forumLoginService = new ForumLoginService();
       await forumLoginService.execute();
       ({ $, html } = await this.getPageContent(url, config));
     }

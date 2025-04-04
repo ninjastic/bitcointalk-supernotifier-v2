@@ -102,14 +102,18 @@ export const shouldNotifyUser = (
   return !(isSameUsername || isSameUid || isAuthorIgnored || isTopicIgnored || isUserBlocked);
 };
 
-export const isUserMentionedInPost = (content: string, user: { username?: string; alternative_usernames?: string[] }, onlyDirectAndQuote?: boolean): boolean => {
+export const isUserMentionedInPost = (
+  content: string,
+  user: { username?: string; alternative_usernames?: string[] },
+  onlyDirectAndQuote?: boolean
+): boolean => {
   if (!user.username) return false;
-  
-  const regexList = []
+
+  const regexList = [];
 
   if (!onlyDirectAndQuote) {
     const usernameRegex = createMentionRegex(user.username);
-    regexList.push(usernameRegex)
+    regexList.push(usernameRegex);
   }
 
   const backupAtSignRegex = new RegExp(`@${escapeUsername(user.username)}`, 'gi');
@@ -119,7 +123,7 @@ export const isUserMentionedInPost = (content: string, user: { username?: string
 
   if (user.alternative_usernames?.length) {
     const altUsernameRegex = createMentionRegex(user.alternative_usernames[0]);
-    regexList.push(altUsernameRegex)
+    regexList.push(altUsernameRegex);
   }
 
   return regexList.some(regex => regex && content.match(regex));
@@ -145,8 +149,8 @@ export function isAprilFools() {
   const dia = currentDate.getDate();
   const mes = currentDate.getMonth();
   if (dia === 1 && mes === 3) {
-      return true;
+    return true;
   } else {
-      return false;
+    return false;
   }
 }

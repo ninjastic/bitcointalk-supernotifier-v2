@@ -4,7 +4,7 @@ import cacheConfig from '../../../../config/cache';
 import { RecipeMetadata, RecipeNames } from '../types/telegram';
 
 const telegramQueue = new Queue<RecipeMetadata[RecipeNames], any, RecipeNames>('TelegramQueue', {
-  connection: cacheConfig.config.redis,
+  connection: { ...cacheConfig.config.redis, connectionName: 'TelegramQueue' },
   defaultJobOptions: {
     attempts: 2,
     removeOnComplete: true,
@@ -15,6 +15,8 @@ const telegramQueue = new Queue<RecipeMetadata[RecipeNames], any, RecipeNames>('
 export const addTelegramJob = async <T extends RecipeNames>(recipe: T, data: RecipeMetadata[T]) =>
   telegramQueue.add(recipe, data);
 
-export const queueEvents = new QueueEvents(telegramQueue.name, { connection: cacheConfig.config.redis });
+export const queueEvents = new QueueEvents(telegramQueue.name, {
+  connection: { ...cacheConfig.config.redis, connectionName: 'TelegramQueueEvents' }
+});
 
 export default telegramQueue;

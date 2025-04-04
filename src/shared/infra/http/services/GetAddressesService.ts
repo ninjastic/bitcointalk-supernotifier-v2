@@ -28,7 +28,7 @@ interface Data {
 
 export default class GetAddressesService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
-    const getBoardsList = container.resolve(GetBoardsListService);
+    const getBoardsList = new GetBoardsListService();
 
     const { address, author, author_uid, coin, post_id, topic_id, board, child_boards, last, order, limit } =
       conditions || {};

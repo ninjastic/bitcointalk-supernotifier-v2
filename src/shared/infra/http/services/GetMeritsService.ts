@@ -105,7 +105,7 @@ export default class GetMeritsService {
       body
     });
 
-    const getBoardsList = container.resolve(GetBoardsListService);
+    const getBoardsList = new GetBoardsListService();
     const boards = await getBoardsList.execute(true);
 
     const data = results.hits.hits.map(merit => {

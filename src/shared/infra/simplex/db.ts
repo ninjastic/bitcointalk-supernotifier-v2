@@ -379,9 +379,9 @@ class Db {
   }
 
   async getTrackedUser(contact_id: number, username: string): Promise<TrackedUser | undefined> {
-    return (await this.db<TrackedUser>('tracked_users').where({ contact_id, username: username.toLowerCase() }).first()) as
-      | TrackedUser
-      | undefined;
+    return (await this.db<TrackedUser>('tracked_users')
+      .where({ contact_id, username: username.toLowerCase() })
+      .first()) as TrackedUser | undefined;
   }
 
   async getTrackedUsers(where: Partial<TrackedUser> = {}): Promise<TrackedUser[]> {

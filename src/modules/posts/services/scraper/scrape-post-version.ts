@@ -3,9 +3,10 @@ import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import { getRepository } from 'typeorm';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import getPost from '##/modules/posts/services/get-post';
+import { container } from 'tsyringe';
 
 export async function scrapePostVersion(postId: number): Promise<PostVersion | null> {
-  const postScraper = new PostScraper();
+  const postScraper = container.resolve<PostScraper>('PostScraper');
   const postsVersionsRepository = getRepository(PostVersion);
 
   const latestPostVersion = await postsVersionsRepository.findOne({

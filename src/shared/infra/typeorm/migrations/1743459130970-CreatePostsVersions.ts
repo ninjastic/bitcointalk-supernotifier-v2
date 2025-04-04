@@ -20,22 +20,22 @@ export class CreatePostsVersions1743459130970 implements MigrationInterface {
           {
             name: 'new_title',
             type: 'varchar',
-            isNullable: true,
+            isNullable: true
           },
           {
             name: 'new_content',
             type: 'varchar',
-            isNullable: true,
+            isNullable: true
           },
           {
             name: 'edit_date',
             type: 'timestamp with time zone',
-            isNullable: true,
+            isNullable: true
           },
           {
             name: 'deleted',
             type: 'boolean',
-            default: false,
+            default: false
           },
           {
             name: 'created_at',
@@ -49,22 +49,20 @@ export class CreatePostsVersions1743459130970 implements MigrationInterface {
           }
         ],
         foreignKeys: [
-            {
-              columnNames: ['post_id'],
-              referencedTableName: 'posts',
-              referencedColumnNames: ['post_id'],
-              onUpdate: 'CASCADE',
-              onDelete: 'CASCADE'
-            }
-          ],
-          indices: [
-            { columnNames: ['post_id', 'edit_date', 'created_at']}
-          ]
+          {
+            columnNames: ['post_id'],
+            referencedTableName: 'posts',
+            referencedColumnNames: ['post_id'],
+            onUpdate: 'CASCADE',
+            onDelete: 'CASCADE'
+          }
+        ],
+        indices: [{ columnNames: ['post_id', 'edit_date', 'created_at'] }]
       })
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable('post_versions')
+    await queryRunner.dropTable('post_versions');
   }
 }

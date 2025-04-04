@@ -27,7 +27,7 @@ export default class SendAutoTrackTopicNotificationService {
   private redis: RedisProvider;
 
   constructor() {
-    this.redis = container.resolve(RedisProvider);
+    this.redis = container.resolve<RedisProvider>('CacheRepository');
   }
 
   private async createNotification(telegramId: string, metadata: AutoTrackTopicRequestNotification['metadata']) {
@@ -84,7 +84,7 @@ export const handleTrackTopicRepliesMenu = (_bot: Bot) =>
       'We have added your request to the queue.\n\nThis will take a few seconds...'
     );
 
-    const redis = container.resolve(RedisProvider);
+    const redis = container.resolve<RedisProvider>('CacheRepository');
     const addTrackedTopicService = container.resolve(AddTrackedTopicService);
 
     const data: { topic_id: number } = await redis.recover(

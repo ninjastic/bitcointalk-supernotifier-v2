@@ -23,11 +23,12 @@ import ScrapeModLogService from '../../../../modules/modlog/services/ScrapeModLo
 import ForumLoginService from '../../../../modules/merits/services/ForumLoginService';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
+import { container } from 'tsyringe';
 
 const scraper = async () => {
   await createConnection();
-  const postScraper = new PostScraper();
-  const meritScraper = new MeritScraper();
+  const postScraper = container.resolve<PostScraper>('PostScraper');
+  const meritScraper = container.resolve<MeritScraper>('MeritScraper');
 
   const scrapeRecentPosts = async (): Promise<number> => {
     const results = await postScraper.scrapeRecentPosts();
@@ -78,7 +79,7 @@ const scraper = async () => {
 
       return jobRecipe(job);
     },
-    { connection: cacheConfig.config.redis }
+    { connection: { ...cacheConfig.config.redis, connectionName: 'ScraperQueue' } }
   );
 
   worker.on('active', async (job: Job) => {

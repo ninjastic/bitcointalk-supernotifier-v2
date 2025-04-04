@@ -357,7 +357,7 @@ export const handlers: Handlers = {
           case '/phrase': {
             if (command[2]) {
               const phrase = command[2];
-              const lowercasePhrase = phrase.toLowerCase()
+              const lowercasePhrase = phrase.toLowerCase();
 
               const isExistent = await simpleX.db.getTrackedPhrase(contactId, lowercasePhrase);
               if (isExistent) {
@@ -381,7 +381,7 @@ export const handlers: Handlers = {
           case '/del_phrase': {
             if (command[2]) {
               const phrase = command[2];
-              const lowercasePhrase = phrase.toLowerCase()
+              const lowercasePhrase = phrase.toLowerCase();
 
               await simpleX.db.deleteTrackedPhrase(contactId, lowercasePhrase);
               await simpleX.sendMessage(contactId, `Phrase *${phrase}* is no longer being tracked`);
@@ -392,7 +392,7 @@ export const handlers: Handlers = {
           case '/user': {
             if (command[2]) {
               const username = command[2];
-              const lowercaseUser = username.toLowerCase()
+              const lowercaseUser = username.toLowerCase();
 
               const isExistent = await simpleX.db.getTrackedUser(contactId, lowercaseUser);
               if (isExistent) {
@@ -416,7 +416,7 @@ export const handlers: Handlers = {
           case '/del_user': {
             if (command[2]) {
               const username = command[2];
-              const lowercaseUser = username.toLowerCase()
+              const lowercaseUser = username.toLowerCase();
 
               await simpleX.db.deleteTrackedUser(contactId, lowercaseUser);
               await simpleX.sendMessage(contactId, `User *${lowercaseUser}* is no longer being tracked`);
@@ -427,7 +427,7 @@ export const handlers: Handlers = {
           case '/ignoreuser': {
             if (command[2]) {
               const username = command[2];
-              const lowercaseUser = username.toLowerCase()
+              const lowercaseUser = username.toLowerCase();
 
               const isExistent = await simpleX.db.getIgnoredUser(contactId, lowercaseUser);
               if (isExistent) {
@@ -451,7 +451,7 @@ export const handlers: Handlers = {
           case '/del_ignoreuser': {
             if (command[2]) {
               const username = command[2];
-              const lowercaseUser = username.toLowerCase()
+              const lowercaseUser = username.toLowerCase();
 
               await simpleX.db.deleteIgnoredUser(contactId, lowercaseUser);
               await simpleX.sendMessage(contactId, `User *${lowercaseUser}* is no longer being ignored`);

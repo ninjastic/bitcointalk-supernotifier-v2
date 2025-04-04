@@ -23,7 +23,7 @@ export default class CheckPostsService {
   ) {}
 
   public async execute(): Promise<void> {
-    const parsePostAddresses = container.resolve(ParsePostAddressesService);
+    const parsePostAddresses = new ParsePostAddressesService();
 
     let lastId = await this.cacheProvider.recover<number>('checkPostsAddresses:lastId');
 

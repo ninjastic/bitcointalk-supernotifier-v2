@@ -5,7 +5,7 @@ import IMenuContext from '../@types/IMenuContext';
 import RedisProvider from '../../../container/providers/implementations/RedisProvider';
 
 const lengthCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
-  const redisProvider = container.resolve(RedisProvider);
+  const redisProvider = container.resolve<RedisProvider>('CacheRepository');
 
   const length = Number(ctx.match?.at(1));
 

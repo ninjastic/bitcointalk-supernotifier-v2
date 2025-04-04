@@ -28,7 +28,7 @@ export type JobRecipes = {
 };
 
 const forumScraperQueue: ForumScraperQueue = new Queue('ForumScraperQueue', {
-  connection: cacheConfig.config.redis,
+  connection: { ...cacheConfig.config.redis, connectionName: 'ForumScraperQueue' },
   defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
 });
 
@@ -40,6 +40,8 @@ export const addForumScraperJob = async <T extends ForumScraperQueueJobName>(
   return forumScraperQueue.add(jobName, data, opts);
 };
 
-export const queueEvents = new QueueEvents(forumScraperQueue.name, { connection: cacheConfig.config.redis });
+export const queueEvents = new QueueEvents(forumScraperQueue.name, {
+  connection: { ...cacheConfig.config.redis, connectionName: 'ForumScraperQueueEvents' }
+});
 
 export default forumScraperQueue;

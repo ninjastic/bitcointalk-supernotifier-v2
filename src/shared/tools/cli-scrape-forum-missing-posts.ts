@@ -6,11 +6,11 @@ import inquirer from 'inquirer';
 
 import '../container';
 
-import ScrapePostService from '../../modules/posts/services/ScrapePostService';
 import CreatePostService from '../../modules/posts/services/CreatePostService';
 import Post from '../../modules/posts/infra/typeorm/entities/Post';
 import PostMissing from '../../modules/posts/infra/typeorm/entities/PostMissing';
 import { scrapeLoyceArchivePost } from './loyce/utils';
+import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 
 type PromptAnswers = {
   startPostId: number;
@@ -35,7 +35,7 @@ const scrape = async () => {
       name: 'endPostId',
       type: 'number',
       message: 'Post ID end?',
-      validate: (value, { startPostId }) => value > startPostId ?? 'Can not be lower than the start value'
+      validate: (value, { startPostId }) => value > startPostId || 'Can not be lower than the start value'
     }
   ]);
 
@@ -73,7 +73,7 @@ const scrape = async () => {
   console.log(`Range: [${answers.startPostId}, ${answers.endPostId}]`);
   console.log(`Found missing ids: ${missingIds.length}`);
 
-  const scrapePost = container.resolve(ScrapePostService);
+  const postScraper = container.resolve<PostScraper>('PostScraper');
   const createPost = container.resolve(CreatePostService);
 
   for (let i = 0; i < missingIds.length; i += BATCH_SIZE) {
@@ -87,7 +87,7 @@ const scrape = async () => {
     for await (const id of batch) {
       console.log(`Checking post of id ${id}`);
 
-      const forumPost = await scrapePost.execute({ post_id: id });
+      const { post: forumPost } = await postScraper.scrapePost(id);
       const loycePost = await scrapeLoyceArchivePost(id);
 
       if (forumPost) {

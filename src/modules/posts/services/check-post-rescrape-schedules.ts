@@ -1,4 +1,5 @@
 import { isBefore } from 'date-fns';
+import { container } from 'tsyringe';
 
 import { addForumScraperJob } from '../../../shared/infra/bull/queues/forumScraperQueue';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
@@ -6,7 +7,7 @@ import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 export type RescrapeSchedule = { time: number; post_id: number };
 
 const checkPostRescrapeSchedules = async () => {
-  const postScraper = new PostScraper();
+  const postScraper = container.resolve<PostScraper>('PostScraper');
   const rescrapeSchedules = await postScraper.getScheduledPostRescrapes();
 
   const rescrapeSchedulesToRun = rescrapeSchedules.filter((job: { time: number }) => {

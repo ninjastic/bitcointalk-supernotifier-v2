@@ -36,7 +36,7 @@ export default class SendGlobalNotificationService {
   }
 
   private async saveMessageIdsToRedis(messageIds: MessageSent[]): Promise<string> {
-    const redisProvider = container.resolve(RedisProvider);
+    const redisProvider = container.resolve<RedisProvider>('CacheRepository');
     const id = Math.floor(new Date().getTime() * Math.random()).toString();
     await redisProvider.save(`globalNotificationMessages:${id}`, messageIds, 'EX', 300);
     return id;

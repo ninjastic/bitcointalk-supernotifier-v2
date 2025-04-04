@@ -92,11 +92,17 @@ const telegram = async () => {
 
       await jobRecipe(job);
     },
-    { connection: cacheConfig.config.redis, limiter: { max: 10, duration: 1000 } }
+    {
+      connection: { ...cacheConfig.config.redis, connectionName: 'TelegramQueue' },
+      limiter: { max: 10, duration: 1000 }
+    }
   );
 
   worker.on('active', async (job: Job) => {
-    logger.debug({ jobName: job.name, jobId: job.id, data: job.data }, `[${worker.name}][Worker][${job.id}] Active ${job.name}`);
+    logger.debug(
+      { jobName: job.name, jobId: job.id, data: job.data },
+      `[${worker.name}][Worker][${job.id}] Active ${job.name}`
+    );
   });
 
   worker.on('completed', async (job: Job) => {

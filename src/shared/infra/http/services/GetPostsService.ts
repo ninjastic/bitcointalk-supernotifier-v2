@@ -23,7 +23,7 @@ export default class GetPostSearchService {
 
     const results = await this.postsRepository.findPostsES({ ...query, limit });
 
-    const getBoardsList = container.resolve(GetBoardsListService);
+    const getBoardsList = new GetBoardsListService();
     const boards = await getBoardsList.execute(true);
 
     const data = results.hits.hits.map(post => {

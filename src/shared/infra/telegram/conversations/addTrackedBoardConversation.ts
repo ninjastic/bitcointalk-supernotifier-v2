@@ -24,7 +24,7 @@ const askForPrompt = async (
   conversation: Conversation<IMenuContext & ConversationFlavor>,
   ctx: IMenuContext
 ): Promise<Board[] | null> => {
-  const getBoardsListService = container.resolve(GetBoardsListService);
+  const getBoardsListService = new GetBoardsListService();
   const getBoardChildrensFromIdService = container.resolve(GetBoardChildrensFromIdService);
 
   const promptMessage = await ctx.reply('What is the ID or URL of the board you want to track?', {
