@@ -21,7 +21,7 @@ const checkPostRescrapeSchedules = async () => {
     });
 
     if (newJob) {
-      postScraper.deleteScheduledPostRescrape(rescrapeSchedule);
+      await postScraper.deleteScheduledPostRescrape(rescrapeSchedule);
     }
   }
 };

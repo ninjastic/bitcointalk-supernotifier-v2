@@ -1,9 +1,29 @@
-import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
-
+import { container } from 'tsyringe';
+import { load } from 'cheerio';
 import { getRepository } from 'typeorm';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import { format } from 'date-fns';
 import getPost from '##/modules/posts/services/get-post';
-import { container } from 'tsyringe';
+
+import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+
+function fixPostContentWithTodayQuoteDate(content: string, date: Date): string {
+  const $ = load(content);
+
+  $('.quoteheader').each((_, quoteHeader) => {
+    const hasTodayDate = $(quoteHeader)
+      .html()
+      .match(/<b>Today<\/b>/);
+    if (hasTodayDate) {
+      const fixedHtml = $(quoteHeader)
+        .html()
+        .replace(/<b>Today<\/b> at/, format(date, 'LLLL dd, yyyy,'));
+      $(quoteHeader).html(fixedHtml);
+    }
+  });
+
+  return $('body').html();
+}
 
 export async function scrapePostVersion(postId: number): Promise<PostVersion | null> {
   const postScraper = container.resolve<PostScraper>('PostScraper');
@@ -57,7 +77,10 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion | n
     newPostVersion.new_title = currentPost.title;
   }
 
-  if (previousPostToCompare.content !== currentPost.content) {
+  if (
+    fixPostContentWithTodayQuoteDate(previousPostToCompare.content, savedPost.date) !==
+    fixPostContentWithTodayQuoteDate(currentPost.content, savedPost.date)
+  ) {
     newPostVersion.new_content = currentPost.content;
   }
 
