@@ -6,6 +6,7 @@ import IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
 import IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
 import Post from '../infra/typeorm/entities/Post';
 import forumScraperQueue, { queueEvents } from '../../../shared/infra/bull/queues/forumScraperQueue';
+import scrapeTopicJob from '##/modules/posts/infra/jobs/scrape-topic-job';
 
 @injectable()
 export default class AddIgnoredTopicService {
@@ -39,8 +40,7 @@ export default class AddIgnoredTopicService {
       return ignoredTopicExists;
     }
 
-    const job = await forumScraperQueue.add('scrapeTopic', { topic_id }, { priority: 1 });
-    const topicPost: Post = await job.waitUntilFinished(queueEvents);
+    const { post: topicPost } = await scrapeTopicJob(topic_id, { priority: 1 });
 
     const ignoredTopic = this.ignoredTopicsRepository.create({
       post_id: topicPost.post_id,

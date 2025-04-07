@@ -38,7 +38,7 @@ export default class AddTrackedTopicService {
       return topicExists;
     }
 
-    const { post: topicPost } = await scrapeTopicJob(topic_id);
+    const { post: topicPost } = await scrapeTopicJob(topic_id, { priority: 1 });
 
     const trackedTopic = this.trackedTopicsRepository.create({
       post_id: topicPost.post_id,
