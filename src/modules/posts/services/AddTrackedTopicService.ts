@@ -4,7 +4,7 @@ import ICacheProvider from '../../../shared/container/providers/models/ICachePro
 import ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
 
 import TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
-import scrapeTopicJob from '##/modules/posts/infra/jobs/scrape-topic-job';
+import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 
 @injectable()
 export default class AddTrackedTopicService {
@@ -38,7 +38,7 @@ export default class AddTrackedTopicService {
       return topicExists;
     }
 
-    const { post: topicPost } = await scrapeTopicJob(topic_id, { priority: 1 });
+    const { post: topicPost } = await addForumScraperJob('scrapeTopic', { topic_id }, true, { priority: 1 });
 
     const trackedTopic = this.trackedTopicsRepository.create({
       post_id: topicPost.post_id,

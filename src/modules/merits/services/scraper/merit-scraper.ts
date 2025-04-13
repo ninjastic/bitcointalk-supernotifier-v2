@@ -1,11 +1,9 @@
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import ForumLoginService from '##/modules/merits/services/ForumLoginService';
-import scrapePostForChangesJob from '##/modules/posts/infra/jobs/scrape-post-for-changes-job';
-import scrapePostJob from '##/modules/posts/infra/jobs/scrape-post-job';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
-import forumScraperQueue from '##/shared/infra/bull/queues/forumScraperQueue';
+import forumScraperQueue, { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 import api from '##/shared/services/api';
 import logger from '##/shared/services/logger';
 import Cheerio, { load } from 'cheerio';
@@ -78,7 +76,7 @@ export class MeritScraper {
     let receiver_uid: number;
 
     if (!post) {
-      const result = await scrapePostJob(post_id);
+      const result = await addForumScraperJob('scrapePost', { post_id }, true);
       post = await this.postsRepository.save(result.post);
     } else {
       if (post.title !== meritPostTitle) {
@@ -87,14 +85,17 @@ export class MeritScraper {
           order: { created_at: 'DESC' }
         });
 
-        const alreadyHasJob = await forumScraperQueue.getJob(`scrapePostForChanges-${post_id}`);
+        const scrapePostForChangesJobId = `scrapePostForChanges-${post_id}`;
+        const alreadyHasJob = await forumScraperQueue.getJob(scrapePostForChangesJobId);
 
         if (!alreadyHasJob && !latestPostVersionWithNewTitle) {
           logger.debug(
             { post, meritPostTitle },
             'Merit post title mismatch with archived post title, scheduling version rescrape for post'
           );
-          await scrapePostForChangesJob(post_id, false);
+          await addForumScraperJob('scrapePostForChanges', { post_id }, false, {
+            jobId: scrapePostForChangesJobId
+          });
         }
       }
     }

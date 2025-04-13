@@ -1,5 +1,4 @@
 import { Job, JobsOptions, Queue, QueueEvents } from 'bullmq';
-
 import cacheConfig from '../../../../config/cache';
 import { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
@@ -12,8 +11,10 @@ export type ForumScraperQueueRecipes = {
 };
 
 export type ForumScraperQueueJobName = keyof ForumScraperQueueRecipes;
-export type ForumScraperQueueInput<T extends ForumScraperQueueJobName = any> = ForumScraperQueueRecipes[T]['input'];
-export type ForumScraperQueueOutput<T extends ForumScraperQueueJobName = any> = ForumScraperQueueRecipes[T]['output'];
+
+export type ForumScraperQueueInput<T extends ForumScraperQueueJobName> = ForumScraperQueueRecipes[T]['input'];
+
+export type ForumScraperQueueOutput<T extends ForumScraperQueueJobName> = ForumScraperQueueRecipes[T]['output'];
 
 export type ForumScraperQueue = Queue<
   ForumScraperQueueInput<any>,
@@ -23,25 +24,71 @@ export type ForumScraperQueue = Queue<
 
 export type JobRecipes = {
   [K in ForumScraperQueueJobName]: (
-    job: Job<ForumScraperQueueRecipes[K]['input'], ForumScraperQueueRecipes[K]['output'], K>
-  ) => Promise<ForumScraperQueueRecipes[K]['output']>;
+    job: Job<ForumScraperQueueInput<K>, ForumScraperQueueOutput<K>, K>
+  ) => Promise<ForumScraperQueueOutput<K>>;
 };
 
-const forumScraperQueue: ForumScraperQueue = new Queue('ForumScraperQueue', {
-  connection: { ...cacheConfig.config.redis, connectionName: 'ForumScraperQueue' },
-  defaultJobOptions: { removeOnComplete: true, removeOnFail: true }
+type ForumScraperJob<T extends ForumScraperQueueJobName> = Job<
+  ForumScraperQueueInput<T>,
+  ForumScraperQueueOutput<T>,
+  T
+>;
+
+const QUEUE_NAME = 'ForumScraperQueue';
+
+const forumScraperQueue: ForumScraperQueue = new Queue(QUEUE_NAME, {
+  connection: {
+    ...cacheConfig.config.redis,
+    connectionName: 'ForumScraperQueue:Producer'
+  },
+  defaultJobOptions: {
+    removeOnComplete: true,
+    removeOnFail: { count: 1000, age: 24 * 3600 },
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 1000
+    }
+  }
 });
 
-export const addForumScraperJob = async <T extends ForumScraperQueueJobName>(
+export const queueEvents = new QueueEvents(QUEUE_NAME, {
+  connection: {
+    ...cacheConfig.config.redis,
+    connectionName: 'ForumScraperQueue:Events'
+  }
+});
+
+export async function addForumScraperJob<T extends ForumScraperQueueJobName>(
   jobName: T,
-  data: ForumScraperQueueRecipes[T]['input'],
-  opts: JobsOptions = {}
-): Promise<Job<ForumScraperQueueInput<T>, ForumScraperQueueOutput<T>, ForumScraperQueueJobName>> => {
-  return forumScraperQueue.add(jobName, data, opts);
-};
+  data: ForumScraperQueueInput<T>,
+  waitUntilFinished: true,
+  opts?: JobsOptions
+): Promise<ForumScraperQueueOutput<T>>;
 
-export const queueEvents = new QueueEvents(forumScraperQueue.name, {
-  connection: { ...cacheConfig.config.redis, connectionName: 'ForumScraperQueueEvents' }
-});
+export async function addForumScraperJob<T extends ForumScraperQueueJobName>(
+  jobName: T,
+  data: ForumScraperQueueInput<T>,
+  waitUntilFinished?: false,
+  opts?: JobsOptions
+): Promise<ForumScraperJob<T>>;
+
+export async function addForumScraperJob<T extends ForumScraperQueueJobName>(
+  jobName: T,
+  data: ForumScraperQueueInput<T>,
+  waitUntilFinished?: boolean,
+  opts: JobsOptions = {}
+): Promise<ForumScraperQueueOutput<T> | ForumScraperJob<T>> {
+  const jobOptions: JobsOptions = { ...forumScraperQueue.defaultJobOptions, ...opts };
+
+  const job = await forumScraperQueue.add(jobName, data, jobOptions);
+
+  if (waitUntilFinished) {
+    const result = await job.waitUntilFinished(queueEvents);
+    return result as ForumScraperQueueOutput<T>;
+  } else {
+    return job as ForumScraperJob<T>;
+  }
+}
 
 export default forumScraperQueue;

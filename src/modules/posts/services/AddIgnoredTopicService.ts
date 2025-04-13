@@ -4,9 +4,7 @@ import ICacheProvider from '../../../shared/container/providers/models/ICachePro
 import IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
 
 import IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
-import Post from '../infra/typeorm/entities/Post';
-import forumScraperQueue, { queueEvents } from '../../../shared/infra/bull/queues/forumScraperQueue';
-import scrapeTopicJob from '##/modules/posts/infra/jobs/scrape-topic-job';
+import { addForumScraperJob } from '../../../shared/infra/bull/queues/forumScraperQueue';
 
 @injectable()
 export default class AddIgnoredTopicService {
@@ -40,7 +38,7 @@ export default class AddIgnoredTopicService {
       return ignoredTopicExists;
     }
 
-    const { post: topicPost } = await scrapeTopicJob(topic_id, { priority: 1 });
+    const { post: topicPost } = await addForumScraperJob('scrapeTopic', { topic_id }, true, { priority: 1 });
 
     const ignoredTopic = this.ignoredTopicsRepository.create({
       post_id: topicPost.post_id,

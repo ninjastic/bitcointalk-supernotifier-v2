@@ -5,7 +5,7 @@ import { getRepository } from 'typeorm';
 export type ParsedTopicPost = {
   success: boolean;
   post: Post | null;
-  failed_reason: string | null;
+  failedReason: string | null;
 };
 
 const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
@@ -22,7 +22,7 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
   });
 
   if (!postElement) {
-    return { success: false, post: null, failed_reason: 'No topic found' };
+    return { success: false, post: null, failedReason: 'No topic found' };
   }
 
   const postHeader = $(postElement).find("td.td_headerandpost td > div[id*='subject'] > a");
@@ -94,7 +94,7 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
     notified_to: []
   });
 
-  return { success: true, post, failed_reason: null };
+  return { success: true, post, failedReason: null };
 };
 
 export default parseTopicPostOpHtml;

@@ -2,7 +2,7 @@ import { getRepository } from 'typeorm';
 import { container } from 'tsyringe';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
-import scrapePostJob from '##/modules/posts/infra/jobs/scrape-post-job';
+import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 
 type GetPostParams = {
   postId: number;
@@ -31,7 +31,7 @@ const getPost = async (params: GetPostParams): Promise<Post | undefined> => {
   }
 
   if (params.shouldScrape) {
-    const { post: scrapedPost } = await scrapePostJob(params.postId);
+    const { post: scrapedPost } = await addForumScraperJob('scrapePost', { post_id: params.postId }, true);
     if (post) {
       post = scrapedPost;
     }

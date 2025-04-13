@@ -19,6 +19,7 @@ import logger from '##/shared/services/logger';
 import { getRepository, Repository } from 'typeorm';
 import parseTopicPostOpHtml from '##/modules/posts/services/scraper/parse-topic-post-op-html';
 import { RescrapeSchedule } from '##/modules/posts/services/check-post-rescrape-schedules';
+import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 
 export type RecentPostWithFooter = {
   postElement: cheerio.Element;
@@ -210,6 +211,11 @@ export class PostScraper {
             await this.topicsRepository.save(topic);
             logger.debug(`[PostScraper] Created topic ${topic.topic_id}`);
           }
+        } else {
+          const existingTopic = await this.topicsRepository.findOne({ where: { topic_id: post.topic_id } });
+          if (!existingTopic) {
+            await addForumScraperJob('scrapeTopic', { topic_id: post.topic_id }, false);
+          }
         }
       } else {
         await this.redisProvider.save(scrapedPostKey, true, 'EX', 1800); // 30 minutes
@@ -276,7 +282,7 @@ export class PostScraper {
     const topicPost = parseTopicPostOpHtml(html);
 
     if (!topicPost.success) {
-      return { success: false, post: null, failed_reason: topicPost.failed_reason };
+      return { success: false, post: null, failedReason: topicPost.failedReason };
     }
 
     let post = await this.postsRepository.findOne({ where: { post_id: topicPost.post.post_id } });
@@ -296,7 +302,7 @@ export class PostScraper {
       await this.topicsRepository.save(topic);
     }
 
-    return { success: true, post, failed_reason: null };
+    return { success: true, post, failedReason: null };
   }
 
   async schedulePostRescrape(postId: number, minutes: number): Promise<void> {

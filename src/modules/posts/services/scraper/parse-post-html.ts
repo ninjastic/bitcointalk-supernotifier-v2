@@ -2,12 +2,13 @@ import { getRepository } from 'typeorm';
 import { load } from 'cheerio';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import logger from '##/shared/services/logger';
-import { isValid } from 'date-fns';
+import { isValid, sub } from 'date-fns';
 
 export type ParsedPost = {
   success: boolean;
   post: Post | null;
-  failed_reason: string | null;
+  failedReason: string | null;
+  scrapedForumDate?: Date;
 };
 
 const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> => {
@@ -28,7 +29,7 @@ const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> 
 
   if (topicNotFound || topicOffLimit) {
     logger.info(`[ParsePostElementService] Topic of post ${postId} was not found or is off limit`);
-    return { success: false, post: null, failed_reason: 'Topic not found' };
+    return { success: false, post: null, failedReason: 'Topic not found' };
   }
 
   const postsContainer = $('#quickModForm > table.bordercolor');
@@ -43,7 +44,7 @@ const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> 
 
   if (!postElement) {
     logger.info(`[ParsePostElementService] Post of id ${postId} not found`);
-    return { success: false, post: null, failed_reason: 'Post not found' };
+    return { success: false, post: null, failedReason: 'Post not found' };
   }
 
   const postHeader = $(postElement).find("td.td_headerandpost td > div[id*='subject'] > a");
@@ -102,6 +103,12 @@ const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> 
         .replace(/Last edit:.*/, '')
     ) || null;
 
+  const forumDateString = $(
+    'body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span'
+  ).text();
+
+  const scrapeDate = sub(new Date(forumDateString), { minutes: new Date().getTimezoneOffset() });
+
   const post = postsRepository.create({
     post_id: postId,
     topic_id: topicId,
@@ -119,7 +126,7 @@ const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> 
 
   post.edited = isValid(editedDate) ? editedDate : null;
 
-  return { success: true, post, failed_reason: null };
+  return { success: true, post, failedReason: null, scrapedForumDate: scrapeDate };
 };
 
 export default parsePostHtml;
