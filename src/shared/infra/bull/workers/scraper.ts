@@ -68,7 +68,7 @@ const scraper = async () => {
     }
   };
 
-  const worker = new Worker<ForumScraperQueueInput, ForumScraperQueueOutput, ForumScraperQueueJobName>(
+  const worker = new Worker<ForumScraperQueueInput<any>, ForumScraperQueueOutput<any>, ForumScraperQueueJobName>(
     forumScraperQueue.name,
     async (job: Job) => {
       const jobRecipe = jobRecipes[job.name];
