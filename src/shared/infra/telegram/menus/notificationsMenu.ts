@@ -22,6 +22,11 @@ const handleNotificationToggle = async (ctx: IMenuContext) => {
     await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'mentions', ctx.session.mentions);
   }
 
+  if (ctx.update.callback_query.data === '/notifications/onlyDirectMentions') {
+    ctx.session.onlyDirectMentions = !ctx.session.onlyDirectMentions;
+    await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'onlyDirectMentions', ctx.session.onlyDirectMentions);
+  }
+
   if (ctx.update.callback_query.data === '/notifications/modlogs') {
     ctx.session.modlogs = !ctx.session.modlogs;
     await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'modlogs', ctx.session.modlogs);
@@ -43,6 +48,7 @@ const mentionsEnabled = (ctx: IMenuContext) => ctx.session.mentions;
 const meritsEnabled = (ctx: IMenuContext) => ctx.session.merits;
 const modlogsEnabled = (ctx: IMenuContext) => ctx.session.modlogs;
 const trackTopicsEnabled = (ctx: IMenuContext) => ctx.session.track_topics;
+const onlyDirectMentionsEnabled = (ctx: IMenuContext) => ctx.session.onlyDirectMentions;
 
 notificationsMenu.interact(
   ctx => (mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '🚫 Mentions Disabled'),
@@ -82,6 +88,19 @@ notificationsMenu.interact(
 notificationsMenu.interact(
   ctx => (trackTopicsEnabled(ctx) ? '✅ Auto-Track Own Topics Enabled ' : '🚫 Auto-Track Own Topics Disabled'),
   'track_topics',
+  {
+    do: async ctx => {
+      await ctx.answerCallbackQuery();
+      await handleNotificationToggle(ctx);
+
+      return true;
+    }
+  }
+);
+
+notificationsMenu.interact(
+  ctx => (onlyDirectMentionsEnabled(ctx) ? '✅ Only Direct Mentions Enabled ' : '🚫 Only Direct Mentions Disabled'),
+  'onlyDirectMentions',
   {
     do: async ctx => {
       await ctx.answerCallbackQuery();

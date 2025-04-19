@@ -2,6 +2,7 @@ export default interface ISession {
   username: string;
   userId: number;
   mentions: boolean;
+  onlyDirectMentions: boolean;
   merits: boolean;
   modlogs: boolean;
   track_topics: boolean;

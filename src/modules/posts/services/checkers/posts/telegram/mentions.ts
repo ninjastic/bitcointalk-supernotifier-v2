@@ -28,7 +28,7 @@ const processPost = (
 
   for (const user of users) {
     try {
-      if (!user.username || !isUserMentionedInPost(post.content, user)) continue;
+      if (!user.username || !isUserMentionedInPost(post.content, user, user.enable_only_direct_mentions)) continue;
       if (!shouldNotifyUser(post, user, ignoredUsers, ignoredTopics)) continue;
 
       data.push({
@@ -62,7 +62,7 @@ const processPostVersion = (
 
   for (const user of users) {
     try {
-      if (!user.username || !isUserMentionedInPost(postVersion.new_content, user)) continue;
+      if (!user.username || !isUserMentionedInPost(postVersion.new_content, user, user.enable_only_direct_mentions)) continue;
       if (!shouldNotifyUser(postWithNewContent, user, ignoredUsers, ignoredTopics)) continue;
 
       data.push({

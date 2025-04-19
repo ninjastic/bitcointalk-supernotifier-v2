@@ -77,6 +77,37 @@ const askForConfirmation = async (
   return false;
 };
 
+const askForMentionType = async (conversation: Conversation<IMenuContext>, ctx: IMenuContext): Promise<boolean> => {
+  const mentionTypeMenu = new Menu<IMenuContext>('mentionTypeMenu').text('All mentions').text('Only quotes and @ tags');
+  await conversation.run(mentionTypeMenu);
+
+  const promptMsg = await ctx.reply(
+    `Do you want to be notified every time someone writes your username <b>${ctx.from.username}</b>...\n\nOr <b>only</b> when they quote your post or tag you with <b>@${ctx.from.username}</b>?`,
+    {
+      parse_mode: 'HTML',
+      reply_markup: mentionTypeMenu
+    }
+  );
+
+  const cb = await conversation.waitForCallbackQuery(/mentionTypeMenu/);
+  const answer = cb.callbackQuery.data.match(/\/0\/0\//) !== null; // true if "All mentions"
+
+  await ctx.api.editMessageText(
+    ctx.chat.id,
+    promptMsg.message_id,
+    answer
+      ? `✅ We will notify you of <b> all mentions</b>`
+      : `✅ We will only notify you of <b>quotes</b> and <b>@ tags</b>`,
+    { reply_markup: null }
+  );
+
+  if (answer) {
+    return true;
+  }
+
+  return false;
+};
+
 const setupConversation = async (
   conversation: Conversation<IMenuContext & ConversationFlavor>,
   ctx: IMenuContext
@@ -85,6 +116,12 @@ const setupConversation = async (
   const userId = (await askForPrompt(conversation, ctx, 'userId')) as number;
 
   const mentionsEnabled = await askForConfirmation(conversation, ctx, 'mentions');
+
+  if (mentionsEnabled) {
+    const onlyDirectMentions = await askForMentionType(conversation, ctx);
+    conversation.session.onlyDirectMentions = onlyDirectMentions;
+  }
+
   const meritsEnabled = await askForConfirmation(conversation, ctx, 'merits');
 
   conversation.session.username = username;

@@ -26,6 +26,9 @@ class User {
   enable_mentions: boolean;
 
   @Column('boolean')
+  enable_only_direct_mentions: boolean;
+
+  @Column('boolean')
   enable_merits: boolean;
 
   @Column('boolean')

@@ -70,7 +70,7 @@ export default class CheckPostsHistoryService {
     for await (const history of histories) {
       for await (const user of users) {
         if (!history.post) continue;
-        if (!isUserMentionedInPost(history.post.content, user)) continue;
+        if (!isUserMentionedInPost(history.post.content, user, user.enable_only_direct_mentions)) continue;
         if (!shouldNotifyUser(history.post, user, ignoredUsers, ignoredTopics)) continue;
 
         const notificationKey = `CheckPostsHistoryService:${user.telegram_id}:${history.post.post_id}`;
