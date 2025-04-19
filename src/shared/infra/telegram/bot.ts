@@ -121,6 +121,8 @@ class TelegramBot {
           ctx.session.mentions = user.enable_mentions;
           ctx.session.merits = user.enable_merits;
           ctx.session.modlogs = user.enable_modlogs;
+          ctx.session.track_topics = user.enable_auto_track_topics;
+          ctx.session.onlyDirectMentions = user.enable_only_direct_mentions;
           ctx.session.isGroup = ctx.chat.type !== 'private';
         }
       }
