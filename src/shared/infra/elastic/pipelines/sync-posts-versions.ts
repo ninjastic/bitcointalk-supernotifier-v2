@@ -64,7 +64,7 @@ export class SyncPostsVersionsPipeline {
 
     const $ = load(html);
     const quotes: QuoteContent[] = [];
-    let contentWithoutQuotes = html;
+    let contentWithoutQuotes = $('body').html();
 
     $('div.quoteheader').each((_, quoteHeaderElement) => {
       const quoteHeader = $(quoteHeaderElement);
@@ -129,7 +129,7 @@ export class SyncPostsVersionsPipeline {
     });
 
     return {
-      content: html,
+      content: $('body').html(),
       content_without_quotes: contentWithoutQuotes,
       quotes
     };
