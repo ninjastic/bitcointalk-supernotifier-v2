@@ -5,6 +5,16 @@ import RedisProvider from '##/shared/container/providers/implementations/RedisPr
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import baseLogger from '##/shared/services/logger';
 
+type RawTopic = Topic & {
+  posts_title: string;
+  posts_author: string;
+  posts_author_uid: number;
+  posts_board_id: number;
+  posts_date: Date;
+  posts_created_at: Date;
+  posts_updated_at: string;
+};
+
 interface LastSyncState {
   lastUpdatedAt: string;
 }
@@ -83,7 +93,7 @@ export class SyncTopicsPipeline {
           }
         }
       });
-      this.logger.info(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
+      this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
     } catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
@@ -98,9 +108,9 @@ export class SyncTopicsPipeline {
         await this.esClient.indices.create({
           index: this.INDEX_NAME
         });
-        this.logger.info(`Index '${this.INDEX_NAME}' created successfully.`);
+        this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
       } else {
-        this.logger.info(`Index '${this.INDEX_NAME}' already exists.`);
+        this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
     } catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
@@ -108,20 +118,20 @@ export class SyncTopicsPipeline {
     }
   }
 
-  private async batchProcessTopics(topics: Topic[]): Promise<void> {
+  private async batchProcessTopics(topics: RawTopic[]): Promise<void> {
     const esBulkContent = topics.flatMap(topic => [
       { index: { _index: this.INDEX_NAME, _id: topic.topic_id.toString() } },
       {
         topic_id: topic.topic_id,
         post_id: topic.post_id,
         post: {
-          title: topic.post.title,
-          author: topic.post.author,
-          author_uid: topic.post.author_uid,
-          date: topic.post.date,
-          board_id: topic.post.board_id,
-          created_at: topic.created_at,
-          updated_at: topic.updated_at
+          title: topic.posts_title,
+          author: topic.posts_author,
+          author_uid: topic.posts_author_uid,
+          date: topic.posts_date,
+          board_id: topic.posts_board_id,
+          created_at: topic.posts_created_at,
+          updated_at: topic.posts_updated_at
         }
       }
     ]);
@@ -159,25 +169,25 @@ export class SyncTopicsPipeline {
     let stop = false;
 
     while (!stop) {
-      const topics = await topicsRepository.find({
-        where: { updated_at: MoreThan(lastUpdatedAt) },
-        relations: ['post', 'post.board'],
-        order: {
-          updated_at: 'ASC'
-        },
-        take: this.SYNC_BATCH_SIZE
-      });
+      const topics = await topicsRepository
+        .createQueryBuilder('topics')
+        .select(['topics.*', 'topics.updated_at::text'])
+        .where('topics.updated_at > :lastUpdatedAt', { lastUpdatedAt })
+        .innerJoinAndSelect('topics.post', 'posts')
+        .orderBy('topics.updated_at', 'ASC')
+        .limit(this.SYNC_BATCH_SIZE)
+        .getRawMany();
 
       if (topics.length) {
         await this.batchProcessTopics(topics);
-        lastUpdatedAt = topics.at(-1).updated_at.toISOString();
+        lastUpdatedAt = topics.at(-1).updated_at;
 
         await this.cacheRepository.save('topics-sync-state', { lastUpdatedAt });
-        this.logger.info(`Processed ${topics.length} topics. Last updated_at: ${lastUpdatedAt}`);
+        this.logger.debug(`Processed ${topics.length} topics. Last updated_at: ${lastUpdatedAt}`);
       }
 
       if (topics.length < this.SYNC_BATCH_SIZE) {
-        this.logger.info('Synchronization is up to date');
+        this.logger.debug('Synchronization is up to date');
         stop = true;
       }
     }

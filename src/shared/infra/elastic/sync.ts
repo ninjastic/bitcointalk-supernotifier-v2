@@ -30,7 +30,7 @@ async function syncAll() {
   const syncTopicsPipeline = new SyncTopicsPipeline(connection, esClient, cacheRepository);
   const syncPostsHistoryPipeline = new SyncPostsHistoryPipeline(connection, esClient, cacheRepository);
   const syncPostsAddressesPipeline = new SyncPostsAddressesPipeline(connection, esClient, cacheRepository);
-  const syncBoardsPipeline = new SyncBoardsPipeline(connection, esClient);
+  const syncBoardsPipeline = new SyncBoardsPipeline(connection, esClient, cacheRepository);
 
   const argv = yargs
     .option('bootstrap', {

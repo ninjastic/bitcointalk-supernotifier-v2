@@ -115,7 +115,7 @@ export class SyncPostsHistoryPipeline {
           }
         }
       });
-      this.logger.info(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
+      this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
     } catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
@@ -130,9 +130,9 @@ export class SyncPostsHistoryPipeline {
         await this.esClient.indices.create({
           index: this.INDEX_NAME
         });
-        this.logger.info(`Index '${this.INDEX_NAME}' created successfully.`);
+        this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
       } else {
-        this.logger.info(`Index '${this.INDEX_NAME}' already exists.`);
+        this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
     } catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
@@ -207,11 +207,11 @@ export class SyncPostsHistoryPipeline {
         lastUpdatedAt = histories.at(-1).updated_at.toISOString();
 
         await this.cacheRepository.save('posts-history-sync-state', { lastUpdatedAt });
-        this.logger.info(`Processed ${histories.length} history records. Last updated_at: ${lastUpdatedAt}`);
+        this.logger.debug(`Processed ${histories.length} history records. Last updated_at: ${lastUpdatedAt}`);
       }
 
       if (histories.length < this.SYNC_BATCH_SIZE) {
-        this.logger.info('Synchronization is up to date');
+        this.logger.debug('Synchronization is up to date');
         stop = true;
       }
     }

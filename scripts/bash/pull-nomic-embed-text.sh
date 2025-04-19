@@ -1,0 +1,1 @@
+curl -X POST localhost:11434/api/pull -d '{"name":"nomic-embed-text"}'

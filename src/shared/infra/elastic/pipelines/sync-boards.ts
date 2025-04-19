@@ -3,15 +3,29 @@ import { Connection } from 'typeorm';
 import { Client } from '@elastic/elasticsearch';
 import Board from '##/modules/posts/infra/typeorm/entities/Board';
 import baseLogger from '##/shared/services/logger';
+import { OllamaEmbeddings } from '@langchain/ollama';
+import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+
+interface LastSyncState {
+  lastUpdatedAt: string;
+}
 
 export class SyncBoardsPipeline {
   private readonly logger = baseLogger.child({ pipeline: 'syncBoardsPipeline' });
 
-  private readonly INDEX_NAME = 'boards';
+  private embeddings = new OllamaEmbeddings({
+    model: 'nomic-embed-text'
+  });
 
-  private readonly INDEX_TEMPLATE_NAME = 'boards_template';
+  private readonly INDEX_NAME = 'boards_v2';
 
-  constructor(private readonly connection: Connection, private readonly esClient: Client) {}
+  private readonly INDEX_TEMPLATE_NAME = 'boards_v2_template';
+
+  constructor(
+    private readonly connection: Connection,
+    private readonly esClient: Client,
+    private readonly cacheRepository: RedisProvider
+  ) {}
 
   public async execute(): Promise<void> {
     try {
@@ -35,11 +49,14 @@ export class SyncBoardsPipeline {
             name: {
               type: 'keyword'
             },
+            embeddings: {
+              type: 'dense_vector'
+            },
             parent_id: { type: 'integer' }
           }
         }
       });
-      this.logger.info(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
+      this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
     } catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
@@ -54,9 +71,9 @@ export class SyncBoardsPipeline {
         await this.esClient.indices.create({
           index: this.INDEX_NAME
         });
-        this.logger.info(`Index '${this.INDEX_NAME}' created successfully.`);
+        this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
       } else {
-        this.logger.info(`Index '${this.INDEX_NAME}' already exists.`);
+        this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
     } catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
@@ -65,12 +82,15 @@ export class SyncBoardsPipeline {
   }
 
   private async batchProcessBoard(boards: Board[]): Promise<void> {
-    const esBulkContent = boards.flatMap(board => [
+    const embeddingsArray = await this.embeddings.embedDocuments(boards.map(board => board.name));
+
+    const esBulkContent = boards.flatMap((board, i) => [
       { index: { _index: this.INDEX_NAME, _id: board.board_id.toString() } },
       {
         board_id: board.board_id,
         name: board.name,
-        parent_id: board.parent_id
+        parent_id: board.parent_id,
+        embeddings: embeddingsArray[i]
       }
     ]);
 
@@ -91,13 +111,24 @@ export class SyncBoardsPipeline {
   }
 
   private async syncBoards(): Promise<void> {
-    const boardRepository = this.connection.getRepository(Board);
+    const boardsRepository = this.connection.getRepository(Board);
 
-    const boards = await boardRepository.createQueryBuilder('boards').orderBy('boards.board_id', 'ASC').getMany();
+    let { lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('boards-sync-state')) ?? {
+      lastUpdatedAt: new Date(0).toISOString()
+    };
+    const boards = await boardsRepository
+      .createQueryBuilder('boards')
+      .select(['*', 'boards.updated_at::text'])
+      .where('boards.updated_at > :lastUpdatedAt', { lastUpdatedAt })
+      .orderBy('boards.updated_at', 'ASC')
+      .getRawMany();
 
     if (boards.length) {
       await this.batchProcessBoard(boards);
-      this.logger.info(`Processed ${boards.length} boards.`);
+      this.logger.debug(`Processed ${boards.length} boards.`);
+
+      lastUpdatedAt = boards.at(-1).updated_at;
+      await this.cacheRepository.save('boards-sync-state', { lastUpdatedAt });
     }
   }
 }

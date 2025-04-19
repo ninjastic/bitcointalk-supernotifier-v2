@@ -236,25 +236,33 @@ export class SyncPostsVersionsPipeline {
     let stop = false;
 
     while (!stop) {
-      const postsVersions = await postsVersionsRepository.find({
-        where: { updated_at: MoreThan(lastUpdatedAt) },
-        relations: ['post'],
-        order: {
-          updated_at: 'ASC'
-        },
-        take: this.SYNC_BATCH_SIZE
-      });
+      // const postsVersions = await postsVersionsRepository.find({
+      //   where: { updated_at: MoreThan(lastUpdatedAt) },
+      //   relations: ['post'],
+      //   order: {
+      //     updated_at: 'ASC'
+      //   },
+      //   take: this.SYNC_BATCH_SIZE
+      // });
+
+      const postsVersions = await postsVersionsRepository
+        .createQueryBuilder('posts_versions')
+        .select(['posts_versions.*', 'posts_versions.updated_at::text'])
+        .where('posts_versions.updated_at > :lastUpdatedAt', { lastUpdatedAt })
+        .orderBy('posts_versions.updated_at', 'ASC')
+        .limit(this.SYNC_BATCH_SIZE)
+        .getRawMany();
 
       if (postsVersions.length) {
         await this.batchProcess(postsVersions);
-        lastUpdatedAt = postsVersions.at(-1).updated_at.toISOString();
+        lastUpdatedAt = postsVersions.at(-1).updated_at;
 
         await this.cacheRepository.save('posts-versions-sync-state', { lastUpdatedAt });
-        this.logger.info(`Processed ${postsVersions.length} versions records. Last updated_at: ${lastUpdatedAt}`);
+        this.logger.debug(`Processed ${postsVersions.length} versions records. Last updated_at: ${lastUpdatedAt}`);
       }
 
       if (postsVersions.length < this.SYNC_BATCH_SIZE) {
-        this.logger.info('Synchronization is up to date');
+        this.logger.debug('Synchronization is up to date');
         stop = true;
       }
     }
