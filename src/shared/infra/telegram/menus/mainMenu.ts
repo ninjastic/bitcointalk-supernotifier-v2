@@ -8,6 +8,7 @@ import trackedBoardsMenu from './trackedBoardsMenu';
 import trackedUsersMenu from './trackedUsersMenu';
 import ignoredUsersMenu from './ignoredUsersMenu';
 import ignoredTopicsMenu from './ignoredTopicsMenu';
+import ignoredBoardsMenu from './ignoredBoardsMenu';
 import notificationsMenu from './notificationsMenu';
 import aboutMenu from './aboutMenu';
 
@@ -22,11 +23,12 @@ const mainMenu = new MenuTemplate<IMenuContext>(async (ctx: IMenuContext) => ({
   parse_mode: 'HTML'
 }));
 
+mainMenu.submenu('💬 Tracked Phrases', 'tp', trackedPhrasesMenu);
 mainMenu.submenu('📗 Tracked Topics', 'tt', trackedTopicsMenu);
-mainMenu.submenu('💬 Tracked Phrases', 'tp', trackedPhrasesMenu, { joinLastRow: true });
+mainMenu.submenu('🚫 Ignored Topics', 'it', ignoredTopicsMenu, { joinLastRow: true });
 mainMenu.submenu('🗂️ Tracked Boards', 'tb', trackedBoardsMenu);
-mainMenu.submenu('✍️ Tracked Users', 'tu', trackedUsersMenu, { joinLastRow: true });
-mainMenu.submenu('🚫 Ignored Topics', 'it', ignoredTopicsMenu);
+mainMenu.submenu('🚫 Ignored Boards', 'ib', ignoredBoardsMenu, { joinLastRow: true });
+mainMenu.submenu('✍️ Tracked Users', 'tu', trackedUsersMenu);
 mainMenu.submenu('🚫 Ignored Users', 'iu', ignoredUsersMenu, { joinLastRow: true });
 mainMenu.submenu('🔔 Notifications', 'notifications', notificationsMenu, { hide: ctx => ctx.session.isGroup });
 mainMenu.submenu('👋 About', 'about', aboutMenu, { joinLastRow: true });

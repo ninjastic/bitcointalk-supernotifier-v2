@@ -20,6 +20,10 @@ import addTrackedBoardConversation, {
   confirmAddTrackedBoardInlineMenu,
   cancelAddTrackedBoardPromptInlineMenu
 } from './conversations/addTrackedBoardConversation';
+import addIgnoredBoardConversation, {
+  cancelAddIgnoredBoardPromptInlineMenu,
+  confirmAddIgnoredBoardInlineMenu
+} from './conversations/addIgnoredBoardConversation';
 import addTrackedUserConversation, {
   cancelAddTrackedUserPromptInlineMenu,
   confirmAddTrackedUserInlineMenu
@@ -39,7 +43,6 @@ import lengthCommand from './commands/lengthCommand';
 import imageCommand from './commands/imageCommand';
 import authCommand from './commands/authCommand';
 import minPostsCommand from './commands/minPostsCommand';
-
 export function initialSession(): ISession {
   return {
     username: null,
@@ -57,7 +60,7 @@ class TelegramBot {
 
   constructor() {
     this.instance = new Bot(process.env.TELEGRAM_BOT_TOKEN, {
-      client: { environment: process.env.NODE_ENV === 'development' ? 'test' : 'prod' }
+      // client: { environment: process.env.NODE_ENV === 'development' ? 'test' : 'prod' }
     });
 
     this.middlewares();
@@ -164,7 +167,9 @@ class TelegramBot {
       confirmAddTrackedBoardInlineMenu,
       cancelAddTrackedBoardPromptInlineMenu,
       confirmAddTrackedUserInlineMenu,
-      cancelAddTrackedUserPromptInlineMenu
+      cancelAddTrackedUserPromptInlineMenu,
+      confirmAddIgnoredBoardInlineMenu,
+      cancelAddIgnoredBoardPromptInlineMenu
     );
     handleTrackTopicRepliesMenu(this.instance);
   }
@@ -173,7 +178,8 @@ class TelegramBot {
     this.instance.use(
       createConversation(setupConversation, 'setup'),
       createConversation(addTrackedBoardConversation, 'addTrackedBoard'),
-      createConversation(addTrackedUserConversation, 'addTrackedUser')
+      createConversation(addTrackedUserConversation, 'addTrackedUser'),
+      createConversation(addIgnoredBoardConversation, 'addIgnoredBoard')
     );
   }
 

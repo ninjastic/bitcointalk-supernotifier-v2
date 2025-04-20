@@ -1,4 +1,6 @@
 import { container, inject, injectable } from 'tsyringe';
+import { getRepository, IsNull, MoreThanOrEqual, Not } from 'typeorm';
+import { sub } from 'date-fns';
 
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import User from '##/modules/users/infra/typeorm/entities/User';
@@ -25,18 +27,15 @@ import { telegramTrackedBoardTopicsChecker } from './checkers/posts/telegram/tra
 import { telegramTrackedUserTopicsChecker } from './checkers/posts/telegram/trackedUserTopics';
 import { telegramAutoTrackTopicsChecker } from './checkers/posts/telegram/autoTrackTopics';
 import { NotificationResult, RecipeNames } from '../../../shared/infra/bull/types/telegram';
-import { getRepository, IsNull, MoreThanOrEqual, Not } from 'typeorm';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
-import { sub } from 'date-fns';
+import IgnoredBoard from '../infra/typeorm/entities/IgnoredBoard';
 
 type ProcessorCheckerPromise<T> = (data: T) => Promise<NotificationResult<any>[]>;
-
-type ProcessorData<T extends ProcessorCheckerPromise<any>> = Parameters<T>[0];
 
 type Processor<T extends ProcessorCheckerPromise<any>> = {
   checkerPromise: T;
   jobName: RecipeNames;
-  data: ProcessorData<T>[0];
+  data: Parameters<T>[0];
 };
 
 type ProcessorResult = NotificationResult<any>;
@@ -60,6 +59,8 @@ export default class CheckPostsService {
   ) {}
 
   private async fetchData() {
+    const ignoredBoardsRepository = getRepository(IgnoredBoard)
+
     const posts = await this.postsRepository.findLatestUncheckedPosts();
     const users = await this.usersRepository.getUsersWithMentions();
     const trackedBoards = await container.resolve(TrackedBoardsRepository).find();
@@ -69,6 +70,7 @@ export default class CheckPostsService {
     const trackedTopics = await container.resolve(GetTrackedTopicsService).execute();
     const ignoredUsers = await container.resolve(GetIgnoredUsersService).execute();
     const ignoredTopics = await container.resolve(GetIgnoredTopicsService).execute();
+    const ignoredBoards = await ignoredBoardsRepository.find({ relations: ['board'] });
 
     const postsVersions = await this.postsVersionRepository.find({
       relations: ['post'],
@@ -89,6 +91,7 @@ export default class CheckPostsService {
       trackedTopics,
       ignoredUsers,
       ignoredTopics,
+      ignoredBoards,
       postsVersions
     };
   }
@@ -166,6 +169,7 @@ export default class CheckPostsService {
         trackedTopics,
         ignoredUsers,
         ignoredTopics,
+        ignoredBoards,
         postsVersions
       } = await this.fetchData();
 
@@ -175,13 +179,13 @@ export default class CheckPostsService {
         {
           checkerPromise: telegramMentionsChecker,
           jobName: 'sendMentionNotification',
-          data: { posts, users, ignoredUsers, ignoredTopics, postsVersions }
+          data: { posts, postsVersions, users, ignoredUsers, ignoredTopics, ignoredBoards }
         } as Processor<typeof telegramMentionsChecker>,
 
         {
           checkerPromise: telegramTrackedPhrasesChecker,
           jobName: 'sendPhraseTrackingNotification',
-          data: { posts, trackedPhrases, ignoredUsers, ignoredTopics }
+          data: { posts, trackedPhrases, ignoredUsers, ignoredTopics, ignoredBoards }
         } as Processor<typeof telegramTrackedPhrasesChecker>,
 
         {

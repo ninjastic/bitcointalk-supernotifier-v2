@@ -4,6 +4,7 @@ import logger from '../../../../../../shared/services/logger';
 import Post from '../../../../infra/typeorm/entities/Post';
 import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
 import IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
+import IgnoredBoard from '../../../../infra/typeorm/entities/IgnoredBoard';
 import TrackedPhrase from '../../../../infra/typeorm/entities/TrackedPhrase';
 import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 
@@ -16,6 +17,7 @@ type TelegramTrackedPhrasesCheckerParams = {
   trackedPhrases: TrackedPhrase[];
   ignoredUsers: IgnoredUser[];
   ignoredTopics: IgnoredTopic[];
+  ignoredBoards: IgnoredBoard[];
 };
 
 const isPhraseInPost = (post: Post, phraseRegex: RegExp): boolean => post.content.match(phraseRegex) !== null;
@@ -24,7 +26,8 @@ const processPost = (
   post: Post,
   trackedPhrases: TrackedPhrase[],
   ignoredUsers: IgnoredUser[],
-  ignoredTopics: IgnoredTopic[]
+  ignoredTopics: IgnoredTopic[],
+  ignoredBoards: IgnoredBoard[]
 ): TelegramTrackedPhrasesCheckerNotificationResult[] => {
   const data: TelegramTrackedPhrasesCheckerNotificationResult[] = [];
 
@@ -34,7 +37,7 @@ const processPost = (
       const phraseRegex = createMentionRegex(phrase);
 
       if (!isPhraseInPost(post, phraseRegex)) continue;
-      if (!shouldNotifyUser(post, user, ignoredUsers, ignoredTopics)) continue;
+      if (!shouldNotifyUser(post, user, ignoredUsers, ignoredTopics, ignoredBoards)) continue;
 
       data.push({
         userId: user.id,
@@ -56,13 +59,14 @@ export const telegramTrackedPhrasesChecker = async ({
   posts,
   trackedPhrases,
   ignoredUsers,
-  ignoredTopics
+  ignoredTopics,
+  ignoredBoards
 }: TelegramTrackedPhrasesCheckerParams): Promise<TelegramTrackedPhrasesCheckerNotificationResult[]> => {
   const data: TelegramTrackedPhrasesCheckerNotificationResult[] = [];
 
   for (const post of posts) {
     try {
-      const notifications = processPost(post, trackedPhrases, ignoredUsers, ignoredTopics);
+      const notifications = processPost(post, trackedPhrases, ignoredUsers, ignoredTopics, ignoredBoards);
       data.push(...notifications);
     } catch (error) {
       logger.error({ error, postId: post.post_id }, `Error processing post ${post.post_id}`);

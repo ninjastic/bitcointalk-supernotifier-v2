@@ -24,19 +24,19 @@ donationMenu.interact('₿ BTC (bech32)', 'bech32-donate', {
   }
 });
 
-donationMenu.interact('₿ BTC (legacy)', 'legacy-donate', {
-  do: async ctx => {
-    await ctx.reply('1NinjabXd5znM5zgTcmxDVzH4w3nbaY16L');
-    return true;
-  }
-});
+// donationMenu.interact('₿ BTC (legacy)', 'legacy-donate', {
+//   do: async ctx => {
+//     await ctx.reply('1NinjabXd5znM5zgTcmxDVzH4w3nbaY16L');
+//     return true;
+//   }
+// });
 
-donationMenu.interact('USDT (TRX)', 'usdt-donate', {
-  do: async ctx => {
-    await ctx.reply('TKijZ1wLkiagkddpXmTUkESEd4Fnsd8pA3');
-    return true;
-  }
-});
+// donationMenu.interact('USDT (TRX)', 'usdt-donate', {
+//   do: async ctx => {
+//     await ctx.reply('TKijZ1wLkiagkddpXmTUkESEd4Fnsd8pA3');
+//     return true;
+//   }
+// });
 
 donationMenu.interact('↩ Go Back', 'back', {
   do: async ctx => {

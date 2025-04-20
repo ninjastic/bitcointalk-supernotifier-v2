@@ -16,11 +16,9 @@ class IgnoredTopic {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Index({ unique: true })
   @Column('integer')
   topic_id: number;
 
-  @Index({ unique: true })
   @Column('integer')
   post_id: number;
 

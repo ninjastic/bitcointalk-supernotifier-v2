@@ -8,6 +8,7 @@ import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import User from '##/modules/users/infra/typeorm/entities/User';
 import IgnoredUser from '##/modules/users/infra/typeorm/entities/IgnoredUser';
 import IgnoredTopic from '##/modules/posts/infra/typeorm/entities/IgnoredTopic';
+import IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
 import SetUserBlockedService from '../infra/telegram/services/SetUserBlockedService';
 import logger from './logger';
 
@@ -86,8 +87,9 @@ export const createMentionRegex = (username: string): RegExp =>
 export const shouldNotifyUser = (
   post: Post,
   user: User,
-  ignoredUsers: IgnoredUser[],
-  ignoredTopics: IgnoredTopic[]
+  ignoredUsers?: IgnoredUser[],
+  ignoredTopics?: IgnoredTopic[],
+  ignoredBoards?: IgnoredBoard[]
 ): boolean => {
   const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
   const isSameUid = user.user_id && post.author_uid === user.user_id;
@@ -98,8 +100,10 @@ export const shouldNotifyUser = (
   const isTopicIgnored = ignoredTopics
     .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
     ?.ignoring.includes(user.telegram_id);
+  const isBoardIgnored = ignoredBoards
+    .find(ignoredBoard => ignoredBoard.board_id === post.board_id && ignoredBoard.telegram_id === user.telegram_id);
 
-  return !(isSameUsername || isSameUid || isAuthorIgnored || isTopicIgnored || isUserBlocked);
+  return !(isSameUsername || isSameUid || isAuthorIgnored || isTopicIgnored || isUserBlocked || isBoardIgnored);
 };
 
 export const isUserMentionedInPost = (

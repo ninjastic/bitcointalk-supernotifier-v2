@@ -96,9 +96,9 @@ const askForMentionType = async (conversation: Conversation<IMenuContext>, ctx: 
     ctx.chat.id,
     promptMsg.message_id,
     answer
-      ? `✅ We will notify you of <b> all mentions</b>`
+      ? `✅ We will notify you of <b>all mentions</b>`
       : `✅ We will only notify you of <b>quotes</b> and <b>@ tags</b>`,
-    { reply_markup: null }
+    { parse_mode: 'HTML', reply_markup: null }
   );
 
   if (answer) {
