@@ -87,9 +87,9 @@ export const createMentionRegex = (username: string): RegExp =>
 export const shouldNotifyUser = (
   post: Post,
   user: User,
-  ignoredUsers?: IgnoredUser[],
-  ignoredTopics?: IgnoredTopic[],
-  ignoredBoards?: IgnoredBoard[]
+  ignoredUsers: IgnoredUser[] = [],
+  ignoredTopics: IgnoredTopic[] = [],
+  ignoredBoards: IgnoredBoard[] = []
 ): boolean => {
   const isSameUsername = user.username && post.author.toLowerCase() === user.username.toLowerCase();
   const isSameUid = user.user_id && post.author_uid === user.user_id;

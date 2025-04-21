@@ -47,7 +47,7 @@ const processPost = async (
         continue;
       }
 
-      if (!shouldNotifyUser(post, user, ignoredUsers, [])) continue;
+      if (!shouldNotifyUser(post, user, ignoredUsers, [], [])) continue;
 
       const trackedTopicUsers = await findTrackedTopicUsers.execute({
         telegram_id: user.telegram_id,
