@@ -112,7 +112,7 @@ export class PostScraper {
     );
 
     const title = fullTitleWithBoards.find('b > a').text().trim();
-    const author = $('tr:nth-child(2) > td > span > a:nth-child(2)').text();
+    const author = $('tr:nth-child(2) > td > span > a:last-child').text();
     const topicAuthor = $('tr:nth-child(2) > td > span > a:nth-child(1)').text();
 
     if (!topicAuthor) {
@@ -128,7 +128,7 @@ export class PostScraper {
     }
 
     const authorUid = Number(
-      $('tr:nth-child(2) > td > span > a:nth-child(2)')
+      $('tr:nth-child(2) > td > span > a:last-child')
         .attr('href')
         .match(/u=(\d*)/)[1]
     );
