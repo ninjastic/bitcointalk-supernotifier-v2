@@ -30,7 +30,7 @@ export class SyncMeritsPipeline {
 
   private readonly INDEX_NAME = 'merits';
 
-  private readonly POSTS_INDEX_NAME = 'posts_v2';
+  private readonly POSTS_INDEX_NAME = 'posts_v3';
 
   private readonly INDEX_TEMPLATE_NAME = 'merits_template';
 
@@ -44,11 +44,11 @@ export class SyncMeritsPipeline {
     private readonly cacheRepository: RedisProvider
   ) {}
 
-  public async execute(bootstrap?: boolean): Promise<void> {
+  public async execute(bootstrap?: boolean): Promise<{ lastUpdatedAt: string; lastDate: string }> {
     try {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
-      await this.syncMerits(bootstrap);
+      return this.syncMerits(bootstrap);
     } catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
@@ -288,7 +288,7 @@ export class SyncMeritsPipeline {
     return merits;
   }
 
-  private async syncMerits(bootstrap?: boolean): Promise<void> {
+  private async syncMerits(bootstrap?: boolean): Promise<{ lastUpdatedAt: string; lastDate: string }> {
     let lastUpdatedAt: string;
     let lastDate: string;
 
@@ -296,7 +296,7 @@ export class SyncMeritsPipeline {
       lastUpdatedAt = new Date(0).toISOString();
       lastDate = new Date(0).toISOString();
     } else {
-      ({ lastUpdatedAt, lastDate } = (await this.cacheRepository.recover<LastSyncState>('merits-sync-state')) ?? {
+      ({ lastUpdatedAt, lastDate } = (await this.cacheRepository.recover<LastSyncState>('syncState:merits')) ?? {
         lastUpdatedAt: new Date(0).toISOString(),
         lastDate: new Date(0).toISOString()
       });
@@ -313,6 +313,7 @@ export class SyncMeritsPipeline {
         };
 
     let stop = false;
+    let lastState = { lastUpdatedAt, lastDate };
 
     while (!stop) {
       const merits = await this.getMeritsToSync(lastSync.type, lastSync.last);
@@ -328,16 +329,23 @@ export class SyncMeritsPipeline {
           lastSync.last = lastDate;
         }
 
-        await this.cacheRepository.save('merits-sync-state', { lastUpdatedAt, lastDate });
+        if (!bootstrap) {
+          await this.cacheRepository.save('syncState:merits', { lastUpdatedAt, lastDate });
+        }
+
         this.logger.debug(
           `Processed ${merits.length} merits. Last updated_at: ${lastUpdatedAt} | Last date: ${lastDate}`
         );
       }
 
       if (merits.length < this.SYNC_BATCH_SIZE) {
+        lastState = { lastUpdatedAt, lastDate };
+
         this.logger.debug('Synchronization is up to date');
         stop = true;
       }
     }
+
+    return lastState;
   }
 }

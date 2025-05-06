@@ -21,6 +21,8 @@ interface PostDocVersion {
   new_content: string;
   new_content_without_quotes: string;
   quotes: QuoteContent[];
+  urls: string[];
+  image_urls: string[];
   edit_date: Date;
   deleted: boolean;
   created_at: Date;
@@ -30,6 +32,8 @@ interface PostContent {
   content: string;
   content_without_quotes: string;
   quotes: QuoteContent[];
+  urls: string[];
+  image_urls: string[];
 }
 
 interface LastSyncState {
@@ -39,7 +43,7 @@ interface LastSyncState {
 export class SyncPostsVersionsPipeline {
   private readonly logger = baseLogger.child({ pipeline: 'syncPostsVersionsPipeline' });
 
-  private readonly POSTS_INDEX_NAME = 'posts_v2';
+  private readonly POSTS_INDEX_NAME = 'posts_v3';
 
   private readonly SYNC_BATCH_SIZE = 30000;
 
@@ -51,16 +55,16 @@ export class SyncPostsVersionsPipeline {
     private readonly cacheRepository: RedisProvider
   ) {}
 
-  public async execute(): Promise<void> {
+  public async execute(bootstrap?: boolean): Promise<{ lastUpdatedAt: string }> {
     try {
-      await this.syncVersions();
+      return this.syncVersions(bootstrap);
     } catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
   }
 
   private extractPostContent(html: string | null): PostContent {
-    if (!html) return { content: null, content_without_quotes: null, quotes: [] };
+    if (!html) return { content: null, content_without_quotes: null, quotes: [], urls: [], image_urls: [] };
 
     const $ = load(html);
     const quotes: QuoteContent[] = [];
@@ -128,10 +132,59 @@ export class SyncPostsVersionsPipeline {
       contentWithoutQuotes = contentWithoutQuotes.replace(fullQuoteHtml, '');
     });
 
+    const content = $('body').html();
+
+    const urls = new Set<string>();
+    const imageUrls = new Set<string>();
+
+    $('img.userimg').each((_, imgElement) => {
+      const img = $(imgElement);
+      let src = img.attr('src');
+      if (src) {
+        if (src.startsWith('https://bitcointalk.org/Smileys/')) {
+          return;
+        }
+
+        if (src.startsWith('https://ip.bitcointalk.org/')) {
+          const urlObj = new URL(src);
+          const imageUrl = urlObj.searchParams.get('u');
+
+          if (imageUrl) {
+            src = imageUrl;
+          }
+
+          try {
+            src = imageUrl ? decodeURIComponent(imageUrl) : src;
+          } catch (error) {
+            this.logger.warn({ src }, '[SyncPosts] Invalid decodeURIComponent image url');
+          }
+        }
+
+        if (src.length >= 256) {
+          return;
+        }
+
+        imageUrls.add(src);
+      }
+    });
+
+    $('a.ul').each((_, aElement) => {
+      const a = $(aElement);
+      const href = a.attr('href');
+      if (href) {
+        if (href.length >= 256) {
+          return;
+        }
+        urls.add(href);
+      }
+    });
+
     return {
-      content: $('body').html(),
+      content,
       content_without_quotes: contentWithoutQuotes,
-      quotes
+      quotes,
+      urls: Array.from(urls),
+      image_urls: Array.from(imageUrls)
     };
   }
 
@@ -139,7 +192,9 @@ export class SyncPostsVersionsPipeline {
     const versiosToUpdateMap = new Map<number, PostDocVersion[]>();
 
     for (const version of versions) {
-      const { content_without_quotes, content, quotes } = this.extractPostContent(version.new_content);
+      const { content_without_quotes, content, quotes, urls, image_urls } = this.extractPostContent(
+        version.new_content
+      );
       const newVersion: PostDocVersion = {
         id: version.id,
         post_id: version.post_id,
@@ -149,6 +204,8 @@ export class SyncPostsVersionsPipeline {
         quotes,
         edit_date: version.edit_date,
         deleted: version.deleted,
+        urls,
+        image_urls,
         created_at: version.created_at
       };
       versiosToUpdateMap.set(version.post_id, [...(versiosToUpdateMap.get(version.post_id) ?? []), newVersion]);
@@ -226,25 +283,23 @@ export class SyncPostsVersionsPipeline {
     }
   }
 
-  private async syncVersions(): Promise<void> {
+  private async syncVersions(bootstrap?: boolean): Promise<{ lastUpdatedAt: string }> {
     const postsVersionsRepository = this.connection.getRepository(PostVersion);
 
-    let { lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('posts-versions-sync-state')) ?? {
-      lastUpdatedAt: new Date(0).toISOString()
-    };
+    let lastUpdatedAt: string;
+
+    if (bootstrap) {
+      lastUpdatedAt = new Date(0).toISOString();
+    } else {
+      ({ lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('syncState:posts-versions')) ?? {
+        lastUpdatedAt: new Date(0).toISOString()
+      });
+    }
 
     let stop = false;
+    let lastState = { lastUpdatedAt };
 
     while (!stop) {
-      // const postsVersions = await postsVersionsRepository.find({
-      //   where: { updated_at: MoreThan(lastUpdatedAt) },
-      //   relations: ['post'],
-      //   order: {
-      //     updated_at: 'ASC'
-      //   },
-      //   take: this.SYNC_BATCH_SIZE
-      // });
-
       const postsVersions = await postsVersionsRepository
         .createQueryBuilder('posts_versions')
         .select(['posts_versions.*', 'posts_versions.updated_at::text'])
@@ -257,14 +312,21 @@ export class SyncPostsVersionsPipeline {
         await this.batchProcess(postsVersions);
         lastUpdatedAt = postsVersions.at(-1).updated_at;
 
-        await this.cacheRepository.save('posts-versions-sync-state', { lastUpdatedAt });
+        if (!bootstrap) {
+          await this.cacheRepository.save('syncState:posts-versions', { lastUpdatedAt });
+        }
+
         this.logger.debug(`Processed ${postsVersions.length} versions records. Last updated_at: ${lastUpdatedAt}`);
       }
 
       if (postsVersions.length < this.SYNC_BATCH_SIZE) {
+        lastState = { lastUpdatedAt };
+
         this.logger.debug('Synchronization is up to date');
         stop = true;
       }
     }
+
+    return lastState;
   }
 }

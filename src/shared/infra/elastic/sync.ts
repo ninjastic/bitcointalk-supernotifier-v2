@@ -37,6 +37,11 @@ async function syncAll() {
       type: 'boolean',
       default: false
     })
+    .option('exitAfter', {
+      type: 'boolean',
+      default: false
+    })
+    .implies('exitAfter', 'bootstrap')
     .option('lastPostId', {
       type: 'number',
       default: 0,
@@ -45,13 +50,27 @@ async function syncAll() {
     .implies('lastPostId', 'bootstrap')
     .parseSync();
 
-  const { bootstrap, lastPostId } = argv;
+  const { bootstrap, lastPostId, exitAfter } = argv;
 
   if (bootstrap) {
     logger.info('Starting bootstrap synchronization');
-    await syncPostsPipeline.execute(bootstrap, lastPostId);
-    await syncMeritsPipeline.execute(bootstrap);
-    logger.info('Bootstrap synchronization completed');
+    
+    const syncPostsLastState = await syncPostsPipeline.execute(bootstrap, lastPostId);
+    const syncPostsVersionsLastState = await syncPostsVersionsPipeline.execute(bootstrap);
+    const syncMeritsLastState = await syncMeritsPipeline.execute(bootstrap);
+
+    await cacheRepository.save('syncState:posts', syncPostsLastState);
+    await cacheRepository.save('syncState:posts-versions', syncPostsVersionsLastState);
+    await cacheRepository.save('syncState:merits', syncMeritsLastState);
+
+    logger.info(
+      { syncPostsLastState, syncPostsVersionsLastState, syncMeritsLastState },
+      'Bootstrap synchronization completed'
+    );
+
+    if (exitAfter) {
+      process.exit(1);
+    }
   }
 
   while (true) {

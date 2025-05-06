@@ -23,14 +23,16 @@ interface PostContent {
   content: string;
   content_without_quotes: string;
   quotes: QuoteContent[];
+  urls: string[];
+  image_urls: string[];
 }
 
 export class SyncPostsPipeline {
   private readonly logger = baseLogger.child({ pipeline: 'syncPostsPipeline' });
 
-  private readonly INDEX_NAME = 'posts_v2';
+  private readonly INDEX_NAME = 'posts_v3';
 
-  private readonly INDEX_TEMPLATE_NAME = 'posts_v2_template';
+  private readonly INDEX_TEMPLATE_NAME = 'posts_v3_template';
 
   private readonly SYNC_BATCH_SIZE = 10000;
 
@@ -42,11 +44,11 @@ export class SyncPostsPipeline {
     private readonly cacheRepository: RedisProvider
   ) {}
 
-  public async execute(bootstrap?: boolean, lastPostId?: number): Promise<void> {
+  public async execute(bootstrap?: boolean, lastPostId?: number): Promise<{ lastUpdatedAt: string; lastPostId: number }> {
     try {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
-      await this.syncPosts(bootstrap, lastPostId);
+      return this.syncPosts(bootstrap, lastPostId);
     } catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
@@ -65,6 +67,11 @@ export class SyncPostsPipeline {
                 tokenizer: 'standard',
                 filter: ['stop', 'asciifolding', 'apostrophe', 'lowercase'],
                 char_filter: ['html_strip']
+              },
+              url_analyzer: {
+                type: 'custom',
+                tokenizer: 'standard',
+                filter: ['lowercase', 'url_tokenizer', 'asciifolding']
               }
             },
             normalizer: {
@@ -80,6 +87,14 @@ export class SyncPostsPipeline {
                 catenate_words: true,
                 split_on_case_change: false,
                 split_on_numerics: false
+              },
+              url_tokenizer: {
+                type: 'word_delimiter_graph',
+                preserve_original: true,
+                split_on_numerics: false,
+                split_on_case_change: false,
+                generate_word_parts: true,
+                generate_number_parts: false
               }
             }
           }
@@ -106,21 +121,11 @@ export class SyncPostsPipeline {
             author_uid: { type: 'integer' },
             content: {
               type: 'text',
-              fields: {
-                stripped: {
-                  type: 'text',
-                  analyzer: 'html_strip'
-                }
-              }
+              analyzer: 'html_strip'
             },
             content_without_quotes: {
               type: 'text',
-              fields: {
-                stripped: {
-                  type: 'text',
-                  analyzer: 'html_strip'
-                }
-              }
+              analyzer: 'html_strip'
             },
             quotes: {
               type: 'nested',
@@ -136,12 +141,7 @@ export class SyncPostsPipeline {
                 },
                 content: {
                   type: 'text',
-                  fields: {
-                    stripped: {
-                      type: 'text',
-                      analyzer: 'html_strip'
-                    }
-                  }
+                  analyzer: 'html_strip'
                 },
                 topic_id: { type: 'integer' },
                 post_id: { type: 'integer' }
@@ -203,21 +203,11 @@ export class SyncPostsPipeline {
                 },
                 new_content: {
                   type: 'text',
-                  fields: {
-                    stripped: {
-                      type: 'text',
-                      analyzer: 'html_strip'
-                    }
-                  }
+                  analyzer: 'html_strip'
                 },
                 new_content_without_quotes: {
                   type: 'text',
-                  fields: {
-                    stripped: {
-                      type: 'text',
-                      analyzer: 'html_strip'
-                    }
-                  }
+                  analyzer: 'html_strip'
                 },
                 quotes: {
                   type: 'nested',
@@ -233,12 +223,7 @@ export class SyncPostsPipeline {
                     },
                     content: {
                       type: 'text',
-                      fields: {
-                        stripped: {
-                          type: 'text',
-                          analyzer: 'html_strip'
-                        }
-                      }
+                      analyzer: 'html_strip'
                     },
                     topic_id: { type: 'integer' },
                     post_id: { type: 'integer' }
@@ -246,7 +231,38 @@ export class SyncPostsPipeline {
                 },
                 edit_date: { type: 'date' },
                 deleted: { type: 'boolean' },
-                created_at: { type: 'boolean' }
+                urls: {
+                  type: 'text',
+                  analyzer: 'url_analyzer',
+                  fields: {
+                    keyword: {
+                      type: 'keyword',
+                      ignore_above: 256
+                    }
+                  }
+                },
+                image_urls: {
+                  type: 'text',
+                  analyzer: 'url_analyzer',
+                  fields: {
+                    keyword: { type: 'keyword', ignore_above: 256 }
+                  }
+                },
+                created_at: { type: 'date' }
+              }
+            },
+            urls: {
+              type: 'text',
+              analyzer: 'url_analyzer',
+              fields: {
+                keyword: { type: 'keyword', ignore_above: 256 }
+              }
+            },
+            image_urls: {
+              type: 'text',
+              analyzer: 'url_analyzer',
+              fields: {
+                keyword: { type: 'keyword', ignore_above: 256 }
               }
             },
             updated_at: { type: 'date' }
@@ -345,10 +361,60 @@ export class SyncPostsPipeline {
       contentWithoutQuotes = contentWithoutQuotes.replace(fullQuoteHtml, '');
     });
 
+    const content = $('body').html();
+
+    const urls = new Set<string>();
+    const imageUrls = new Set<string>();
+
+    $('img.userimg').each((_, imgElement) => {
+      const img = $(imgElement);
+      let src = img.attr('src');
+      if (src) {
+        if (src.startsWith('https://bitcointalk.org/Smileys/')) {
+          return;
+        }
+
+        if (src.startsWith('https://ip.bitcointalk.org/')) {
+          const urlObj = new URL(src);
+          const imageUrl = urlObj.searchParams.get('u');
+
+          if (imageUrl) {
+            src = imageUrl;
+          }
+
+          try {
+            src = imageUrl ? decodeURIComponent(imageUrl) : src;
+          } catch (error) {
+            this.logger.warn({ src }, '[SyncPosts] Invalid decodeURIComponent image url');
+          }
+        }
+
+        if (src.length >= 256) {
+          return;
+        }
+
+        imageUrls.add(src);
+      }
+    });
+
+    $('a.ul').each((_, aElement) => {
+      const a = $(aElement);
+      const href = a.attr('href');
+      if (href) {
+        if (href.length >= 256) {
+          return;
+        }
+
+        urls.add(href);
+      }
+    });
+
     return {
-      content: $('body').html(),
+      content,
       content_without_quotes: contentWithoutQuotes,
-      quotes
+      quotes,
+      urls: Array.from(urls),
+      image_urls: Array.from(imageUrls)
     };
   }
 
@@ -356,7 +422,7 @@ export class SyncPostsPipeline {
     const chunks = [];
 
     for (const post of posts) {
-      const { content_without_quotes, content, quotes } = this.extractPostContent(post.content);
+      const { content_without_quotes, content, quotes, urls, image_urls } = this.extractPostContent(post.content);
       const operationInfo = { index: { _index: this.INDEX_NAME, _id: post.post_id.toString() } };
       const operationContent = {
         post_id: post.post_id,
@@ -369,6 +435,8 @@ export class SyncPostsPipeline {
         quotes,
         date: post.date,
         board_id: post.board_id,
+        urls,
+        image_urls,
         updated_at: new Date(post.updated_at).toISOString()
       };
 
@@ -433,7 +501,10 @@ export class SyncPostsPipeline {
     return posts;
   }
 
-  private async syncPosts(bootstrap?: boolean, bootstrapLastPostId?: number): Promise<void> {
+  private async syncPosts(
+    bootstrap?: boolean,
+    bootstrapLastPostId?: number
+  ): Promise<{ lastUpdatedAt: string; lastPostId: number }> {
     let lastUpdatedAt: string;
     let lastPostId: number;
 
@@ -441,7 +512,7 @@ export class SyncPostsPipeline {
       lastUpdatedAt = new Date(0).toISOString();
       lastPostId = bootstrapLastPostId;
     } else {
-      ({ lastUpdatedAt, lastPostId } = (await this.cacheRepository.recover<LastSyncState>('posts-sync-state')) ?? {
+      ({ lastUpdatedAt, lastPostId } = (await this.cacheRepository.recover<LastSyncState>('syncState:posts')) ?? {
         lastUpdatedAt: new Date(0).toISOString(),
         lastPostId: 0
       });
@@ -458,6 +529,7 @@ export class SyncPostsPipeline {
         };
 
     let stop = false;
+    let lastState = { lastUpdatedAt, lastPostId };
 
     while (!stop) {
       const posts = await this.getPostsToSync(lastSync.type, lastSync.last);
@@ -473,16 +545,23 @@ export class SyncPostsPipeline {
           lastSync.last = lastPostId;
         }
 
-        await this.cacheRepository.save('posts-sync-state', { lastUpdatedAt, lastPostId });
+        if (!bootstrap) {
+          await this.cacheRepository.save('syncState:posts', { lastUpdatedAt, lastPostId });
+        }
+
         this.logger.debug(
           `Processed ${posts.length} posts. Last updated_at: ${lastUpdatedAt} | Last post_id: ${lastPostId}`
         );
       }
 
       if (posts.length < this.SYNC_BATCH_SIZE) {
+        lastState = { lastUpdatedAt, lastPostId };
+
         this.logger.debug('Synchronization is up to date');
         stop = true;
       }
     }
+
+    return lastState;
   }
 }
