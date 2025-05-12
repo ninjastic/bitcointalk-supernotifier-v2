@@ -11,6 +11,8 @@ import { NotificationResult, RecipeMetadata } from '../../../../../../shared/inf
 import PostsRepository from '../../../../infra/typeorm/repositories/PostsRepository';
 import ICacheProvider from '../../../../../../shared/container/providers/models/ICacheProvider';
 import logger from '../../../../../../shared/services/logger';
+import { subDays } from 'date-fns';
+import { getRepository } from 'typeorm';
 
 type TelegramTrackedBoardTopicsCheckerNotificationResult = NotificationResult<
   RecipeMetadata['sendTrackedBoardNotification']
@@ -32,7 +34,7 @@ const checkMinAuthorPostCount = async (user: User, post: Post): Promise<boolean>
     userMinAuthorPostCount = 1; // default value
   }
 
-  const postsRepository = container.resolve(PostsRepository);
+  const postsRepository = container.resolve<PostsRepository>('PostsRepository');
   const authorPosts = await postsRepository.findPosts({ author_uid: post.author_uid, limit: 100 });
 
   if (authorPosts.length < 10) {
@@ -41,6 +43,20 @@ const checkMinAuthorPostCount = async (user: User, post: Post): Promise<boolean>
   }
 
   return authorPosts.length > userMinAuthorPostCount;
+};
+
+const checkPotentialSpam = async (post: Post) => {
+  const topicRepository = getRepository(Topic);
+
+  const matchingTopics = await topicRepository
+    .createQueryBuilder('topic')
+    .innerJoinAndSelect('topic.post', 'post')
+    .where('post.title = :title', { title: post.title })
+    .andWhere('post.date >= :date', { date: subDays(new Date(), 1) })
+    .getMany();
+
+  if (matchingTopics.length) return true;
+  return false;
 };
 
 const processTopic = async (
@@ -63,6 +79,9 @@ const processTopic = async (
 
       const isAuthorPostCountEnough = await checkMinAuthorPostCount(user, post);
       if (!isAuthorPostCountEnough) continue;
+
+      const isPotentialSpam = await checkPotentialSpam(post);
+      if (isPotentialSpam) continue;
 
       data.push({
         userId: user.id,
