@@ -46,11 +46,11 @@ const checkMinAuthorPostCount = async (user: User, post: Post): Promise<boolean>
 };
 
 const checkPotentialSpam = async (post: Post) => {
-  const topicRepository = getRepository(Topic);
+  const topicsRepository = getRepository(Topic);
 
-  const matchingTopics = await topicRepository
-    .createQueryBuilder('topic')
-    .innerJoinAndSelect('topic.post', 'post')
+  const matchingTopics = await topicsRepository
+    .createQueryBuilder('topics')
+    .innerJoinAndSelect('topics.post', 'post')
     .where('post.title = :title', { title: post.title })
     .andWhere('post.date >= :date', { date: subDays(new Date(), 1) })
     .getMany();
