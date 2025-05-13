@@ -55,7 +55,7 @@ const checkPotentialSpam = async (post: Post) => {
     .andWhere('post.date >= :date', { date: subDays(new Date(), 1) })
     .getMany();
 
-  if (matchingTopics.length) return true;
+  if (matchingTopics.length > 1) return true;
   return false;
 };
 
