@@ -23,13 +23,13 @@ import SendApiNotificationService from '../../telegram/services/notifications/Se
 import SendAutoTrackTopicNotificationService from '../../telegram/services/notifications/SendAutoTrackTopicNotificationService';
 
 container.registerSingleton('TelegramBot', TelegramBot);
-const bot = container.resolve(TelegramBot);
+const bot = container.resolve<TelegramBot>('TelegramBot');
 
 const jobRecipes: JobRecipe = {
   sendMentionNotification: async job => {
-    const { user, post, history } = job.data;
+    const { user, post, history, mentionType } = job.data;
     const sendMentionNotification = container.resolve(SendMentionNotificationService);
-    await sendMentionNotification.execute({ bot, telegramId: user.telegram_id, post, history });
+    await sendMentionNotification.execute({ bot, user, post, history, mentionType });
   },
   sendMeritNotification: async job => {
     const { merit, user } = job.data;

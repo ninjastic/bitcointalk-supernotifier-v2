@@ -1,7 +1,7 @@
 import { injectable, inject } from 'tsyringe';
 import User from '../../../../modules/users/infra/typeorm/entities/User';
 
-import IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
+import type IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
 
 @injectable()
 export default class SetUserBlockedService {

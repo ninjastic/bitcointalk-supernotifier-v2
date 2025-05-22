@@ -115,15 +115,14 @@ export default class SendTrackedUserNotificationService {
           { telegram_id: telegramId, post_id: post.post_id, message, messageSent },
           'Tracked User notification was sent'
         );
+        await this.markPostAsNotified(post, telegramId);
+        await this.createNotification(telegramId, { post_id: post.post_id, author: post.author });
       } else {
         logger.warn(
           { telegram_id: telegramId, post_id: post.post_id, message },
           'Could not get Tracked User notification data'
         );
       }
-
-      await this.markPostAsNotified(post, telegramId);
-      await this.createNotification(telegramId, { post_id: post.post_id, author: post.author });
 
       return true;
     } catch (error) {

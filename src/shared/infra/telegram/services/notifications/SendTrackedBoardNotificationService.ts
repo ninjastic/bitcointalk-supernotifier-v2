@@ -128,12 +128,11 @@ export default class SendTrackedBoardNotificationService {
 
       if (messageSent) {
         logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Tracked Board notification was sent');
+        await setPostNotified.execute(post.post_id, telegramId);
+        await this.createNotification(telegramId, { post_id, board_id: board.board_id });
       } else {
         logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get Tracked Board notification data');
       }
-
-      await setPostNotified.execute(post.post_id, telegramId);
-      await this.createNotification(telegramId, { post_id, board_id: board.board_id });
 
       return true;
     } catch (error) {

@@ -70,19 +70,18 @@ export default class SendRemovedTopicNotificationService {
           { telegram_id: telegramId, topic_id: modLog.topic_id, message, messageSent },
           'Removed Topic notification was sent'
         );
+        await this.markModLogAsNotified(modLog, telegramId);
+        await this.createNotification(telegramId, {
+          user_id: modLog.user_id,
+          topic_id: modLog.topic_id,
+          posts_removed_count: posts.length
+        });
       } else {
         logger.warn(
           { telegram_id: telegramId, topic_id: modLog.topic_id, message },
           'Could not get Removed Topic notification data'
         );
       }
-
-      await this.markModLogAsNotified(modLog, telegramId);
-      await this.createNotification(telegramId, {
-        user_id: modLog.user_id,
-        topic_id: modLog.topic_id,
-        posts_removed_count: posts.length
-      });
 
       return true;
     } catch (error) {

@@ -1,13 +1,13 @@
 import { isUserMentionedInPost, shouldNotifyUser } from '##/shared/services/utils';
 import logger from '../../../../../../shared/services/logger';
-import Post from '../../../../infra/typeorm/entities/Post';
-import User from '../../../../../users/infra/typeorm/entities/User';
-import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
-import IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
-import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type Post from '../../../../infra/typeorm/entities/Post';
+import type User from '../../../../../users/infra/typeorm/entities/User';
+import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
+import type IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
+import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import { NotificationType } from '../../../../../notifications/infra/typeorm/entities/Notification';
-import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
-import IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
+import type PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+import type IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
 
 type TelegramMentionsCheckerNotificationResult = NotificationResult<RecipeMetadata['sendMentionNotification']>;
 
@@ -31,13 +31,14 @@ const processPost = (
 
   for (const user of users) {
     try {
-      if (!user.username || !isUserMentionedInPost(post.content, user, user.enable_only_direct_mentions)) continue;
+      const { isMentioned, mentionType } = isUserMentionedInPost(post.content, user, user.enable_only_direct_mentions);
+      if (!user.username || !isMentioned) continue;
       if (!shouldNotifyUser(post, user, ignoredUsers, ignoredTopics, ignoredBoards)) continue;
 
       data.push({
         userId: user.id,
         type: NotificationType.POST_MENTION,
-        metadata: { post, user, history: false }
+        metadata: { post, user, history: false, mentionType }
       });
     } catch (error) {
       logger.error(
@@ -66,13 +67,18 @@ const processPostVersion = (
 
   for (const user of users) {
     try {
-      if (!user.username || !isUserMentionedInPost(postVersion.new_content, user, user.enable_only_direct_mentions)) continue;
+      const { isMentioned, mentionType } = isUserMentionedInPost(
+        postVersion.new_content,
+        user,
+        user.enable_only_direct_mentions
+      );
+      if (!user.username || !isMentioned) continue;
       if (!shouldNotifyUser(postWithNewContent, user, ignoredUsers, ignoredTopics, ignoredBoards)) continue;
 
       data.push({
         userId: user.id,
         type: NotificationType.POST_MENTION,
-        metadata: { post: postWithNewContent, user, history: false }
+        metadata: { post: postWithNewContent, user, history: false, mentionType }
       });
     } catch (error) {
       logger.error(

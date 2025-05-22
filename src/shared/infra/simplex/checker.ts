@@ -94,7 +94,7 @@ class Checker {
 
       for (const user of users) {
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
-        if (!isUserMentionedInPost(post.content, { username: user.forum_username }, user.only_direct)) continue;
+        if (!isUserMentionedInPost(post.content, { username: user.forum_username }, user.only_direct).isMentioned) continue;
         if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
         if (ignoringPostAuthor.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
         if (ignoringPostTopic.find(ignoring => ignoring.contact_id === user.contact_id)) continue;

@@ -102,6 +102,8 @@ const scrape = async () => {
         continue;
       }
 
+      console.log(`Post of id ${id} not found`)
+
       idsNotFound.push({ id, verified_at: new Date() });
     }
 
@@ -114,7 +116,7 @@ const scrape = async () => {
         .insert()
         .into(Post)
         .values(postsToInsert)
-        .onConflict('("post_id") DO NOTHING')
+        .orIgnore()
         .execute();
     }
 
@@ -127,7 +129,7 @@ const scrape = async () => {
         .insert()
         .into(PostMissing)
         .values(idsNotFound)
-        .onConflict('("id") DO NOTHING')
+        .orIgnore()
         .execute();
     }
 

@@ -10,6 +10,7 @@ import IgnoredUser from '##/modules/users/infra/typeorm/entities/IgnoredUser';
 import IgnoredTopic from '##/modules/posts/infra/typeorm/entities/IgnoredTopic';
 import IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
 import SetUserBlockedService from '../infra/telegram/services/SetUserBlockedService';
+import { MentionType } from '##/shared/infra/bull/types/telegram';
 import logger from './logger';
 
 const sha256 = (str: string) => {
@@ -21,9 +22,9 @@ const sha256 = (str: string) => {
 export function validateTronAddress(addressBase58Check: string) {
   try {
     if (typeof addressBase58Check !== 'string' || addressBase58Check.length !== 34) return false;
-    const bytes = Buffer.from(bs58.decode(addressBase58Check));
-    const checkSum = Buffer.from(bytes.subarray(bytes.length - 4)).toString('hex');
-    const addressWithoutCheckSum = Buffer.from(bytes.subarray(0, bytes.length - 4)).toString('hex');
+    const bytes = Buffer.from(Array.from(bs58.decode(addressBase58Check)));
+    const checkSum = Buffer.from(Array.from(bytes.subarray(bytes.length - 4))).toString('hex');
+    const addressWithoutCheckSum = Buffer.from(Array.from(bytes.subarray(0, bytes.length - 4))).toString('hex');
     const doubleHash = sha256(sha256(addressWithoutCheckSum));
     const expectedCheckSum = doubleHash.slice(0, 8);
     return expectedCheckSum === checkSum;
@@ -100,8 +101,9 @@ export const shouldNotifyUser = (
   const isTopicIgnored = ignoredTopics
     .find(ignoredTopic => ignoredTopic.topic_id === post.topic_id)
     ?.ignoring.includes(user.telegram_id);
-  const isBoardIgnored = ignoredBoards
-    .find(ignoredBoard => ignoredBoard.board_id === post.board_id && ignoredBoard.telegram_id === user.telegram_id);
+  const isBoardIgnored = ignoredBoards.find(
+    ignoredBoard => ignoredBoard.board_id === post.board_id && ignoredBoard.telegram_id === user.telegram_id
+  );
 
   return !(isSameUsername || isSameUid || isAuthorIgnored || isTopicIgnored || isUserBlocked || isBoardIgnored);
 };
@@ -110,27 +112,40 @@ export const isUserMentionedInPost = (
   content: string,
   user: { username?: string; alternative_usernames?: string[] },
   onlyDirectAndQuote?: boolean
-): boolean => {
-  if (!user.username) return false;
+): {
+  isMentioned: boolean;
+  mentionType: MentionType | null;
+} => {
+  if (!user.username) return { isMentioned: false, mentionType: null };
 
-  const regexList = [];
+  const regexList: Array<{
+    regex: RegExp;
+    mentionType: MentionType;
+  }> = [];
+
+  const quoteRegex = new RegExp(`Quote from: ${escapeUsername(user.username)} on`, 'gi');
+  regexList.push({ regex: quoteRegex, mentionType: 'quoted_mention' });
+
+  const directMentionRegex = new RegExp(`@${escapeUsername(user.username)}`, 'gi');
+  regexList.push({ regex: directMentionRegex, mentionType: 'direct_mention' });
 
   if (!onlyDirectAndQuote) {
     const usernameRegex = createMentionRegex(user.username);
-    regexList.push(usernameRegex);
+    regexList.push({ regex: usernameRegex, mentionType: 'username' });
   }
-
-  const backupAtSignRegex = new RegExp(`@${escapeUsername(user.username)}`, 'gi');
-  const backupQuotedRegex = new RegExp(`Quote from: ${escapeUsername(user.username)} on`, 'gi');
-
-  regexList.push(backupAtSignRegex, backupQuotedRegex);
 
   if (user.alternative_usernames?.length) {
     const altUsernameRegex = createMentionRegex(user.alternative_usernames[0]);
-    regexList.push(altUsernameRegex);
+    regexList.push({ regex: altUsernameRegex, mentionType: 'alternative_username' });
   }
 
-  return regexList.some(regex => regex && content.match(regex));
+  for (const regex of regexList) {
+    if (regex.regex && content.match(regex.regex)) {
+      return { isMentioned: true, mentionType: regex.mentionType };
+    }
+  }
+
+  return { isMentioned: false, mentionType: null };
 };
 
 export function isValidPostgresInt(num: number) {

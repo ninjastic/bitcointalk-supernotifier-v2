@@ -134,12 +134,11 @@ export default class SendMeritNotificationService {
 
       if (messageSent) {
         logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Merit notification was sent');
+        await setMeritNotified.execute(merit, telegramId);
+        await this.createNotification(telegramId, { post_id, merit_id });
       } else {
         logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get Merit notification data');
       }
-
-      await setMeritNotified.execute(merit, telegramId);
-      await this.createNotification(telegramId, { post_id, merit_id });
 
       return true;
     } catch (error) {

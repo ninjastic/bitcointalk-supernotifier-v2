@@ -20,8 +20,10 @@ export type RecipeNames =
   | 'sendApiNotification'
   | 'sendAutoTrackTopicRequestNotification';
 
+export type MentionType = 'username' | 'alternative_username' | 'direct_mention' | 'quoted_mention';
+
 type SendMeritNotificationMetadata = { merit: Merit; user: User };
-type SendMentionNotificationMetadata = { post: Post; user: User; history: boolean };
+type SendMentionNotificationMetadata = { post: Post; user: User; history: boolean; mentionType: MentionType };
 type SendTopicTrackingNotificationMetadata = { post: Post; user: User };
 type SendPhraseTrackingNotificationMetadata = { post: Post; user: User; trackedPhrase: TrackedPhrase };
 type SendTrackedBoardNotificationMetadata = { post: Post; user: User; trackedBoard: TrackedBoard };

@@ -125,18 +125,17 @@ export default class SendTrackedPhraseNotificationService {
           { telegram_id: telegramId, post_id: post.post_id, message, messageSent },
           'Tracked Phrase notification was sent'
         );
+        await this.markPostAsNotified(post, telegramId);
+        await this.createNotification(telegramId, {
+          post_id: post.post_id,
+          phrase
+        });
       } else {
         logger.warn(
           { telegram_id: telegramId, post_id: post.post_id, message },
           'Could not get Tracked Phrase notification data'
         );
       }
-
-      await this.markPostAsNotified(post, telegramId);
-      await this.createNotification(telegramId, {
-        post_id: post.post_id,
-        phrase
-      });
 
       return true;
     } catch (error) {

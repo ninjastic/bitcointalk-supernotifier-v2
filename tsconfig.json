@@ -1,12 +1,10 @@
 {
    "compilerOptions": {
       "lib": [
-         "es5",
-         "es6",
-         "es2022"
+         "ESNext",
       ],
-      "target": "ES2022",
-      "module": "commonjs",
+      "target": "ESNext",
+      "module": "ESNext",
       "moduleResolution": "node",
       "resolveJsonModule": true,
       "rootDir": "./src",
@@ -22,6 +20,6 @@
          "##/*": ["./*"],
       }
    },
-   "include": ["src/**/*.ts"],
+   "include": ["src/**/*.ts", "scripts/*.ts"],
    "exclude": ["node_modules"],
 }
