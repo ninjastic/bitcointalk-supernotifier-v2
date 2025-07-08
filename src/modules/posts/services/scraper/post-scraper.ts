@@ -95,7 +95,10 @@ export class PostScraper {
     const { postElement, footerElement } = recentPost;
     let $ = load(postElement, { decodeEntities: true });
 
-    const fullTitleWithBoards = $('tbody > tr.titlebg2 > td > div:nth-child(2)');
+    const postTableBody = $('tbody').first();
+    const postCreatorDetails = postTableBody.children('tr:nth-child(2)').first();
+
+    const fullTitleWithBoards = postTableBody.find('td > div:nth-child(2)').first();
 
     const postId = Number(
       fullTitleWithBoards
@@ -112,13 +115,13 @@ export class PostScraper {
     );
 
     const title = fullTitleWithBoards.find('b > a').text().trim();
-    const author = $('tr:nth-child(2) > td > span > a:last-child').text();
-    const topicAuthor = $('tr:nth-child(2) > td > span > a:nth-child(1)').text();
+    const author = postCreatorDetails.find('td.catbg > span.middletext > a:last-child').first().text();
+    const topicAuthor = postCreatorDetails.find('td.catbg > span.middletext > a:nth-child(1)').first().text();
 
     if (!topicAuthor) {
       logger.error(
         {
-          elementHtml: $('tr:nth-child(2) > td > span > a:nth-child(1)').html(),
+          elementHtml: postCreatorDetails.find('td.catbg > span.middletext > a:nth-child(1)').first().html(),
           author,
           postId,
           topicId
@@ -128,7 +131,9 @@ export class PostScraper {
     }
 
     const authorUid = Number(
-      $('tr:nth-child(2) > td > span > a:last-child')
+      postCreatorDetails
+        .find('td.catbg > span.middletext > a:last-child')
+        .first()
         .attr('href')
         .match(/u=(\d*)/)[1]
     );
