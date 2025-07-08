@@ -215,6 +215,7 @@ export class SyncPostsVersionsPipeline {
 
     for (const [postId, newVersions] of versiosToUpdateMap.entries()) {
       const updateOperationInfo = { update: { _index: this.POSTS_INDEX_NAME, _id: postId.toString() } };
+      
       const updateOperationContent = {
         script: {
           source: `

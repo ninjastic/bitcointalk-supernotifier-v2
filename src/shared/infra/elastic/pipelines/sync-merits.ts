@@ -138,39 +138,43 @@ export class SyncMeritsPipeline {
   }
 
   private async batchProcessMerit(merits: RawMerit[]): Promise<void> {
-    const indexChunks = [];
+    const meritChunks = [];
 
     for (const merit of merits) {
-      const operationInfo = { index: { _index: this.INDEX_NAME, _id: merit.id } };
+      const operationInfo = { update: { _index: this.INDEX_NAME, _id: merit.id } };
+
       const operationContent = {
-        amount: merit.amount,
-        post_id: merit.post_id,
-        topic_id: merit.topic_id,
-        title: merit.post_title,
-        receiver: merit.receiver,
-        receiver_uid: merit.receiver_uid,
-        sender: merit.sender,
-        sender_uid: merit.sender_uid,
-        board_id: merit.post_board_id,
-        date: merit.date,
-        updated_at: new Date(merit.updated_at).toISOString()
+        doc: {
+          amount: merit.amount,
+          post_id: merit.post_id,
+          topic_id: merit.topic_id,
+          title: merit.post_title,
+          receiver: merit.receiver,
+          receiver_uid: merit.receiver_uid,
+          sender: merit.sender,
+          sender_uid: merit.sender_uid,
+          board_id: merit.post_board_id,
+          date: merit.date,
+          updated_at: new Date(merit.updated_at).toISOString()
+        },
+        doc_as_upsert: true
       };
 
-      if (indexChunks.length === 0) {
-        indexChunks.push([operationInfo, operationContent]);
+      if (meritChunks.length === 0) {
+        meritChunks.push([operationInfo, operationContent]);
         continue;
       }
 
-      if (indexChunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
-        indexChunks.push([operationInfo, operationContent]);
+      if (meritChunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
+        meritChunks.push([operationInfo, operationContent]);
         continue;
       }
 
-      indexChunks.at(-1).push(operationInfo, operationContent);
+      meritChunks.at(-1).push(operationInfo, operationContent);
     }
 
     const indexBulkPromises = [];
-    for (const chunk of indexChunks) {
+    for (const chunk of meritChunks) {
       indexBulkPromises.push(this.esClient.bulk({ operations: chunk, refresh: false }));
     }
 
@@ -189,7 +193,7 @@ export class SyncMeritsPipeline {
       postsToUpdateMap.set(merit.post_id, [...(postsToUpdateMap.get(merit.post_id) ?? []), newMerit]);
     }
 
-    const updateChunks = [];
+    const postChunks = [];
 
     for (const [postId, newMerits] of postsToUpdateMap.entries()) {
       const updateOperationInfo = { update: { _index: this.POSTS_INDEX_NAME, _id: postId.toString() } };
@@ -221,21 +225,21 @@ export class SyncMeritsPipeline {
         }
       };
 
-      if (updateChunks.length === 0) {
-        updateChunks.push([updateOperationInfo, updateOperationContent]);
+      if (postChunks.length === 0) {
+        postChunks.push([updateOperationInfo, updateOperationContent]);
         continue;
       }
 
-      if (updateChunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
-        updateChunks.push([updateOperationInfo, updateOperationContent]);
+      if (postChunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
+        postChunks.push([updateOperationInfo, updateOperationContent]);
         continue;
       }
 
-      updateChunks.at(-1).push(updateOperationInfo, updateOperationContent);
+      postChunks.at(-1).push(updateOperationInfo, updateOperationContent);
     }
 
     const updateBulkPromises = [];
-    for (const chunk of updateChunks) {
+    for (const chunk of postChunks) {
       updateBulkPromises.push(this.esClient.bulk({ operations: chunk, refresh: false }));
     }
 
@@ -244,15 +248,15 @@ export class SyncMeritsPipeline {
     if (results.some(result => result.errors)) {
       const erroredItems = results
         .flatMap(result => result.items)
-        .filter(item => item.index?.error || item.create?.error || item.update?.error || item.delete?.error)
+        .filter(item => item.update?.error)
         .map(item => ({
-          id: item.index?._id,
-          error: item.index?.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index?.status
+          id: item.update?._id,
+          error: item.update?.error,
+          status: item.update?.status
         }));
 
-      this.logger.error({ errored: erroredItems }, 'Index errored');
-      throw new Error('Index errored');
+      this.logger.error({ errored: erroredItems }, 'Update errored');
+      throw new Error('Update errored');
     }
   }
 

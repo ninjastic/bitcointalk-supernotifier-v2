@@ -44,7 +44,10 @@ export class SyncPostsPipeline {
     private readonly cacheRepository: RedisProvider
   ) {}
 
-  public async execute(bootstrap?: boolean, lastPostId?: number): Promise<{ lastUpdatedAt: string; lastPostId: number }> {
+  public async execute(
+    bootstrap?: boolean,
+    lastPostId?: number
+  ): Promise<{ lastUpdatedAt: string; lastPostId: number }> {
     try {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
@@ -423,21 +426,31 @@ export class SyncPostsPipeline {
 
     for (const post of posts) {
       const { content_without_quotes, content, quotes, urls, image_urls } = this.extractPostContent(post.content);
-      const operationInfo = { index: { _index: this.INDEX_NAME, _id: post.post_id.toString() } };
+
+      const operationInfo = {
+        update: {
+          _index: this.INDEX_NAME,
+          _id: post.post_id.toString()
+        }
+      };
+
       const operationContent = {
-        post_id: post.post_id,
-        topic_id: post.topic_id,
-        title: post.title,
-        author: post.author,
-        author_uid: post.author_uid,
-        content,
-        content_without_quotes,
-        quotes,
-        date: post.date,
-        board_id: post.board_id,
-        urls,
-        image_urls,
-        updated_at: new Date(post.updated_at).toISOString()
+        doc: {
+          post_id: post.post_id,
+          topic_id: post.topic_id,
+          title: post.title,
+          author: post.author,
+          author_uid: post.author_uid,
+          content,
+          content_without_quotes,
+          quotes,
+          date: post.date,
+          board_id: post.board_id,
+          urls,
+          image_urls,
+          updated_at: new Date(post.updated_at).toISOString()
+        },
+        doc_as_upsert: true
       };
 
       if (chunks.length === 0) {
@@ -464,15 +477,15 @@ export class SyncPostsPipeline {
     if (results.some(result => result.errors)) {
       const erroredItems = results
         .flatMap(result => result.items)
-        .filter(item => item.index?.error || item.create?.error || item.update?.error || item.delete?.error)
+        .filter(item => item.update?.error)
         .map(item => ({
-          id: item.index?._id,
-          error: item.index?.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index?.status
+          id: item.update?._id,
+          error: item.update?.error,
+          status: item.update?.status
         }));
 
-      this.logger.error({ errored: erroredItems }, 'Index errored');
-      throw new Error('Index errored');
+      this.logger.error({ errored: erroredItems }, 'Update errored');
+      throw new Error('Update errored');
     }
   }
 
