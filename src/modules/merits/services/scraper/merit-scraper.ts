@@ -2,6 +2,7 @@ import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import ForumLoginService from '##/modules/merits/services/ForumLoginService';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import forumScraperQueue, { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 import api from '##/shared/services/api';
@@ -16,6 +17,7 @@ export class MeritScraper {
 
   redisProvider: RedisProvider;
   postsRepository: Repository<Post>;
+  topicsRepository: Repository<Topic>;
   postsVersionsRepository: Repository<PostVersion>;
   meritsRepository: Repository<Merit>;
 
@@ -24,6 +26,7 @@ export class MeritScraper {
   constructor() {
     this.redisProvider = container.resolve<RedisProvider>('CacheRepository');
     this.postsRepository = getRepository(Post);
+    this.topicsRepository = getRepository(Topic);
     this.postsVersionsRepository = getRepository(PostVersion);
     this.meritsRepository = getRepository(Merit);
   }
@@ -78,6 +81,9 @@ export class MeritScraper {
     if (!post) {
       const result = await addForumScraperJob('scrapePost', { post_id }, true);
       post = await this.postsRepository.save(result.post);
+      if (result.topic) {
+        await this.topicsRepository.save(result.topic);
+      }
     } else {
       if (post.title !== meritPostTitle) {
         const latestPostVersionWithNewTitle = await this.postsVersionsRepository.findOne({

@@ -11,6 +11,7 @@ import Post from '../../modules/posts/infra/typeorm/entities/Post';
 import PostMissing from '../../modules/posts/infra/typeorm/entities/PostMissing';
 import { scrapeLoyceArchivePost } from './loyce/utils';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
 type PromptAnswers = {
   startPostId: number;
@@ -81,17 +82,21 @@ const scrape = async () => {
     console.log(`Processing batch ${i / BATCH_SIZE + 1} of ${Math.ceil(missingIds.length / BATCH_SIZE)}`);
 
     const postsToInsert: Post[] = [];
+    const topicsToInsert: Topic[] = [];
     const idsNotFound = [];
 
     // eslint-disable-next-line no-await-in-loop
     for await (const id of batch) {
       console.log(`Checking post of id ${id}`);
 
-      const { post: forumPost } = await postScraper.scrapePost(id);
+      const { post: forumPost, topic } = await postScraper.scrapePost(id);
       const loycePost = await scrapeLoyceArchivePost(id);
 
       if (forumPost) {
         const post: Post = { ...forumPost, content: loycePost?.content ?? forumPost.content };
+        if (topic) {
+          topicsToInsert.push(topic);
+        }
         postsToInsert.push(post);
         continue;
       }
@@ -102,35 +107,27 @@ const scrape = async () => {
         continue;
       }
 
-      console.log(`Post of id ${id} not found`)
+      console.log(`Post of id ${id} not found`);
 
       idsNotFound.push({ id, verified_at: new Date() });
     }
 
     console.log('postsToInsert length', postsToInsert.length);
-
     if (postsToInsert.length) {
       // eslint-disable-next-line no-await-in-loop
-      await connection.manager
-        .createQueryBuilder()
-        .insert()
-        .into(Post)
-        .values(postsToInsert)
-        .orIgnore()
-        .execute();
+      await connection.manager.createQueryBuilder().insert().into(Post).values(postsToInsert).orIgnore().execute();
+    }
+
+    console.log('topicsToInsert length', topicsToInsert.length);
+    if (topicsToInsert.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await connection.manager.createQueryBuilder().insert().into(Topic).values(topicsToInsert).orIgnore().execute();
     }
 
     console.log('idsNotFound length', idsNotFound.length);
-
     if (idsNotFound.length) {
       // eslint-disable-next-line no-await-in-loop
-      await connection.manager
-        .createQueryBuilder()
-        .insert()
-        .into(PostMissing)
-        .values(idsNotFound)
-        .orIgnore()
-        .execute();
+      await connection.manager.createQueryBuilder().insert().into(PostMissing).values(idsNotFound).orIgnore().execute();
     }
 
     // eslint-disable-next-line no-await-in-loop

@@ -3,6 +3,7 @@ import { container } from 'tsyringe';
 import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
 type GetPostParams = {
   postId: number;
@@ -12,6 +13,7 @@ type GetPostParams = {
 
 const getPost = async (params: GetPostParams): Promise<Post | undefined> => {
   const postsRepository = getRepository(Post);
+  const topicsRepository = getRepository(Topic);
   const cacheRepository = container.resolve<RedisProvider>('CacheRepository');
 
   const cacheKey = `post:${params.postId}`;
@@ -31,9 +33,17 @@ const getPost = async (params: GetPostParams): Promise<Post | undefined> => {
   }
 
   if (params.shouldScrape) {
-    const { post: scrapedPost } = await addForumScraperJob('scrapePost', { post_id: params.postId }, true);
-    if (post) {
+    const { post: scrapedPost, topic: scrapedTopic } = await addForumScraperJob(
+      'scrapePost',
+      { post_id: params.postId },
+      true
+    );
+    if (scrapedPost) {
       post = scrapedPost;
+      await postsRepository.save(scrapedPost);
+    }
+    if (scrapedTopic) {
+      await topicsRepository.save(scrapedTopic);
     }
   }
 

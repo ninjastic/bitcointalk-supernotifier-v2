@@ -3,16 +3,20 @@ import { load } from 'cheerio';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import logger from '##/shared/services/logger';
 import { isValid, sub } from 'date-fns';
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
 export type ParsedPost = {
   success: boolean;
   post: Post | null;
   failedReason: string | null;
   scrapedForumDate?: Date;
+  isTopicStarter?: boolean;
+  topic?: Topic;
 };
 
 const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> => {
   const postsRepository = getRepository(Post);
+  const topicsRepository = getRepository(Topic);
 
   const $ = load(html, { decodeEntities: true });
 
@@ -32,14 +36,28 @@ const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> 
     return { success: false, post: null, failedReason: 'Topic not found' };
   }
 
+  let isTopicStarter = false;
+
+  const isTopicFirstPage =
+    $('#bodyarea > table:not(.tborder)')
+      .filter((_, el) => $(el).text().includes('Pages'))
+      .first()
+      .find('tbody > tr > td.middletext > b')
+      .first()
+      .text() === '1';
+
   const postsContainer = $('#quickModForm > table.bordercolor');
 
   const postElement = $(postsContainer)
     .find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr')
     .toArray()
-    .find(postContainer => {
+    .find((postContainer, index) => {
       const postHeader = $(postContainer).find("td.td_headerandpost td > div[id*='subject'] > a");
-      return postHeader.length && $(postHeader).attr('href').includes(`.msg${postId}`);
+      const isTargetPost = postHeader.length && $(postHeader).attr('href').includes(`.msg${postId}`);
+      if (isTopicFirstPage && isTargetPost && index === 0) {
+        isTopicStarter = true;
+      }
+      return isTargetPost;
     });
 
   if (!postElement) {
@@ -126,7 +144,16 @@ const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> 
 
   post.edited = isValid(editedDate) ? editedDate : null;
 
-  return { success: true, post, failedReason: null, scrapedForumDate: scrapeDate };
+  let topic: Topic | undefined;
+
+  if (isTopicStarter) {
+    topic = topicsRepository.create({
+      post_id: post.post_id,
+      topic_id: post.topic_id
+    });
+  }
+
+  return { success: true, post, topic, failedReason: null, isTopicStarter, scrapedForumDate: scrapeDate };
 };
 
 export default parsePostHtml;
