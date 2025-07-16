@@ -45,9 +45,9 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
   const authorElement = $(postElement).find('td.poster_info > b > a');
 
   const title = postHeader.text().trim();
-  const author = authorElement.html();
+  const author = authorElement.html() ?? 'Guest';
   const authorUrl = authorElement.attr('href');
-  const authorUid = Number(authorUrl.replace('https://bitcointalk.org/index.php?action=profile;u=', ''));
+  const authorUid = authorUrl ? Number(authorUrl.replace('https://bitcointalk.org/index.php?action=profile;u=', '')) : -1;
 
   const titleBoard = $('#bodyarea > div > div > b').parent();
 

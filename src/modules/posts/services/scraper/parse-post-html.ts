@@ -75,9 +75,9 @@ const parsePostHtml = async (html: string, postId: number): Promise<ParsedPost> 
   );
 
   const authorElement = $(postElement).find('td.poster_info > b > a');
-  const author = authorElement.html();
+  const author = authorElement.html() ?? 'Guest';
   const authorUrl = author && authorElement.attr('href');
-  const authorUid = author && Number(authorUrl.replace('https://bitcointalk.org/index.php?action=profile;u=', ''));
+  const authorUid = authorUrl ? Number(authorUrl.replace('https://bitcointalk.org/index.php?action=profile;u=', '')) : -1;
 
   const titleBoard = $('#bodyarea > div > div > b').parent();
 

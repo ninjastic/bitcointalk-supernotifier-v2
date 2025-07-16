@@ -34,7 +34,7 @@ const scrape = async () => {
       name: 'endTopicId',
       type: 'number',
       message: 'Topic ID end?',
-      validate: (value, { startTopicId }) => value > startTopicId || 'Can not be lower than the start value'
+      validate: (value, { startTopicId }) => value >= startTopicId || 'Can not be lower than the start value'
     }
   ]);
 
