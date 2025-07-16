@@ -283,7 +283,9 @@ export class PostScraper {
   }
 
   async scrapeTopicOp(topicId: number): Promise<ParsedTopicPost> {
-    const { html } = await this.ensureLoggedIn(`index.php?topic=${topicId}`);
+    const { html } = await this.ensureLoggedIn(`index.php?topic=${topicId}`, {
+      validateStatus: status => (status >= 200 && status < 300) || status === 404
+    });
     const topicPost = parseTopicPostOpHtml(html);
 
     if (!topicPost.success) {

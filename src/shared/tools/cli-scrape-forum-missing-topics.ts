@@ -10,6 +10,7 @@ import Post from '../../modules/posts/infra/typeorm/entities/Post';
 import { scrapeLoyceArchivePost } from './loyce/utils';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
+import TopicMissing from '##/modules/posts/infra/typeorm/entities/TopicMissing';
 
 type PromptAnswers = {
   startTopicId: number;
@@ -51,10 +52,11 @@ const scrape = async () => {
       all_ids.id
     from
       all_ids
-    left join topics on
-      all_ids.id = topics.topic_id
+    left join topics on all_ids.id = topics.topic_id
+    left join topics_missing on all_ids.id = topics_missing.id
     where
       topics.topic_id is null
+      and topics_missing.id is null
         )
       select
       id
@@ -79,6 +81,7 @@ const scrape = async () => {
 
     const postsToInsert: Post[] = [];
     const topicsToInsert: Topic[] = [];
+    const idsNotFound = [];
 
     // eslint-disable-next-line no-await-in-loop
     for await (const id of batch) {
@@ -91,10 +94,12 @@ const scrape = async () => {
         const post: Post = { ...forumPost, content: loycePost?.content ?? forumPost.content };
         postsToInsert.push(post);
         topicsToInsert.push(topic);
+        console.log(`Topic of id ${id} found!`);
         continue;
       }
 
       console.log(`Topic of id ${id} not found`);
+      idsNotFound.push({ id, verified_at: new Date() });
     }
 
     console.log('postsToInsert length', postsToInsert.length);
@@ -107,6 +112,12 @@ const scrape = async () => {
     if (topicsToInsert.length) {
       // eslint-disable-next-line no-await-in-loop
       await connection.manager.createQueryBuilder().insert().into(Topic).values(topicsToInsert).orIgnore().execute();
+    }
+
+    console.log('idsNotFound length', idsNotFound.length);
+    if (idsNotFound.length) {
+      // eslint-disable-next-line no-await-in-loop
+      await connection.manager.createQueryBuilder().insert().into(TopicMissing).values(idsNotFound).orIgnore().execute();
     }
 
     // eslint-disable-next-line no-await-in-loop
