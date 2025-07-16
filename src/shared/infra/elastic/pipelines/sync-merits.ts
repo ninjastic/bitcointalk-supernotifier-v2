@@ -138,12 +138,12 @@ export class SyncMeritsPipeline {
   }
 
   private async batchProcessMerit(merits: RawMerit[]): Promise<void> {
-    const meritChunks = [];
+    let bulkOperations: any[] = [];
+    const postsToUpdateMap = new Map<number, PostDocMerit[]>();
 
     for (const merit of merits) {
-      const operationInfo = { update: { _index: this.INDEX_NAME, _id: merit.id } };
-
-      const operationContent = {
+      const updateOperationInfo = { update: { _index: this.INDEX_NAME, _id: merit.id } };
+      const updateOperationContent = {
         doc: {
           amount: merit.amount,
           post_id: merit.post_id,
@@ -160,25 +160,14 @@ export class SyncMeritsPipeline {
         doc_as_upsert: true
       };
 
-      if (meritChunks.length === 0) {
-        meritChunks.push([operationInfo, operationContent]);
-        continue;
-      }
-
-      if (meritChunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
-        meritChunks.push([operationInfo, operationContent]);
-        continue;
-      }
-
-      meritChunks.at(-1).push(operationInfo, operationContent);
+      bulkOperations.push(updateOperationInfo, updateOperationContent);
     }
 
-    const indexBulkPromises = [];
-    for (const chunk of meritChunks) {
-      indexBulkPromises.push(this.esClient.bulk({ operations: chunk, refresh: false }));
+    const meritUpdateOrIndexBulkChunks: any[] = [];
+    for (let i = 0; i < bulkOperations.length; i += this.INDEX_BATCH_SIZE * 2) {
+      const operations = bulkOperations.slice(i, i + this.INDEX_BATCH_SIZE * 2);
+      meritUpdateOrIndexBulkChunks.push(this.esClient.bulk({ operations, refresh: false }));
     }
-
-    const postsToUpdateMap = new Map<number, PostDocMerit[]>();
 
     for (const merit of merits) {
       const newMerit = {
@@ -193,7 +182,7 @@ export class SyncMeritsPipeline {
       postsToUpdateMap.set(merit.post_id, [...(postsToUpdateMap.get(merit.post_id) ?? []), newMerit]);
     }
 
-    const postChunks = [];
+    bulkOperations = [];
 
     for (const [postId, newMerits] of postsToUpdateMap.entries()) {
       const updateOperationInfo = { update: { _index: this.POSTS_INDEX_NAME, _id: postId.toString() } };
@@ -219,40 +208,29 @@ export class SyncMeritsPipeline {
             }
           `,
           lang: 'painless',
-          params: {
-            newMerits
-          }
+          params: { newMerits }
         }
       };
 
-      if (postChunks.length === 0) {
-        postChunks.push([updateOperationInfo, updateOperationContent]);
-        continue;
-      }
-
-      if (postChunks.at(-1).length === this.INDEX_BATCH_SIZE * 2) {
-        postChunks.push([updateOperationInfo, updateOperationContent]);
-        continue;
-      }
-
-      postChunks.at(-1).push(updateOperationInfo, updateOperationContent);
+      bulkOperations.push(updateOperationInfo, updateOperationContent);
     }
 
-    const updateBulkPromises = [];
-    for (const chunk of postChunks) {
-      updateBulkPromises.push(this.esClient.bulk({ operations: chunk, refresh: false }));
+    const postUpdateWithMeritsBulkChunks: any[] = [];
+    for (let i = 0; i < bulkOperations.length; i += this.INDEX_BATCH_SIZE * 2) {
+      const operations = bulkOperations.slice(i, i + this.INDEX_BATCH_SIZE * 2);
+      postUpdateWithMeritsBulkChunks.push(this.esClient.bulk({ operations, refresh: false }));
     }
 
-    const results = await Promise.all([...indexBulkPromises, ...updateBulkPromises]);
+    const results = await Promise.all([...meritUpdateOrIndexBulkChunks, ...postUpdateWithMeritsBulkChunks]);
 
     if (results.some(result => result.errors)) {
       const erroredItems = results
         .flatMap(result => result.items)
         .filter(item => item.update?.error)
         .map(item => ({
-          id: item.update?._id,
-          error: item.update?.error,
-          status: item.update?.status
+          id: item.update._id,
+          error: item.update.error,
+          status: item.update.status
         }));
 
       this.logger.error({ errored: erroredItems }, 'Update errored');

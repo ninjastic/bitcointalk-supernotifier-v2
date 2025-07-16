@@ -268,6 +268,9 @@ export class SyncPostsPipeline {
                 keyword: { type: 'keyword', ignore_above: 256 }
               }
             },
+            is_topic_starter: {
+              type: 'boolean',
+            },
             updated_at: { type: 'date' }
           }
         }

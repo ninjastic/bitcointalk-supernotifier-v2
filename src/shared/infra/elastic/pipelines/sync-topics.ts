@@ -24,9 +24,11 @@ export class SyncTopicsPipeline {
 
   private readonly INDEX_NAME = 'topics';
 
+  private readonly POSTS_INDEX_NAME = 'posts_v3';
+
   private readonly INDEX_TEMPLATE_NAME = 'topics_template';
 
-  private readonly SYNC_BATCH_SIZE = 30000;
+  private readonly SYNC_BATCH_SIZE = 10000;
 
   private readonly INDEX_BATCH_SIZE = 10;
 
@@ -119,9 +121,11 @@ export class SyncTopicsPipeline {
   }
 
   private async batchProcessTopics(topics: RawTopic[]): Promise<void> {
-    const esBulkContent = topics.flatMap(topic => [
-      { index: { _index: this.INDEX_NAME, _id: topic.topic_id.toString() } },
-      {
+    let bulkOperations: any[] = [];
+
+    for (const topic of topics) {
+      const operationInfo = { index: { _index: this.INDEX_NAME, _id: topic.topic_id.toString() } };
+      const operationContent = {
         topic_id: topic.topic_id,
         post_id: topic.post_id,
         post: {
@@ -133,29 +137,48 @@ export class SyncTopicsPipeline {
           created_at: topic.posts_created_at,
           updated_at: topic.posts_updated_at
         }
-      }
-    ]);
+      };
 
-    const batchSize = Math.ceil(esBulkContent.length / this.INDEX_BATCH_SIZE);
-
-    const bulkPromises = [];
-    for (let i = 0; i < esBulkContent.length; i += batchSize * 2) {
-      bulkPromises.push(this.esClient.bulk({ operations: esBulkContent.slice(i, i + batchSize * 2), refresh: false }));
+      bulkOperations.push(operationInfo, operationContent);
     }
 
-    const results = await Promise.all(bulkPromises);
+    const indexTopicsBulkChunks = [];
+    for (let i = 0; i < bulkOperations.length; i += this.INDEX_BATCH_SIZE * 2) {
+      const operations = bulkOperations.slice(i, i + this.INDEX_BATCH_SIZE * 2);
+      indexTopicsBulkChunks.push(this.esClient.bulk({ operations, refresh: false }));
+    }
+
+    bulkOperations = [];
+
+    for (const topic of topics) {
+      const operationInfo = { update: { _index: this.POSTS_INDEX_NAME, _id: topic.post_id.toString() } };
+      const operationContent = {
+        doc: { is_topic_starter: true }
+      };
+
+      bulkOperations.push(operationInfo, operationContent);
+    }
+
+    const updatePostsWithTopicStarterFieldBulkChunks = [];
+    for (let i = 0; i < bulkOperations.length; i += this.INDEX_BATCH_SIZE * 2) {
+      const operations = bulkOperations.slice(i, i + this.INDEX_BATCH_SIZE * 2);
+      updatePostsWithTopicStarterFieldBulkChunks.push(this.esClient.bulk({ operations, refresh: false }));
+    }
+
+    const results = await Promise.all([...indexTopicsBulkChunks, ...updatePostsWithTopicStarterFieldBulkChunks]);
+
     if (results.some(result => result.errors)) {
       const erroredItems = results
         .flatMap(result => result.items)
-        .filter(item => item.index.error || item.create?.error || item.update?.error || item.delete?.error)
+        .filter(item => item.index?.error || item.update?.error)
         .map(item => ({
-          id: item.index._id,
-          error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index.status
+          id: item.index?._id || item.index?._id,
+          error: item.index?.error || item.update?.error,
+          status: item.index?.status || item.update?.status,
         }));
 
-      this.logger.error({ errored: erroredItems }, 'Index errored');
-      throw new Error('Index errored');
+      this.logger.error({ errored: erroredItems }, 'Index or index errored');
+      throw new Error('Update or index errored errored');
     }
   }
 
