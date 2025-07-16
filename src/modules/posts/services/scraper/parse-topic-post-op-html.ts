@@ -1,15 +1,18 @@
-import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import { load } from 'cheerio';
 import { getRepository } from 'typeorm';
+import Post from '##/modules/posts/infra/typeorm/entities/Post';
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
 export type ParsedTopicPost = {
   success: boolean;
   post: Post | null;
   failedReason: string | null;
+  topic?: Topic;
 };
 
 const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
   const postsRepository = getRepository(Post);
+  const topicsRepository = getRepository(Topic);
 
   const $ = load(html, { decodeEntities: true });
   const posts = $('#quickModForm > table.bordercolor');
@@ -94,7 +97,12 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
     notified_to: []
   });
 
-  return { success: true, post, failedReason: null };
+  const topic = topicsRepository.create({
+    post_id: post.post_id,
+    topic_id: post.topic_id
+  });
+
+  return { success: true, post, topic, failedReason: null };
 };
 
 export default parseTopicPostOpHtml;

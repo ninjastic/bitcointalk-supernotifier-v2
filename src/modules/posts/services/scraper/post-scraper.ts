@@ -17,7 +17,7 @@ import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
 import logger from '##/shared/services/logger';
 import { getRepository, Repository } from 'typeorm';
-import parseTopicPostOpHtml from '##/modules/posts/services/scraper/parse-topic-post-op-html';
+import parseTopicPostOpHtml, { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
 import { RescrapeSchedule } from '##/modules/posts/services/check-post-rescrape-schedules';
 import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 
@@ -282,7 +282,7 @@ export class PostScraper {
     return new Date(lastDateString);
   }
 
-  async scrapeTopicOp(topicId: number): Promise<ParsedPost> {
+  async scrapeTopicOp(topicId: number): Promise<ParsedTopicPost> {
     const { html } = await this.ensureLoggedIn(`index.php?topic=${topicId}`);
     const topicPost = parseTopicPostOpHtml(html);
 
@@ -291,23 +291,16 @@ export class PostScraper {
     }
 
     let post = await this.postsRepository.findOne({ where: { post_id: topicPost.post.post_id } });
-
     if (!post) {
       post = await this.postsRepository.save(topicPost.post);
     }
 
-    const topicExists = await this.topicsRepository.findOne({ where: { topic_id: topicId } });
-
-    if (!topicExists) {
-      const topic = this.topicsRepository.create({
-        topic_id: post.topic_id,
-        post_id: post.post_id
-      });
-
-      await this.topicsRepository.save(topic);
+    let topic = await this.topicsRepository.findOne({ where: { topic_id: topicId } });
+    if (!topic) {
+      topic = await this.topicsRepository.save(topicPost.topic);
     }
 
-    return { success: true, post, failedReason: null };
+    return { success: true, post, topic, failedReason: null };
   }
 
   async schedulePostRescrape(postId: number, minutes: number): Promise<void> {
