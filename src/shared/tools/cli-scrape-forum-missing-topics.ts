@@ -117,12 +117,22 @@ const scrape = async () => {
     console.log('idsNotFound length', idsNotFound.length);
     if (idsNotFound.length) {
       // eslint-disable-next-line no-await-in-loop
-      await connection.manager.createQueryBuilder().insert().into(TopicMissing).values(idsNotFound).orIgnore().execute();
+      await connection.manager
+        .createQueryBuilder()
+        .insert()
+        .into(TopicMissing)
+        .values(idsNotFound)
+        .orIgnore()
+        .execute();
     }
 
     // eslint-disable-next-line no-await-in-loop
     await sleep(1000);
   }
+
+  console.log(`Finished range [${answers.startTopicId}, ${answers.endTopicId}]`)
 };
 
-scrape();
+scrape().then(() => {
+  process.exit(0);
+});

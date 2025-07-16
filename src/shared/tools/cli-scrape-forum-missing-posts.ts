@@ -135,4 +135,6 @@ const scrape = async () => {
   }
 };
 
-scrape();
+scrape().then(() => {
+  process.exit(0);
+});
