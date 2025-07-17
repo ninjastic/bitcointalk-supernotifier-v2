@@ -11,6 +11,7 @@ import { scrapeLoyceArchivePost } from './loyce/utils';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import TopicMissing from '##/modules/posts/infra/typeorm/entities/TopicMissing';
+import { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
 
 type PromptAnswers = {
   startTopicId: number;
@@ -23,6 +24,28 @@ const sleep = ms =>
   });
 
 const BATCH_SIZE = 50;
+
+async function retryScrapeTopicOp(
+  postScraper: PostScraper,
+  topicId: number,
+  maxAttempts = 3,
+  delayMs = 2000
+): Promise<ParsedTopicPost | null> {
+  let lastError: any;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await postScraper.scrapeTopicOp(topicId);
+    } catch (err) {
+      lastError = err;
+      console.warn(`scrapeTopicOp failed (attempt ${attempt}/${maxAttempts}): ${err.message}`);
+      if (attempt < maxAttempts) {
+        await new Promise(res => setTimeout(res, delayMs));
+      }
+    }
+  }
+  console.error(`scrapeTopicOp failed after ${maxAttempts} attempts`, lastError);
+  return null;
+}
 
 const scrape = async () => {
   const answers = await inquirer.prompt<PromptAnswers>([
@@ -87,7 +110,13 @@ const scrape = async () => {
     for await (const id of batch) {
       console.log(`Checking topic of id ${id}`);
 
-      const { post: forumPost, topic } = await postScraper.scrapeTopicOp(id);
+      const result = await retryScrapeTopicOp(postScraper, id, 5, 2000);
+
+      if (!result) {
+        continue;
+      }
+
+      const { post: forumPost, topic } = result;
 
       if (forumPost && topic) {
         const loycePost = await scrapeLoyceArchivePost(forumPost.post_id);
