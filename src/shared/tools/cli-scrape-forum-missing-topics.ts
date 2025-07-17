@@ -119,7 +119,10 @@ const scrape = async () => {
       const { post: forumPost, topic } = result;
 
       if (forumPost && topic) {
-        const loycePost = await scrapeLoyceArchivePost(forumPost.post_id);
+        const loycePost = await scrapeLoyceArchivePost(forumPost.post_id).catch(err => {
+          console.log(`Loyce archive for post ${forumPost.post_id} request failed: ${err.message}`);
+          return null;
+        });
         const post: Post = { ...forumPost, content: loycePost?.content ?? forumPost.content };
         postsToInsert.push(post);
         topicsToInsert.push(topic);
@@ -159,7 +162,7 @@ const scrape = async () => {
     await sleep(1000);
   }
 
-  console.log(`Finished range [${answers.startTopicId}, ${answers.endTopicId}]`)
+  console.log(`Finished range [${answers.startTopicId}, ${answers.endTopicId}]`);
 };
 
 scrape().then(() => {
