@@ -30,6 +30,11 @@ const askForPrompt = async (
   const confirmMenu = new Menu<IMenuContext & ConversationFlavor>('confirm').text('Yes').text('No');
   await conversation.run(confirmMenu);
 
+  if (['/menu', '/start'].includes(input.toString().toLowerCase())) {
+    await ctx.reply(`I don't think your ${typeText} is ${input}... let's try again.`)
+    return askForPrompt(conversation, ctx, type);
+  }
+
   const promptMsg = await ctx.reply(`Is your BitcoinTalk ${typeText} <b>${input}</b>?`, {
     parse_mode: 'HTML',
     reply_markup: confirmMenu
