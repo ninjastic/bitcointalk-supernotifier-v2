@@ -91,7 +91,7 @@ export const handlers: Handlers = {
   },
   newChatItems: async (r: CRNewChatItems, simpleX) => {
     for (const chatItem of r.chatItems) {
-      if (chatItem.chatInfo.type !== ChatInfoType.Direct) continue;
+      if (chatItem.chatInfo.type !== ChatInfoType.Direct || !chatItem.chatInfo.contact.contactId) continue;
       if (chatItem.chatItem.content.type !== 'rcvMsgContent' || chatItem.chatItem.content.msgContent.type !== 'text')
         continue;
 

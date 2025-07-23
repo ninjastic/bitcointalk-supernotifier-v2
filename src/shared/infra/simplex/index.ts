@@ -45,7 +45,7 @@ export class SimpleX {
       throw new Error('No user profile');
     }
 
-    this.address = (await this.chat.apiGetUserAddress()) || (await this.chat.apiCreateUserAddress());
+    this.address = await this.chat.apiGetUserAddress();
     await this.chat.disableAddressAutoAccept();
     await this.chat.apiUpdateProfile(user.profile.profileId, {
       displayName: 'BitcoinTalk SuperNotifier',
@@ -101,19 +101,19 @@ export class SimpleX {
   async sendMessage(contactId: number, text: string) {
     logger.info({ contactId, text }, 'Sending bot message');
 
-    if (!this.connectedUsers.has(contactId)) {
+    if (!this.connectedUsers.has(contactId) || !(await this.isContactActive(contactId))) {
       logger.warn({ contactId }, 'Contact not connected');
       return [];
     }
 
-    return this.chat.apiSendTextMessage(ChatType.Direct, contactId, text).catch(err => {
+    return this.chat.apiSendTextMessage(ChatType.Direct, contactId, text).catch(async err => {
       logger.error({ err, contactId, text }, 'Error when sending message');
       return [];
     });
   }
 
   async addConnectedUser(contactId: number) {
-    if (this.connectedUsers.has(contactId)) return;
+    if (this.connectedUsers.has(contactId) && !contactId) return;
 
     this.connectedUsers.add(contactId);
     logger.info({ contactId }, `Contact ${contactId} connected`);
