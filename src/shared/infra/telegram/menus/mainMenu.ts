@@ -19,7 +19,7 @@ function getUsername(ctx: IMenuContext): string {
 }
 
 const mainMenu = new MenuTemplate<IMenuContext>(async (ctx: IMenuContext) => ({
-  text: `Hello, <b>${getUsername(ctx)}</b>.\nNice to see you. What do you want to do now?`,
+  text: `Hello, <b>${getUsername(ctx)}</b>.\nNice to see you. What do you want to do now?\n\nRun /help to see all available commands.`,
   parse_mode: 'HTML'
 }));
 

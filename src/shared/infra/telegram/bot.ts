@@ -31,6 +31,7 @@ import addTrackedUserConversation, {
 import { handleTrackTopicRepliesMenu } from './services/notifications/SendAutoTrackTopicNotificationService';
 
 import startCommand from './commands/startCommand';
+import helpCommand from './commands/helpCommand';
 import menuCommand from './commands/menuCommand';
 import alertCommand from './commands/alertCommand';
 import setMeritCommand from './commands/setMeritCommand';
@@ -138,6 +139,7 @@ class TelegramBot {
 
   async commands(): Promise<void> {
     this.instance.command('start', startCommand);
+    this.instance.command('help', helpCommand);
     this.instance.command('menu', menuCommand);
     this.instance.command('alert', alertCommand);
     this.instance.hears(/\/?setmerit (.*)/i, setMeritCommand);
