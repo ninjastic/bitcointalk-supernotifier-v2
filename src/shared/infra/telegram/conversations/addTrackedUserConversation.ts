@@ -11,9 +11,9 @@ import trackedUsersMenu from '../menus/trackedUsersMenu';
 import TrackedUsersRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedUsersRepository';
 
 export const confirmAddTrackedUserInlineMenu = new Menu('addTrackedUserConfirm')
-  .text({ text: 'Yes', payload: 'yes-posts' })
+  .text({ text: 'Yes, all posts', payload: 'yes-posts' })
   .row()
-  .text({ text: 'Only for topics', payload: 'yes-topics' })
+  .text({ text: 'Only new topics', payload: 'yes-topics' })
   .row()
   .text({ text: 'No', payload: 'no' });
 
@@ -64,7 +64,7 @@ const askForPrompt = async (
     return askForPrompt(conversation, ctx);
   }
 
-  await ctx.reply(`Do you want to add the user <b>${trackedUser.username}</b>?`, {
+  await ctx.reply(`Do you want to track the user <b>${trackedUser.username}</b>?`, {
     parse_mode: 'HTML',
     reply_markup: confirmAddTrackedUserInlineMenu
   });

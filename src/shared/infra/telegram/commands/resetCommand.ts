@@ -1,8 +1,8 @@
-import { HearsContext } from 'grammy';
+import { CommandContext } from 'grammy';
 import IMenuContext from '../@types/IMenuContext';
 import { initialSession } from '../bot';
 
-const resetCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
+const resetCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
   if (ctx.chat.type === 'private') {
     ctx.session = initialSession();
     ctx.conversation.exit();

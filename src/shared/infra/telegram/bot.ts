@@ -43,6 +43,8 @@ import lengthCommand from './commands/lengthCommand';
 import imageCommand from './commands/imageCommand';
 import authCommand from './commands/authCommand';
 import minPostsCommand from './commands/minPostsCommand';
+import hardresetCommand, { hardResetConfirmInlineMenu } from '##/shared/infra/telegram/commands/hardresetCommand';
+
 export function initialSession(): ISession {
   return {
     username: null,
@@ -113,7 +115,7 @@ class TelegramBot {
     });
 
     this.instance.use(conversations());
-    this.instance.hears(/\/?reset/i, resetCommand);
+    this.instance.command('reset', resetCommand);
     this.instance.use(async (ctx, next) => {
       if (!ctx.session.username || !ctx.session.userId) {
         const findUserByTelegramId = container.resolve(FindUserByTelegramIdService);
@@ -146,6 +148,7 @@ class TelegramBot {
     this.instance.hears(/\/?image/i, imageCommand);
     this.instance.hears(/\/?auth/i, authCommand);
     this.instance.hears(/\/?minposts? (.*)/i, minPostsCommand);
+    this.instance.command('hardreset', hardresetCommand);
 
     this.instance.command('dev', devCommand);
 
@@ -169,7 +172,8 @@ class TelegramBot {
       confirmAddTrackedUserInlineMenu,
       cancelAddTrackedUserPromptInlineMenu,
       confirmAddIgnoredBoardInlineMenu,
-      cancelAddIgnoredBoardPromptInlineMenu
+      cancelAddIgnoredBoardPromptInlineMenu,
+      hardResetConfirmInlineMenu
     );
     handleTrackTopicRepliesMenu(this.instance);
   }
