@@ -158,6 +158,10 @@ class TelegramBot {
       {
         command: '/menu',
         description: 'Sends the menu in a message'
+      },
+      {
+        command: '/help',
+        description: 'Sends the help message'
       }
     ]);
   }
