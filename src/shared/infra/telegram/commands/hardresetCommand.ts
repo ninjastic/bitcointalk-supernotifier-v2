@@ -65,6 +65,8 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
         enable_only_direct_mentions = FALSE,
       WHERE telegram_id = $1;`, [telegramId]);
 
+    await cacheRepository.invalidate(`meritCount:${telegramId}`);
+
     await cacheRepository.invalidate('trackedPhrases');
     await cacheRepository.invalidate(`trackedPhrases:${telegramId}`);
 
