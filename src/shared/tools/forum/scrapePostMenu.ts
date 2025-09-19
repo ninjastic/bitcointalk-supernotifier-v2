@@ -3,7 +3,7 @@ import 'dotenv/config';
 import 'reflect-metadata';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { getManager } from 'typeorm';
+import { createConnection, getManager } from 'typeorm';
 
 import '../../container';
 
@@ -14,6 +14,7 @@ import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 const postScraper = new PostScraper();
 
 export const scrapePostMenu = async (): Promise<void> => {
+  await createConnection();
   await inquirer
     .prompt([
       {
