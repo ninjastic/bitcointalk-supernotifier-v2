@@ -1,8 +1,12 @@
 /* eslint-disable no-console */
+import 'dotenv/config';
+import 'reflect-metadata';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { container } from 'tsyringe';
 import { getManager } from 'typeorm';
+
+import '../../container';
+
 
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
