@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import 'reflect-metadata';
 import inquirer from 'inquirer';
+import { createConnection } from 'typeorm';
 import { censorPostsMenu } from './forum/censorPostsMenu';
 import { createPostMenu } from './forum/createPostsMenu';
 import { scrapePostMenu } from './forum/scrapePostMenu';
@@ -8,7 +9,7 @@ import { syncBoards } from './forum/syncBoards';
 import { scrapeMeritDump } from './forum/scrapeMeritDump';
 import { censorAddressesMenu } from './forum/censorAddressesMenu';
 
-import '../../container';
+import '##/shared/container';
 
 type MainMenuOptions = 'Posts' | 'Boards' | 'Merits' | 'Addresses';
 type PostsMenuOptions = 'Scrape' | 'Create' | 'Censor';

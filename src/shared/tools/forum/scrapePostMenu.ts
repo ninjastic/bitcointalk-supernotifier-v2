@@ -7,14 +7,12 @@ import { createConnection, getManager } from 'typeorm';
 
 import '../../container';
 
-
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 
-const postScraper = new PostScraper();
-
 export const scrapePostMenu = async (): Promise<void> => {
   await createConnection();
+  const postScraper = new PostScraper();
   await inquirer
     .prompt([
       {
