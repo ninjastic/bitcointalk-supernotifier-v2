@@ -77,7 +77,7 @@ export default class CheckPostsService {
       where: {
         new_content: Not(IsNull()),
         deleted: false,
-        post: { date: MoreThanOrEqual(sub(new Date(), { minutes: 30 })) }
+        post: { date: MoreThanOrEqual(sub(new Date(), { hours: 3 })) }
       }
     });
 

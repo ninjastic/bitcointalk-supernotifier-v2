@@ -35,7 +35,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       where: {
         checked: false,
         deleted: false,
-        date: MoreThanOrEqual(sub(new Date(), { minutes: 30 }))
+        date: MoreThanOrEqual(sub(new Date(), { hours: 3 }))
       },
       order: { post_id: 'DESC' },
       take: limit,

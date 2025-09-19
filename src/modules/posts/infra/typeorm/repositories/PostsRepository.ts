@@ -40,7 +40,7 @@ export default class PostsRepository implements IPostsRepository {
       where: {
         checked: false,
         archive: false,
-        date: MoreThanOrEqual(sub(new Date(), { minutes: 30 }))
+        date: MoreThanOrEqual(sub(new Date(), { hours: 3 }))
       },
       order: { post_id: 'DESC' },
       take: limit
