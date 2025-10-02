@@ -87,7 +87,7 @@ const askForMentionType = async (conversation: Conversation<IMenuContext>, ctx: 
   await conversation.run(mentionTypeMenu);
 
   const promptMsg = await ctx.reply(
-    `Do you want to be notified every time someone writes your username <b>${ctx.from.username}</b>...\n\nOr <b>only</b> when they quote your post or tag you with <b>@${ctx.from.username}</b>?`,
+    `Do you want to be notified every time someone writes your username <b>${conversation.session.username}</b>...\n\nOr <b>only</b> when they quote your post or tag you with <b>@${conversation.session.username}</b>?`,
     {
       parse_mode: 'HTML',
       reply_markup: mentionTypeMenu
@@ -118,9 +118,13 @@ const setupConversation = async (
   ctx: IMenuContext
 ): Promise<void> => {
   const username = (await askForPrompt(conversation, ctx, 'username')) as string;
+  conversation.session.username = username;
+  
   const userId = (await askForPrompt(conversation, ctx, 'userId')) as number;
+  conversation.session.userId = userId;
 
   const mentionsEnabled = await askForConfirmation(conversation, ctx, 'mentions');
+  conversation.session.mentions = mentionsEnabled;
 
   if (mentionsEnabled) {
     const onlyDirectMentions = await askForMentionType(conversation, ctx);
@@ -128,11 +132,8 @@ const setupConversation = async (
   }
 
   const meritsEnabled = await askForConfirmation(conversation, ctx, 'merits');
-
-  conversation.session.username = username;
-  conversation.session.userId = userId;
-  conversation.session.mentions = mentionsEnabled;
   conversation.session.merits = meritsEnabled;
+
   conversation.session.isGroup = false;
 
   const createUser = container.resolve(CreateUserService);
