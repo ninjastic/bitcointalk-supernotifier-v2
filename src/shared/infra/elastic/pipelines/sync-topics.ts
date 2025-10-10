@@ -22,7 +22,7 @@ interface LastSyncState {
 export class SyncTopicsPipeline {
   private readonly logger = baseLogger.child({ pipeline: 'syncTopicsPipeline' });
 
-  private readonly INDEX_NAME = 'topics';
+  private readonly INDEX_NAME = 'topics_v2';
 
   private readonly POSTS_INDEX_NAME = 'posts_v3';
 
@@ -53,6 +53,29 @@ export class SyncTopicsPipeline {
       await this.esClient.indices.putTemplate({
         name: this.INDEX_TEMPLATE_NAME,
         index_patterns: [this.INDEX_NAME],
+        settings: {
+          analysis: {
+            analyzer: {
+              autocomplete_analyzer: {
+                type: 'custom',
+                tokenizer: 'standard',
+                filter: ['lowercase', 'autocomplete_filter']
+              },
+              autocomplete_search_analyzer: {
+                type: 'custom',
+                tokenizer: 'standard',
+                filter: ['lowercase']
+              }
+            },
+            filter: {
+              autocomplete_filter: {
+                type: 'edge_ngram',
+                min_gram: 2,
+                max_gram: 20
+              }
+            }
+          }
+        },
         mappings: {
           properties: {
             topic_id: {
@@ -65,6 +88,8 @@ export class SyncTopicsPipeline {
               properties: {
                 title: {
                   type: 'text',
+                  analyzer: 'autocomplete_analyzer',
+                  search_analyzer: 'autocomplete_search_analyzer',
                   fields: {
                     keyword: {
                       type: 'keyword',
