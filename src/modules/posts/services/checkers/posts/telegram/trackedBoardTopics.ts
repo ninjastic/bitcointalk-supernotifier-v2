@@ -59,6 +59,23 @@ const checkPotentialSpam = async (post: Post) => {
   return false;
 };
 
+const checkIsTopicMoved = async (post: Post) => {
+  if (!post.title.startsWith('MOVED: ')) return false;
+
+  const originalTitle = post.title.replace(/^MOVED: /, "")
+
+  const topicsRepository = getRepository(Topic);
+  const matchingTopics = await topicsRepository
+    .createQueryBuilder('topics')
+    .innerJoinAndSelect('topics.post', 'post')
+    .where('post.title = :title', { title: originalTitle })
+    .andWhere('post.date >= :date', { date: subDays(new Date(), 7) })
+    .getMany();
+
+  if (matchingTopics.length > 0) return true;
+  return false;
+}
+
 const processTopic = async (
   topic: Topic,
   trackedBoards: TrackedBoard[],
@@ -82,6 +99,9 @@ const processTopic = async (
 
       const isPotentialSpam = await checkPotentialSpam(post);
       if (isPotentialSpam) continue;
+
+      const isTopicMoved = await checkIsTopicMoved(post);
+      if (isTopicMoved) continue;
 
       data.push({
         userId: user.id,
