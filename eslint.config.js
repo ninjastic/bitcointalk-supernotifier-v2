@@ -41,9 +41,10 @@ export default [
         },
       ],
       'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
-      'max-len': ['error', { code: 120, ignoreUrls: true }],
+      'max-len': ['error', { code: 120, ignoreUrls: true, ignoreTemplateLiterals: true }],
       'no-underscore-dangle': 'off',
       'no-param-reassign': 'off',
+      'no-undef': 'off'
     },
     settings: {
       'import/resolver': {
