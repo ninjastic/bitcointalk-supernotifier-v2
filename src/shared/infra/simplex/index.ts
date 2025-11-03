@@ -33,6 +33,12 @@ export class SimpleX {
     const { profileId } = user.profile;
 
     this.address = await this.chat.apiGetUserAddress(profileId);
+
+    if (this.address && this.address.startsWith('simplex:/contact#/?v=2')) {
+      this.chat.apiDeleteUserAddress(profileId);
+      this.address = undefined;
+    }
+
     if (!this.address) {
       this.address = await this.chat.apiCreateUserAddress(profileId);
     }
