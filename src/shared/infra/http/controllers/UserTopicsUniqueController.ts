@@ -1,4 +1,4 @@
-import { Request as ExpressRequest, Response } from 'express';
+import type { Request as ExpressRequest, Response } from 'express';
 import { endOfHour, addMinutes } from 'date-fns';
 import Joi from 'joi';
 

@@ -1,17 +1,17 @@
 import { container } from 'tsyringe';
-import { Conversation, ConversationFlavor } from '@grammyjs/conversations';
+import type { Conversation, ConversationFlavor } from '@grammyjs/conversations';
 import { Menu } from '@grammyjs/menu';
 import { replyMenuToContext } from 'grammy-inline-menu';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import { mainMenu } from '../menus/mainMenu';
-import Board from '../../../../modules/posts/infra/typeorm/entities/Board';
+import type Board from '../../../../modules/posts/infra/typeorm/entities/Board';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 import ignoredBoardsMenu from '../menus/ignoredBoardsMenu';
 import { getRepository } from 'typeorm';
 import IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
-  
+
 export const confirmAddIgnoredBoardInlineMenu = new Menu('addIgnoredBoardConfirm')
   .text({ text: 'Yes', payload: 'yes' })
   .row()
@@ -103,14 +103,17 @@ const addIgnoredBoardConversation = async (
   conversation: Conversation<IMenuContext & ConversationFlavor>,
   ctx: IMenuContext
 ): Promise<void> => {
-  const ignoredBoardsRepository = getRepository(IgnoredBoard)
+  const ignoredBoardsRepository = getRepository(IgnoredBoard);
   const newBoards = await askForPrompt(conversation, ctx);
 
   if (!newBoards) {
     return;
   }
 
-  const userIgnoredBoards = await ignoredBoardsRepository.find({ where: { telegram_id: String(ctx.chat.id) }, relations: ['board'] });
+  const userIgnoredBoards = await ignoredBoardsRepository.find({
+    where: { telegram_id: String(ctx.chat.id) },
+    relations: ['board']
+  });
 
   const ignoredBoardsToAdd = newBoards
     .map(board =>

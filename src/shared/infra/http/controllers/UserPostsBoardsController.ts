@@ -1,4 +1,4 @@
-import { Request as ExpressRequest, Response } from 'express';
+import type { Request as ExpressRequest, Response } from 'express';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';

@@ -1,10 +1,11 @@
-import { HearsContext, InputFile } from 'grammy';
+import type { HearsContext } from 'grammy';
+import { InputFile } from 'grammy';
 import type { MessageEntity } from '@grammyjs/types';
 import { container } from 'tsyringe';
 
 import puppeteer from 'puppeteer';
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-import IMenuContext from '../@types/IMenuContext';
+import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import type IMenuContext from '../@types/IMenuContext';
 import getPost from '##/modules/posts/services/get-post';
 import logger from '##/shared/services/logger';
 

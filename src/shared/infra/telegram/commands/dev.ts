@@ -1,7 +1,7 @@
-import { CommandContext } from 'grammy';
+import type { CommandContext } from 'grammy';
 import { container } from 'tsyringe';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 import MeritsRepository from '../../../../modules/merits/infra/typeorm/repositories/MeritsRepository';
 import SendMeritNotificationService from '../services/notifications/SendMeritNotificationService';

@@ -2,7 +2,8 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import { container } from 'tsyringe';
-import { createConnection, getManager, InsertResult } from 'typeorm';
+import type { InsertResult } from 'typeorm';
+import { createConnection, getManager } from 'typeorm';
 import { load } from 'cheerio';
 import validate from 'bitcoin-address-validation';
 

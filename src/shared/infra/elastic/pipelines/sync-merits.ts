@@ -1,8 +1,8 @@
 /* eslint-disable no-await-in-loop */
-import { Connection, ObjectLiteral } from 'typeorm';
-import { Client } from '@elastic/elasticsearch';
+import type { Connection, ObjectLiteral } from 'typeorm';
+import type { Client } from '@elastic/elasticsearch';
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import baseLogger from '##/shared/services/logger';
 
 type RawMerit = Merit & {

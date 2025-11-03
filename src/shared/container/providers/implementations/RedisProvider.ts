@@ -1,7 +1,8 @@
-import Redis, { Redis as RedisClient } from 'ioredis';
+import type { Redis as RedisClient } from 'ioredis';
+import Redis from 'ioredis';
 import cacheConfig from '../../../../config/cache';
 
-import ICacheProvider from '../models/ICacheProvider';
+import type ICacheProvider from '../models/ICacheProvider';
 
 interface SaveManyData {
   key: string;

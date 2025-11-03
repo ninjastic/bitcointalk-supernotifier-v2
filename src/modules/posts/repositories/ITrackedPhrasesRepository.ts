@@ -1,9 +1,9 @@
-import { DeleteResult } from 'typeorm';
+import type { DeleteResult } from 'typeorm';
 
-import TrackedPhrase from '../infra/typeorm/entities/TrackedPhrase';
+import type TrackedPhrase from '../infra/typeorm/entities/TrackedPhrase';
 
-import ICreateTrackedPhraseDTO from '../dtos/ICreateTrackedPhraseDTO';
-import IFindTrackedPhraseDTO from '../dtos/IFindTrackedPhraseDTO';
+import type ICreateTrackedPhraseDTO from '../dtos/ICreateTrackedPhraseDTO';
+import type IFindTrackedPhraseDTO from '../dtos/IFindTrackedPhraseDTO';
 
 export default interface ITrackedPhrasesRepository {
   create(data: ICreateTrackedPhraseDTO): TrackedPhrase;

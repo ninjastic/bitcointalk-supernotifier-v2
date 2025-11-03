@@ -1,10 +1,10 @@
 /* eslint-disable no-await-in-loop */
-import { Connection } from 'typeorm';
-import { Client } from '@elastic/elasticsearch';
+import type { Connection } from 'typeorm';
+import type { Client } from '@elastic/elasticsearch';
 import Board from '##/modules/posts/infra/typeorm/entities/Board';
 import baseLogger from '##/shared/services/logger';
 import { OllamaEmbeddings } from '@langchain/ollama';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 
 interface LastSyncState {
   lastUpdatedAt: string;

@@ -21,7 +21,7 @@ export async function sarcasticAprilFoolsMessage(content: string) {
 
     return text;
   } catch (error) {
-    logger.warn(error)
+    logger.warn(error);
     return 'Error returning very smart message';
   }
 }

@@ -1,5 +1,6 @@
-import { DeleteResult, getRepository, Repository } from 'typeorm';
-import { ICreateTrackedUserDTO } from '../../../dtos/ICreateTrackedUserDTO';
+import type { DeleteResult, Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
+import type { ICreateTrackedUserDTO } from '../../../dtos/ICreateTrackedUserDTO';
 
 import TrackedUser from '../entities/TrackedUser';
 

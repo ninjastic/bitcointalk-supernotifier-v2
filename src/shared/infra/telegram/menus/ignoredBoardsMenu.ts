@@ -1,6 +1,6 @@
 import { MenuTemplate } from 'grammy-inline-menu';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import { getRepository } from 'typeorm';
 import IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
 
@@ -10,11 +10,14 @@ const ignoredBoardsMenu = new MenuTemplate<IMenuContext>(() => ({
 }));
 
 const confirmRemoveIgnoredBoardMenu = new MenuTemplate<IMenuContext>(async ctx => {
-  const ignoredBoardsRepository = getRepository(IgnoredBoard)
-  const ignoredBoard = await ignoredBoardsRepository.findOne({
-    telegram_id: String(ctx.chat.id),
-    board_id: Number(ctx.match[1])
-  }, { relations: ['board'] });
+  const ignoredBoardsRepository = getRepository(IgnoredBoard);
+  const ignoredBoard = await ignoredBoardsRepository.findOne(
+    {
+      telegram_id: String(ctx.chat.id),
+      board_id: Number(ctx.match[1])
+    },
+    { relations: ['board'] }
+  );
 
   return {
     text: `Are you sure you want to remove the ignored board: <b>${ignoredBoard.board.name}</b>?`,
@@ -24,7 +27,7 @@ const confirmRemoveIgnoredBoardMenu = new MenuTemplate<IMenuContext>(async ctx =
 
 confirmRemoveIgnoredBoardMenu.interact('Yes, do it!', 'yes', {
   do: async ctx => {
-    const ignoredBoardsRepository = getRepository(IgnoredBoard)
+    const ignoredBoardsRepository = getRepository(IgnoredBoard);
     await ignoredBoardsRepository.delete({ telegram_id: String(ctx.chat.id), board_id: Number(ctx.match[1]) });
     return '/ib/';
   }
@@ -35,11 +38,14 @@ confirmRemoveIgnoredBoardMenu.interact('No, go back!', 'no', {
 });
 
 const getIgnoredBoard = async (telegramId: string, boardId: number) => {
-  const ignoredBoardsRepository = getRepository(IgnoredBoard)
-  const ignoredBoard = await ignoredBoardsRepository.findOne({
-    telegram_id: telegramId,
-    board_id: boardId
-  }, { relations: ['board'] });
+  const ignoredBoardsRepository = getRepository(IgnoredBoard);
+  const ignoredBoard = await ignoredBoardsRepository.findOne(
+    {
+      telegram_id: telegramId,
+      board_id: boardId
+    },
+    { relations: ['board'] }
+  );
   return ignoredBoard;
 };
 
@@ -63,8 +69,11 @@ ignoredBoardInfoMenu.interact('↩ Go Back', 'back', {
 });
 
 const getIgnoredBoards = async (ctx: IMenuContext) => {
-  const ignoredBoardsRepository = getRepository(IgnoredBoard)
-  const ignoredBoards = await ignoredBoardsRepository.find({ where: { telegram_id: String(ctx.chat.id) }, relations: ['board'] });
+  const ignoredBoardsRepository = getRepository(IgnoredBoard);
+  const ignoredBoards = await ignoredBoardsRepository.find({
+    where: { telegram_id: String(ctx.chat.id) },
+    relations: ['board']
+  });
 
   const choices = {};
 

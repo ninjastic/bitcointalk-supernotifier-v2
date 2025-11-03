@@ -1,13 +1,13 @@
-import { Job } from 'bullmq';
+import type { Job } from 'bullmq';
 
-import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-import User from '../../../../modules/users/infra/typeorm/entities/User';
-import Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
-import ModLog from '../../../../modules/modlog/infra/typeorm/entities/ModLog';
-import TrackedPhrase from '../../../../modules/posts/infra/typeorm/entities/TrackedPhrase';
-import TrackedBoard from '../../../../modules/posts/infra/typeorm/entities/TrackedBoard';
-import Topic from '../../../../modules/posts/infra/typeorm/entities/Topic';
+import type { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import type User from '../../../../modules/users/infra/typeorm/entities/User';
+import type Merit from '../../../../modules/merits/infra/typeorm/entities/Merit';
+import type ModLog from '../../../../modules/modlog/infra/typeorm/entities/ModLog';
+import type TrackedPhrase from '../../../../modules/posts/infra/typeorm/entities/TrackedPhrase';
+import type TrackedBoard from '../../../../modules/posts/infra/typeorm/entities/TrackedBoard';
+import type Topic from '../../../../modules/posts/infra/typeorm/entities/Topic';
 
 export type RecipeNames =
   | 'sendMentionNotification'

@@ -1,12 +1,13 @@
-import { Repository, getRepository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
-import IFindAddressesByAuthorDTO from '../../../dtos/IFindAddressesByAuthorDTO';
-import ICreateAddressDTO from '../../../dtos/ICreateAddressDTO';
-import IAddressesRepository from '../../../repositories/IAddressesRepository';
+import type IFindAddressesByAuthorDTO from '../../../dtos/IFindAddressesByAuthorDTO';
+import type ICreateAddressDTO from '../../../dtos/ICreateAddressDTO';
+import type IAddressesRepository from '../../../repositories/IAddressesRepository';
 
 import Address from '../entities/Address';
 
-import IFindAddressesConditionsDTO from '../../../dtos/IFindAddressesConditionsDTO';
+import type IFindAddressesConditionsDTO from '../../../dtos/IFindAddressesConditionsDTO';
 
 export default class AddressesRepository implements IAddressesRepository {
   private ormRepository: Repository<Address>;

@@ -1,7 +1,7 @@
-import Address from '../infra/typeorm/entities/Address';
-import ICreateAddressDTO from '../dtos/ICreateAddressDTO';
-import IFindAddressesConditionsDTO from '../dtos/IFindAddressesConditionsDTO';
-import IFindAddressesByAuthorDTO from '../dtos/IFindAddressesByAuthorDTO';
+import type Address from '../infra/typeorm/entities/Address';
+import type ICreateAddressDTO from '../dtos/ICreateAddressDTO';
+import type IFindAddressesConditionsDTO from '../dtos/IFindAddressesConditionsDTO';
+import type IFindAddressesByAuthorDTO from '../dtos/IFindAddressesByAuthorDTO';
 
 export default interface IAddressesRepository {
   create(data: ICreateAddressDTO): Address;

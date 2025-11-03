@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetPostsBoardsPeriodService, { GetPostsBoardsPeriodParams } from '../services/GetPostsBoardsPeriodService';
+import type { GetPostsBoardsPeriodParams } from '../services/GetPostsBoardsPeriodService';
+import GetPostsBoardsPeriodService from '../services/GetPostsBoardsPeriodService';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
 export default class PostsBoardsPeriodController {

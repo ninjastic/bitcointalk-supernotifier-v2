@@ -10,7 +10,7 @@ import CreatePostService from '../../modules/posts/services/CreatePostService';
 import Post from '../../modules/posts/infra/typeorm/entities/Post';
 import PostMissing from '../../modules/posts/infra/typeorm/entities/PostMissing';
 import { scrapeLoyceArchivePost } from './loyce/utils';
-import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
 type PromptAnswers = {

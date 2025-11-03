@@ -1,43 +1,43 @@
 import { container } from 'tsyringe';
 
 import { NotificationService } from '##/modules/posts/services/notification-service';
-import IUsersRepository from '../../modules/users/repositories/IUsersRepository';
+import type IUsersRepository from '../../modules/users/repositories/IUsersRepository';
 import UsersRepository from '../../modules/users/infra/typeorm/repositories/UsersRepository';
 
-import IIgnoredUserRepository from '../../modules/users/repositories/IIgnoredUserRepository';
+import type IIgnoredUserRepository from '../../modules/users/repositories/IIgnoredUserRepository';
 import IgnoredUserRepository from '../../modules/users/infra/typeorm/repositories/IgnoredUserRepository';
 
-import IPostsRepository from '../../modules/posts/repositories/IPostsRepository';
+import type IPostsRepository from '../../modules/posts/repositories/IPostsRepository';
 import PostsRepository from '../../modules/posts/infra/typeorm/repositories/PostsRepository';
 
-import ITrackedTopicsRepository from '../../modules/posts/repositories/ITrackedTopicsRepository';
+import type ITrackedTopicsRepository from '../../modules/posts/repositories/ITrackedTopicsRepository';
 import TrackedTopicsRepository from '../../modules/posts/infra/typeorm/repositories/TrackedTopicsRepository';
 
-import ITrackedTopicUsersRepository from '../../modules/posts/repositories/ITrackedTopicUsersRepository';
+import type ITrackedTopicUsersRepository from '../../modules/posts/repositories/ITrackedTopicUsersRepository';
 import TrackedTopicUsersRepository from '../../modules/posts/infra/typeorm/repositories/TrackedTopicUsersRepository';
 
-import ITrackedPhrasesRepository from '../../modules/posts/repositories/ITrackedPhrasesRepository';
+import type ITrackedPhrasesRepository from '../../modules/posts/repositories/ITrackedPhrasesRepository';
 import TrackedPhrasesRepository from '../../modules/posts/infra/typeorm/repositories/TrackedPhrasesRepository';
 
-import IIgnoredTopicsRepository from '../../modules/posts/repositories/IIgnoredTopicsRepository';
+import type IIgnoredTopicsRepository from '../../modules/posts/repositories/IIgnoredTopicsRepository';
 import IgnoredTopicsRepository from '../../modules/posts/infra/typeorm/repositories/IgnoredTopicsRepository';
 
-import IMeritsRepository from '../../modules/merits/repositories/IMeritsRepository';
+import type IMeritsRepository from '../../modules/merits/repositories/IMeritsRepository';
 import MeritsRepository from '../../modules/merits/infra/typeorm/repositories/MeritsRepository';
 
-import IModLogRepository from '../../modules/modlog/repositories/IModLogRepository';
+import type IModLogRepository from '../../modules/modlog/repositories/IModLogRepository';
 import ModLogRepository from '../../modules/modlog/infra/typeorm/repositories/ModLogRepository';
 
-import IAddressesRepository from '../../modules/posts/repositories/IAddressesRepository';
+import type IAddressesRepository from '../../modules/posts/repositories/IAddressesRepository';
 import AddressesRepository from '../../modules/posts/infra/typeorm/repositories/AddressesRepository';
 
-import IPostsAddressesRepository from '../../modules/posts/repositories/IPostsAddressesRepository';
+import type IPostsAddressesRepository from '../../modules/posts/repositories/IPostsAddressesRepository';
 import PostsAddressesRepository from '../../modules/posts/infra/typeorm/repositories/PostsAddressesRepository';
 
-import IPostsHistoryRepository from '../../modules/posts/repositories/IPostsHistoryRepository';
+import type IPostsHistoryRepository from '../../modules/posts/repositories/IPostsHistoryRepository';
 import PostsHistoryRepository from '../../modules/posts/infra/typeorm/repositories/PostsHistoryRepository';
 
-import ICacheRepository from './providers/models/ICacheProvider';
+import type ICacheRepository from './providers/models/ICacheProvider';
 import RedisProvider from './providers/implementations/RedisProvider';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';

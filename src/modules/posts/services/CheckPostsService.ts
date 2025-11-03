@@ -59,7 +59,7 @@ export default class CheckPostsService {
   ) {}
 
   private async fetchData() {
-    const ignoredBoardsRepository = getRepository(IgnoredBoard)
+    const ignoredBoardsRepository = getRepository(IgnoredBoard);
 
     const posts = await this.postsRepository.findLatestUncheckedPosts();
     const users = await this.usersRepository.getUsersWithMentions();

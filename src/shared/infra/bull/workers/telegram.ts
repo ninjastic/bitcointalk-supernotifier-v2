@@ -3,14 +3,15 @@ import 'module-alias/register';
 import 'dotenv/config';
 import { createConnection } from 'typeorm';
 import { container } from 'tsyringe';
-import { Job, Worker } from 'bullmq';
+import type { Job } from 'bullmq';
+import { Worker } from 'bullmq';
 
 import '##/shared/container';
 import TelegramBot from '##/shared/infra/telegram/bot';
 import logger from '../../../services/logger';
 import cacheConfig from '../../../../config/cache';
 import telegramQueue from '../queues/telegramQueue';
-import { JobRecipe } from '../types/telegram';
+import type { JobRecipe } from '../types/telegram';
 
 import SendMentionNotificationService from '../../telegram/services/notifications/SendMentionNotificationService';
 import SendMeritNotificationService from '../../telegram/services/notifications/SendMeritNotificationService';

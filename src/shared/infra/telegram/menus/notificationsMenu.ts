@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import { MenuTemplate } from 'grammy-inline-menu';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import UpdateUserNotificationService from '../services/UpdateUserNotificationService';
 
 const notificationsMenu = new MenuTemplate<IMenuContext>(() => ({
@@ -24,7 +24,11 @@ const handleNotificationToggle = async (ctx: IMenuContext) => {
 
   if (ctx.update.callback_query.data === '/notifications/onlyDirectMentions') {
     ctx.session.onlyDirectMentions = !ctx.session.onlyDirectMentions;
-    await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'onlyDirectMentions', ctx.session.onlyDirectMentions);
+    await updateUserNotification.execute(
+      String(ctx.update.callback_query.from.id),
+      'onlyDirectMentions',
+      ctx.session.onlyDirectMentions
+    );
   }
 
   if (ctx.update.callback_query.data === '/notifications/modlogs') {

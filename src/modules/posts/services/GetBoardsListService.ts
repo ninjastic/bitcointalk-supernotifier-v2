@@ -1,6 +1,6 @@
 import { getManager } from 'typeorm';
 
-import Board from '../infra/typeorm/entities/Board';
+import type Board from '../infra/typeorm/entities/Board';
 
 export default class GetBoardsListService {
   public async execute(raw = false): Promise<Board[]> {

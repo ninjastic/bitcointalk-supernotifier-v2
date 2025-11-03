@@ -3,7 +3,7 @@ import { MenuTemplate } from 'grammy-inline-menu';
 
 import TrackedBoardsRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedBoardsRepository';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 const trackedBoardsMenu = new MenuTemplate<IMenuContext>(() => ({
   text: '<b>Tracked Boards</b>\n\nGet notified for new topics on your favorite boards.',

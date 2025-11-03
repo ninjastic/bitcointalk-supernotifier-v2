@@ -1,10 +1,11 @@
-import { DeleteResult, getRepository, Repository } from 'typeorm';
+import type { DeleteResult, Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
 import TrackedTopicUser from '../entities/TrackedTopicUser';
 
-import ITrackedTopicUsersRepository from '../../../repositories/ITrackedTopicUsersRepository';
-import ICreateTrackedTopicUserDTO from '../../../dtos/ICreateTrackedTopicUserDTO';
-import IFindTrackedTopicUsersDTO from '../../../dtos/IFindTrackedTopicUserDTO';
+import type ITrackedTopicUsersRepository from '../../../repositories/ITrackedTopicUsersRepository';
+import type ICreateTrackedTopicUserDTO from '../../../dtos/ICreateTrackedTopicUserDTO';
+import type IFindTrackedTopicUsersDTO from '../../../dtos/IFindTrackedTopicUserDTO';
 
 export default class TrackedTopicUsersRepository implements ITrackedTopicUsersRepository {
   private ormRepository: Repository<TrackedTopicUser>;

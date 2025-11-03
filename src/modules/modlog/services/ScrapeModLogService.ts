@@ -6,7 +6,7 @@ import api from '../../../shared/services/api';
 
 import ParseModLogService from './ParseModLogService';
 import SaveModLogService from './SaveModLogService';
-import ModLog from '../infra/typeorm/entities/ModLog';
+import type ModLog from '../infra/typeorm/entities/ModLog';
 
 export default class ScrapeModLogService {
   public async execute(): Promise<number> {

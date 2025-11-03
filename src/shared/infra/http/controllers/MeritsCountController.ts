@@ -1,7 +1,7 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
 import Joi from 'joi';
-import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
+import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
 import logger from '../../../services/logger';
 

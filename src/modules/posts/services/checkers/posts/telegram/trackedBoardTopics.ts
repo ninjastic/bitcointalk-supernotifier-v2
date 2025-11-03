@@ -2,14 +2,14 @@ import { container } from 'tsyringe';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { shouldNotifyUser } from '##/shared/services/utils';
-import Post from '##/modules/posts/infra/typeorm/entities/Post';
-import User from '../../../../../users/infra/typeorm/entities/User';
+import type Post from '##/modules/posts/infra/typeorm/entities/Post';
+import type User from '../../../../../users/infra/typeorm/entities/User';
 import Topic from '../../../../infra/typeorm/entities/Topic';
-import TrackedBoard from '../../../../infra/typeorm/entities/TrackedBoard';
-import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
-import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
-import PostsRepository from '../../../../infra/typeorm/repositories/PostsRepository';
-import ICacheProvider from '../../../../../../shared/container/providers/models/ICacheProvider';
+import type TrackedBoard from '../../../../infra/typeorm/entities/TrackedBoard';
+import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
+import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type PostsRepository from '../../../../infra/typeorm/repositories/PostsRepository';
+import type ICacheProvider from '../../../../../../shared/container/providers/models/ICacheProvider';
 import logger from '../../../../../../shared/services/logger';
 import { subDays } from 'date-fns';
 import { getRepository } from 'typeorm';
@@ -62,7 +62,7 @@ const checkPotentialSpam = async (post: Post) => {
 const checkIsTopicMoved = async (post: Post) => {
   if (!post.title.startsWith('MOVED: ')) return false;
 
-  const originalTitle = post.title.replace(/^MOVED: /, "")
+  const originalTitle = post.title.replace(/^MOVED: /, '');
 
   const topicsRepository = getRepository(Topic);
   const matchingTopics = await topicsRepository
@@ -74,7 +74,7 @@ const checkIsTopicMoved = async (post: Post) => {
 
   if (matchingTopics.length > 0) return true;
   return false;
-}
+};
 
 const processTopic = async (
   topic: Topic,

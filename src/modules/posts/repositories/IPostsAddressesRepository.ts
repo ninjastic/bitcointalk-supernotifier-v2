@@ -1,7 +1,7 @@
-import PostAddress from '../infra/typeorm/entities/PostAddress';
+import type PostAddress from '../infra/typeorm/entities/PostAddress';
 
-import ICreatePostAddressDTO from '../dtos/ICreatePostAddressDTO';
-import IFindPostAddressesDTO from '../dtos/IFindPostAddressesDTO';
+import type ICreatePostAddressDTO from '../dtos/ICreatePostAddressDTO';
+import type IFindPostAddressesDTO from '../dtos/IFindPostAddressesDTO';
 
 export default interface IPostsAddressesRepository {
   create(data: ICreatePostAddressDTO): PostAddress;

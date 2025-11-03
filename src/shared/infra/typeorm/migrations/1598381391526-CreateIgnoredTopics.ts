@@ -1,4 +1,5 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { Table, TableForeignKey } from 'typeorm';
 
 export class CreateIgnoredTopics1598381391526 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {

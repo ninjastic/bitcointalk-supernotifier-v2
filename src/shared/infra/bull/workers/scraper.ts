@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import 'module-alias/register';
 import 'dotenv/config';
-import { Job, Worker } from 'bullmq';
+import type { Job } from 'bullmq';
+import { Worker } from 'bullmq';
 import { createConnection } from 'typeorm';
 
 import '../../../container';
@@ -11,18 +12,19 @@ import cacheConfig from '../../../../config/cache';
 import { uptimeApi } from '../../../services/api';
 import { queueRepeatableFunction } from '../../../services/utils';
 
-import forumScraperQueue, {
+import type {
   ForumScraperQueueInput,
   ForumScraperQueueJobName,
   ForumScraperQueueOutput,
   JobRecipes
 } from '../queues/forumScraperQueue';
+import forumScraperQueue from '../queues/forumScraperQueue';
 
 import ScrapeUserMeritCountService from '../../../../modules/merits/services/ScrapeUserMeritCountService';
 import ScrapeModLogService from '../../../../modules/modlog/services/ScrapeModLogService';
 import ForumLoginService from '../../../../modules/merits/services/ForumLoginService';
-import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
-import { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import type { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
 import { container } from 'tsyringe';
 
 const scraper = async () => {

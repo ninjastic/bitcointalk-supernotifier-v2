@@ -1,7 +1,7 @@
-import { CommandContext } from 'grammy';
+import type { CommandContext } from 'grammy';
 
-import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
-import IMenuContext from '../@types/IMenuContext';
+import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
+import type IMenuContext from '../@types/IMenuContext';
 
 import { Menu } from '@grammyjs/menu';
 import { getManager } from 'typeorm';
@@ -21,7 +21,7 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
 
     logger.info({ telegramId }, 'Hard reset command executed');
 
-    const cacheRepository = container.resolve<ICacheProvider>('CacheRepository')
+    const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
     const manager = getManager();
 
     await manager.query(`DELETE FROM tracked_topics_users WHERE telegram_id = $1;`, [telegramId]);
@@ -55,7 +55,8 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
 
     await manager.query(`DELETE FROM ignored_boards WHERE telegram_id = $1;`, [telegramId]);
 
-    await manager.query(`UPDATE users SET
+    await manager.query(
+      `UPDATE users SET
         username = NULL,
         user_id = NULL,
         enable_mentions = FALSE,
@@ -63,7 +64,9 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
         enable_modlogs = FALSE,
         enable_auto_track_topics = FALSE
         enable_only_direct_mentions = FALSE,
-      WHERE telegram_id = $1;`, [telegramId]);
+      WHERE telegram_id = $1;`,
+      [telegramId]
+    );
 
     await cacheRepository.invalidate(`meritCount:${telegramId}`);
 

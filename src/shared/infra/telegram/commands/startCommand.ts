@@ -1,9 +1,9 @@
-import { ConversationFlavor } from '@grammyjs/conversations';
-import { CommandContext } from 'grammy';
+import type { ConversationFlavor } from '@grammyjs/conversations';
+import type { CommandContext } from 'grammy';
 import { container } from 'tsyringe';
 import { replyMenuToContext } from 'grammy-inline-menu';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import UsersRepository from '../../../../modules/users/infra/typeorm/repositories/UsersRepository';
 import { mainMenu } from '../menus/mainMenu';
 

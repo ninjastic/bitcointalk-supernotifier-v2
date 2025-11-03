@@ -1,5 +1,5 @@
 import { MenuTemplate } from 'grammy-inline-menu';
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 const aboutMenu = new MenuTemplate<IMenuContext>(() => ({
   text: `<b>About</b>\n\nMore information about the bot.`,

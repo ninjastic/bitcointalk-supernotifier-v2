@@ -3,7 +3,7 @@ import { container } from 'tsyringe';
 import { StatelessQuestion } from '@grammyjs/stateless-question';
 import { format } from 'date-fns';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 import logger from '../../../services/logger';
 

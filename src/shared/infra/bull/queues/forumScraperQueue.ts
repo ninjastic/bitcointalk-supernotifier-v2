@@ -1,7 +1,8 @@
-import { Job, JobsOptions, Queue, QueueEvents } from 'bullmq';
+import type { Job, JobsOptions } from 'bullmq';
+import { Queue, QueueEvents } from 'bullmq';
 import cacheConfig from '../../../../config/cache';
-import { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
-import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+import type { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
+import type PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 
 export type ForumScraperQueueRecipes = {
   scrapePost: { input: { post_id: number }; output: ParsedPost };

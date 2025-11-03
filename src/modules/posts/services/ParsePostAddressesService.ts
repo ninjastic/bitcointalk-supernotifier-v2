@@ -1,8 +1,8 @@
 import { load } from 'cheerio';
 import validate from 'bitcoin-address-validation';
 
-import Address from '../infra/typeorm/entities/Address';
-import Post from '../infra/typeorm/entities/Post';
+import type Address from '../infra/typeorm/entities/Address';
+import type Post from '../infra/typeorm/entities/Post';
 import { validateTronAddress } from '../../../shared/services/utils';
 
 export default class ParsePostAddressesService {

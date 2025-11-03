@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
-import { Connection, MoreThan } from 'typeorm';
-import { Client } from '@elastic/elasticsearch';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { Connection } from 'typeorm';
+import { MoreThan } from 'typeorm';
+import type { Client } from '@elastic/elasticsearch';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import baseLogger from '##/shared/services/logger';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import { isValidPostgresInt } from '##/shared/services/utils';
@@ -215,7 +216,7 @@ export class SyncPostsVersionsPipeline {
 
     for (const [postId, newVersions] of versiosToUpdateMap.entries()) {
       const updateOperationInfo = { update: { _index: this.POSTS_INDEX_NAME, _id: postId.toString() } };
-      
+
       const updateOperationContent = {
         script: {
           source: `

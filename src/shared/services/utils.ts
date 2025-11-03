@@ -4,13 +4,13 @@ import { container } from 'tsyringe';
 import fs from 'fs';
 import path from 'path';
 
-import Post from '##/modules/posts/infra/typeorm/entities/Post';
-import User from '##/modules/users/infra/typeorm/entities/User';
-import IgnoredUser from '##/modules/users/infra/typeorm/entities/IgnoredUser';
-import IgnoredTopic from '##/modules/posts/infra/typeorm/entities/IgnoredTopic';
-import IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
+import type Post from '##/modules/posts/infra/typeorm/entities/Post';
+import type User from '##/modules/users/infra/typeorm/entities/User';
+import type IgnoredUser from '##/modules/users/infra/typeorm/entities/IgnoredUser';
+import type IgnoredTopic from '##/modules/posts/infra/typeorm/entities/IgnoredTopic';
+import type IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
 import SetUserBlockedService from '../infra/telegram/services/SetUserBlockedService';
-import { MentionType } from '##/shared/infra/bull/types/telegram';
+import type { MentionType } from '##/shared/infra/bull/types/telegram';
 import logger from './logger';
 
 const sha256 = (str: string) => {

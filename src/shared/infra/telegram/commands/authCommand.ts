@@ -1,6 +1,6 @@
-import { HearsContext } from 'grammy';
+import type { HearsContext } from 'grammy';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import redis from '../../../services/redis';
 
 const authCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {

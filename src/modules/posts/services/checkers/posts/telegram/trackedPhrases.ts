@@ -1,12 +1,12 @@
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { createMentionRegex, shouldNotifyUser } from '##/shared/services/utils';
 import logger from '../../../../../../shared/services/logger';
-import Post from '../../../../infra/typeorm/entities/Post';
-import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
-import IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
-import IgnoredBoard from '../../../../infra/typeorm/entities/IgnoredBoard';
-import TrackedPhrase from '../../../../infra/typeorm/entities/TrackedPhrase';
-import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type Post from '../../../../infra/typeorm/entities/Post';
+import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
+import type IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
+import type IgnoredBoard from '../../../../infra/typeorm/entities/IgnoredBoard';
+import type TrackedPhrase from '../../../../infra/typeorm/entities/TrackedPhrase';
+import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 
 type TelegramTrackedPhrasesCheckerNotificationResult = NotificationResult<
   RecipeMetadata['sendPhraseTrackingNotification']

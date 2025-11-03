@@ -8,10 +8,10 @@ import '../container';
 
 import Post from '../../modules/posts/infra/typeorm/entities/Post';
 import { scrapeLoyceArchivePost } from './loyce/utils';
-import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import TopicMissing from '##/modules/posts/infra/typeorm/entities/TopicMissing';
-import { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
+import type { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
 
 type PromptAnswers = {
   startTopicId: number;

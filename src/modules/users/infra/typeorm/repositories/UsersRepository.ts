@@ -1,10 +1,11 @@
-import { Repository, getRepository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
-import FindOneUserDTO from '../../../dtos/FindOneUserDTO';
-import CreateUserDTO from '../../../dtos/CreateUserDTO';
+import type FindOneUserDTO from '../../../dtos/FindOneUserDTO';
+import type CreateUserDTO from '../../../dtos/CreateUserDTO';
 
 import User from '../entities/User';
-import IUsersRepository from '../../../repositories/IUsersRepository';
+import type IUsersRepository from '../../../repositories/IUsersRepository';
 
 export default class UsersRepository implements IUsersRepository {
   private ormRepository: Repository<User>;

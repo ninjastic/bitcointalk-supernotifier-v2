@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import 'dotenv/config';
-import express, { Express } from 'express';
+import type { Express } from 'express';
+import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import bodyParser from 'body-parser';

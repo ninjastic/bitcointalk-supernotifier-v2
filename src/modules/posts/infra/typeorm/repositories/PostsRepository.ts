@@ -1,16 +1,18 @@
-import { Repository, MoreThanOrEqual, getRepository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { MoreThanOrEqual, getRepository } from 'typeorm';
 import { sub } from 'date-fns';
-import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
 import esClient from '../../../../../shared/services/elastic';
 import { getCensorJSON } from '../../../../../shared/services/utils';
 
 import Post from '../entities/Post';
 
-import IPostsRepository, { PostFromES } from '../../../repositories/IPostsRepository';
+import type { PostFromES } from '../../../repositories/IPostsRepository';
+import type IPostsRepository from '../../../repositories/IPostsRepository';
 
-import CreatePostDTO from '../../../dtos/CreatePostDTO';
-import IFindPostsConditionsDTO from '../../../dtos/IFindPostsConditionsDTO';
+import type CreatePostDTO from '../../../dtos/CreatePostDTO';
+import type IFindPostsConditionsDTO from '../../../dtos/IFindPostsConditionsDTO';
 
 import GetBoardChildrensFromIdService from '../../../services/GetBoardChildrensFromIdService';
 

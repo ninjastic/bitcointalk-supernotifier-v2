@@ -1,8 +1,8 @@
-import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
-import Post from '../infra/typeorm/entities/Post';
-import CreatePostDTO from '../dtos/CreatePostDTO';
+import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type Post from '../infra/typeorm/entities/Post';
+import type CreatePostDTO from '../dtos/CreatePostDTO';
 
-import IFindPostsConditionsDTO from '../dtos/IFindPostsConditionsDTO';
+import type IFindPostsConditionsDTO from '../dtos/IFindPostsConditionsDTO';
 
 export interface PostFromES {
   post_id: number;

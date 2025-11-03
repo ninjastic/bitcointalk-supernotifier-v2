@@ -1,8 +1,8 @@
 import { container } from 'tsyringe';
-import { Request as ExpressRequest, Response } from 'express';
+import type { Request as ExpressRequest, Response } from 'express';
 import { sub, addMinutes, startOfDay, endOfDay } from 'date-fns';
 import Joi from 'joi';
-import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
+import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
 import logger from '../../../services/logger';
 

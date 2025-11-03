@@ -1,7 +1,7 @@
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import Topic from '../../../../infra/typeorm/entities/Topic';
-import User from '../../../../../users/infra/typeorm/entities/User';
-import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type Topic from '../../../../infra/typeorm/entities/Topic';
+import type User from '../../../../../users/infra/typeorm/entities/User';
+import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import logger from '../../../../../../shared/services/logger';
 
 type TelegramAutoTrackTopicsCheckerNotificationResult = NotificationResult<

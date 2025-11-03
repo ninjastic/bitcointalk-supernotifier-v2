@@ -1,4 +1,4 @@
-import { FindOperator } from 'typeorm';
+import type { FindOperator } from 'typeorm';
 
 export default interface FindUncheckedTypeDTO {
   checked: boolean;

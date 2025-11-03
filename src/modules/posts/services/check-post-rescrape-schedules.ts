@@ -2,7 +2,7 @@ import { isBefore } from 'date-fns';
 import { container } from 'tsyringe';
 
 import { addForumScraperJob } from '../../../shared/infra/bull/queues/forumScraperQueue';
-import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 
 export type RescrapeSchedule = { time: number; post_id: number };
 

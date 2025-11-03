@@ -1,10 +1,10 @@
-import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
-import PostHistory from '../infra/typeorm/entities/PostHistory';
+import type PostHistory from '../infra/typeorm/entities/PostHistory';
 
-import IFindAllPostsHistoryDTO from '../dtos/IFindAllPostsHistoryDTO';
-import ICreatePostHistoryDTO from '../dtos/ICreatePostHistoryDTO';
-import IFindOnePostHistoryDTO from '../dtos/IFindOnePostHistoryDTO';
+import type IFindAllPostsHistoryDTO from '../dtos/IFindAllPostsHistoryDTO';
+import type ICreatePostHistoryDTO from '../dtos/ICreatePostHistoryDTO';
+import type IFindOnePostHistoryDTO from '../dtos/IFindOnePostHistoryDTO';
 
 export default interface IPostsHistoryRepository {
   create(data: ICreatePostHistoryDTO): PostHistory;

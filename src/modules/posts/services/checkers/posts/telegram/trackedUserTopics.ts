@@ -1,8 +1,8 @@
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { shouldNotifyUser } from '##/shared/services/utils';
-import Topic from '../../../../infra/typeorm/entities/Topic';
-import TrackedUser from '../../../../infra/typeorm/entities/TrackedUser';
-import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type Topic from '../../../../infra/typeorm/entities/Topic';
+import type TrackedUser from '../../../../infra/typeorm/entities/TrackedUser';
+import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import logger from '../../../../../../shared/services/logger';
 
 type TelegramTrackedUserTopicsCheckerNotificationResult = NotificationResult<

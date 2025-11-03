@@ -1,9 +1,9 @@
-import { Conversation, ConversationFlavor } from '@grammyjs/conversations';
+import type { Conversation, ConversationFlavor } from '@grammyjs/conversations';
 import { replyMenuToContext } from 'grammy-inline-menu';
 import { Menu } from '@grammyjs/menu';
 import { container } from 'tsyringe';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import CreateUserService from '../../../../modules/users/services/CreateUserService';
 import FindUserByTelegramIdService from '../services/FindUserByTelegramIdService';
 import UpdateUserByTelegramIdService from '../services/UpdateUserByTelegramIdService';
@@ -31,7 +31,7 @@ const askForPrompt = async (
   await conversation.run(confirmMenu);
 
   if (['/menu', '/start'].includes(input.toString().toLowerCase())) {
-    await ctx.reply(`I don't think your ${typeText} is ${input}... let's try again.`)
+    await ctx.reply(`I don't think your ${typeText} is ${input}... let's try again.`);
     return askForPrompt(conversation, ctx, type);
   }
 
@@ -119,7 +119,7 @@ const setupConversation = async (
 ): Promise<void> => {
   const username = (await askForPrompt(conversation, ctx, 'username')) as string;
   conversation.session.username = username;
-  
+
   const userId = (await askForPrompt(conversation, ctx, 'userId')) as number;
   conversation.session.userId = userId;
 

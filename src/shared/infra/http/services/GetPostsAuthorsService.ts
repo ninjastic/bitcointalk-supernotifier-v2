@@ -1,6 +1,6 @@
 import esClient from '../../../services/elastic';
 
-import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
+import type IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
 
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 

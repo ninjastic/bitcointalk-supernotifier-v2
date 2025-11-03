@@ -1,4 +1,5 @@
-import knex, { Knex } from 'knex';
+import type { Knex } from 'knex';
+import knex from 'knex';
 
 export type SimpleXUser = {
   contact_id: number;
@@ -46,6 +47,12 @@ export type IgnoredTopic = {
   created_at: string;
 };
 
+type ConversationData = {
+  step: string;
+  forum_username: string;
+  forum_user_uid: number;
+};
+
 export type RawConversation = {
   id: number;
   contact_id: number;
@@ -56,7 +63,7 @@ export type RawConversation = {
 export type Conversation = {
   id: number;
   contact_id: number;
-  data: any;
+  data: ConversationData;
   created_at: string;
 };
 
@@ -240,7 +247,10 @@ class Db {
       });
   }
 
-  async getNotifications(where: Partial<Notification>, order = 'asc'): Promise<Notification[]> {
+  async getNotifications(
+    where: Partial<Notification> | ((qb: Knex.QueryBuilder<Notification>) => void),
+    order = 'asc'
+  ): Promise<Notification[]> {
     return (await this.db<Notification>('notifications').where(where).orderBy('created_at', order)) as Notification[];
   }
 
@@ -267,8 +277,12 @@ class Db {
   async updateUser(
     contact_id: number,
     user: Partial<Omit<SimpleXUser, 'contact_id' | 'created_at' | 'deleted_at'>>
-  ): Promise<void> {
-    await this.db<SimpleXUser>('users').where({ contact_id }).update(user);
+  ): Promise<SimpleXUser> {
+    return this.db<SimpleXUser>('users')
+      .where({ contact_id })
+      .update(user)
+      .returning('*')
+      .then(rows => rows[0]);
   }
 
   async deleteUser(contact_id: number): Promise<void> {
@@ -278,14 +292,14 @@ class Db {
   }
 
   async createConversation(conversation: Omit<Conversation, 'id' | 'created_at'>): Promise<void> {
-    await this.db<Conversation>('conversations').insert({
+    await this.db<RawConversation>('conversations').insert({
       contact_id: conversation.contact_id,
       data: JSON.stringify(conversation.data)
     });
   }
 
-  async updateConversation(contact_id: number, data: any): Promise<void> {
-    await this.db<Conversation>('conversations')
+  async updateConversation(contact_id: number, data: ConversationData): Promise<void> {
+    await this.db<RawConversation>('conversations')
       .where({ contact_id })
       .update({ data: JSON.stringify(data) });
   }
@@ -301,7 +315,7 @@ class Db {
   }
 
   async deleteConversation(contact_id: number): Promise<void> {
-    await this.db<Conversation>('conversations').where({ contact_id }).delete();
+    await this.db<RawConversation>('conversations').where({ contact_id }).delete();
   }
 
   async createTrackedPhrase(trackedPhrase: Omit<TrackedPhrase, 'id' | 'created_at'>): Promise<void> {

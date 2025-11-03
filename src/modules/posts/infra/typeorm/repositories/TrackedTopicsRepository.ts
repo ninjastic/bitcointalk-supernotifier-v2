@@ -1,11 +1,11 @@
-import { getRepository, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
-import CreateTrackedTopicDTO from '../../../dtos/CreateTrackedTopicDTO';
+import type CreateTrackedTopicDTO from '../../../dtos/CreateTrackedTopicDTO';
 
 import TrackedTopic from '../entities/TrackedTopic';
-import ITrackedTopicsRepository, {
-  TrackedTopicWithReturningUser
-} from '../../../repositories/ITrackedTopicsRepository';
+import type { TrackedTopicWithReturningUser } from '../../../repositories/ITrackedTopicsRepository';
+import type ITrackedTopicsRepository from '../../../repositories/ITrackedTopicsRepository';
 
 export default class TrackedTopicsRepository implements ITrackedTopicsRepository {
   private ormRepository: Repository<TrackedTopic>;

@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 
 import logger from '../../../services/logger';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 import AddTrackedTopicService from '../../../../modules/posts/services/AddTrackedTopicService';
 import RemoveTrackedTopicService from '../../../../modules/posts/services/RemoveTrackedTopicService';

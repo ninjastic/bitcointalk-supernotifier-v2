@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import GetUsersDataService from '../../services/bpip/GetUsersDataService';
 
 import ParseUsersScopeService from '../../services/bpip/ParseUsersScopeService';

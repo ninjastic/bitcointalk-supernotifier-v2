@@ -1,5 +1,5 @@
-import IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
-import CreateIgnoredTopicDTO from '../dtos/CreateIgnoredTopicDTO';
+import type IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
+import type CreateIgnoredTopicDTO from '../dtos/CreateIgnoredTopicDTO';
 
 export default interface IIgnoredUserRepository {
   create(data: CreateIgnoredTopicDTO): IgnoredTopic;

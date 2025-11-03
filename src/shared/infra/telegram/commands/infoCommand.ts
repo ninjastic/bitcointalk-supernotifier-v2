@@ -1,5 +1,5 @@
-import { HearsContext } from 'grammy';
-import IMenuContext from '../@types/IMenuContext';
+import type { HearsContext } from 'grammy';
+import type IMenuContext from '../@types/IMenuContext';
 
 const infoCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
   const data = JSON.stringify({ chat: ctx.chat.id, id: ctx.from.id, ...ctx.session });

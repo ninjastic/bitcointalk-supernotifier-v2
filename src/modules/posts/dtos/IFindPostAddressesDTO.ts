@@ -1,4 +1,4 @@
-import { SortOrder } from '@elastic/elasticsearch/lib/api/types';
+import type { SortOrder } from '@elastic/elasticsearch/lib/api/types';
 
 export default interface IFindPostAddressesDTO {
   address?: string;

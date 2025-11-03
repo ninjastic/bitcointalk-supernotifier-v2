@@ -1,5 +1,5 @@
-import User from '../infra/typeorm/entities/User';
-import CreateUserDTO from '../dtos/CreateUserDTO';
+import type User from '../infra/typeorm/entities/User';
+import type CreateUserDTO from '../dtos/CreateUserDTO';
 
 export default interface IUsersRepository {
   create(data: CreateUserDTO): User;

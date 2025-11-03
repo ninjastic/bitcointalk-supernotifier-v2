@@ -1,6 +1,6 @@
-import TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
-import CreateTrackedTopicDTO from '../dtos/CreateTrackedTopicDTO';
-import User from '../../users/infra/typeorm/entities/User';
+import type TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
+import type CreateTrackedTopicDTO from '../dtos/CreateTrackedTopicDTO';
+import type User from '../../users/infra/typeorm/entities/User';
 
 export type TrackedTopicWithReturningUser = TrackedTopic & User;
 

@@ -1,4 +1,5 @@
-import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { TableColumn } from 'typeorm';
 
 export class AddAuthorsColumnToAddresses1600170928562 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {

@@ -1,8 +1,8 @@
-import { HearsContext } from 'grammy';
+import type { HearsContext } from 'grammy';
 import { container } from 'tsyringe';
 
-import IMenuContext from '../@types/IMenuContext';
-import RedisProvider from '../../../container/providers/implementations/RedisProvider';
+import type IMenuContext from '../@types/IMenuContext';
+import type RedisProvider from '../../../container/providers/implementations/RedisProvider';
 
 const lengthCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
   const redisProvider = container.resolve<RedisProvider>('CacheRepository');

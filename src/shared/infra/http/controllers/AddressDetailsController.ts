@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';

@@ -1,10 +1,11 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import GetPostsCountPeriodService, { GetPostsCountPeriodParams } from '../services/GetPostsCountPeriodService';
+import type { GetPostsCountPeriodParams } from '../services/GetPostsCountPeriodService';
+import GetPostsCountPeriodService from '../services/GetPostsCountPeriodService';
 
 export default class PostsCountPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {

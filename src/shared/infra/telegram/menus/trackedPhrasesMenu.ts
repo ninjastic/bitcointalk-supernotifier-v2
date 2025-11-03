@@ -4,7 +4,7 @@ import { StatelessQuestion } from '@grammyjs/stateless-question';
 
 import logger from '../../../services/logger';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 import FindTrackedPhrasesByTelegramIdService from '../services/FindTrackedPhrasesByTelegramIdService';
 import CreateTrackedPhraseService from '../services/CreateTrackedPhraseService';

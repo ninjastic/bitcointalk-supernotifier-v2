@@ -1,11 +1,12 @@
-import { getRepository, Repository, MoreThanOrEqual, FindManyOptions } from 'typeorm';
+import type { Repository, FindManyOptions } from 'typeorm';
+import { getRepository, MoreThanOrEqual } from 'typeorm';
 import { sub } from 'date-fns';
 
-import CreateMeritDTO from '../../../dtos/CreateMeritDTO';
-import FindMeritDTO from '../../../dtos/FindMeritDTO';
+import type CreateMeritDTO from '../../../dtos/CreateMeritDTO';
+import type FindMeritDTO from '../../../dtos/FindMeritDTO';
 
 import Merit from '../entities/Merit';
-import IMeritsRepository from '../../../repositories/IMeritsRepository';
+import type IMeritsRepository from '../../../repositories/IMeritsRepository';
 
 export default class MeritsRepository implements IMeritsRepository {
   private ormRepository: Repository<Merit>;

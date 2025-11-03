@@ -4,7 +4,7 @@ import { StatelessQuestion } from '@grammyjs/stateless-question';
 
 import logger from '../../../services/logger';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 import FindIgnoredUsersByTelegramIdService from '../services/FindIgnoredUsersByTelegramIdService';
 import AddIgnoredUserService from '../../../../modules/users/services/AddIgnoredUserService';

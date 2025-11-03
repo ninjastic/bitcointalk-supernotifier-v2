@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import esClient from '../../../services/elastic';
 
-import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
+import type IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';

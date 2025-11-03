@@ -3,7 +3,7 @@ import iconv from 'iconv-lite';
 import { load } from 'cheerio';
 import { sub } from 'date-fns';
 
-import CreatePostDTO from '../../../modules/posts/dtos/CreatePostDTO';
+import type CreatePostDTO from '../../../modules/posts/dtos/CreatePostDTO';
 
 const getLoyceArchiveUrl = (id: number): string => {
   const folder = String(id).slice(0, 4);

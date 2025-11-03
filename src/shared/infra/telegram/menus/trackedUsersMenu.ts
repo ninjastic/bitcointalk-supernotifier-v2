@@ -1,9 +1,9 @@
 import { MenuTemplate } from 'grammy-inline-menu';
 import { container } from 'tsyringe';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import TrackedUsersRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedUsersRepository';
-import TrackedUser from '../../../../modules/posts/infra/typeorm/entities/TrackedUser';
+import type TrackedUser from '../../../../modules/posts/infra/typeorm/entities/TrackedUser';
 
 const trackedUsersMenu = new MenuTemplate<IMenuContext>(() => ({
   text: '<b>Tracked Users</b>\n\nGet notified for new posts from your favorite users.',

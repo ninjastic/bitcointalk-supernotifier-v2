@@ -1,9 +1,10 @@
-import { Repository, getRepository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
-import CreateIgnoredTopicDTO from '../../../dtos/CreateIgnoredTopicDTO';
+import type CreateIgnoredTopicDTO from '../../../dtos/CreateIgnoredTopicDTO';
 
 import IgnoredTopic from '../entities/IgnoredTopic';
-import IIgnoredTopicsRepository from '../../../repositories/IIgnoredTopicsRepository';
+import type IIgnoredTopicsRepository from '../../../repositories/IIgnoredTopicsRepository';
 
 export default class IgnoredTopicsRepository implements IIgnoredTopicsRepository {
   private ormRepository: Repository<IgnoredTopic>;

@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
-import { HearsContext } from 'grammy';
+import type { HearsContext } from 'grammy';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 import SetUserAlternativeUsernameService from '../services/SetUserAlternativeUsernameService';
 

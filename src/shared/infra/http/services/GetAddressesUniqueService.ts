@@ -1,6 +1,6 @@
 import esClient from '../../../services/elastic';
 
-import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
+import type IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 import { getCensorJSON } from '../../../services/utils';
 

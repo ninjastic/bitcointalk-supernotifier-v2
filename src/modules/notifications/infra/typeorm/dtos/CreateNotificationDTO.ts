@@ -1,4 +1,4 @@
-import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 
 export interface CreateNotificationDTO {
   telegram_id: string;

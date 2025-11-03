@@ -7,7 +7,7 @@ import ora from 'ora';
 import '../../container';
 
 import api from '../../services/api';
-import ICacheProvider from '../../container/providers/models/ICacheProvider';
+import type ICacheProvider from '../../container/providers/models/ICacheProvider';
 
 const spinner = ora();
 

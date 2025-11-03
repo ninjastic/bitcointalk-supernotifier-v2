@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import { load } from 'cheerio';
 import { getRepository } from 'typeorm';
-import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import { format } from 'date-fns';
 import getPost from '##/modules/posts/services/get-post';
 

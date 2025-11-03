@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
+import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
 import esClient from '../../../services/elastic';
 

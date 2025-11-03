@@ -1,7 +1,7 @@
 import { load } from 'cheerio';
 import { container } from 'tsyringe';
 
-import Post from '../infra/typeorm/entities/Post';
+import type Post from '../infra/typeorm/entities/Post';
 
 import CreatePostService from './CreatePostService';
 

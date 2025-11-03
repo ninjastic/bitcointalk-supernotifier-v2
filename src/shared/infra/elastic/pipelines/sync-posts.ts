@@ -1,9 +1,9 @@
 /* eslint-disable no-await-in-loop */
-import { Connection, ObjectLiteral } from 'typeorm';
-import { Client } from '@elastic/elasticsearch';
+import type { Connection, ObjectLiteral } from 'typeorm';
+import type { Client } from '@elastic/elasticsearch';
 import Post from 'modules/posts/infra/typeorm/entities/Post';
 import { load } from 'cheerio';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import baseLogger from '##/shared/services/logger';
 import { isValidPostgresInt } from '##/shared/services/utils';
 
@@ -269,7 +269,7 @@ export class SyncPostsPipeline {
               }
             },
             is_topic_starter: {
-              type: 'boolean',
+              type: 'boolean'
             },
             updated_at: { type: 'date' }
           }

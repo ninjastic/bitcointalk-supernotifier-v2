@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
-import { Connection, MoreThan } from 'typeorm';
-import { Client } from '@elastic/elasticsearch';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { Connection } from 'typeorm';
+import { MoreThan } from 'typeorm';
+import type { Client } from '@elastic/elasticsearch';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import baseLogger from '##/shared/services/logger';
 
@@ -199,7 +200,7 @@ export class SyncTopicsPipeline {
         .map(item => ({
           id: item.index?._id || item.index?._id,
           error: item.index?.error || item.update?.error,
-          status: item.index?.status || item.update?.status,
+          status: item.index?.status || item.update?.status
         }));
 
       this.logger.error({ errored: erroredItems }, 'Index or index errored');

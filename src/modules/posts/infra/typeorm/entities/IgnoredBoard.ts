@@ -1,4 +1,12 @@
-import { Entity, Column, CreateDateColumn, UpdateDateColumn, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn
+} from 'typeorm';
 import Board from './Board';
 
 @Entity('ignored_boards')

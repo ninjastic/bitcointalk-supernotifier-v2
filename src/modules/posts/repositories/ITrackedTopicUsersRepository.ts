@@ -1,9 +1,9 @@
-import { DeleteResult } from 'typeorm';
+import type { DeleteResult } from 'typeorm';
 
-import TrackedTopicUser from '../infra/typeorm/entities/TrackedTopicUser';
+import type TrackedTopicUser from '../infra/typeorm/entities/TrackedTopicUser';
 
-import ICreateTrackedTopicUserDTO from '../dtos/ICreateTrackedTopicUserDTO';
-import IFindTrackedTopicUserDTO from '../dtos/IFindTrackedTopicUserDTO';
+import type ICreateTrackedTopicUserDTO from '../dtos/ICreateTrackedTopicUserDTO';
+import type IFindTrackedTopicUserDTO from '../dtos/IFindTrackedTopicUserDTO';
 
 export default interface ITrackedTopicUsersRepository {
   create(data: ICreateTrackedTopicUserDTO): TrackedTopicUser;

@@ -1,11 +1,11 @@
 import { container } from 'tsyringe';
-import { Conversation, ConversationFlavor } from '@grammyjs/conversations';
+import type { Conversation, ConversationFlavor } from '@grammyjs/conversations';
 import { Menu } from '@grammyjs/menu';
 import { replyMenuToContext } from 'grammy-inline-menu';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import { mainMenu } from '../menus/mainMenu';
-import Board from '../../../../modules/posts/infra/typeorm/entities/Board';
+import type Board from '../../../../modules/posts/infra/typeorm/entities/Board';
 import TrackedBoardsRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedBoardsRepository';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';

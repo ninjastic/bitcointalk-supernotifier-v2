@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
-import { Connection, MoreThan } from 'typeorm';
-import { Client } from '@elastic/elasticsearch';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { Connection } from 'typeorm';
+import { MoreThan } from 'typeorm';
+import type { Client } from '@elastic/elasticsearch';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import PostHistory from '##/modules/posts/infra/typeorm/entities/PostHistory';
 import baseLogger from '##/shared/services/logger';
 

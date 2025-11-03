@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreatePostsDateIndex1599383111140 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {

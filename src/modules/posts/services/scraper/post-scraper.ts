@@ -1,21 +1,25 @@
-import { AxiosRequestConfig } from 'axios';
+import type { AxiosRequestConfig } from 'axios';
 import { container } from 'tsyringe';
 import { scrapePostVersion } from '##/modules/posts/services/scraper/scrape-post-version';
-import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+import type PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import api from '##/shared/services/api';
-import parsePostHtml, { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
+import type { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
+import parsePostHtml from '##/modules/posts/services/scraper/parse-post-html';
 import { sub, addMinutes } from 'date-fns';
-import Cheerio, { load } from 'cheerio';
+import type Cheerio from 'cheerio';
+import { load } from 'cheerio';
 
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import ForumLoginService from '##/modules/merits/services/ForumLoginService';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
 import logger from '##/shared/services/logger';
-import { getRepository, Repository } from 'typeorm';
-import parseTopicPostOpHtml, { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
-import { RescrapeSchedule } from '##/modules/posts/services/check-post-rescrape-schedules';
+import type { Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
+import type { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
+import parseTopicPostOpHtml from '##/modules/posts/services/scraper/parse-topic-post-op-html';
+import type { RescrapeSchedule } from '##/modules/posts/services/check-post-rescrape-schedules';
 import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 
 export type RecentPostWithFooter = {

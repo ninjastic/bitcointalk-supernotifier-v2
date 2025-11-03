@@ -1,10 +1,10 @@
 import { container } from 'tsyringe';
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
 
-import IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
+import type IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
 import GetAddressesTopUniqueService from '../services/GetAddressesTopUniqueService';
 

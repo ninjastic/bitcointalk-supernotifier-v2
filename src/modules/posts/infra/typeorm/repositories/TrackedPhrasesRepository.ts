@@ -1,10 +1,11 @@
-import { DeleteResult, getRepository, Repository } from 'typeorm';
+import type { DeleteResult, Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
-import ICreateTrackedPhraseDTO from '../../../dtos/ICreateTrackedPhraseDTO';
-import IFindTrackedPhraseDTO from '../../../dtos/IFindTrackedPhraseDTO';
+import type ICreateTrackedPhraseDTO from '../../../dtos/ICreateTrackedPhraseDTO';
+import type IFindTrackedPhraseDTO from '../../../dtos/IFindTrackedPhraseDTO';
 import TrackedPhrase from '../entities/TrackedPhrase';
 
-import ITrackedPhrasesRepository from '../../../repositories/ITrackedPhrasesRepository';
+import type ITrackedPhrasesRepository from '../../../repositories/ITrackedPhrasesRepository';
 
 export default class TrackedPhrasesRepository implements ITrackedPhrasesRepository {
   private ormRepository: Repository<TrackedPhrase>;

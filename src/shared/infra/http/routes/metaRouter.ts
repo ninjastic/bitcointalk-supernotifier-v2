@@ -1,9 +1,10 @@
-import { Router, Request, Response } from 'express';
+import type { Request, Response } from 'express';
+import { Router } from 'express';
 import { container } from 'tsyringe';
 
-import { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
+import type { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
 import esClient from '../../../services/elastic';
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
 const metaRouter = Router();
 const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');

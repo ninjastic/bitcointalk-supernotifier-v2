@@ -5,7 +5,7 @@ import esClient from '../../../services/elastic';
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
 import GetAuthorBaseDataService from './GetAuthorBaseDataService';
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 interface Data {
   author: string;

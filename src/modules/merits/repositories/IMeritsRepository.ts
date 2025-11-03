@@ -1,6 +1,6 @@
-import Merit from '../infra/typeorm/entities/Merit';
-import CreateMeritDTO from '../dtos/CreateMeritDTO';
-import FindMeritDTO from '../dtos/FindMeritDTO';
+import type Merit from '../infra/typeorm/entities/Merit';
+import type CreateMeritDTO from '../dtos/CreateMeritDTO';
+import type FindMeritDTO from '../dtos/FindMeritDTO';
 
 export default interface IMeritsRepository {
   create(data: CreateMeritDTO): Merit;

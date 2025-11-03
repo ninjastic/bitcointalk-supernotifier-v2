@@ -1,4 +1,5 @@
-import Notification, {
+import type Notification from '##/modules/notifications/infra/typeorm/entities/Notification';
+import {
   AutoTrackTopicRequestNotification,
   MeritNotification,
   NotificationType,
@@ -9,7 +10,8 @@ import Notification, {
   TrackedTopicNotification,
   TrackedUserNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import { DeepPartial, getRepository, Repository } from 'typeorm';
+import type { DeepPartial, Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
 type FindOneNotificationConditions<T extends Notification> = {
   type: T['type'];

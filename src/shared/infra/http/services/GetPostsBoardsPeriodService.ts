@@ -1,4 +1,4 @@
-import { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
+import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 import esClient from '../../../services/elastic';
 
 export interface GetPostsBoardsPeriodParams {

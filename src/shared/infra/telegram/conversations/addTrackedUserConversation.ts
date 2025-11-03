@@ -1,12 +1,12 @@
 import { container } from 'tsyringe';
-import { Conversation, ConversationFlavor } from '@grammyjs/conversations';
+import type { Conversation, ConversationFlavor } from '@grammyjs/conversations';
 import { Menu } from '@grammyjs/menu';
 import { replyMenuToContext } from 'grammy-inline-menu';
 import { z } from 'zod';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import { mainMenu } from '../menus/mainMenu';
-import TrackedUser from '../../../../modules/posts/infra/typeorm/entities/TrackedUser';
+import type TrackedUser from '../../../../modules/posts/infra/typeorm/entities/TrackedUser';
 import trackedUsersMenu from '../menus/trackedUsersMenu';
 import TrackedUsersRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedUsersRepository';
 

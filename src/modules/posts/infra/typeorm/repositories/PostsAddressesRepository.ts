@@ -1,11 +1,12 @@
-import { getRepository, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
 import PostAddress from '../entities/PostAddress';
 
-import IPostsAddressesRepository from '../../../repositories/IPostsAddressesRepository';
+import type IPostsAddressesRepository from '../../../repositories/IPostsAddressesRepository';
 
-import IFindPostAddressesDTO from '../../../dtos/IFindPostAddressesDTO';
-import ICreatePostAddressDTO from '../../../dtos/ICreatePostAddressDTO';
+import type IFindPostAddressesDTO from '../../../dtos/IFindPostAddressesDTO';
+import type ICreatePostAddressDTO from '../../../dtos/ICreatePostAddressDTO';
 
 export default class PostsAddressesRepository implements IPostsAddressesRepository {
   private ormRepository: Repository<PostAddress>;

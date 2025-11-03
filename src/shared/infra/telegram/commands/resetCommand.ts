@@ -1,5 +1,5 @@
-import { CommandContext } from 'grammy';
-import IMenuContext from '../@types/IMenuContext';
+import type { CommandContext } from 'grammy';
+import type IMenuContext from '../@types/IMenuContext';
 import { initialSession } from '../bot';
 
 const resetCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {

@@ -1,6 +1,6 @@
-import { CommandContext } from 'grammy';
+import type { CommandContext } from 'grammy';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 
 const helpCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
   const commands = [
@@ -10,7 +10,7 @@ const helpCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => 
     },
     {
       command: '/menu',
-      description: 'Shows the cool menu.',
+      description: 'Shows the cool menu.'
     },
     {
       command: '/alt USERNAME',
@@ -22,7 +22,8 @@ const helpCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => 
     },
     {
       command: '/minPosts XXX',
-      description: 'Sets the minimum of posts a user should have to trigger a notification for new topics. Good to avoid spammers.'
+      description:
+        'Sets the minimum of posts a user should have to trigger a notification for new topics. Good to avoid spammers.'
     },
     {
       command: '/length XXX',
@@ -40,8 +41,13 @@ const helpCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => 
       command: '/info',
       description: 'Shows your account debug information. Useful for troubleshooting.'
     }
-  ]
-  await ctx.reply(`<b>Commands</b>\n\n${commands.map(({ command, description }) => `<b>${command}</b> => ${description}`).join('\n\n')}`, { parse_mode: 'HTML'})
+  ];
+  await ctx.reply(
+    `<b>Commands</b>\n\n${commands
+      .map(({ command, description }) => `<b>${command}</b> => ${description}`)
+      .join('\n\n')}`,
+    { parse_mode: 'HTML' }
+  );
 };
 
 export default helpCommand;

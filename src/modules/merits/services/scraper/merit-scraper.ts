@@ -3,14 +3,16 @@ import ForumLoginService from '##/modules/merits/services/ForumLoginService';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import forumScraperQueue, { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 import api from '##/shared/services/api';
 import logger from '##/shared/services/logger';
-import Cheerio, { load } from 'cheerio';
+import type Cheerio from 'cheerio';
+import { load } from 'cheerio';
 import { sub } from 'date-fns';
 import { container } from 'tsyringe';
-import { getRepository, IsNull, Not, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository, IsNull, Not } from 'typeorm';
 
 export class MeritScraper {
   RECENT_MERITS_URL = 'index.php?action=merit;stats=recent';

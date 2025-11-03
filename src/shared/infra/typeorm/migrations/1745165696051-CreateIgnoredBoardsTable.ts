@@ -1,4 +1,5 @@
-import { MigrationInterface, QueryRunner, Table } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from 'typeorm';
+import { Table } from 'typeorm';
 
 export class CreateIgnoredBoardsTable1745165696051 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {

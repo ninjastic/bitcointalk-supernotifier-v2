@@ -1,13 +1,14 @@
-import { getRepository, MoreThanOrEqual, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository, MoreThanOrEqual } from 'typeorm';
 import { sub } from 'date-fns';
 
 import esClient from '../../../../../shared/services/elastic';
 
 import PostHistory from '../entities/PostHistory';
-import IPostsHistoryRepository from '../../../repositories/IPostsHistoryRepository';
-import IFindOnePostHistoryDTO from '../../../dtos/IFindOnePostHistoryDTO';
-import IFindAllPostsHistoryDTO from '../../../dtos/IFindAllPostsHistoryDTO';
-import ICreatePostHistoryDTO from '../../../dtos/ICreatePostHistoryDTO';
+import type IPostsHistoryRepository from '../../../repositories/IPostsHistoryRepository';
+import type IFindOnePostHistoryDTO from '../../../dtos/IFindOnePostHistoryDTO';
+import type IFindAllPostsHistoryDTO from '../../../dtos/IFindAllPostsHistoryDTO';
+import type ICreatePostHistoryDTO from '../../../dtos/ICreatePostHistoryDTO';
 
 import GetBoardChildrensFromIdService from '../../../services/GetBoardChildrensFromIdService';
 

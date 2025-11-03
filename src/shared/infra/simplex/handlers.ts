@@ -1,39 +1,12 @@
-import {
-  ChatInfoType,
-  ChatResponse,
-  CRNewChatItems,
-  CRContactDeleted,
-  CRChatError,
-  CRContactsDisconnected,
-  CRContactsSubscribed,
-  CRReceivedContactRequest
-} from 'simplex-chat/dist/response';
+import { ChatInfoType } from 'simplex-chat/dist/response';
 import logger from '##/shared/services/logger';
 import type { SimpleX } from './index';
+import type { CEvt, ChatEvent } from '@simplex-chat/types';
 
-type CRContactConnected = ChatResponse & {
-  type: 'contactConnected';
-  contact: {
-    contactId: number;
-    activeConn: {
-      connId: number;
-      agentConnId: string;
-      localDisplayName: string;
-    };
-  };
-};
-
-type CRContactSubSummary = ChatResponse & {
-  type: 'contactSubSummary';
-  contactSubscriptions: Array<{
-    contactId: number;
-  }>;
-};
-
-type Handlers = Record<string, (r: ChatResponse, simpleX: SimpleX) => Promise<void>>;
+type Handlers = Record<string, (r: ChatEvent, simpleX: SimpleX) => Promise<void>>;
 
 export const handlers: Handlers = {
-  receivedContactRequest: async (r: CRReceivedContactRequest, simpleX) => {
+  receivedContactRequest: async (r: CEvt.ReceivedContactRequest, simpleX) => {
     const { contactId } = await simpleX.chat.apiAcceptContactRequest(r.contactRequest.contactRequestId);
 
     while (!(await simpleX.isContactActive(contactId))) {
@@ -61,35 +34,19 @@ export const handlers: Handlers = {
       data: { step: 'waiting-for-username', forum_username: null, forum_user_uid: null }
     });
   },
-  contactConnected: async (r: CRContactConnected, simpleX) => {
+  contactConnected: async (r: CEvt.ContactConnected, simpleX) => {
     const { contactId } = r.contact;
     await simpleX.addConnectedUser(contactId);
-  },
-  contactsDisconnected: async (r: CRContactsDisconnected, simpleX) => {
-    for (const contactRef of r.contactRefs) {
-      await simpleX.removeConnectedUser(contactRef.contactId);
-    }
-  },
-  contactsSubscribed: async (r: CRContactsSubscribed, simpleX) => {
-    for (const contactRef of r.contactRefs) {
-      await simpleX.addConnectedUser(contactRef.contactId);
-    }
-  },
-  chatItemsStatusesUpdated: async () => {},
-  contactSubSummary: async (r: CRContactSubSummary, simpleX) => {
-    for (const contact of r.contactSubscriptions) {
-      await simpleX.addConnectedUser(contact.contactId);
-    }
   },
   pendingSubSummary: async () => {},
   acceptingContactRequest: async () => {},
   memberSubSummary: async () => {},
-  chatError: async (r: CRChatError) => {
+  chatError: async (r: CEvt.ChatError) => {
     if (r.chatError.type === 'error') {
       logger.warn({ type: r.chatError, error: r.chatError }, 'Chat error');
     }
   },
-  newChatItems: async (r: CRNewChatItems, simpleX) => {
+  newChatItems: async (r: CEvt.NewChatItems, simpleX) => {
     for (const chatItem of r.chatItems) {
       if (chatItem.chatInfo.type !== ChatInfoType.Direct || !chatItem.chatInfo.contact.contactId) continue;
       if (chatItem.chatItem.content.type !== 'rcvMsgContent' || chatItem.chatItem.content.msgContent.type !== 'text')
@@ -105,7 +62,7 @@ export const handlers: Handlers = {
 
       logger.info({ contactId, text }, 'New chat message');
 
-      const user = await simpleX.db.getUser(contactId);
+      let user = await simpleX.db.getUser(contactId);
 
       if (!user) {
         logger.warn({ contactId }, 'User not found in database');
@@ -127,32 +84,48 @@ export const handlers: Handlers = {
           }
 
           case 'waiting-for-forum-uid': {
+            const forumUserUid = Number(text);
+            if (Number.isNaN(forumUserUid)) {
+              await simpleX.sendMessage(
+                contactId,
+                `That doesn't seem to be a valid forum UID. Let's try again... What's your forum UID?`
+              );
+              return;
+            }
+
             await simpleX.db.updateConversation(contactId, {
               step: 'confirm-setup',
               forum_username: conversation.data.forum_username,
-              forum_user_uid: text
+              forum_user_uid: forumUserUid
             });
 
             await simpleX.sendMessage(
               contactId,
-              `Great!\n\nUsername is *${conversation.data.forum_username}*\nForum UID is *${text}*\n\n*OK* to confirm\n*RESET* to start again`
+              `Great!\n\nUsername is *${conversation.data.forum_username}*\nForum UID is *${forumUserUid}*\n\n*OK* to confirm\n*RESET* to start again`
             );
             return;
           }
 
           case 'confirm-setup': {
             if (text.toLowerCase() === 'ok') {
-              await simpleX.sendMessage(
-                contactId,
-                `Great, you're good to go!\n\nYou will receive notifications for mentions and merits.\n\n- Toggle them with */mentions* and */merits*\n- Use */help* to see all commands.`
-              );
-              await simpleX.db.updateUser(contactId, {
+              user = await simpleX.db.updateUser(contactId, {
                 forum_username: conversation.data.forum_username,
                 forum_user_uid: conversation.data.forum_user_uid,
                 enable_mentions: true,
                 enable_merits: true
               });
+
               await simpleX.db.deleteConversation(contactId);
+
+              await simpleX.sendMessage(
+                contactId,
+                `Great, you're good to go!\n\n` +
+                  `You will receive notifications for mentions and merits.\n\n` +
+                  `*Mentions:* ${user.enable_mentions ? 'Enabled' : 'Disabled'}\n` +
+                  `*Merits:* ${user.enable_merits ? 'Enabled' : 'Disabled'}\n\n` +
+                  `- Toggle them with */mentions* and */merits*\n` +
+                  `- Use */help* to see all commands.\n`
+              );
 
               logger.info({ contactId }, 'New contact configured');
             }
@@ -462,11 +435,7 @@ export const handlers: Handlers = {
       }
     }
   },
-  contactDeletedByContact: async (r: CRContactDeleted, simpleX) => {
-    await simpleX.db.deleteConversation(r.contact.contactId);
-    await simpleX.db.deleteUser(r.contact.contactId);
-
-    simpleX.connectedUsers.delete(r.contact.contactId);
-    logger.info({ contactId: r.contact.contactId }, 'Contact deleted');
+  contactDeletedByContact: async (r: CEvt.ContactDeletedByContact, simpleX) => {
+    await simpleX.deleteContact(r.contact.contactId);
   }
 };

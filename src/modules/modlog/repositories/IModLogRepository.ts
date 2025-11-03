@@ -1,6 +1,6 @@
-import ModLog from '../infra/typeorm/entities/ModLog';
-import CreateModLogDTO from '../dtos/CreateModLogDTO';
-import FindModLogDTO from '../dtos/FindModLogDTO';
+import type ModLog from '../infra/typeorm/entities/ModLog';
+import type CreateModLogDTO from '../dtos/CreateModLogDTO';
+import type FindModLogDTO from '../dtos/FindModLogDTO';
 
 export default interface IModLogRepository {
   create(data: CreateModLogDTO): ModLog;

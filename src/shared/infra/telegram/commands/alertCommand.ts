@@ -1,7 +1,7 @@
-import { CommandContext } from 'grammy';
+import type { CommandContext } from 'grammy';
 import { container } from 'tsyringe';
 
-import IMenuContext from '../@types/IMenuContext';
+import type IMenuContext from '../@types/IMenuContext';
 import SendGlobalNotificationService from '../services/notifications/SendGlobalNotificationService';
 
 const alertCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {

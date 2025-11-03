@@ -2,16 +2,16 @@ import { sub } from 'date-fns';
 import { LastCheckedType, NotificationType } from './db';
 import { createMentionRegex, isUserMentionedInPost } from '##/shared/services/utils';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
-import { SimpleX } from '.';
+import type { SimpleX } from '.';
 import logger from '##/shared/services/logger';
 import '##/shared/container';
 import { sponsorTextsForSimpleX } from '##/config/sponsor';
 import { load } from 'cheerio';
-import { getRepository, MoreThan, MoreThanOrEqual, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository, MoreThan, MoreThanOrEqual } from 'typeorm';
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import pluralize from 'pluralize';
 import redis from '##/shared/services/redis';
-import { hasNotificationMessageSent } from './utils';
 
 const userNextSponsorMap = new Map();
 
@@ -94,7 +94,8 @@ class Checker {
 
       for (const user of users) {
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
-        if (!isUserMentionedInPost(post.content, { username: user.forum_username }, user.only_direct).isMentioned) continue;
+        if (!isUserMentionedInPost(post.content, { username: user.forum_username }, user.only_direct).isMentioned)
+          continue;
         if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
         if (ignoringPostAuthor.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
         if (ignoringPostTopic.find(ignoring => ignoring.contact_id === user.contact_id)) continue;
@@ -116,7 +117,7 @@ class Checker {
           user.contact_id
         )}`;
         const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
-        if (hasNotificationMessageSent(msg[0])) {
+        if (msg.sent) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.MENTION,
@@ -124,7 +125,7 @@ class Checker {
             message: messageText,
             sent: true
           });
-        } else {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.MENTION,
@@ -162,7 +163,7 @@ class Checker {
           user.contact_id
         )}`;
         const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
-        if (hasNotificationMessageSent(msg[0])) {
+        if (msg.sent) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_USER,
@@ -170,7 +171,7 @@ class Checker {
             message: messageText,
             sent: true
           });
-        } else {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_USER,
@@ -207,7 +208,7 @@ class Checker {
           user.contact_id
         )}`;
         const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
-        if (hasNotificationMessageSent(msg[0])) {
+        if (msg.sent) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_TOPIC,
@@ -215,7 +216,7 @@ class Checker {
             message: messageText,
             sent: true
           });
-        } else {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_TOPIC,
@@ -254,7 +255,7 @@ class Checker {
           user.contact_id
         )}`;
         const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
-        if (hasNotificationMessageSent(msg[0])) {
+        if (msg.sent) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_PHRASE,
@@ -262,7 +263,7 @@ class Checker {
             message: messageText,
             sent: true
           });
-        } else {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_PHRASE,
@@ -304,7 +305,7 @@ class Checker {
           merit.sender
         }* for *${merit.post.title}* \n\n${postUrl}${getSponsorPhrase(user.contact_id)}`;
         const msg = await this.simpleX.sendMessage(user.contact_id, messageText);
-        if (hasNotificationMessageSent(msg[0])) {
+        if (msg.sent) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.MERIT,
@@ -312,7 +313,7 @@ class Checker {
             message: messageText,
             sent: true
           });
-        } else {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.MERIT,

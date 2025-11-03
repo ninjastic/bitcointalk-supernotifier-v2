@@ -36,29 +36,31 @@ export default class SendMentionNotificationService {
     const $ = load(content);
     const body = $('body');
     const relevantQuotesElements: cheerio.Element[] = [];
-  
+
     body.find('img.userimg').each((_, element) => {
-      $(element).replaceWith('[IMAGE]')
-    })
-  
+      $(element).replaceWith('[IMAGE]');
+    });
+
     if (mentionType === 'quoted_mention') {
       const quotes = body.find('div.quoteheader:has(a:not(.ul)):not(.quote *)').toArray();
-  
+
       quotes.forEach(element => {
         const quoteHeader = $(element);
-  
+
         const isRegularQuote = quoteHeader.children('a:not(.ul)').length === 0;
         if (isRegularQuote) return;
-  
-        const authorMatch = quoteHeader.text().match(new RegExp(`Quote from: ${escapeUsername(user.username)} on`, 'gi'));
-  
+
+        const authorMatch = quoteHeader
+          .text()
+          .match(new RegExp(`Quote from: ${escapeUsername(user.username)} on`, 'gi'));
+
         if (authorMatch) {
           relevantQuotesElements.push(element);
         }
       });
-  
+
       let relevantTexts = [];
-  
+
       for (const quote of relevantQuotesElements) {
         let currentNode = quote.next;
         let isCurrentNodeDifferentQuote = false;
@@ -66,19 +68,19 @@ export default class SendMentionNotificationService {
           currentNode = currentNode.next;
           if (quotes.includes(currentNode)) break;
           if ($(currentNode).hasClass('quoteheader')) continue;
-  
-         const nodeText = $(currentNode).text()
-         if (nodeText) {
-          relevantTexts.push(nodeText)
-         }
+
+          const nodeText = $(currentNode).text();
+          if (nodeText) {
+            relevantTexts.push(nodeText);
+          }
         }
       }
-  
+
       if (relevantTexts.length) {
         return relevantTexts.join(' ');
       }
     }
-  
+
     body.children('div.quote, div.quoteheader').remove();
     body.find('br').replaceWith('&nbsp;');
     return body.text().replace(/\s\s+/g, ' ').trim();

@@ -1,7 +1,8 @@
 import { sub } from 'date-fns';
-import { getRepository, Repository } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository } from 'typeorm';
 
-import ICreateTopicDTO from '../../../dtos/ICreateTopicDTO';
+import type ICreateTopicDTO from '../../../dtos/ICreateTopicDTO';
 
 import Topic from '../entities/Topic';
 

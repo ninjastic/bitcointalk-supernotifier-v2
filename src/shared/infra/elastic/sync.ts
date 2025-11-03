@@ -10,7 +10,7 @@ import esClient from 'shared/services/elastic';
 
 import 'shared/container';
 import logger from '##/shared/services/logger';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 
 import { SyncPostsPipeline } from './pipelines/sync-posts';
 import { SyncPostsVersionsPipeline } from './pipelines/sync-posts-versions';
@@ -54,7 +54,7 @@ async function syncAll() {
 
   if (bootstrap) {
     logger.info('Starting bootstrap synchronization');
-    
+
     const syncPostsLastState = await syncPostsPipeline.execute(bootstrap, lastPostId);
     const syncPostsVersionsLastState = await syncPostsVersionsPipeline.execute(bootstrap);
     const syncMeritsLastState = await syncMeritsPipeline.execute(bootstrap);

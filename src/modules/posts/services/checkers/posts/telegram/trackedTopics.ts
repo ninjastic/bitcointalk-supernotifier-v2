@@ -2,12 +2,12 @@ import { container } from 'tsyringe';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { shouldNotifyUser } from '##/shared/services/utils';
-import Post from '../../../../infra/typeorm/entities/Post';
-import IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
-import TrackedTopic from '../../../../infra/typeorm/entities/TrackedTopic';
+import type Post from '../../../../infra/typeorm/entities/Post';
+import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
+import type TrackedTopic from '../../../../infra/typeorm/entities/TrackedTopic';
 import UsersRepository from '../../../../../users/infra/typeorm/repositories/UsersRepository';
 import FindTrackedTopicUsersService from '../../../../../../shared/infra/telegram/services/FindTrackedTopicUsersService';
-import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import logger from '../../../../../../shared/services/logger';
 
 type TelegramTrackedTopicsCheckerNotificationResult = NotificationResult<

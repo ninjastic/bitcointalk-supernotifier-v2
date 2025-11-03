@@ -1,8 +1,8 @@
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import Post from '../../../../infra/typeorm/entities/Post';
-import User from '../../../../../users/infra/typeorm/entities/User';
-import TrackedUser from '../../../../infra/typeorm/entities/TrackedUser';
-import { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type Post from '../../../../infra/typeorm/entities/Post';
+import type User from '../../../../../users/infra/typeorm/entities/User';
+import type TrackedUser from '../../../../infra/typeorm/entities/TrackedUser';
+import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
 import logger from '../../../../../../shared/services/logger';
 
 type TelegramTrackedUsersCheckerNotificationResult = NotificationResult<RecipeMetadata['sendTrackedUserNotification']>;

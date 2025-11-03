@@ -12,7 +12,7 @@ import { load } from 'cheerio';
 import '../../container';
 
 import api from '../../services/api';
-import Merit from '../../../modules/merits/infra/typeorm/entities/Merit';
+import type Merit from '../../../modules/merits/infra/typeorm/entities/Merit';
 import MeritsRepository from '../../../modules/merits/infra/typeorm/repositories/MeritsRepository';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 
@@ -82,7 +82,12 @@ const getListOfMerits = async (shouldScrapeLoyce: boolean): Promise<MeritPartial
 
 const getMeritsMissingInDb = async (merits: MeritPartial[]): Promise<MeritPartial[]> => {
   const missingIds = await getManager().query(
-    'SELECT t.date, t.amount, t.post_id, t.sender_uid FROM unnest($1::merit_key[]) as t(date, amount, post_id, sender_uid) LEFT JOIN merits m ON t.date = m.date AND t.amount = m.amount AND t.post_id = m.post_id AND t.sender_uid = m.sender_uid WHERE m.id IS NULL;',
+    `SELECT
+      t.date, t.amount, t.post_id, t.sender_uid
+    FROM unnest($1::merit_key[]) as t(date, amount, post_id, sender_uid)
+    LEFT JOIN
+      merits m ON t.date = m.date AND t.amount = m.amount AND t.post_id = m.post_id AND t.sender_uid = m.sender_uid
+    WHERE m.id IS NULL;`,
     [
       merits.map(
         merit =>
@@ -107,7 +112,8 @@ const getMeritsMissingInDb = async (merits: MeritPartial[]): Promise<MeritPartia
 const getPostsMissingInDb = async (merits: MeritPartial[]): Promise<Array<{ post_id: number; topic_id: number }>> =>
   getManager()
     .query(
-      'SELECT DISTINCT t.id FROM unnest($1::integer[]) as t(id) LEFT JOIN posts p ON p.post_id = t.id WHERE p.post_id IS NULL;',
+      `SELECT DISTINCT t.id FROM unnest($1::integer[]) as t(id)
+      LEFT JOIN posts p ON p.post_id = t.id WHERE p.post_id IS NULL;`,
       [merits.map(merit => merit.post_id)]
     )
     .then(values =>
@@ -188,7 +194,7 @@ export const scrapeMeritDump = async (shouldScrapeLoyce: boolean) => {
       post_id: number;
       topic_id: number;
     }> = await getManager().query(
-      'SELECT author, author_uid, post_id, topic_id FROM posts WHERE post_id = ANY($1::integer[]) AND topic_id = ANY($2::integer[]) ORDER BY date DESC;',
+      `SELECT author, author_uid, post_id, topic_idFROM posts WHERE post_id = ANY($1::integer[]) AND topic_id = ANY($2::integer[]) ORDER BY date DESC;`,
       [meritsMissingInDb.map(merit => merit.post_id), meritsMissingInDb.map(merit => merit.topic_id)]
     );
 
@@ -200,7 +206,7 @@ export const scrapeMeritDump = async (shouldScrapeLoyce: boolean) => {
       post_id: number;
       topic_id: number;
     }> = await getManager().query(
-      'SELECT receiver, receiver_uid, sender, sender_uid, post_id, topic_id FROM merits WHERE receiver_uid = ANY($1::integer[]) OR sender_uid = ANY($1::integer[]) ORDER BY date DESC;',
+      `SELECT receiver, receiver_uid, sender, sender_uid, post_id, topic_id FROM merits WHERE receiver_uid = ANY($1::integer[]) OR sender_uid = ANY($1::integer[]) ORDER BY date DESC;`,
       [meritsMissingInDb.flatMap(merit => [merit.receiver_uid, merit.sender_uid])]
     );
 

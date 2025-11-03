@@ -1,13 +1,15 @@
-import { Api, Bot, Context, RawApi, session, SessionFlavor } from 'grammy';
+import type { Api, Context, RawApi, SessionFlavor } from 'grammy';
+import { Bot, session } from 'grammy';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import { conversations, createConversation } from '@grammyjs/conversations';
-import { run, RunnerHandle } from '@grammyjs/runner';
+import type { RunnerHandle } from '@grammyjs/runner';
+import { run } from '@grammyjs/runner';
 import { container } from 'tsyringe';
 import IORedis from 'ioredis';
 
 import cache from '../../../config/cache';
 import logger from '../../services/logger';
-import ISession from './@types/ISession';
+import type ISession from './@types/ISession';
 
 import { checkBotNotificationError } from '../../services/utils';
 import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';

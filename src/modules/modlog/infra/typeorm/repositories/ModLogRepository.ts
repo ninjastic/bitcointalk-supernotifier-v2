@@ -1,10 +1,11 @@
-import { Repository, getRepository, MoreThanOrEqual } from 'typeorm';
+import type { Repository } from 'typeorm';
+import { getRepository, MoreThanOrEqual } from 'typeorm';
 import { sub } from 'date-fns';
 
-import FindModLogDTO from '../../../dtos/FindModLogDTO';
-import FindUncheckedTypeDTO from '../../../dtos/FindUncheckedTypeDTO';
-import IModLogRepository from '../../../repositories/IModLogRepository';
-import CreateModLogDTO from '../../../dtos/CreateModLogDTO';
+import type FindModLogDTO from '../../../dtos/FindModLogDTO';
+import type FindUncheckedTypeDTO from '../../../dtos/FindUncheckedTypeDTO';
+import type IModLogRepository from '../../../repositories/IModLogRepository';
+import type CreateModLogDTO from '../../../dtos/CreateModLogDTO';
 
 import ModLog from '../entities/ModLog';
 
