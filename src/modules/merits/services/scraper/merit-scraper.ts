@@ -86,26 +86,6 @@ export class MeritScraper {
       if (result.topic) {
         await this.topicsRepository.save(result.topic);
       }
-    } else {
-      if (post.title !== meritPostTitle) {
-        const latestPostVersionWithNewTitle = await this.postsVersionsRepository.findOne({
-          where: { post_id, new_title: Not(IsNull()) },
-          order: { created_at: 'DESC' }
-        });
-
-        const scrapePostForChangesJobId = `scrapePostForChanges-${post_id}`;
-        const alreadyHasJob = await forumScraperQueue.getJob(scrapePostForChangesJobId);
-
-        if (!alreadyHasJob && !latestPostVersionWithNewTitle) {
-          logger.debug(
-            { post, meritPostTitle },
-            'Merit post title mismatch with archived post title, scheduling version rescrape for post'
-          );
-          await addForumScraperJob('scrapePostForChanges', { post_id }, false, {
-            jobId: scrapePostForChangesJobId
-          });
-        }
-      }
     }
 
     if (post) {
@@ -126,6 +106,29 @@ export class MeritScraper {
       notified_to: [],
       checked: false
     });
+
+    if (post && post.title !== meritPostTitle) {
+      const latestPostVersionWithNewTitle = await this.postsVersionsRepository.findOne({
+        where: { post_id, new_title: Not(IsNull()) },
+        order: { created_at: 'DESC' }
+      });
+
+      const scrapePostForChangesJobId = `scrapePostForChanges-${post_id}`;
+      const alreadyHasJob = await forumScraperQueue.getJob(scrapePostForChangesJobId);
+
+      if (!alreadyHasJob && !latestPostVersionWithNewTitle) {
+        logger.debug(
+          { post, meritPostTitle },
+          'Merit post title mismatch with archived post title, scheduling version rescrape for post'
+        );
+        await addForumScraperJob('scrapePostForChanges', { post_id }, false, {
+          jobId: scrapePostForChangesJobId
+        });
+      }
+
+      logger.debug(`[MeritScraper] Saved different merit scraped post title ${merit.id}: ${meritPostTitle}`);
+      await this.redisProvider.save(`meritScrapedPostTitle:${merit.id}`, meritPostTitle, 'EX', 60 * 60);
+    }
 
     return merit;
   }

@@ -63,7 +63,8 @@ export default class CheckMeritsService {
           continue;
         }
 
-        await addTelegramJob('sendMeritNotification', { merit, user: receiverUser });
+        const scrapedPostTitle = await this.cacheRepository.recover<string>(`meritScrapedPostTitle:${merit.id}`);
+        await addTelegramJob('sendMeritNotification', { merit, scrapedPostTitle, user: receiverUser });
       }
     }
 

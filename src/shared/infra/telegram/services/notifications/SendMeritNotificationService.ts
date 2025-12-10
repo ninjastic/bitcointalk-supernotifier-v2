@@ -8,19 +8,18 @@ import TelegramBot from '##/shared/infra/telegram/bot';
 import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 
-import { checkBotNotificationError, isAprilFools } from '##/shared/services/utils';
+import { checkBotNotificationError } from '##/shared/services/utils';
 import forumScraperQueue, { queueEvents } from '##/shared/infra/bull/queues/forumScraperQueue';
 import SetMeritNotifiedService from '##/modules/merits/services/SetMeritNotifiedService';
 import { MeritNotification, NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
 import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
-import { sarcasticAprilFoolsMessage } from '##/shared/services/ai';
-import { load } from 'cheerio';
 
 type MeritNoficationData = {
   bot: TelegramBot;
   telegramId: string;
   merit: Merit;
+  scrapedPostTitle: string | null;
 };
 
 @injectable()
@@ -59,7 +58,12 @@ export default class SendMeritNotificationService {
     });
   }
 
-  private async buildNotificationMessage(merit: Merit, totalMeritCount: number, telegramId: string): Promise<string> {
+  private async buildNotificationMessage(
+    telegramId: string,
+    merit: Merit,
+    totalMeritCount: number,
+    scrapedPostTitle: string | null
+  ): Promise<string> {
     const { post_id, topic_id, amount, sender, post } = merit;
     const { title } = post;
 
@@ -71,46 +75,11 @@ export default class SendMeritNotificationService {
         totalMeritCount === -1 ? '⭐️ ' : `⭐️ (Merits: <b>${totalMeritCount}</b>) `
       }You received <b>${amount}</b> ${pluralize('merit', amount)} ` +
       `from <b>${escape(sender)}</b> ` +
-      `for <a href="${postUrl}">${escape(title)}</a>${sponsor}`
+      `for <a href="${postUrl}">${escape(scrapedPostTitle || title)}</a>${sponsor}`
     );
   }
 
-  private async buildNotificationMessageAprilFools(
-    merit: Merit,
-    totalMeritCount: number,
-    telegramId: string
-  ): Promise<string> {
-    const { post_id, topic_id, amount, sender, post } = merit;
-    const { title, content } = post;
-    const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
-    const sponsor = getSponsorPhrase(telegramId);
-
-    const $ = load(content);
-    const data = $('body');
-    data.children('div.quote, div.quoteheader').remove();
-    data.find('br').replaceWith('&nbsp;');
-    const filteredContent = data.text().replace(/\s\s+/g, ' ').trim();
-
-    const jokeMessage = await sarcasticAprilFoolsMessage(
-      `${
-        totalMeritCount === -1 ? '⭐️ ' : `⭐️ (Merits: <b>${totalMeritCount}</b>) `
-      }You received <b>${amount}</b> ${pluralize('merit', amount)} ` +
-        `from <b>${escape(sender)}</b> ` +
-        `for <a href="${postUrl}">${escape(title)}</a>\n${filteredContent}`
-    );
-
-    return (
-      `${
-        totalMeritCount === -1 ? '⭐️ ' : `⭐️ (Merits: <b>${totalMeritCount}</b>) `
-      }You received <b>${amount}</b> ${pluralize('merit', amount)} ` +
-      `from <b>${escape(sender)}</b> ` +
-      `for <a href="${postUrl}">${escape(title)}</a>\n\n` +
-      `<a href="https://bitcointalk.org/index.php?topic=5248878.msg65230609#msg65230609">SuperNotifier Ninja-AI:</a> ${jokeMessage}` +
-      sponsor
-    );
-  }
-
-  public async execute({ bot, telegramId, merit }: MeritNoficationData): Promise<boolean> {
+  public async execute({ bot, telegramId, merit, scrapedPostTitle }: MeritNoficationData): Promise<boolean> {
     const setMeritNotified = container.resolve(SetMeritNotifiedService);
     let message: string;
 
@@ -119,13 +88,7 @@ export default class SendMeritNotificationService {
 
       const totalMeritCount = await this.getTotalMeritCount(telegramId, receiver_uid, amount);
 
-      const aprilFools = isAprilFools();
-
-      if (aprilFools) {
-        message = await this.buildNotificationMessageAprilFools(merit, totalMeritCount, telegramId);
-      } else {
-        message = await this.buildNotificationMessage(merit, totalMeritCount, telegramId);
-      }
+      message = await this.buildNotificationMessage(telegramId, merit, totalMeritCount, scrapedPostTitle);
 
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
         parse_mode: 'HTML',

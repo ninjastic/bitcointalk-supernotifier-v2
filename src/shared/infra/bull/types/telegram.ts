@@ -22,7 +22,7 @@ export type RecipeNames =
 
 export type MentionType = 'username' | 'alternative_username' | 'direct_mention' | 'quoted_mention';
 
-type SendMeritNotificationMetadata = { merit: Merit; user: User };
+type SendMeritNotificationMetadata = { merit: Merit; user: User; scrapedPostTitle: string | null };
 type SendMentionNotificationMetadata = { post: Post; user: User; history: boolean; mentionType: MentionType };
 type SendTopicTrackingNotificationMetadata = { post: Post; user: User };
 type SendPhraseTrackingNotificationMetadata = { post: Post; user: User; trackedPhrase: TrackedPhrase };

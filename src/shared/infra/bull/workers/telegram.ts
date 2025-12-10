@@ -33,9 +33,9 @@ const jobRecipes: JobRecipe = {
     await sendMentionNotification.execute({ bot, user, post, history, mentionType });
   },
   sendMeritNotification: async job => {
-    const { merit, user } = job.data;
+    const { merit, user, scrapedPostTitle = null } = job.data;
     const sendMeritNotification = container.resolve(SendMeritNotificationService);
-    await sendMeritNotification.execute({ bot, telegramId: user.telegram_id, merit });
+    await sendMeritNotification.execute({ bot, telegramId: user.telegram_id, merit, scrapedPostTitle });
   },
   sendTopicTrackingNotification: async job => {
     const { post, user } = job.data;
