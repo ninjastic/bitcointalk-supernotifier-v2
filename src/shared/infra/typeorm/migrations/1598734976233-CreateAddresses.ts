@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateAddresses1598734976233 implements MigrationInterface {
@@ -12,34 +13,34 @@ export class CreateAddresses1598734976233 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'coin',
-            type: ' varchar'
+            type: ' varchar',
           },
           {
             name: 'address',
             type: 'varchar',
-            isUnique: true
+            isUnique: true,
           },
           {
             name: 'posts_id',
             type: 'integer',
-            isArray: true
+            isArray: true,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
-        ]
-      })
+            default: 'now()',
+          },
+        ],
+      }),
     );
 
     await queryRunner.query(`CREATE INDEX addresses_posts_id_idx on addresses USING GIN(posts_id);`);

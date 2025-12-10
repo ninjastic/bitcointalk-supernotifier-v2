@@ -1,10 +1,9 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import ITrackedTopicsRepository from '../../../../modules/posts/repositories/ITrackedTopicsRepository';
-import IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
+import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import type IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
+import type ITrackedTopicsRepository from '../../../../modules/posts/repositories/ITrackedTopicsRepository';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
 @injectable()
 export default class FindPostByTrackedTopicService {
@@ -16,7 +15,7 @@ export default class FindPostByTrackedTopicService {
     private postsRepository: IPostsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute({ topic_id }: { topic_id: number }): Promise<Post> {

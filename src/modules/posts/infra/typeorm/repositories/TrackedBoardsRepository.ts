@@ -1,5 +1,7 @@
 import type { DeleteResult, Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
+
 import type { ICreateTrackedBoardDTO } from '../../../dtos/ICreateTrackedBoardDTO';
 
 import TrackedBoard from '../entities/TrackedBoard';
@@ -27,24 +29,24 @@ export default class TrackedBoardsRepository {
 
   public async find(): Promise<TrackedBoard[]> {
     return this.ormRepository.find({
-      relations: ['board', 'user']
+      relations: ['board', 'user'],
     });
   }
 
   public async findOne(where?: ICreateTrackedBoardDTO): Promise<TrackedBoard> {
     return this.ormRepository.findOne({
       where,
-      relations: ['board', 'user']
+      relations: ['board', 'user'],
     });
   }
 
   public async findByTelegramId(telegramId: string): Promise<TrackedBoard[]> {
     return this.ormRepository.find({
       where: {
-        telegram_id: telegramId
+        telegram_id: telegramId,
       },
       order: { board_id: 'ASC' },
-      relations: ['board', 'user']
+      relations: ['board', 'user'],
     });
   }
 

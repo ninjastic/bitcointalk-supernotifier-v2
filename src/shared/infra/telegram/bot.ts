@@ -1,52 +1,50 @@
-import type { Api, Context, RawApi, SessionFlavor } from 'grammy';
-import { Bot, session } from 'grammy';
-import { RedisAdapter } from '@grammyjs/storage-redis';
-import { conversations, createConversation } from '@grammyjs/conversations';
 import type { RunnerHandle } from '@grammyjs/runner';
+import type { Api, Context, RawApi, SessionFlavor } from 'grammy';
+
+import { conversations, createConversation } from '@grammyjs/conversations';
 import { run } from '@grammyjs/runner';
-import { container } from 'tsyringe';
+import { RedisAdapter } from '@grammyjs/storage-redis';
+import hardresetCommand, { hardResetConfirmInlineMenu } from '##/shared/infra/telegram/commands/hardresetCommand';
+import { Bot, session } from 'grammy';
 import IORedis from 'ioredis';
+import { container } from 'tsyringe';
+
+import type ISession from './@types/ISession';
 
 import cache from '../../../config/cache';
 import logger from '../../services/logger';
-import type ISession from './@types/ISession';
-
 import { checkBotNotificationError } from '../../services/utils';
-import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
-
-import { setupQuestionMiddlewares } from './menus';
-import { mainMenuMiddleware } from './menus/mainMenu';
-
-import { setupConversation, uidHelpInlineMenu } from './conversations/setupConversation';
-import addTrackedBoardConversation, {
-  confirmAddTrackedBoardInlineMenu,
-  cancelAddTrackedBoardPromptInlineMenu
-} from './conversations/addTrackedBoardConversation';
+import alertCommand from './commands/alertCommand';
+import altCommand from './commands/altCommand';
+import apiCommand from './commands/apiCommand';
+import authCommand from './commands/authCommand';
+import devCommand from './commands/dev';
+import helpCommand from './commands/helpCommand';
+import imageCommand from './commands/imageCommand';
+import infoCommand from './commands/infoCommand';
+import lengthCommand from './commands/lengthCommand';
+import menuCommand from './commands/menuCommand';
+import minPostsCommand from './commands/minPostsCommand';
+import resetCommand from './commands/resetCommand';
+import setMeritCommand from './commands/setMeritCommand';
+import startCommand from './commands/startCommand';
 import addIgnoredBoardConversation, {
   cancelAddIgnoredBoardPromptInlineMenu,
-  confirmAddIgnoredBoardInlineMenu
+  confirmAddIgnoredBoardInlineMenu,
 } from './conversations/addIgnoredBoardConversation';
+import addTrackedBoardConversation, {
+  cancelAddTrackedBoardPromptInlineMenu,
+  confirmAddTrackedBoardInlineMenu,
+} from './conversations/addTrackedBoardConversation';
 import addTrackedUserConversation, {
   cancelAddTrackedUserPromptInlineMenu,
-  confirmAddTrackedUserInlineMenu
+  confirmAddTrackedUserInlineMenu,
 } from './conversations/addTrackedUserConversation';
+import { setupConversation, uidHelpInlineMenu } from './conversations/setupConversation';
+import { setupQuestionMiddlewares } from './menus';
+import { mainMenuMiddleware } from './menus/mainMenu';
+import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
 import { handleTrackTopicRepliesMenu } from './services/notifications/SendAutoTrackTopicNotificationService';
-
-import startCommand from './commands/startCommand';
-import helpCommand from './commands/helpCommand';
-import menuCommand from './commands/menuCommand';
-import alertCommand from './commands/alertCommand';
-import setMeritCommand from './commands/setMeritCommand';
-import altCommand from './commands/altCommand';
-import infoCommand from './commands/infoCommand';
-import devCommand from './commands/dev';
-import apiCommand from './commands/apiCommand';
-import resetCommand from './commands/resetCommand';
-import lengthCommand from './commands/lengthCommand';
-import imageCommand from './commands/imageCommand';
-import authCommand from './commands/authCommand';
-import minPostsCommand from './commands/minPostsCommand';
-import hardresetCommand, { hardResetConfirmInlineMenu } from '##/shared/infra/telegram/commands/hardresetCommand';
 
 export function initialSession(): ISession {
   return {
@@ -54,7 +52,7 @@ export function initialSession(): ISession {
     userId: null,
     mentions: false,
     merits: false,
-    modlogs: false
+    modlogs: false,
   } as ISession;
 }
 
@@ -80,7 +78,7 @@ class TelegramBot {
 
   middlewares(): void {
     const {
-      config: { redis }
+      config: { redis },
     } = cache;
     this.instance.use(
       session({
@@ -93,11 +91,11 @@ class TelegramBot {
             port: redis.port,
             password: redis.password,
             db: 1,
-            keyPrefix: 'session:'
-          })
+            keyPrefix: 'session:',
+          }),
         }),
-        initial: () => initialSession()
-      })
+        initial: () => initialSession(),
+      }),
     );
 
     this.instance.use(async (ctx, next): Promise<void> => {
@@ -159,12 +157,12 @@ class TelegramBot {
     await this.instance.api.setMyCommands([
       {
         command: '/menu',
-        description: 'Sends the menu in a message'
+        description: 'Sends the menu in a message',
       },
       {
         command: '/help',
-        description: 'Sends the help message'
-      }
+        description: 'Sends the help message',
+      },
     ]);
   }
 
@@ -181,7 +179,7 @@ class TelegramBot {
       cancelAddTrackedUserPromptInlineMenu,
       confirmAddIgnoredBoardInlineMenu,
       cancelAddIgnoredBoardPromptInlineMenu,
-      hardResetConfirmInlineMenu
+      hardResetConfirmInlineMenu,
     );
     handleTrackTopicRepliesMenu(this.instance);
   }
@@ -191,12 +189,12 @@ class TelegramBot {
       createConversation(setupConversation, 'setup'),
       createConversation(addTrackedBoardConversation, 'addTrackedBoard'),
       createConversation(addTrackedUserConversation, 'addTrackedUser'),
-      createConversation(addIgnoredBoardConversation, 'addIgnoredBoard')
+      createConversation(addIgnoredBoardConversation, 'addIgnoredBoard'),
     );
   }
 
   errorHandler(): void {
-    this.instance.catch(async error => {
+    this.instance.catch(async (error) => {
       const isBotBlocked = await checkBotNotificationError(error, String(error.ctx.chat.id));
       if (!isBotBlocked) {
         logger.error(error);

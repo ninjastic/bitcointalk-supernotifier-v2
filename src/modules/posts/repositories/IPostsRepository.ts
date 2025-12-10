@@ -1,8 +1,8 @@
 import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
-import type Post from '../infra/typeorm/entities/Post';
-import type CreatePostDTO from '../dtos/CreatePostDTO';
 
+import type CreatePostDTO from '../dtos/CreatePostDTO';
 import type IFindPostsConditionsDTO from '../dtos/IFindPostsConditionsDTO';
+import type Post from '../infra/typeorm/entities/Post';
 
 export interface PostFromES {
   post_id: number;
@@ -20,14 +20,14 @@ export interface PostFromES {
 }
 
 export default interface IPostsRepository {
-  create(data: CreatePostDTO): Post;
-  save(post: Post): Promise<Post>;
-  findOneByPostId(post_id: number): Promise<Post | undefined>;
-  findLatestUncheckedPosts(limit?: number): Promise<Post[]>;
-  findPostsByTopicId(topic_id: number): Promise<SearchResponse<PostFromES>>;
-  findPostsByAuthor(author: string, limit: number): Promise<SearchResponse<PostFromES>>;
-  findPosts(conditions: IFindPostsConditionsDTO): Promise<Post[]>;
-  findPostsES(conditions: IFindPostsConditionsDTO): Promise<SearchResponse<PostFromES>>;
-  findPostsFromList(posts_id: number[]): Promise<Post[]>;
-  findPostsFromListES(posts_id: number[]): Promise<any>;
+  create: (data: CreatePostDTO) => Post;
+  save: (post: Post) => Promise<Post>;
+  findOneByPostId: (post_id: number) => Promise<Post | undefined>;
+  findLatestUncheckedPosts: (limit?: number) => Promise<Post[]>;
+  findPostsByTopicId: (topic_id: number) => Promise<SearchResponse<PostFromES>>;
+  findPostsByAuthor: (author: string, limit: number) => Promise<SearchResponse<PostFromES>>;
+  findPosts: (conditions: IFindPostsConditionsDTO) => Promise<Post[]>;
+  findPostsES: (conditions: IFindPostsConditionsDTO) => Promise<SearchResponse<PostFromES>>;
+  findPostsFromList: (posts_id: number[]) => Promise<Post[]>;
+  findPostsFromListES: (posts_id: number[]) => Promise<any>;
 }

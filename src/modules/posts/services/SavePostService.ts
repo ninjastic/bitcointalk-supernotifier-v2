@@ -1,9 +1,8 @@
 import { inject, injectable } from 'tsyringe';
 
-import Post from '../infra/typeorm/entities/Post';
-
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import IPostsRepository from '../repositories/IPostsRepository';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type Post from '../infra/typeorm/entities/Post';
+import type IPostsRepository from '../repositories/IPostsRepository';
 
 @injectable()
 export default class SavePostService {
@@ -12,7 +11,7 @@ export default class SavePostService {
     private postsRepository: IPostsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(post: Post): Promise<Post> {

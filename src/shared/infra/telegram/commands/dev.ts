@@ -1,4 +1,5 @@
 import type { CommandContext } from 'grammy';
+
 import { container } from 'tsyringe';
 
 import type IMenuContext from '../@types/IMenuContext';
@@ -6,7 +7,7 @@ import type IMenuContext from '../@types/IMenuContext';
 import MeritsRepository from '../../../../modules/merits/infra/typeorm/repositories/MeritsRepository';
 import SendMeritNotificationService from '../services/notifications/SendMeritNotificationService';
 
-const devCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
+async function devCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
     await ctx.reply('Only in development');
     return;
@@ -26,10 +27,10 @@ const devCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
     receiver_uid: 557798,
     notified: false,
     checked: false,
-    notified_to: []
+    notified_to: [],
   });
 
   await sendMeritNotification.execute({ telegramId: String(ctx.chat.id), merit });
-};
+}
 
 export default devCommand;

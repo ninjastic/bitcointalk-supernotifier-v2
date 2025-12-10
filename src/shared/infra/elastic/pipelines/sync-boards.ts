@@ -1,10 +1,10 @@
-/* eslint-disable no-await-in-loop */
-import type { Connection } from 'typeorm';
 import type { Client } from '@elastic/elasticsearch';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { Connection } from 'typeorm';
+
+import { OllamaEmbeddings } from '@langchain/ollama';
 import Board from '##/modules/posts/infra/typeorm/entities/Board';
 import baseLogger from '##/shared/services/logger';
-import { OllamaEmbeddings } from '@langchain/ollama';
-import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 
 interface LastSyncState {
   lastUpdatedAt: string;
@@ -14,7 +14,7 @@ export class SyncBoardsPipeline {
   private readonly logger = baseLogger.child({ pipeline: 'syncBoardsPipeline' });
 
   private embeddings = new OllamaEmbeddings({
-    model: 'nomic-embed-text'
+    model: 'nomic-embed-text',
   });
 
   private readonly INDEX_NAME = 'boards_v2';
@@ -24,7 +24,7 @@ export class SyncBoardsPipeline {
   constructor(
     private readonly connection: Connection,
     private readonly esClient: Client,
-    private readonly cacheRepository: RedisProvider
+    private readonly cacheRepository: RedisProvider,
   ) {}
 
   public async execute(): Promise<void> {
@@ -32,7 +32,8 @@ export class SyncBoardsPipeline {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
       await this.syncBoards();
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
   }
@@ -47,17 +48,18 @@ export class SyncBoardsPipeline {
           properties: {
             board_id: { type: 'integer' },
             name: {
-              type: 'keyword'
+              type: 'keyword',
             },
             embeddings: {
-              type: 'dense_vector'
+              type: 'dense_vector',
             },
-            parent_id: { type: 'integer' }
-          }
-        }
+            parent_id: { type: 'integer' },
+          },
+        },
       });
       this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
     }
@@ -69,13 +71,15 @@ export class SyncBoardsPipeline {
 
       if (!indexExists.valueOf()) {
         await this.esClient.indices.create({
-          index: this.INDEX_NAME
+          index: this.INDEX_NAME,
         });
         this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
-      } else {
+      }
+      else {
         this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
       throw error;
     }
@@ -90,8 +94,8 @@ export class SyncBoardsPipeline {
         board_id: board.board_id,
         name: board.name,
         parent_id: board.parent_id,
-        embeddings: embeddingsArray[i]
-      }
+        embeddings: embeddingsArray[i],
+      },
     ]);
 
     const results = await this.esClient.bulk({ operations: esBulkContent, refresh: false });
@@ -102,7 +106,7 @@ export class SyncBoardsPipeline {
         .map(item => ({
           id: item.index._id,
           error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index.status
+          status: item.index.status,
         }));
 
       this.logger.error({ errored: erroredItems }, 'Index errored');
@@ -114,7 +118,7 @@ export class SyncBoardsPipeline {
     const boardsRepository = this.connection.getRepository(Board);
 
     let { lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('boards-sync-state')) ?? {
-      lastUpdatedAt: new Date(0).toISOString()
+      lastUpdatedAt: new Date(0).toISOString(),
     };
     const boards = await boardsRepository
       .createQueryBuilder('boards')

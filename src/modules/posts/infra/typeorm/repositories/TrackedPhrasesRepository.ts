@@ -1,11 +1,12 @@
 import type { DeleteResult, Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
 
 import type ICreateTrackedPhraseDTO from '../../../dtos/ICreateTrackedPhraseDTO';
 import type IFindTrackedPhraseDTO from '../../../dtos/IFindTrackedPhraseDTO';
-import TrackedPhrase from '../entities/TrackedPhrase';
-
 import type ITrackedPhrasesRepository from '../../../repositories/ITrackedPhrasesRepository';
+
+import TrackedPhrase from '../entities/TrackedPhrase';
 
 export default class TrackedPhrasesRepository implements ITrackedPhrasesRepository {
   private ormRepository: Repository<TrackedPhrase>;
@@ -24,19 +25,19 @@ export default class TrackedPhrasesRepository implements ITrackedPhrasesReposito
 
   public async find(conditions: IFindTrackedPhraseDTO): Promise<TrackedPhrase[]> {
     return this.ormRepository.find({
-      where: conditions
+      where: conditions,
     });
   }
 
   public async findAll(): Promise<TrackedPhrase[]> {
     return this.ormRepository.find({
-      relations: ['user']
+      relations: ['user'],
     });
   }
 
   public async findOne(conditions: IFindTrackedPhraseDTO): Promise<TrackedPhrase> {
     return this.ormRepository.findOne({
-      where: conditions
+      where: conditions,
     });
   }
 

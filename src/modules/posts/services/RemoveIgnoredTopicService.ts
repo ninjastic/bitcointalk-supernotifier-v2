@@ -1,9 +1,8 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
-
-import IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
+import type IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
 
 @injectable()
 export default class RemoveIgnoredTopicService {
@@ -12,7 +11,7 @@ export default class RemoveIgnoredTopicService {
     private ignoredTopicsRepository: IIgnoredTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(post_id: number, telegram_id?: string): Promise<IgnoredTopic> {

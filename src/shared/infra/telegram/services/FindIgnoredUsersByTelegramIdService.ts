@@ -1,9 +1,8 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import IgnoredUser from '../../../../modules/users/infra/typeorm/entities/IgnoredUser';
-
-import IIgnoredUserRepository from '../../../../modules/users/repositories/IIgnoredUserRepository';
+import type IgnoredUser from '../../../../modules/users/infra/typeorm/entities/IgnoredUser';
+import type IIgnoredUserRepository from '../../../../modules/users/repositories/IIgnoredUserRepository';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
 @injectable()
 export default class FindIgnoredUsersByTelegramIdService {
@@ -12,7 +11,7 @@ export default class FindIgnoredUsersByTelegramIdService {
     private ignoredUserRepository: IIgnoredUserRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(telegram_id: string): Promise<IgnoredUser[]> {

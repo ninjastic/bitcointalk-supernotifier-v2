@@ -1,11 +1,11 @@
-import { container } from 'tsyringe';
 import type { Request, Response } from 'express';
-import Joi from 'joi';
 
-import logger from '../../../services/logger';
+import Joi from 'joi';
+import { container } from 'tsyringe';
 
 import type IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
+import logger from '../../../services/logger';
 import GetAddressesTopUniqueService from '../services/GetAddressesTopUniqueService';
 
 export default class AddressesTopUniqueController {
@@ -21,18 +21,19 @@ export default class AddressesTopUniqueController {
       topic_id: Joi.number(),
       board: Joi.number(),
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
-      limit: Joi.number()
+      limit: Joi.number(),
     });
 
     const query = request.query as unknown;
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -42,14 +43,15 @@ export default class AddressesTopUniqueController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'AddressesTopUniqueController'
+        controller: 'AddressesTopUniqueController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

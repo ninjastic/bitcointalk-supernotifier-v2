@@ -1,17 +1,16 @@
-import { injectable, inject } from 'tsyringe';
-import User from '../../../../modules/users/infra/typeorm/entities/User';
+import { inject, injectable } from 'tsyringe';
+
+import type CreateUserDTO from '../../../../modules/users/dtos/CreateUserDTO';
+import type User from '../../../../modules/users/infra/typeorm/entities/User';
+import type IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
 
 import logger from '../../../services/logger';
-
-import IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
-
-import CreateUserDTO from '../../../../modules/users/dtos/CreateUserDTO';
 
 @injectable()
 export default class UpdateUserByTelegramIdService {
   constructor(
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository
+    private usersRepository: IUsersRepository,
   ) {}
 
   public async execute(telegram_id: string, data: CreateUserDTO): Promise<User> {

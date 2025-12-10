@@ -1,11 +1,11 @@
 import type { Request, Response } from 'express';
-import Joi from 'joi';
-import bodybuilder from 'bodybuilder';
 
-import esClient from '../../../services/elastic';
-import logger from '../../../services/logger';
+import bodybuilder from 'bodybuilder';
+import Joi from 'joi';
 
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import esClient from '../../../services/elastic';
+import logger from '../../../services/logger';
 
 export default class MeritsTopUsersController {
   public async index(request: Request, response: Response): Promise<Response> {
@@ -22,16 +22,17 @@ export default class MeritsTopUsersController {
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
       order: Joi.string().allow('asc', 'desc').insensitive(),
-      limit: Joi.number()
+      limit: Joi.number(),
     });
 
     try {
       await schemaValidation.validateAsync(request.query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -50,16 +51,16 @@ export default class MeritsTopUsersController {
       if (query.after_date) {
         queryBuilder.query('range', {
           date: {
-            gte: query.after_date
-          }
+            gte: query.after_date,
+          },
         });
       }
 
       if (query.before_date) {
         queryBuilder.query('range', {
           date: {
-            lte: query.before_date
-          }
+            lte: query.before_date,
+          },
         });
       }
 
@@ -70,14 +71,15 @@ export default class MeritsTopUsersController {
           const boardsIdList = boards.map(_board => _board.board_id);
 
           queryBuilder.query('terms', 'board_id', boardsIdList);
-        } else {
+        }
+        else {
           queryBuilder.query('terms', 'board_id', [query.board]);
         }
       }
 
       const simpleMatchParams = ['post_id', 'topic_id', 'receiver_uid', 'sender_uid', 'amount'];
 
-      simpleMatchParams.forEach(param => {
+      simpleMatchParams.forEach((param) => {
         if (query[param]) {
           queryBuilder.addQuery('match', param, query[param]);
         }
@@ -92,10 +94,10 @@ export default class MeritsTopUsersController {
         {
           size: Math.min(Number(query.limit || 1000), 1000),
           terms: [{ field: 'sender_uid' }, { field: 'receiver_uid' }],
-          order: { count: query.order?.toString() || 'DESC' }
+          order: { count: query.order?.toString() || 'DESC' },
         },
         'topUsers',
-        agg => agg.aggregation('sum', 'amount', 'count').aggregation('top_hits', { size: 1 }, 'top_hit')
+        agg => agg.aggregation('sum', 'amount', 'count').aggregation('top_hits', { size: 1 }, 'top_hit'),
       );
 
       const body = queryBuilder.build();
@@ -103,7 +105,7 @@ export default class MeritsTopUsersController {
       const results = await esClient.search({
         index: 'merits',
         track_total_hits: true,
-        body
+        body,
       });
 
       const data = (results.aggregations.topUsers as any).buckets.map(bucket => ({
@@ -112,20 +114,21 @@ export default class MeritsTopUsersController {
         receiver: bucket.top_hit.hits.hits[0]._source.receiver,
         receiver_uid: bucket.key[1],
         amount: bucket.count.value,
-        num_transactions: bucket.doc_count
+        num_transactions: bucket.doc_count,
       }));
 
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'MeritsTopUsersController'
+        controller: 'MeritsTopUsersController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

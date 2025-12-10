@@ -1,13 +1,13 @@
 import type { Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
 
-import type IFindAddressesByAuthorDTO from '../../../dtos/IFindAddressesByAuthorDTO';
 import type ICreateAddressDTO from '../../../dtos/ICreateAddressDTO';
+import type IFindAddressesByAuthorDTO from '../../../dtos/IFindAddressesByAuthorDTO';
+import type IFindAddressesConditionsDTO from '../../../dtos/IFindAddressesConditionsDTO';
 import type IAddressesRepository from '../../../repositories/IAddressesRepository';
 
 import Address from '../entities/Address';
-
-import type IFindAddressesConditionsDTO from '../../../dtos/IFindAddressesConditionsDTO';
 
 export default class AddressesRepository implements IAddressesRepository {
   private ormRepository: Repository<Address>;
@@ -37,14 +37,14 @@ export default class AddressesRepository implements IAddressesRepository {
       .createQueryBuilder('addresses')
       .select(['*'])
       .where(`addresses.posts_id @> (:post_id::int4[])`, {
-        post_id: `{${post_id}}`
+        post_id: `{${post_id}}`,
       })
       .execute();
   }
 
   public async findLatestPostId(): Promise<number | undefined> {
     const address = await this.ormRepository.query(
-      'SELECT unnest(posts_id) AS post_id FROM addresses ORDER BY post_id DESC LIMIT 1'
+      'SELECT unnest(posts_id) AS post_id FROM addresses ORDER BY post_id DESC LIMIT 1',
     );
 
     if (address && address[0] && address[0].post_id) {
@@ -69,7 +69,7 @@ export default class AddressesRepository implements IAddressesRepository {
   public async findAuthorsByAddress(address: string): Promise<string[]> {
     return this.ormRepository.query(
       'select p.author, p.author_uid, array_agg(p.post_id) as posts_id from addresses a left join posts p on p.post_id = any(posts_id) where address = $1 group by author, author_uid',
-      [address]
+      [address],
     );
   }
 
@@ -78,17 +78,17 @@ export default class AddressesRepository implements IAddressesRepository {
     limit,
     last_address,
     last_created_at,
-    last_id
+    last_id,
   }: IFindAddressesByAuthorDTO): Promise<string[]> {
     if (last_address && last_created_at && last_id) {
       return this.ormRepository.query(
         'SELECT * FROM addresses WHERE ARRAY[$1::varchar] && array_lowercase(authors) AND (address, created_at, id) > ($3, $4, $5) ORDER BY address, created_at, id DESC LIMIT $2 OFFSET 1',
-        [username, limit, last_address, last_created_at, last_id]
+        [username, limit, last_address, last_created_at, last_id],
       );
     }
     return this.ormRepository.query(
       'SELECT * FROM addresses WHERE ARRAY[$1::varchar] && array_lowercase(authors) ORDER BY address, created_at, id DESC LIMIT $2',
-      [username, limit]
+      [username, limit],
     );
   }
 }

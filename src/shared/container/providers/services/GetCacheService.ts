@@ -1,12 +1,12 @@
 import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../models/ICacheProvider';
+import type ICacheProvider from '../models/ICacheProvider';
 
 @injectable()
 export default class GetCacheService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute<T>(key: string): Promise<T | null> {

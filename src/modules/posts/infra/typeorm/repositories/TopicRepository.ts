@@ -1,5 +1,6 @@
-import { sub } from 'date-fns';
 import type { Repository } from 'typeorm';
+
+import { sub } from 'date-fns';
 import { getRepository } from 'typeorm';
 
 import type ICreateTopicDTO from '../../../dtos/ICreateTopicDTO';
@@ -28,7 +29,7 @@ export default class TopicRepository {
       .where('post.checked = :checked AND post.notified = :notified AND post.date >= :date', {
         checked: false,
         notified: false,
-        date: sub(new Date(), { minutes: 30 })
+        date: sub(new Date(), { minutes: 30 }),
       })
       .getMany();
   }

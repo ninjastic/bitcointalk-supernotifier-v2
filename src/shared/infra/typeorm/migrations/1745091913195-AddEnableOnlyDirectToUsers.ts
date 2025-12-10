@@ -5,7 +5,7 @@ export class AddEnableOnlyDirectToUsers1745091913195 implements MigrationInterfa
     await queryRunner.addColumn('users', {
       name: 'enable_only_direct_mentions',
       type: 'boolean',
-      default: false
+      default: false,
     });
   }
 

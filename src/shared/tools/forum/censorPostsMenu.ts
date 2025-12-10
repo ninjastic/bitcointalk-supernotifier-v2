@@ -1,17 +1,16 @@
-/* eslint-disable no-console */
 import 'dotenv/config';
 import 'reflect-metadata';
-import inquirer from 'inquirer';
 import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 import esClient from '../../services/elastic';
 import logger from '../../services/logger';
 
-type PromptResponse = {
+interface PromptResponse {
   newContent: string;
-};
+}
 
-export const censorPostsMenu = async (): Promise<void> => {
+export async function censorPostsMenu(): Promise<void> {
   const defaultNewContent = 'Censored by TryNinja due to a privacy request';
   let post = null;
 
@@ -21,7 +20,7 @@ export const censorPostsMenu = async (): Promise<void> => {
         type: 'input',
         name: 'post_id',
         message: 'Post ID to edit',
-        validate: async value => {
+        validate: async (value) => {
           if (!value || Number.isNaN(Number(value))) {
             return false;
           }
@@ -30,9 +29,9 @@ export const censorPostsMenu = async (): Promise<void> => {
             index: 'posts',
             query: {
               match: {
-                post_id: value
-              }
-            }
+                post_id: value,
+              },
+            },
           });
 
           if (!search.hits.hits.length) {
@@ -41,15 +40,15 @@ export const censorPostsMenu = async (): Promise<void> => {
 
           post = search.hits.hits.at(0);
           return post !== null;
-        }
+        },
       },
       {
         type: 'input',
         name: 'newContent',
-        default: defaultNewContent
-      }
+        default: defaultNewContent,
+      },
     ])
-    .catch(error => {
+    .catch((error) => {
       logger.error({ error });
       process.exit();
     });
@@ -65,7 +64,7 @@ export const censorPostsMenu = async (): Promise<void> => {
       type: 'confirm',
       name: 'choice',
       message: 'Edit into database?',
-      default: false
+      default: false,
     })
     .catch(() => process.exit())) as { choice: boolean };
 
@@ -74,12 +73,13 @@ export const censorPostsMenu = async (): Promise<void> => {
       index: post._index,
       id: post._id,
       doc: {
-        content: newContent
-      }
+        content: newContent,
+      },
     });
-  } else {
+  }
+  else {
     console.log('Canceled!');
   }
 
   process.exit();
-};
+}

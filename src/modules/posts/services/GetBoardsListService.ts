@@ -20,12 +20,12 @@ export default class GetBoardsListService {
           title: boardToInsert.name,
           value: boardToInsert.board_id,
           parent: boardToInsert.parent_id,
-          children: []
+          children: [],
         });
         return;
       }
 
-      parentIndex = boardsArr.findIndex(organized => {
+      parentIndex = boardsArr.findIndex((organized) => {
         if (!organized.children.length) {
           return false;
         }
@@ -38,24 +38,24 @@ export default class GetBoardsListService {
           title: boardToInsert.name,
           value: boardToInsert.board_id,
           parent: boardToInsert.parent_id,
-          children: []
+          children: [],
         });
       }
 
-      boardsArr.forEach(board => {
-        board.children.forEach(child => {
+      boardsArr.forEach((board) => {
+        board.children.forEach((child) => {
           findAndInsertIntoChildren([child], boardToInsert);
         });
       });
     };
 
-    boards.forEach(board => {
+    boards.forEach((board) => {
       if (!board.parent_id) {
         organizedBoards.push({
           title: board.name,
           value: board.board_id,
           parent_id: board.parent_id,
-          children: []
+          children: [],
         });
       }
 

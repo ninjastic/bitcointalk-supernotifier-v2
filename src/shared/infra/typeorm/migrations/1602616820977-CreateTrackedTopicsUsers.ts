@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateTrackedTopicsUsers1602616820977 implements MigrationInterface {
@@ -14,44 +15,44 @@ export class CreateTrackedTopicsUsers1602616820977 implements MigrationInterface
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'tracked_topic_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'telegram_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'username',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
+            default: 'now()',
+          },
         ],
         foreignKeys: [
           {
             columnNames: ['tracked_topic_id'],
             referencedTableName: 'tracked_topics',
-            referencedColumnNames: ['topic_id']
+            referencedColumnNames: ['topic_id'],
           },
           {
             columnNames: ['telegram_id'],
             referencedTableName: 'users',
-            referencedColumnNames: ['telegram_id']
-          }
-        ]
-      })
+            referencedColumnNames: ['telegram_id'],
+          },
+        ],
+      }),
     );
 
     await queryRunner.query('CREATE INDEX ON tracked_topics_users(telegram_id)');

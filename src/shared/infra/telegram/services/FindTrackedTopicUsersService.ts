@@ -1,9 +1,8 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import TrackedTopicUser from '../../../../modules/posts/infra/typeorm/entities/TrackedTopicUser';
-
-import ITrackedTopicUsersRepository from '../../../../modules/posts/repositories/ITrackedTopicUsersRepository';
+import type TrackedTopicUser from '../../../../modules/posts/infra/typeorm/entities/TrackedTopicUser';
+import type ITrackedTopicUsersRepository from '../../../../modules/posts/repositories/ITrackedTopicUsersRepository';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
 @injectable()
 export default class FindTrackedTopicUsersService {
@@ -12,20 +11,20 @@ export default class FindTrackedTopicUsersService {
     private trackedTopicUsersRepository: ITrackedTopicUsersRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute({
     telegram_id,
     topic_id,
-    username
+    username,
   }: {
     telegram_id?: string;
     topic_id?: number;
     username?: string;
   }): Promise<TrackedTopicUser[]> {
     const cachedTrackedTopics = await this.cacheRepository.recover<TrackedTopicUser[]>(
-      `trackedTopics:${telegram_id}:${topic_id}:${username}`
+      `trackedTopics:${telegram_id}:${topic_id}:${username}`,
     );
 
     if (cachedTrackedTopics) {

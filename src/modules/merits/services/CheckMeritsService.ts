@@ -1,12 +1,12 @@
 import { inject, injectable } from 'tsyringe';
 import { getRepository } from 'typeorm';
 
-import logger from '../../../shared/services/logger';
-import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type IUsersRepository from '../../users/repositories/IUsersRepository';
+import type IMeritsRepository from '../repositories/IMeritsRepository';
 
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import IMeritsRepository from '../repositories/IMeritsRepository';
-import IUsersRepository from '../../users/repositories/IUsersRepository';
+import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
+import logger from '../../../shared/services/logger';
 import { MeritNotification, NotificationType } from '../../notifications/infra/typeorm/entities/Notification';
 
 @injectable()
@@ -19,7 +19,7 @@ export default class CheckMeritsService {
     private usersRepository: IUsersRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(): Promise<void> {
@@ -42,20 +42,21 @@ export default class CheckMeritsService {
           type: NotificationType.MERIT,
           metadata: {
             post_id: merit.post_id,
-            merit_id: merit.id
-          }
+            merit_id: merit.id,
+          },
         };
 
-        const isAlreadyNotified =
-          merit.notified_to.includes(receiverUser.telegram_id) ||
-          (await notificationRepository.findOne({ where: notificationData }));
+        const isAlreadyNotified
+          = merit.notified_to.includes(receiverUser.telegram_id)
+            || (await notificationRepository.findOne({ where: notificationData }));
 
         if (isAlreadyNotified) {
           continue;
         }
 
         const isJobAlreadyInQueue = await this.cacheRepository.recover(meritUserKey);
-        if (isJobAlreadyInQueue) continue;
+        if (isJobAlreadyInQueue)
+          continue;
 
         const redisAnswer = await this.cacheRepository.save(meritUserKey, true, 'EX', 1800);
         if (redisAnswer !== 'OK') {

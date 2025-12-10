@@ -1,9 +1,8 @@
 import { inject, injectable } from 'tsyringe';
 
-import IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
-
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
+import type IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
 
 @injectable()
 export default class GetIgnoredTopicsService {
@@ -12,7 +11,7 @@ export default class GetIgnoredTopicsService {
     private ignoredTopicsRepository: IIgnoredTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(): Promise<IgnoredTopic[]> {

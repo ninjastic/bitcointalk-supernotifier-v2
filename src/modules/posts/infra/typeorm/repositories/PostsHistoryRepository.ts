@@ -1,16 +1,16 @@
 import type { Repository } from 'typeorm';
-import { getRepository, MoreThanOrEqual } from 'typeorm';
+
 import { sub } from 'date-fns';
+import { getRepository, MoreThanOrEqual } from 'typeorm';
+
+import type ICreatePostHistoryDTO from '../../../dtos/ICreatePostHistoryDTO';
+import type IFindAllPostsHistoryDTO from '../../../dtos/IFindAllPostsHistoryDTO';
+import type IFindOnePostHistoryDTO from '../../../dtos/IFindOnePostHistoryDTO';
+import type IPostsHistoryRepository from '../../../repositories/IPostsHistoryRepository';
 
 import esClient from '../../../../../shared/services/elastic';
-
-import PostHistory from '../entities/PostHistory';
-import type IPostsHistoryRepository from '../../../repositories/IPostsHistoryRepository';
-import type IFindOnePostHistoryDTO from '../../../dtos/IFindOnePostHistoryDTO';
-import type IFindAllPostsHistoryDTO from '../../../dtos/IFindAllPostsHistoryDTO';
-import type ICreatePostHistoryDTO from '../../../dtos/ICreatePostHistoryDTO';
-
 import GetBoardChildrensFromIdService from '../../../services/GetBoardChildrensFromIdService';
+import PostHistory from '../entities/PostHistory';
 
 export default class PostsHistoryRepository implements IPostsHistoryRepository {
   private ormRepository: Repository<PostHistory>;
@@ -36,11 +36,11 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       where: {
         checked: false,
         deleted: false,
-        date: MoreThanOrEqual(sub(new Date(), { hours: 3 }))
+        date: MoreThanOrEqual(sub(new Date(), { hours: 3 })),
       },
       order: { post_id: 'DESC' },
       take: limit,
-      relations: ['post']
+      relations: ['post'],
     });
   }
 
@@ -54,9 +54,9 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
         term: {
           'author.keyword': {
             value: author,
-            case_insensitive: true
-          }
-        }
+            case_insensitive: true,
+          },
+        },
       });
     }
 
@@ -74,7 +74,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
 
     if (after_date || before_date) {
       must.push({
-        range: { date: { gte: after_date || null, lte: before_date || null } }
+        range: { date: { gte: after_date || null, lte: before_date || null } },
       });
     }
 
@@ -92,13 +92,13 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
       size: limit,
       query: {
         bool: {
-          must
-        }
+          must,
+        },
       },
-      sort: [{ date: { order: 'desc' } }]
+      sort: [{ date: { order: 'desc' } }],
     });
 
-    const posts_history = results.hits.hits.map(post => {
+    const posts_history = results.hits.hits.map((post) => {
       const postData = post._source;
 
       return {
@@ -109,13 +109,13 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
         board_id: postData.board_id,
         deleted: postData.deleted,
         created_at: postData.created_at,
-        updated_at: postData.updated_at
+        updated_at: postData.updated_at,
       };
     });
 
     const data = {
       total_results: (results.hits.total as { value: number }).value,
-      posts_history
+      posts_history,
     };
 
     return data;

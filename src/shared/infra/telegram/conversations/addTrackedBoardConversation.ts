@@ -1,14 +1,16 @@
-import { container } from 'tsyringe';
 import type { Conversation, ConversationFlavor } from '@grammyjs/conversations';
+
 import { Menu } from '@grammyjs/menu';
 import { replyMenuToContext } from 'grammy-inline-menu';
+import { container } from 'tsyringe';
 
-import type IMenuContext from '../@types/IMenuContext';
-import { mainMenu } from '../menus/mainMenu';
 import type Board from '../../../../modules/posts/infra/typeorm/entities/Board';
+import type IMenuContext from '../@types/IMenuContext';
+
 import TrackedBoardsRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedBoardsRepository';
-import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+import { mainMenu } from '../menus/mainMenu';
 import trackedBoardsMenu from '../menus/trackedBoardsMenu';
 
 export const confirmAddTrackedBoardInlineMenu = new Menu('addTrackedBoardConfirm')
@@ -20,15 +22,12 @@ export const confirmAddTrackedBoardInlineMenu = new Menu('addTrackedBoardConfirm
 
 export const cancelAddTrackedBoardPromptInlineMenu = new Menu('cancelAddTrackedBoard').text({ text: 'Cancel' });
 
-const askForPrompt = async (
-  conversation: Conversation<IMenuContext & ConversationFlavor>,
-  ctx: IMenuContext
-): Promise<Board[] | null> => {
+async function askForPrompt(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext): Promise<Board[] | null> {
   const getBoardsListService = new GetBoardsListService();
   const getBoardChildrensFromIdService = container.resolve(GetBoardChildrensFromIdService);
 
   const promptMessage = await ctx.reply('What is the ID or URL of the board you want to track?', {
-    reply_markup: cancelAddTrackedBoardPromptInlineMenu
+    reply_markup: cancelAddTrackedBoardPromptInlineMenu,
   });
 
   const { message, callbackQuery } = await conversation.wait();
@@ -54,7 +53,8 @@ const askForPrompt = async (
 
   if (text.startsWith('https://bitcointalk.org/index.php?board=')) {
     boardId = Number(text.match(/board=(\d+)/)[1]);
-  } else if (!Number.isNaN(Number(text))) {
+  }
+  else if (!Number.isNaN(Number(text))) {
     boardId = Number(text);
   }
 
@@ -62,7 +62,7 @@ const askForPrompt = async (
   const inputBoard = boards.find(_board => _board.board_id === boardId);
 
   if (!inputBoard) {
-    await ctx.reply("I couldn't find a board with this ID. Let's try again?");
+    await ctx.reply('I couldn\'t find a board with this ID. Let\'s try again?');
     await conversation.skip();
   }
 
@@ -80,7 +80,7 @@ const askForPrompt = async (
 
   await ctx.reply(confirmMessage, {
     parse_mode: 'HTML',
-    reply_markup: confirmAddTrackedBoardInlineMenu
+    reply_markup: confirmAddTrackedBoardInlineMenu,
   });
 
   const answerCb = await conversation.waitForCallbackQuery(/addTrackedBoardConfirm/);
@@ -96,12 +96,9 @@ const askForPrompt = async (
 
   await ctx.api.deleteMessage(ctx.chat.id, answerCb.callbackQuery.message.message_id);
   return askForPrompt(conversation, ctx);
-};
+}
 
-const addTrackedBoardConversation = async (
-  conversation: Conversation<IMenuContext & ConversationFlavor>,
-  ctx: IMenuContext
-): Promise<void> => {
+async function addTrackedBoardConversation(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext): Promise<void> {
   const trackedBoardsRepository = container.resolve(TrackedBoardsRepository);
   const newBoards = await askForPrompt(conversation, ctx);
 
@@ -115,30 +112,31 @@ const addTrackedBoardConversation = async (
     .map(board =>
       trackedBoardsRepository.create({
         board_id: board.board_id,
-        telegram_id: String(ctx.chat.id)
-      })
+        telegram_id: String(ctx.chat.id),
+      }),
     )
     .filter(
-      boardToAdd => !userTrackedTopics.find(userTrackedTopic => userTrackedTopic.board_id === boardToAdd.board_id)
+      boardToAdd => !userTrackedTopics.find(userTrackedTopic => userTrackedTopic.board_id === boardToAdd.board_id),
     );
 
   const insertedTrackedBoards = await conversation.external(async () =>
-    trackedBoardsRepository.batchSave(trackedBoardsToAdd)
+    trackedBoardsRepository.batchSave(trackedBoardsToAdd),
   );
 
   if (insertedTrackedBoards.length) {
     const insertedBoardsText = insertedTrackedBoards
       .map(
         insertedTrackedBoard =>
-          `<b>${newBoards.find(board => insertedTrackedBoard.board_id === board.board_id).name}</b>`
+          `<b>${newBoards.find(board => insertedTrackedBoard.board_id === board.board_id).name}</b>`,
       )
       .join('\n');
     await ctx.reply(`You are now tracking the boards:\n\n${insertedBoardsText}`, { parse_mode: 'HTML' });
-  } else {
+  }
+  else {
     await ctx.reply('You were already tracking these boards.');
   }
 
   await replyMenuToContext(trackedBoardsMenu, ctx, '/tb/');
-};
+}
 
 export default addTrackedBoardConversation;

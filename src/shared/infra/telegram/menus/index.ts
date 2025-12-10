@@ -1,18 +1,18 @@
 import type { Bot } from 'grammy';
 
-import { addTrackedTopicLinkQuestion, addTrackedTopicUserQuestion } from './trackedTopicsMenu';
-import { addTrackedPhraseLinkQuestion } from './trackedPhrasesMenu';
-import { addIgnoredUserQuestion } from './ignoredUsersMenu';
 import { addIgnoredTopicLinkQuestion } from './ignoredTopicsMenu';
+import { addIgnoredUserQuestion } from './ignoredUsersMenu';
+import { addTrackedPhraseLinkQuestion } from './trackedPhrasesMenu';
+import { addTrackedTopicLinkQuestion, addTrackedTopicUserQuestion } from './trackedTopicsMenu';
 
-const setupQuestionMiddlewares = (bot: Bot): void => {
+function setupQuestionMiddlewares(bot: Bot): void {
   bot.use(
     addTrackedTopicLinkQuestion,
     addTrackedTopicUserQuestion,
     addTrackedPhraseLinkQuestion,
     addIgnoredTopicLinkQuestion,
-    addIgnoredUserQuestion
+    addIgnoredUserQuestion,
   );
-};
+}
 
 export { setupQuestionMiddlewares };

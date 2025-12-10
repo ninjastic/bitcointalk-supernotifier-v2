@@ -1,10 +1,8 @@
-import { container } from 'tsyringe';
 import bodybuilder from 'bodybuilder';
-
-import esClient from '../../../services/elastic';
 
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+import esClient from '../../../services/elastic';
 
 export interface IFindMeritsService {
   post_id?: number;
@@ -58,16 +56,16 @@ export default class GetMeritsService {
     if (query.after_date) {
       queryBuilder.query('range', {
         date: {
-          gte: query.after_date
-        }
+          gte: query.after_date,
+        },
       });
     }
 
     if (query.before_date) {
       queryBuilder.query('range', {
         date: {
-          lte: query.before_date
-        }
+          lte: query.before_date,
+        },
       });
     }
 
@@ -78,14 +76,15 @@ export default class GetMeritsService {
         const boardsIdList = boards.map(_board => _board.board_id);
 
         queryBuilder.query('terms', 'board_id', boardsIdList);
-      } else {
+      }
+      else {
         queryBuilder.query('terms', 'board_id', [query.board]);
       }
     }
 
     const simpleMatchParams = ['post_id', 'topic_id', 'receiver_uid', 'sender_uid', 'amount'];
 
-    simpleMatchParams.forEach(param => {
+    simpleMatchParams.forEach((param) => {
       if (query[param]) {
         queryBuilder.addQuery('match', param, query[param]);
       }
@@ -102,13 +101,13 @@ export default class GetMeritsService {
     const results = await esClient.search<Merit>({
       index: 'merits',
       track_total_hits: true,
-      body
+      body,
     });
 
     const getBoardsList = new GetBoardsListService();
     const boards = await getBoardsList.execute(true);
 
-    const data = results.hits.hits.map(merit => {
+    const data = results.hits.hits.map((merit) => {
       const boardName = boards.find(board => board.board_id === merit._source.board_id)?.name;
 
       const meritData = { ...merit._source, board_name: boardName };
@@ -124,7 +123,7 @@ export default class GetMeritsService {
 
     const response = {
       total_results: (results.hits.total as { value: number }).value,
-      merits: data
+      merits: data,
     };
 
     return response;

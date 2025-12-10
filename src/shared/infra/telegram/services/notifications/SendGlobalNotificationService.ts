@@ -1,18 +1,16 @@
-import { injectable, inject, container } from 'tsyringe';
+import type IUsersRepository from '##/modules/users/repositories/IUsersRepository';
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type TelegramBot from '##/shared/infra/telegram/bot';
 
-import logger from '##/shared/services/logger';
-import TelegramBot from '##/shared/infra/telegram/bot';
 import { ADMIN_TELEGRAM_ID } from '##/config/admin';
-
-import IUsersRepository from '##/modules/users/repositories/IUsersRepository';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
-
+import logger from '##/shared/services/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
+import { container, inject, injectable } from 'tsyringe';
 
-type MessageSent = {
+interface MessageSent {
   telegramId: string;
   messageId: number;
-};
+}
 
 @injectable()
 export default class SendGlobalNotificationService {
@@ -21,14 +19,14 @@ export default class SendGlobalNotificationService {
     private usersRepository: IUsersRepository,
 
     @inject('TelegramBot')
-    private bot: TelegramBot
+    private bot: TelegramBot,
   ) {}
 
   private async sendMessageToUser(userTelegramId: string, message: string): Promise<MessageSent> {
     const messageSent = await this.bot.instance.api.sendMessage(userTelegramId, message, {
       parse_mode: 'HTML',
       link_preview_options: { is_disabled: true },
-      reply_markup: { remove_keyboard: true }
+      reply_markup: { remove_keyboard: true },
     });
 
     logger.info({ telegram_id: userTelegramId, message }, 'Global notification was sent');
@@ -46,7 +44,7 @@ export default class SendGlobalNotificationService {
     await this.bot.instance.api.sendMessage(
       608520255,
       `The messages were sent!\n\nID: ${id}\n\n<b>${successed}/${totalUsers} successed (${errored} failed)</b>`,
-      { parse_mode: 'HTML' }
+      { parse_mode: 'HTML' },
     );
   }
 
@@ -60,20 +58,22 @@ export default class SendGlobalNotificationService {
 
     const promises = unblockedUsers.map(
       async (user, index) =>
-        new Promise<void>(resolve => {
+        new Promise<void>((resolve) => {
           setTimeout(async () => {
             try {
               const messageSent = await this.sendMessageToUser(user.telegram_id, message);
               messageIds.push(messageSent);
               successed += 1;
-            } catch (error) {
+            }
+            catch (error) {
               errored += 1;
               await checkBotNotificationError(error, user.telegram_id, { message });
-            } finally {
+            }
+            finally {
               resolve();
             }
           }, 150 * index);
-        })
+        }),
     );
 
     await Promise.allSettled(promises);

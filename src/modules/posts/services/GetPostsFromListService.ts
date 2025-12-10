@@ -1,7 +1,9 @@
-import { container, inject, injectable } from 'tsyringe';
-import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
-import IPostsRepository, { PostFromES } from '../repositories/IPostsRepository';
+import { inject, injectable } from 'tsyringe';
+
+import type { PostFromES } from '../repositories/IPostsRepository';
+import type IPostsRepository from '../repositories/IPostsRepository';
 
 import GetBoardsListService from './GetBoardsListService';
 
@@ -13,7 +15,7 @@ interface Params {
 export default class GetPostsService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository
+    private postsRepository: IPostsRepository,
   ) {}
 
   public async execute({ id_list }: Params): Promise<SearchResponse<PostFromES>> {
@@ -22,7 +24,7 @@ export default class GetPostsService {
     const results = await this.postsRepository.findPostsFromListES(id_list);
     const boards = await getBoardsList.execute(true);
 
-    const data = results.map(post => {
+    const data = results.map((post) => {
       const boardName = boards.find(board => board.board_id === post.board_id)?.name || null;
 
       const postData = { ...post, board_name: boardName };
@@ -39,7 +41,7 @@ export default class GetPostsService {
         board_name: postData.board_name,
         archive: postData.archive,
         created_at: postData.created_at,
-        updated_at: postData.updated_at
+        updated_at: postData.updated_at,
       };
     });
 

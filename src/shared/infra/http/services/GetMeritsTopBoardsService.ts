@@ -26,7 +26,7 @@ export default class GetMeritsTopBoardsService {
   public async execute(query: IFindMeritsService): Promise<Data[]> {
     const queryBuilder = bodybuilder();
 
-    Object.keys(query).forEach(key => {
+    Object.keys(query).forEach((key) => {
       switch (key) {
         case 'receiver':
           return queryBuilder.addQuery('match_phrase', key, query[key]);
@@ -35,14 +35,14 @@ export default class GetMeritsTopBoardsService {
         case 'after_date':
           return queryBuilder.query('range', {
             date: {
-              gte: query[key]
-            }
+              gte: query[key],
+            },
           });
         case 'before_date':
           return queryBuilder.query('range', {
             date: {
-              lte: query[key]
-            }
+              lte: query[key],
+            },
           });
         case 'board_id':
           return queryBuilder.query('terms', key, query[key]);
@@ -56,20 +56,19 @@ export default class GetMeritsTopBoardsService {
     queryBuilder.size(0);
 
     queryBuilder.aggregation('terms', 'board_id', { order: { count: 'desc' }, size: query.limit || 10 }, 'boards', a =>
-      a.aggregation('sum', 'amount', 'count')
-    );
+      a.aggregation('sum', 'amount', 'count'));
 
     const body = queryBuilder.build();
 
     const results = await esClient.search({
       index: 'merits',
       track_total_hits: true,
-      ...body
+      ...body,
     });
 
     const data = (results.aggregations.boards as any).buckets.map(b => ({
       board_id: b.key,
-      count: b.count.value
+      count: b.count.value,
     }));
 
     return data;

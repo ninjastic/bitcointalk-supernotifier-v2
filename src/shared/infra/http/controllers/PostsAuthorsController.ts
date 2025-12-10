@@ -1,9 +1,9 @@
-import { container } from 'tsyringe';
 import type { Request, Response } from 'express';
+
 import Joi from 'joi';
+import { container } from 'tsyringe';
 
 import logger from '../../../services/logger';
-
 import GetPostsAuthorsService from '../services/GetPostsAuthorsService';
 
 export default class PostsAuthorsController {
@@ -18,16 +18,17 @@ export default class PostsAuthorsController {
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
-      limit: Joi.number()
+      limit: Joi.number(),
     });
 
     try {
       await schemaValidation.validateAsync(request.query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -37,14 +38,15 @@ export default class PostsAuthorsController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'PostsAuthorsController'
+        controller: 'PostsAuthorsController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateTrackedUsers1677481351137 implements MigrationInterface {
@@ -12,41 +13,41 @@ export class CreateTrackedUsers1677481351137 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'telegram_id',
-            type: 'bigint'
+            type: 'bigint',
           },
           {
             name: 'username',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
+            default: 'now()',
+          },
         ],
         indices: [
           {
             columnNames: ['telegram_id', 'username'],
-            isUnique: true
-          }
+            isUnique: true,
+          },
         ],
         foreignKeys: [
           {
             referencedTableName: 'users',
             columnNames: ['telegram_id'],
-            referencedColumnNames: ['telegram_id']
-          }
-        ]
-      })
+            referencedColumnNames: ['telegram_id'],
+          },
+        ],
+      }),
     );
   }
 

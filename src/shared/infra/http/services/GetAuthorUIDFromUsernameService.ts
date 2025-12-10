@@ -1,8 +1,9 @@
-import { injectable, inject } from 'tsyringe';
-import esClient from '../../../services/elastic';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
+
+import esClient from '../../../services/elastic';
 
 interface Response {
   author_uid: number;
@@ -16,7 +17,7 @@ interface Params {
 export default class GetAuthorUIDFromUsernameService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute({ username }: Params): Promise<Response> {
@@ -34,10 +35,10 @@ export default class GetAuthorUIDFromUsernameService {
         term: {
           author: {
             value: username,
-            case_insensitive: true
-          }
-        }
-      }
+            case_insensitive: true,
+          },
+        },
+      },
     });
 
     if (!author.hits.hits.length) {
@@ -45,7 +46,7 @@ export default class GetAuthorUIDFromUsernameService {
     }
 
     const data = {
-      author_uid: author.hits.hits[0]?._source.author_uid
+      author_uid: author.hits.hits[0]?._source.author_uid,
     };
 
     await this.cacheRepository.save(`authorUID:${username}`, data);

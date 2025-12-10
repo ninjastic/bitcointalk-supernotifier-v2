@@ -1,33 +1,32 @@
 import 'reflect-metadata';
 import 'module-alias/register';
 import 'dotenv/config';
+import type { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import type { Job } from 'bullmq';
-import { Worker } from 'bullmq';
-import { createConnection } from 'typeorm';
 
 import '../../../container';
-import logger from '../../../services/logger';
-
-import cacheConfig from '../../../../config/cache';
-import { uptimeApi } from '../../../services/api';
-import { queueRepeatableFunction } from '../../../services/utils';
+import { Worker } from 'bullmq';
+import { container } from 'tsyringe';
+import { createConnection } from 'typeorm';
 
 import type {
   ForumScraperQueueInput,
   ForumScraperQueueJobName,
   ForumScraperQueueOutput,
-  JobRecipes
+  JobRecipes,
 } from '../queues/forumScraperQueue';
-import forumScraperQueue from '../queues/forumScraperQueue';
 
+import cacheConfig from '../../../../config/cache';
+import ForumLoginService from '../../../../modules/merits/services/ForumLoginService';
 import ScrapeUserMeritCountService from '../../../../modules/merits/services/ScrapeUserMeritCountService';
 import ScrapeModLogService from '../../../../modules/modlog/services/ScrapeModLogService';
-import ForumLoginService from '../../../../modules/merits/services/ForumLoginService';
-import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
-import type { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
-import { container } from 'tsyringe';
+import { uptimeApi } from '../../../services/api';
+import logger from '../../../services/logger';
+import { queueRepeatableFunction } from '../../../services/utils';
+import forumScraperQueue from '../queues/forumScraperQueue';
 
-const scraper = async () => {
+async function scraper() {
   await createConnection();
   const postScraper = container.resolve<PostScraper>('PostScraper');
   const meritScraper = container.resolve<MeritScraper>('MeritScraper');
@@ -51,23 +50,23 @@ const scraper = async () => {
   };
 
   const jobRecipes: JobRecipes = {
-    scrapePost: async job => {
+    scrapePost: async (job) => {
       const post = await postScraper.scrapePost(job.data.post_id);
       return post;
     },
-    scrapeUserMeritCount: async job => {
+    scrapeUserMeritCount: async (job) => {
       const scrapeUserMeritCount = new ScrapeUserMeritCountService();
       const result = await scrapeUserMeritCount.execute(job.data.uid);
       return result;
     },
-    scrapeTopic: async job => {
+    scrapeTopic: async (job) => {
       const topicPost = await postScraper.scrapeTopicOp(job.data.topic_id);
       return topicPost;
     },
-    scrapePostForChanges: async job => {
+    scrapePostForChanges: async (job) => {
       const result = await postScraper.scrapePostVersion(job.data.post_id);
       return result;
-    }
+    },
   };
 
   const worker = new Worker<ForumScraperQueueInput<any>, ForumScraperQueueOutput<any>, ForumScraperQueueJobName>(
@@ -76,12 +75,12 @@ const scraper = async () => {
       const jobRecipe = jobRecipes[job.name];
 
       if (!jobRecipe) {
-        throw Error(`No job recipe for ${job.name}`);
+        throw new Error(`No job recipe for ${job.name}`);
       }
 
       return jobRecipe(job);
     },
-    { connection: { ...cacheConfig.config.redis, connectionName: 'ScraperQueue' } }
+    { connection: { ...cacheConfig.config.redis, connectionName: 'ScraperQueue' } },
   );
 
   worker.on('active', async (job: Job) => {
@@ -91,7 +90,7 @@ const scraper = async () => {
   worker.on('completed', async (job: Job) => {
     logger.debug(
       { jobName: job.name, jobId: job.id, value: job.returnvalue, data: job.data },
-      `[${worker.name}][Worker] Completed ${job.name}`
+      `[${worker.name}][Worker] Completed ${job.name}`,
     );
   });
 
@@ -99,7 +98,7 @@ const scraper = async () => {
     logger.warn({ jobName: name, jobId: id, error }, `[${worker.name}][Worker] Failed for ${failedReason}`);
   });
 
-  worker.on('error', async error => {
+  worker.on('error', async (error) => {
     logger.error(error, `[${worker.name}][Worker] Error`);
   });
 
@@ -109,6 +108,6 @@ const scraper = async () => {
   queueRepeatableFunction(scrapeRecentPosts, 1000 * 5);
   queueRepeatableFunction(scrapeMerits, 1000 * 15);
   queueRepeatableFunction(scrapeModLog, 100 * 60 * 5);
-};
+}
 
 scraper();

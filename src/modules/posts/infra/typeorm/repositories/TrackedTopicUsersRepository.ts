@@ -1,11 +1,12 @@
 import type { DeleteResult, Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
 
-import TrackedTopicUser from '../entities/TrackedTopicUser';
-
-import type ITrackedTopicUsersRepository from '../../../repositories/ITrackedTopicUsersRepository';
 import type ICreateTrackedTopicUserDTO from '../../../dtos/ICreateTrackedTopicUserDTO';
 import type IFindTrackedTopicUsersDTO from '../../../dtos/IFindTrackedTopicUserDTO';
+import type ITrackedTopicUsersRepository from '../../../repositories/ITrackedTopicUsersRepository';
+
+import TrackedTopicUser from '../entities/TrackedTopicUser';
 
 export default class TrackedTopicUsersRepository implements ITrackedTopicUsersRepository {
   private ormRepository: Repository<TrackedTopicUser>;
@@ -24,13 +25,13 @@ export default class TrackedTopicUsersRepository implements ITrackedTopicUsersRe
 
   public async find(conditions: IFindTrackedTopicUsersDTO): Promise<TrackedTopicUser[]> {
     return this.ormRepository.find({
-      where: conditions
+      where: conditions,
     });
   }
 
   public async findOne(conditions: IFindTrackedTopicUsersDTO): Promise<TrackedTopicUser> {
     return this.ormRepository.findOne({
-      where: conditions
+      where: conditions,
     });
   }
 

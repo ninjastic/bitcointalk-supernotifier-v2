@@ -1,15 +1,15 @@
-import type { HearsContext } from 'grammy';
-import { InputFile } from 'grammy';
 import type { MessageEntity } from '@grammyjs/types';
-import { container } from 'tsyringe';
+import type { HearsContext } from 'grammy';
 
-import puppeteer from 'puppeteer';
-import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
-import type IMenuContext from '../@types/IMenuContext';
 import getPost from '##/modules/posts/services/get-post';
 import logger from '##/shared/services/logger';
+import { InputFile } from 'grammy';
+import puppeteer from 'puppeteer';
 
-const imageCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
+import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
+import type IMenuContext from '../@types/IMenuContext';
+
+async function imageCommand(ctx: HearsContext<IMenuContext>): Promise<void> {
   if (!ctx.message.reply_to_message) {
     return;
   }
@@ -17,7 +17,7 @@ const imageCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
   const { reply_to_message } = ctx.message;
 
   const link = reply_to_message.entities.find(
-    entity => entity.type === 'text_link'
+    entity => entity.type === 'text_link',
   ) as MessageEntity.TextLinkMessageEntity;
   const postId = Number(link && link.url.match(/\.msg(\d+)/)?.at(1));
 
@@ -27,7 +27,7 @@ const imageCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
 
   const post: Post | null = await getPost({ postId, shouldCache: true, shouldScrape: true })
     .then(post => post)
-    .catch(async err => {
+    .catch(async (err) => {
       logger.warn({ err }, '[imageCommand] Failed getPost');
       await ctx.reply(`Could not get post ${postId}, please contact TryNinja.`);
       return null;
@@ -102,13 +102,13 @@ const imageCommand = async (ctx: HearsContext<IMenuContext>): Promise<void> => {
     <span><b>Title:</b> ${post.title}</span>
     <span><b>Author:</b> ${post.author}</span>
     </div>
-    <div class="post">${post.content}</div>`
+    <div class="post">${post.content}</div>`,
   );
   await page.setViewport({ width: 800, height: 600 });
   const screenshot = await page.screenshot({ fullPage: true });
   await browser.close();
 
   await ctx.replyWithPhoto(new InputFile(screenshot), { caption: `Post #${postId}` });
-};
+}
 
 export default imageCommand;

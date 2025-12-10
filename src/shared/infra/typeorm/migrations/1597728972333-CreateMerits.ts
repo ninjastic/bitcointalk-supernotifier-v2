@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateMerits1597728972333 implements MigrationInterface {
@@ -12,67 +13,67 @@ export class CreateMerits1597728972333 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'amount',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'sender',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'sender_uid',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'receiver',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'receiver_uid',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'date',
-            type: 'timestamp with time zone'
+            type: 'timestamp with time zone',
           },
           {
             name: 'post_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'topic_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'notified',
             type: 'boolean',
-            default: false
+            default: false,
           },
           {
             name: 'notified_to',
             type: 'integer',
-            isArray: true
+            isArray: true,
           },
           {
             name: 'checked',
             type: 'boolean',
-            default: false
+            default: false,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
-        ]
-      })
+            default: 'now()',
+          },
+        ],
+      }),
     );
   }
 

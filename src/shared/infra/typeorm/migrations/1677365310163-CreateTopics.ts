@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateTopics1677365310163 implements MigrationInterface {
@@ -12,37 +13,37 @@ export class CreateTopics1677365310163 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'topic_id',
             type: 'integer',
-            isUnique: true
+            isUnique: true,
           },
           {
             name: 'post_id',
             type: 'integer',
-            isUnique: true
+            isUnique: true,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
+            default: 'now()',
+          },
         ],
         foreignKeys: [
           {
             referencedTableName: 'posts',
             columnNames: ['post_id'],
-            referencedColumnNames: ['post_id']
-          }
-        ]
-      })
+            referencedColumnNames: ['post_id'],
+          },
+        ],
+      }),
     );
   }
 

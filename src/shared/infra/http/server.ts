@@ -1,17 +1,16 @@
 import 'reflect-metadata';
 import 'dotenv/config';
 import type { Express } from 'express';
+
+import bodyParser from 'body-parser';
+import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import cors from 'cors';
-import bodyParser from 'body-parser';
 import { createConnection } from 'typeorm';
 
 import '../../container';
-
 import loggerHttp from './middlewares/loggerHttp';
 import rateLimiter from './middlewares/rateLimiter';
-
 import routes from './routes';
 
 class Server {

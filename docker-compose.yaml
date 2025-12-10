@@ -18,7 +18,7 @@ services:
     networks:
       - supernotifier
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      test: [CMD-SHELL, 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -36,7 +36,7 @@ services:
     networks:
       - supernotifier
     healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
+      test: [CMD, redis-cli, -a, '${REDIS_PASSWORD}', ping]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,9 +45,9 @@ services:
     container_name: elasticsearch
     restart: always
     environment:
-      - "discovery.type=single-node"
-      - "xpack.security.enabled=true"
-      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - ES_JAVA_OPTS=-Xms4g -Xmx4g
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
       - ELASTIC_PASSWORD=${ELASTIC_SEARCH_PASSWORD}
@@ -56,18 +56,18 @@ services:
         source: elasticsearch
         target: /usr/share/elasticsearch/data
     ports:
-      - "9200:9200"
+      - '9200:9200'
     networks:
       - supernotifier
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:9200" ]
+      test: [CMD, curl, -f, 'http://localhost:9200']
       interval: 30s
       timeout: 10s
       retries: 5
   ollama:
     image: ollama/ollama:0.6.6
     ports:
-      - "11434:11434"
+      - '11434:11434'
     volumes:
       - ollama-local:/root/.ollama
 

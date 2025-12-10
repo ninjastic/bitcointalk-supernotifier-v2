@@ -1,10 +1,11 @@
 import type { Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
 
 import type CreateIgnoredUserDTO from '../../../dtos/CreateIgnoredUserDTO';
+import type IIgnoredUserRepository from '../../../repositories/IIgnoredUserRepository';
 
 import IgnoredUser from '../entities/IgnoredUser';
-import type IIgnoredUserRepository from '../../../repositories/IIgnoredUserRepository';
 
 export default class IgnoredUserRepository implements IIgnoredUserRepository {
   private ormRepository: Repository<IgnoredUser>;

@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import fs from 'fs';
+import fs from 'node:fs';
 import { createConnection } from 'typeorm';
 
 import Post from '../../modules/posts/infra/typeorm/entities/Post';
@@ -11,32 +11,31 @@ if (!fileName) {
   process.exit(1);
 }
 
-type PostData = {
+interface PostData {
   postId: number;
   title: string;
   content: string;
-};
+}
 
 const rawData = fs.readFileSync(fileName, 'utf8');
 const data: PostData[] = JSON.parse(rawData);
 
-const run = async () => {
+async function run() {
   const connection = await createConnection();
 
   for (const post of data) {
-    // eslint-disable-next-line no-await-in-loop
     await connection
       .createQueryBuilder()
       .update(Post)
       .set({
         title: post.title,
-        content: post.content
+        content: post.content,
       })
       .where('post_id = :postId', { postId: post.postId })
       .execute();
 
     console.log(`Updated post ${post.postId}`);
   }
-};
+}
 
 run();

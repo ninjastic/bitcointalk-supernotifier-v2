@@ -28,8 +28,8 @@ export default class GetAddressDetailsService {
       const { data } = await axios.get(`https://api.ethplorer.io/${route}/${address}`, {
         params: {
           apiKey: process.env.ETHPLORER_APIKEY,
-          type: 'transfer'
-        }
+          type: 'transfer',
+        },
       });
 
       await saveCache.execute(`addressDetails:${address}:${route}`, data, 'EX', 300);

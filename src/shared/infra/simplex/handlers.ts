@@ -1,7 +1,9 @@
-import { ChatInfoType } from 'simplex-chat/dist/response';
-import logger from '##/shared/services/logger';
-import type { SimpleX } from './index';
 import type { CEvt, ChatEvent } from '@simplex-chat/types';
+
+import logger from '##/shared/services/logger';
+import { ChatInfoType } from 'simplex-chat/dist/response';
+
+import type { SimpleX } from './index';
 
 type Handlers = Record<string, (r: ChatEvent, simpleX: SimpleX) => Promise<void>>;
 
@@ -21,17 +23,17 @@ export const handlers: Handlers = {
       forum_user_uid: null,
       enable_mentions: false,
       enable_merits: false,
-      only_direct: false
+      only_direct: false,
     });
 
     await simpleX.sendMessage(
       contactId,
-      'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?'
+      'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?',
     );
 
     await simpleX.db.createConversation({
       contact_id: contactId,
-      data: { step: 'waiting-for-username', forum_username: null, forum_user_uid: null }
+      data: { step: 'waiting-for-username', forum_username: null, forum_user_uid: null },
     });
   },
   contactConnected: async (r: CEvt.ContactConnected, simpleX) => {
@@ -48,7 +50,8 @@ export const handlers: Handlers = {
   },
   newChatItems: async (r: CEvt.NewChatItems, simpleX) => {
     for (const chatItem of r.chatItems) {
-      if (chatItem.chatInfo.type !== ChatInfoType.Direct || !chatItem.chatInfo.contact.contactId) continue;
+      if (chatItem.chatInfo.type !== ChatInfoType.Direct || !chatItem.chatInfo.contact.contactId)
+        continue;
       if (chatItem.chatItem.content.type !== 'rcvMsgContent' || chatItem.chatItem.content.msgContent.type !== 'text')
         continue;
 
@@ -77,7 +80,7 @@ export const handlers: Handlers = {
             await simpleX.db.updateConversation(contactId, {
               step: 'waiting-for-forum-uid',
               forum_username: text,
-              forum_user_uid: conversation.data.forum_user_uid
+              forum_user_uid: conversation.data.forum_user_uid,
             });
             await simpleX.sendMessage(contactId, `Hi, *${text}*! And what's your forum UID?`);
             return;
@@ -88,7 +91,7 @@ export const handlers: Handlers = {
             if (Number.isNaN(forumUserUid)) {
               await simpleX.sendMessage(
                 contactId,
-                `That doesn't seem to be a valid forum UID. Let's try again... What's your forum UID?`
+                `That doesn't seem to be a valid forum UID. Let's try again... What's your forum UID?`,
               );
               return;
             }
@@ -96,12 +99,12 @@ export const handlers: Handlers = {
             await simpleX.db.updateConversation(contactId, {
               step: 'confirm-setup',
               forum_username: conversation.data.forum_username,
-              forum_user_uid: forumUserUid
+              forum_user_uid: forumUserUid,
             });
 
             await simpleX.sendMessage(
               contactId,
-              `Great!\n\nUsername is *${conversation.data.forum_username}*\nForum UID is *${forumUserUid}*\n\n*OK* to confirm\n*RESET* to start again`
+              `Great!\n\nUsername is *${conversation.data.forum_username}*\nForum UID is *${forumUserUid}*\n\n*OK* to confirm\n*RESET* to start again`,
             );
             return;
           }
@@ -112,19 +115,19 @@ export const handlers: Handlers = {
                 forum_username: conversation.data.forum_username,
                 forum_user_uid: conversation.data.forum_user_uid,
                 enable_mentions: true,
-                enable_merits: true
+                enable_merits: true,
               });
 
               await simpleX.db.deleteConversation(contactId);
 
               await simpleX.sendMessage(
                 contactId,
-                `Great, you're good to go!\n\n` +
-                  `You will receive notifications for mentions and merits.\n\n` +
-                  `*Mentions:* ${user.enable_mentions ? 'Enabled' : 'Disabled'}\n` +
-                  `*Merits:* ${user.enable_merits ? 'Enabled' : 'Disabled'}\n\n` +
-                  `- Toggle them with */mentions* and */merits*\n` +
-                  `- Use */help* to see all commands.\n`
+                `Great, you're good to go!\n\n`
+                + `You will receive notifications for mentions and merits.\n\n`
+                + `*Mentions:* ${user.enable_mentions ? 'Enabled' : 'Disabled'}\n`
+                + `*Merits:* ${user.enable_merits ? 'Enabled' : 'Disabled'}\n\n`
+                + `- Toggle them with */mentions* and */merits*\n`
+                + `- Use */help* to see all commands.\n`,
               );
 
               logger.info({ contactId }, 'New contact configured');
@@ -134,10 +137,10 @@ export const handlers: Handlers = {
               await simpleX.db.updateConversation(contactId, {
                 step: 'waiting-for-username',
                 forum_username: null,
-                forum_user_uid: null
+                forum_user_uid: null,
               });
 
-              await simpleX.sendMessage(contactId, "Let's try again... What is your BitcoinTalk username?");
+              await simpleX.sendMessage(contactId, 'Let\'s try again... What is your BitcoinTalk username?');
             }
 
             return;
@@ -146,8 +149,10 @@ export const handlers: Handlers = {
       }
 
       if (text.startsWith('/')) {
-        const command = text.match(/(\/[\w_]+)\s?(.*)?/);
-        if (!command) return;
+        // eslint-disable-next-line regexp/no-useless-quantifier
+        const command = text.match(/(\/\w+)\s?(.*)?/);
+        if (!command)
+          return;
 
         switch (command[1]) {
           case '/help': {
@@ -177,7 +182,7 @@ export const handlers: Handlers = {
               '*/list_ignoreusers* - Lists ignored users',
               '',
               '*/invite* - Get the bot invite address',
-              '*/reset* - Restart bot setup'
+              '*/reset* - Restart bot setup',
             ];
             const message = `Commands:\n\n${commands.join('\n')}`;
 
@@ -194,17 +199,17 @@ export const handlers: Handlers = {
               forum_username: null,
               forum_user_uid: null,
               enable_mentions: false,
-              enable_merits: false
+              enable_merits: false,
             });
 
             await simpleX.sendMessage(
               contactId,
-              'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?'
+              'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?',
             );
 
             await simpleX.db.createConversation({
               contact_id: contactId,
-              data: { step: 'waiting-for-username', forum_username: null, forum_user_uid: null }
+              data: { step: 'waiting-for-username', forum_username: null, forum_user_uid: null },
             });
 
             break;
@@ -218,7 +223,7 @@ export const handlers: Handlers = {
             await simpleX.db.updateUser(contactId, { enable_mentions: !user.enable_mentions });
             await simpleX.sendMessage(
               contactId,
-              `Mentions notifications are now *${user.enable_mentions ? 'disabled' : 'enabled'}*`
+              `Mentions notifications are now *${user.enable_mentions ? 'disabled' : 'enabled'}*`,
             );
             break;
           }
@@ -226,7 +231,7 @@ export const handlers: Handlers = {
             await simpleX.db.updateUser(contactId, { enable_merits: !user.enable_merits });
             await simpleX.sendMessage(
               contactId,
-              `Merits notifications are now *${user.enable_merits ? 'disabled' : 'enabled'}*`
+              `Merits notifications are now *${user.enable_merits ? 'disabled' : 'enabled'}*`,
             );
             break;
           }
@@ -234,7 +239,7 @@ export const handlers: Handlers = {
             await simpleX.db.updateUser(contactId, { only_direct: !user.only_direct });
             await simpleX.sendMessage(
               contactId,
-              `Only direct mentions and quotes are now *${user.only_direct ? 'disabled' : 'enabled'}*`
+              `Only direct mentions and quotes are now *${user.only_direct ? 'disabled' : 'enabled'}*`,
             );
             break;
           }
@@ -248,7 +253,8 @@ export const handlers: Handlers = {
                 const match = text.match(urlRegex);
                 if (match && match[1]) {
                   topicId = Number(match[1]);
-                } else {
+                }
+                else {
                   await simpleX.sendMessage(contactId, `Error: Provided topic is invalid`);
                   break;
                 }
@@ -269,7 +275,7 @@ export const handlers: Handlers = {
             const trackedTopics = await simpleX.db.getTrackedTopics({ contact_id: contactId });
             await simpleX.sendMessage(
               contactId,
-              `Tracked topics: ${trackedTopics.map(topic => `*${topic.topic_id}*`).join(', ')}`
+              `Tracked topics: ${trackedTopics.map(topic => `*${topic.topic_id}*`).join(', ')}`,
             );
             break;
           }
@@ -292,7 +298,8 @@ export const handlers: Handlers = {
                 const match = text.match(urlRegex);
                 if (match && match[1]) {
                   topicId = Number(match[1]);
-                } else {
+                }
+                else {
                   await simpleX.sendMessage(contactId, `Error: Provided topic is invalid`);
                   break;
                 }
@@ -313,7 +320,7 @@ export const handlers: Handlers = {
             const ignoredTopics = await simpleX.db.getIgnoredTopics({ contact_id: contactId });
             await simpleX.sendMessage(
               contactId,
-              `Ignored topics: ${ignoredTopics.map(topic => `*${topic.topic_id}*`).join(', ')}`
+              `Ignored topics: ${ignoredTopics.map(topic => `*${topic.topic_id}*`).join(', ')}`,
             );
             break;
           }
@@ -347,7 +354,7 @@ export const handlers: Handlers = {
             const trackedPhrases = await simpleX.db.getTrackedPhrases({ contact_id: contactId });
             await simpleX.sendMessage(
               contactId,
-              `Tracked phrases: ${trackedPhrases.map(phrase => `*${phrase.phrase}*`).join(', ')}`
+              `Tracked phrases: ${trackedPhrases.map(phrase => `*${phrase.phrase}*`).join(', ')}`,
             );
             break;
           }
@@ -382,7 +389,7 @@ export const handlers: Handlers = {
             const trackedUsers = await simpleX.db.getTrackedUsers({ contact_id: contactId });
             await simpleX.sendMessage(
               contactId,
-              `Tracked users: ${trackedUsers.map(user => `*${user.username}*`).join(', ')}`
+              `Tracked users: ${trackedUsers.map(user => `*${user.username}*`).join(', ')}`,
             );
             break;
           }
@@ -417,7 +424,7 @@ export const handlers: Handlers = {
             const trackedUsers = await simpleX.db.getIgnoredUsers({ contact_id: contactId });
             await simpleX.sendMessage(
               contactId,
-              `Ignored users: ${trackedUsers.map(user => `*${user.username}*`).join(', ')}`
+              `Ignored users: ${trackedUsers.map(user => `*${user.username}*`).join(', ')}`,
             );
             break;
           }
@@ -437,5 +444,5 @@ export const handlers: Handlers = {
   },
   contactDeletedByContact: async (r: CEvt.ContactDeletedByContact, simpleX) => {
     await simpleX.deleteContact(r.contact.contactId);
-  }
+  },
 };

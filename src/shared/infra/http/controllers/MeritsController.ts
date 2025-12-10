@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
+
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
-
 import GetMeritsService from '../services/GetMeritsService';
 
 export default class MeritsController {
@@ -22,16 +22,17 @@ export default class MeritsController {
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
       order: Joi.string().allow('asc', 'desc').insensitive(),
-      limit: Joi.number()
+      limit: Joi.number(),
     });
 
     try {
       await schemaValidation.validateAsync(request.query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -41,14 +42,15 @@ export default class MeritsController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'MeritsController'
+        controller: 'MeritsController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

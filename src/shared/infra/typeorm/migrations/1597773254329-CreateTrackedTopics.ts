@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table, TableForeignKey } from 'typeorm';
 
 export class CreateTrackedTopics1597773254329 implements MigrationInterface {
@@ -12,35 +13,35 @@ export class CreateTrackedTopics1597773254329 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'topic_id',
             type: 'integer',
-            isUnique: true
+            isUnique: true,
           },
           {
             name: 'post_id',
             type: 'integer',
-            isUnique: true
+            isUnique: true,
           },
           {
             name: 'tracking',
             type: 'integer',
-            isArray: true
+            isArray: true,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
-        ]
-      })
+            default: 'now()',
+          },
+        ],
+      }),
     );
 
     await queryRunner.createForeignKey(
@@ -50,8 +51,8 @@ export class CreateTrackedTopics1597773254329 implements MigrationInterface {
         referencedTableName: 'posts',
         referencedColumnNames: ['post_id'],
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE'
-      })
+        onDelete: 'CASCADE',
+      }),
     );
   }
 

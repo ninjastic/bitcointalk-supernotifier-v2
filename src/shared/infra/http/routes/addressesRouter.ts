@@ -1,10 +1,10 @@
 import { Router } from 'express';
 
+import AddressDetailsController from '../controllers/AddressDetailsController';
 import AddressesAuthorsController from '../controllers/AddressesAuthorsController';
 import AddressesController from '../controllers/AddressesController';
-import AddressesUniqueController from '../controllers/AddressesUniqueController';
 import AddressesTopUniqueController from '../controllers/AddressesTopUniqueController';
-import AddressDetailsController from '../controllers/AddressDetailsController';
+import AddressesUniqueController from '../controllers/AddressesUniqueController';
 
 const addressesController = new AddressesController();
 const addressesAuthorsController = new AddressesAuthorsController();

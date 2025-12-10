@@ -1,15 +1,14 @@
 import { inject, injectable } from 'tsyringe';
 
-import Post from '../infra/typeorm/entities/Post';
-
-import IPostsRepository from '../repositories/IPostsRepository';
-import IFindPostsConditionsDTO from '../dtos/IFindPostsConditionsDTO';
+import type IFindPostsConditionsDTO from '../dtos/IFindPostsConditionsDTO';
+import type Post from '../infra/typeorm/entities/Post';
+import type IPostsRepository from '../repositories/IPostsRepository';
 
 @injectable()
 export default class GetPostsService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository
+    private postsRepository: IPostsRepository,
   ) {}
 
   public async execute(conditions: IFindPostsConditionsDTO): Promise<Post[]> {

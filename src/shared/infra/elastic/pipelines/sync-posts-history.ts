@@ -1,10 +1,10 @@
-/* eslint-disable no-await-in-loop */
-import type { Connection } from 'typeorm';
-import { MoreThan } from 'typeorm';
 import type { Client } from '@elastic/elasticsearch';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { Connection } from 'typeorm';
+
 import PostHistory from '##/modules/posts/infra/typeorm/entities/PostHistory';
 import baseLogger from '##/shared/services/logger';
+import { MoreThan } from 'typeorm';
 
 interface LastSyncState {
   lastUpdatedAt: string;
@@ -24,7 +24,7 @@ export class SyncPostsHistoryPipeline {
   constructor(
     private readonly connection: Connection,
     private readonly esClient: Client,
-    private readonly cacheRepository: RedisProvider
+    private readonly cacheRepository: RedisProvider,
   ) {}
 
   public async execute(): Promise<void> {
@@ -32,7 +32,8 @@ export class SyncPostsHistoryPipeline {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
       await this.syncHistory();
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
   }
@@ -49,75 +50,76 @@ export class SyncPostsHistoryPipeline {
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             post_id: {
-              type: 'integer'
+              type: 'integer',
             },
             topic_id: {
-              type: 'integer'
+              type: 'integer',
             },
             author: {
               type: 'text',
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             author_uid: {
-              type: 'integer'
+              type: 'integer',
             },
             title: {
               type: 'text',
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             content: {
               type: 'text',
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             board_id: {
-              type: 'integer'
+              type: 'integer',
             },
             date: {
-              type: 'date'
+              type: 'date',
             },
             version: {
               type: 'text',
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             deleted: {
-              type: 'boolean'
+              type: 'boolean',
             },
             created_at: {
-              type: 'date'
+              type: 'date',
             },
             updated_at: {
-              type: 'date'
-            }
-          }
-        }
+              type: 'date',
+            },
+          },
+        },
       });
       this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
     }
@@ -129,13 +131,15 @@ export class SyncPostsHistoryPipeline {
 
       if (!indexExists.valueOf()) {
         await this.esClient.indices.create({
-          index: this.INDEX_NAME
+          index: this.INDEX_NAME,
         });
         this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
-      } else {
+      }
+      else {
         this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
       throw error;
     }
@@ -157,8 +161,8 @@ export class SyncPostsHistoryPipeline {
         version: history.version,
         deleted: history.deleted,
         created_at: history.created_at,
-        updated_at: history.updated_at
-      }
+        updated_at: history.updated_at,
+      },
     ]);
 
     const batchSize = Math.ceil(esBulkContent.length / this.INDEX_BATCH_SIZE);
@@ -176,7 +180,7 @@ export class SyncPostsHistoryPipeline {
         .map(item => ({
           id: item.index._id,
           error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index.status
+          status: item.index.status,
         }));
 
       this.logger.error({ errored: erroredItems }, 'Index errored');
@@ -188,7 +192,7 @@ export class SyncPostsHistoryPipeline {
     const historyRepository = this.connection.getRepository(PostHistory);
 
     let { lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('posts-history-sync-state')) ?? {
-      lastUpdatedAt: new Date(0).toISOString()
+      lastUpdatedAt: new Date(0).toISOString(),
     };
 
     let stop = false;
@@ -198,9 +202,9 @@ export class SyncPostsHistoryPipeline {
         where: { updated_at: MoreThan(lastUpdatedAt) },
         relations: ['post'],
         order: {
-          updated_at: 'ASC'
+          updated_at: 'ASC',
         },
-        take: this.SYNC_BATCH_SIZE
+        take: this.SYNC_BATCH_SIZE,
       });
 
       if (histories.length) {

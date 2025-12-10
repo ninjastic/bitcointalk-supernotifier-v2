@@ -1,7 +1,7 @@
-/* eslint-disable no-await-in-loop */
-import type { Connection } from 'typeorm';
 import type { Client } from '@elastic/elasticsearch';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { Connection } from 'typeorm';
+
 import PostAddress from '##/modules/posts/infra/typeorm/entities/PostAddress';
 import baseLogger from '##/shared/services/logger';
 
@@ -23,7 +23,7 @@ export class SyncPostsAddressesPipeline {
   constructor(
     private readonly connection: Connection,
     private readonly esClient: Client,
-    private readonly cacheRepository: RedisProvider
+    private readonly cacheRepository: RedisProvider,
   ) {}
 
   public async execute(): Promise<void> {
@@ -31,7 +31,8 @@ export class SyncPostsAddressesPipeline {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
       await this.syncAddresses();
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error: error.message }, 'Error during synchronization');
     }
   }
@@ -48,72 +49,73 @@ export class SyncPostsAddressesPipeline {
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             address: {
               type: 'text',
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             coin: {
               type: 'text',
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             post_id: {
-              type: 'integer'
+              type: 'integer',
             },
             topic_id: {
-              type: 'integer'
+              type: 'integer',
             },
             title: {
               type: 'text',
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             author: {
               type: 'text',
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             author_uid: {
-              type: 'integer'
+              type: 'integer',
             },
             board_id: {
-              type: 'integer'
+              type: 'integer',
             },
             date: {
-              type: 'date'
+              type: 'date',
             },
             archive: {
-              type: 'boolean'
+              type: 'boolean',
             },
             updated_at: {
-              type: 'date'
-            }
-          }
-        }
+              type: 'date',
+            },
+          },
+        },
       });
       this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
     }
@@ -125,13 +127,15 @@ export class SyncPostsAddressesPipeline {
 
       if (!indexExists.valueOf()) {
         await this.esClient.indices.create({
-          index: this.INDEX_NAME
+          index: this.INDEX_NAME,
         });
         this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
-      } else {
+      }
+      else {
         this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
       throw error;
     }
@@ -152,8 +156,8 @@ export class SyncPostsAddressesPipeline {
         board_id: address.post_board_id,
         date: address.post_date,
         archive: address.post_archive,
-        updated_at: new Date(address.updated_at).toISOString()
-      }
+        updated_at: new Date(address.updated_at).toISOString(),
+      },
     ]);
 
     const batchSize = Math.ceil(esBulkContent.length / this.INDEX_BATCH_SIZE);
@@ -171,7 +175,7 @@ export class SyncPostsAddressesPipeline {
         .map(item => ({
           id: item.index._id,
           error: item.index.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index.status
+          status: item.index.status,
         }));
 
       this.logger.error({ errored: erroredItems }, 'Index errored');
@@ -183,7 +187,7 @@ export class SyncPostsAddressesPipeline {
     const addressesRepository = this.connection.getRepository(PostAddress);
 
     let { lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('posts-addresses-sync-state')) ?? {
-      lastUpdatedAt: new Date(0).toISOString()
+      lastUpdatedAt: new Date(0).toISOString(),
     };
 
     let stop = false;
@@ -203,11 +207,11 @@ export class SyncPostsAddressesPipeline {
           'post.author_uid as post_author_uid',
           'post.board_id as post_board_id',
           'post.date as post_date',
-          'post.archive as post_archive'
+          'post.archive as post_archive',
         ])
         .innerJoinAndSelect('posts_addresses.post', 'post')
         .where('posts_addresses.updated_at > :lastUpdatedAt', {
-          lastUpdatedAt
+          lastUpdatedAt,
         })
         .orderBy('posts_addresses.updated_at', 'ASC')
         .limit(this.SYNC_BATCH_SIZE)

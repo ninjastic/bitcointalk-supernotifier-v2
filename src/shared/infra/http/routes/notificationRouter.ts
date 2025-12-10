@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
+
 import { Router } from 'express';
 import Joi from 'joi';
 
-import { addTelegramJob } from '../../bull/queues/telegramQueue';
-
 import NotificationApiKeyRepository from '../../../../modules/users/infra/typeorm/repositories/NotificationApiKeyRepository';
+import { addTelegramJob } from '../../bull/queues/telegramQueue';
 
 const notificationRouter = Router();
 
@@ -13,7 +13,7 @@ notificationRouter.post('/', async (request: Request, response: Response) => {
 
   const validationSchema = Joi.object().keys({
     api_key: Joi.string().required(),
-    message: Joi.string().required()
+    message: Joi.string().required(),
   });
 
   const { error, value: body } = validationSchema.validate(requestBody);
@@ -31,7 +31,7 @@ notificationRouter.post('/', async (request: Request, response: Response) => {
 
   await addTelegramJob('sendApiNotification', {
     telegram_id: notificationApiKey.telegram_id,
-    message: body.message
+    message: body.message,
   });
 
   return response.json({ error: false, message: 'Notification dispatched' });

@@ -1,11 +1,11 @@
-/* eslint-disable no-await-in-loop */
-import type { Connection, ObjectLiteral } from 'typeorm';
 import type { Client } from '@elastic/elasticsearch';
-import Post from 'modules/posts/infra/typeorm/entities/Post';
-import { load } from 'cheerio';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { Connection, ObjectLiteral } from 'typeorm';
+
 import baseLogger from '##/shared/services/logger';
 import { isValidPostgresInt } from '##/shared/services/utils';
+import { load } from 'cheerio';
+import Post from 'modules/posts/infra/typeorm/entities/Post';
 
 interface LastSyncState {
   lastUpdatedAt: string;
@@ -41,18 +41,19 @@ export class SyncPostsPipeline {
   constructor(
     private readonly connection: Connection,
     private readonly esClient: Client,
-    private readonly cacheRepository: RedisProvider
+    private readonly cacheRepository: RedisProvider,
   ) {}
 
   public async execute(
     bootstrap?: boolean,
-    lastPostId?: number
+    lastPostId?: number,
   ): Promise<{ lastUpdatedAt: string; lastPostId: number }> {
     try {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
       return this.syncPosts(bootstrap, lastPostId);
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
   }
@@ -69,19 +70,19 @@ export class SyncPostsPipeline {
                 type: 'custom',
                 tokenizer: 'standard',
                 filter: ['stop', 'asciifolding', 'apostrophe', 'lowercase'],
-                char_filter: ['html_strip']
+                char_filter: ['html_strip'],
               },
               url_analyzer: {
                 type: 'custom',
                 tokenizer: 'standard',
-                filter: ['lowercase', 'url_tokenizer', 'asciifolding']
-              }
+                filter: ['lowercase', 'url_tokenizer', 'asciifolding'],
+              },
             },
             normalizer: {
               lowercase_normalizer: {
                 type: 'custom',
-                filter: ['lowercase']
-              }
+                filter: ['lowercase'],
+              },
             },
             filter: {
               apostrophe: {
@@ -89,7 +90,7 @@ export class SyncPostsPipeline {
                 preserve_original: true,
                 catenate_words: true,
                 split_on_case_change: false,
-                split_on_numerics: false
+                split_on_numerics: false,
               },
               url_tokenizer: {
                 type: 'word_delimiter_graph',
@@ -97,10 +98,10 @@ export class SyncPostsPipeline {
                 split_on_numerics: false,
                 split_on_case_change: false,
                 generate_word_parts: true,
-                generate_number_parts: false
-              }
-            }
-          }
+                generate_number_parts: false,
+              },
+            },
+          },
         },
         mappings: {
           properties: {
@@ -109,26 +110,26 @@ export class SyncPostsPipeline {
             title: {
               type: 'text',
               fields: {
-                keyword: { type: 'keyword' }
-              }
+                keyword: { type: 'keyword' },
+              },
             },
             author: {
               type: 'keyword',
               fields: {
                 lowercase: {
                   type: 'keyword',
-                  normalizer: 'lowercase_normalizer'
-                }
-              }
+                  normalizer: 'lowercase_normalizer',
+                },
+              },
             },
             author_uid: { type: 'integer' },
             content: {
               type: 'text',
-              analyzer: 'html_strip'
+              analyzer: 'html_strip',
             },
             content_without_quotes: {
               type: 'text',
-              analyzer: 'html_strip'
+              analyzer: 'html_strip',
             },
             quotes: {
               type: 'nested',
@@ -138,17 +139,17 @@ export class SyncPostsPipeline {
                   fields: {
                     lowercase: {
                       type: 'keyword',
-                      normalizer: 'lowercase_normalizer'
-                    }
-                  }
+                      normalizer: 'lowercase_normalizer',
+                    },
+                  },
                 },
                 content: {
                   type: 'text',
-                  analyzer: 'html_strip'
+                  analyzer: 'html_strip',
                 },
                 topic_id: { type: 'integer' },
-                post_id: { type: 'integer' }
-              }
+                post_id: { type: 'integer' },
+              },
             },
             date: { type: 'date' },
             board_id: { type: 'integer' },
@@ -156,39 +157,39 @@ export class SyncPostsPipeline {
               type: 'nested',
               properties: {
                 id: {
-                  type: 'keyword'
+                  type: 'keyword',
                 },
                 amount: {
-                  type: 'integer'
+                  type: 'integer',
                 },
                 sender: {
                   type: 'keyword',
                   fields: {
                     lowercase: {
                       type: 'keyword',
-                      normalizer: 'lowercase_normalizer'
-                    }
-                  }
+                      normalizer: 'lowercase_normalizer',
+                    },
+                  },
                 },
                 sender_uid: {
-                  type: 'integer'
+                  type: 'integer',
                 },
                 receiver: {
                   type: 'keyword',
                   fields: {
                     lowercase: {
                       type: 'keyword',
-                      normalizer: 'lowercase_normalizer'
-                    }
-                  }
+                      normalizer: 'lowercase_normalizer',
+                    },
+                  },
                 },
                 receiver_uid: {
-                  type: 'integer'
+                  type: 'integer',
                 },
                 date: {
-                  type: 'date'
-                }
-              }
+                  type: 'date',
+                },
+              },
             },
             merits_sum: { type: 'integer' },
             versions_count: { type: 'integer' },
@@ -201,16 +202,16 @@ export class SyncPostsPipeline {
                 new_title: {
                   type: 'text',
                   fields: {
-                    keyword: { type: 'keyword' }
-                  }
+                    keyword: { type: 'keyword' },
+                  },
                 },
                 new_content: {
                   type: 'text',
-                  analyzer: 'html_strip'
+                  analyzer: 'html_strip',
                 },
                 new_content_without_quotes: {
                   type: 'text',
-                  analyzer: 'html_strip'
+                  analyzer: 'html_strip',
                 },
                 quotes: {
                   type: 'nested',
@@ -220,17 +221,17 @@ export class SyncPostsPipeline {
                       fields: {
                         lowercase: {
                           type: 'keyword',
-                          normalizer: 'lowercase_normalizer'
-                        }
-                      }
+                          normalizer: 'lowercase_normalizer',
+                        },
+                      },
                     },
                     content: {
                       type: 'text',
-                      analyzer: 'html_strip'
+                      analyzer: 'html_strip',
                     },
                     topic_id: { type: 'integer' },
-                    post_id: { type: 'integer' }
-                  }
+                    post_id: { type: 'integer' },
+                  },
                 },
                 edit_date: { type: 'date' },
                 deleted: { type: 'boolean' },
@@ -240,43 +241,44 @@ export class SyncPostsPipeline {
                   fields: {
                     keyword: {
                       type: 'keyword',
-                      ignore_above: 256
-                    }
-                  }
+                      ignore_above: 256,
+                    },
+                  },
                 },
                 image_urls: {
                   type: 'text',
                   analyzer: 'url_analyzer',
                   fields: {
-                    keyword: { type: 'keyword', ignore_above: 256 }
-                  }
+                    keyword: { type: 'keyword', ignore_above: 256 },
+                  },
                 },
-                created_at: { type: 'date' }
-              }
+                created_at: { type: 'date' },
+              },
             },
             urls: {
               type: 'text',
               analyzer: 'url_analyzer',
               fields: {
-                keyword: { type: 'keyword', ignore_above: 256 }
-              }
+                keyword: { type: 'keyword', ignore_above: 256 },
+              },
             },
             image_urls: {
               type: 'text',
               analyzer: 'url_analyzer',
               fields: {
-                keyword: { type: 'keyword', ignore_above: 256 }
-              }
+                keyword: { type: 'keyword', ignore_above: 256 },
+              },
             },
             is_topic_starter: {
-              type: 'boolean'
+              type: 'boolean',
             },
-            updated_at: { type: 'date' }
-          }
-        }
+            updated_at: { type: 'date' },
+          },
+        },
       });
       this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
     }
@@ -288,13 +290,15 @@ export class SyncPostsPipeline {
 
       if (!indexExists.valueOf()) {
         await this.esClient.indices.create({
-          index: this.INDEX_NAME
+          index: this.INDEX_NAME,
         });
         this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
-      } else {
+      }
+      else {
         this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
       throw error;
     }
@@ -310,10 +314,12 @@ export class SyncPostsPipeline {
       const quoteDiv = quoteHeader.next('div.quote');
 
       const isRegularQuote = quoteHeader.children('a:not(.ul)').length === 0;
-      if (isRegularQuote) return;
+      if (isRegularQuote)
+        return;
 
       const authorMatch = quoteHeader.text().match(/Quote from: (.*?) on/);
-      if (!authorMatch) return;
+      if (!authorMatch)
+        return;
 
       const author = authorMatch[1];
 
@@ -338,13 +344,15 @@ export class SyncPostsPipeline {
       const fullQuoteHtml = quoteHeader.prop('outerHTML') + quoteDiv.prop('outerHTML');
 
       const postUrl = quoteHeader.find('a').attr('href');
-      if (!postUrl) return;
+      if (!postUrl)
+        return;
 
       const url = new URL(postUrl);
       const topicParam = url.searchParams.get('topic');
       const hashPart = url.hash;
 
-      if (!topicParam || !hashPart) return;
+      if (!topicParam || !hashPart)
+        return;
 
       let topicId = Number(topicParam.split('.')[0]);
       let postId = Number(hashPart.split('msg')[1]);
@@ -361,7 +369,7 @@ export class SyncPostsPipeline {
         content: quoteText.trim(),
         author,
         topic_id: topicId,
-        post_id: postId
+        post_id: postId,
       });
 
       contentWithoutQuotes = contentWithoutQuotes.replace(fullQuoteHtml, '');
@@ -390,7 +398,8 @@ export class SyncPostsPipeline {
 
           try {
             src = imageUrl ? decodeURIComponent(imageUrl) : src;
-          } catch (error) {
+          }
+          catch (error) {
             this.logger.warn({ src }, '[SyncPosts] Invalid decodeURIComponent image url');
           }
         }
@@ -420,7 +429,7 @@ export class SyncPostsPipeline {
       content_without_quotes: contentWithoutQuotes,
       quotes,
       urls: Array.from(urls),
-      image_urls: Array.from(imageUrls)
+      image_urls: Array.from(imageUrls),
     };
   }
 
@@ -433,8 +442,8 @@ export class SyncPostsPipeline {
       const operationInfo = {
         update: {
           _index: this.INDEX_NAME,
-          _id: post.post_id.toString()
-        }
+          _id: post.post_id.toString(),
+        },
       };
 
       const operationContent = {
@@ -451,9 +460,9 @@ export class SyncPostsPipeline {
           board_id: post.board_id,
           urls,
           image_urls,
-          updated_at: new Date(post.updated_at).toISOString()
+          updated_at: new Date(post.updated_at).toISOString(),
         },
-        doc_as_upsert: true
+        doc_as_upsert: true,
       };
 
       if (chunks.length === 0) {
@@ -484,7 +493,7 @@ export class SyncPostsPipeline {
         .map(item => ({
           id: item.update?._id,
           error: item.update?.error,
-          status: item.update?.status
+          status: item.update?.status,
         }));
 
       this.logger.error({ errored: erroredItems }, 'Update errored');
@@ -501,7 +510,8 @@ export class SyncPostsPipeline {
     if (type === 'updated_at') {
       where = ['posts.updated_at > :lastUpdatedAt', { lastUpdatedAt: last }];
       orderBy = ['posts.updated_at', 'ASC'];
-    } else if (type === 'post_id') {
+    }
+    else if (type === 'post_id') {
       where = ['posts.post_id > :lastPostId', { lastPostId: last }];
       orderBy = ['posts.post_id', 'ASC'];
     }
@@ -519,7 +529,7 @@ export class SyncPostsPipeline {
 
   private async syncPosts(
     bootstrap?: boolean,
-    bootstrapLastPostId?: number
+    bootstrapLastPostId?: number,
   ): Promise<{ lastUpdatedAt: string; lastPostId: number }> {
     let lastUpdatedAt: string;
     let lastPostId: number;
@@ -527,21 +537,22 @@ export class SyncPostsPipeline {
     if (bootstrap) {
       lastUpdatedAt = new Date(0).toISOString();
       lastPostId = bootstrapLastPostId;
-    } else {
+    }
+    else {
       ({ lastUpdatedAt, lastPostId } = (await this.cacheRepository.recover<LastSyncState>('syncState:posts')) ?? {
         lastUpdatedAt: new Date(0).toISOString(),
-        lastPostId: 0
+        lastPostId: 0,
       });
     }
 
     const lastSync = bootstrap
       ? {
           type: 'post_id' as 'post_id' | 'updated_at',
-          last: lastPostId
+          last: lastPostId,
         }
       : {
           type: 'updated_at' as 'post_id' | 'updated_at',
-          last: lastUpdatedAt
+          last: lastUpdatedAt,
         };
 
     let stop = false;
@@ -557,7 +568,8 @@ export class SyncPostsPipeline {
 
         if (lastSync.type === 'updated_at') {
           lastSync.last = lastUpdatedAt;
-        } else if (lastSync.type === 'post_id') {
+        }
+        else if (lastSync.type === 'post_id') {
           lastSync.last = lastPostId;
         }
 
@@ -566,7 +578,7 @@ export class SyncPostsPipeline {
         }
 
         this.logger.debug(
-          `Processed ${posts.length} posts. Last updated_at: ${lastUpdatedAt} | Last post_id: ${lastPostId}`
+          `Processed ${posts.length} posts. Last updated_at: ${lastUpdatedAt} | Last post_id: ${lastPostId}`,
         );
       }
 

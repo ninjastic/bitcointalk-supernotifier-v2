@@ -1,11 +1,11 @@
 import { container } from 'tsyringe';
-import esClient from '../../../services/elastic';
 
 import type IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
+import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
-import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import esClient from '../../../services/elastic';
 import { getCensorJSON } from '../../../services/utils';
 
 interface Address {
@@ -56,9 +56,9 @@ export default class GetAddressesTopUniqueService {
         term: {
           'author.keyword': {
             value: author,
-            case_insensitive: true
-          }
-        }
+            case_insensitive: true,
+          },
+        },
       });
     }
 
@@ -73,7 +73,8 @@ export default class GetAddressesTopUniqueService {
         const boardsIdList = boards.map(_board => _board.board_id);
 
         must.push({ terms: { board_id: boardsIdList } });
-      } else {
+      }
+      else {
         must.push({ terms: { board_id: [board] } });
       }
     }
@@ -90,38 +91,38 @@ export default class GetAddressesTopUniqueService {
       query: {
         bool: {
           must,
-          must_not
-        }
+          must_not,
+        },
       },
       aggs: {
         addresses: {
           terms: {
             field: 'address.keyword',
-            size: Math.min(limit || 10, 100)
+            size: Math.min(limit || 10, 100),
           },
           aggs: {
             coin: {
               top_hits: {
                 size: 1,
                 _source: {
-                  includes: ['coin']
-                }
-              }
-            }
-          }
-        }
-      }
+                  includes: ['coin'],
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const addresses = (results.aggregations.addresses as any).buckets.map(record => ({
       address: record.key,
       coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
-      count: record.doc_count
+      count: record.doc_count,
     }));
 
     const data = {
       total_results: addresses.length,
-      addresses
+      addresses,
     };
 
     await saveCache.execute(`users:AddressesTopUnique:${JSON.stringify(conditions)}`, data, 'EX', 600);

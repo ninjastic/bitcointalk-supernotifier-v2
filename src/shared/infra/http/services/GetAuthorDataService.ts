@@ -1,11 +1,11 @@
 import { container } from 'tsyringe';
 
-import esClient from '../../../services/elastic';
+import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
+import esClient from '../../../services/elastic';
 import GetAuthorBaseDataService from './GetAuthorBaseDataService';
-import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 
 interface Data {
   author: string;
@@ -42,28 +42,28 @@ export default class GetUserDataService {
       size: 1,
       query: {
         match: {
-          author_uid: authorInfo.author_uid
-        }
+          author_uid: authorInfo.author_uid,
+        },
       },
       aggs: {
         posts: {
           value_count: {
-            field: 'post_id'
-          }
+            field: 'post_id',
+          },
         },
         usernames: {
           terms: {
             field: 'author',
-            size: 10
-          }
-        }
-      }
+            size: 10,
+          },
+        },
+      },
     });
 
     const data = {
       ...authorInfo,
       ...results.hits.hits[0]?._source,
-      posts_count: (results.hits.total as { value: number }).value
+      posts_count: (results.hits.total as { value: number }).value,
     };
 
     await saveCache.execute(`userData:${author_uid}`, data, 'EX', 180);

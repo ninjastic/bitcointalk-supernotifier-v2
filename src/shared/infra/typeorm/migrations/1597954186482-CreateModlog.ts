@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateModlog1597954186482 implements MigrationInterface {
@@ -12,53 +13,53 @@ export class CreateModlog1597954186482 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'type',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'topic_id',
             type: 'integer',
-            isNullable: true
+            isNullable: true,
           },
           {
             name: 'user_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'title',
             type: 'varchar',
-            isNullable: true
+            isNullable: true,
           },
           {
             name: 'notified',
             type: 'boolean',
-            default: false
+            default: false,
           },
           {
             name: 'notified_to',
             type: 'integer',
-            isArray: true
+            isArray: true,
           },
           {
             name: 'checked',
             type: 'boolean',
-            default: false
+            default: false,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
-        ]
-      })
+            default: 'now()',
+          },
+        ],
+      }),
     );
   }
 

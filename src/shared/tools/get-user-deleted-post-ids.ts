@@ -1,6 +1,7 @@
 import 'dotenv/config';
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs';
+import path from 'node:path';
+
 import esClient from '../services/elastic';
 
 const fileName = process.argv[2];
@@ -19,13 +20,13 @@ if (!USER_ID) {
 const rawData = fs.readFileSync(fileName, 'utf8');
 const data: number[] = JSON.parse(rawData);
 
-const saveIdsToJson = (ids: string[]) => {
+function saveIdsToJson(ids: string[]) {
   const jsonString = JSON.stringify(ids, null, 2);
   const caminhoArquivo = path.join(process.cwd(), `user-posts-deleted-ids.${USER_ID}.json`);
   fs.writeFileSync(caminhoArquivo, jsonString, 'utf-8');
-};
+}
 
-const main = async () => {
+async function main() {
   const results = await esClient.search({
     index: 'posts',
     track_total_hits: true,
@@ -36,30 +37,30 @@ const main = async () => {
           {
             term: {
               author_uid: {
-                value: USER_ID
-              }
-            }
+                value: USER_ID,
+              },
+            },
           },
           {
             range: {
               date: {
-                gte: '2023-08-01'
-              }
-            }
-          }
+                gte: '2023-08-01',
+              },
+            },
+          },
         ],
         must_not: {
           terms: {
-            post_id: data
-          }
-        }
-      }
-    }
+            post_id: data,
+          },
+        },
+      },
+    },
   });
 
   const ids = results.hits.hits.map(hit => hit._id);
   console.log('Results:', ids.length);
   saveIdsToJson(ids);
-};
+}
 
 main();

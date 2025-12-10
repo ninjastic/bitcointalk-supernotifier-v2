@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { TableColumn } from 'typeorm';
 
 export class AddIsGroupToUsers1683437850770 implements MigrationInterface {
@@ -8,8 +9,8 @@ export class AddIsGroupToUsers1683437850770 implements MigrationInterface {
       new TableColumn({
         name: 'is_group',
         type: 'boolean',
-        default: false
-      })
+        default: false,
+      }),
     );
 
     await queryRunner.query('ALTER TABLE users ALTER COLUMN username DROP NOT NULL');

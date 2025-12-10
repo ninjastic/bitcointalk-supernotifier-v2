@@ -1,15 +1,14 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import IPostsRepository from '../repositories/IPostsRepository';
-
-import Post from '../infra/typeorm/entities/Post';
-import CreatePostDTO from '../dtos/CreatePostDTO';
+import type CreatePostDTO from '../dtos/CreatePostDTO';
+import type Post from '../infra/typeorm/entities/Post';
+import type IPostsRepository from '../repositories/IPostsRepository';
 
 @injectable()
 export default class CreatePostService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository
+    private postsRepository: IPostsRepository,
   ) {}
 
   public execute(post: CreatePostDTO): Post {

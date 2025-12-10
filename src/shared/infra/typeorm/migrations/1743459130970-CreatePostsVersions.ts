@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreatePostsVersions1743459130970 implements MigrationInterface {
@@ -12,42 +13,42 @@ export class CreatePostsVersions1743459130970 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'post_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'new_title',
             type: 'varchar',
-            isNullable: true
+            isNullable: true,
           },
           {
             name: 'new_content',
             type: 'varchar',
-            isNullable: true
+            isNullable: true,
           },
           {
             name: 'edit_date',
             type: 'timestamp with time zone',
-            isNullable: true
+            isNullable: true,
           },
           {
             name: 'deleted',
             type: 'boolean',
-            default: false
+            default: false,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
+            default: 'now()',
+          },
         ],
         foreignKeys: [
           {
@@ -55,11 +56,11 @@ export class CreatePostsVersions1743459130970 implements MigrationInterface {
             referencedTableName: 'posts',
             referencedColumnNames: ['post_id'],
             onUpdate: 'CASCADE',
-            onDelete: 'CASCADE'
-          }
+            onDelete: 'CASCADE',
+          },
         ],
-        indices: [{ columnNames: ['post_id', 'edit_date', 'created_at'] }]
-      })
+        indices: [{ columnNames: ['post_id', 'edit_date', 'created_at'] }],
+      }),
     );
   }
 

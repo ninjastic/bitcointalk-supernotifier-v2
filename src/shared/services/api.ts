@@ -1,6 +1,6 @@
 import axios from 'axios';
-import iconv from 'iconv-lite';
 import { add, isBefore } from 'date-fns';
+import iconv from 'iconv-lite';
 import UserAgent from 'user-agents';
 
 const MAX_REQUESTS_COUNT = 1;
@@ -13,24 +13,24 @@ export const api = axios.create({
   baseURL: 'https://bitcointalk.org',
   timeout: 5000,
   headers: {
-    Cookie: process.env.BITCOINTALK_COOKIE || '',
+    'Cookie': process.env.BITCOINTALK_COOKIE || '',
     'User-Agent': new UserAgent().toString(),
-    'Cache-Control': 'no-cache'
+    'Cache-Control': 'no-cache',
   },
   responseType: 'arraybuffer',
-  responseEncoding: 'binary'
+  responseEncoding: 'binary',
 });
 
 export const uptimeApi = axios.create({
-  baseURL: 'https://betteruptime.com/api/v1'
+  baseURL: 'https://betteruptime.com/api/v1',
 });
 
 api.interceptors.request.use(
   config =>
-    new Promise(resolve => {
+    new Promise((resolve) => {
       const interval = setInterval(() => {
         const NEXT_ALLOWED_REQUEST = add(LAST_REQUEST, {
-          seconds: INTERVAL_MS / 1000
+          seconds: INTERVAL_MS / 1000,
         });
 
         if (config.url === 'index.php?action=recent' && isBefore(NEXT_ALLOWED_REQUEST, LAST_REQUEST)) {
@@ -40,7 +40,8 @@ api.interceptors.request.use(
 
           clearInterval(interval);
           resolve(config);
-        } else if (PENDING_REQUESTS < MAX_REQUESTS_COUNT && !WAITING) {
+        }
+        else if (PENDING_REQUESTS < MAX_REQUESTS_COUNT && !WAITING) {
           PENDING_REQUESTS += 1;
           LAST_REQUEST = new Date();
 
@@ -48,11 +49,11 @@ api.interceptors.request.use(
           resolve(config);
         }
       }, INTERVAL_MS);
-    })
+    }),
 );
 
 api.interceptors.response.use(
-  response => {
+  (response) => {
     PENDING_REQUESTS = Math.max(0, PENDING_REQUESTS - 1);
 
     if (response.config.url === 'index.php?action=recent') {
@@ -62,13 +63,13 @@ api.interceptors.response.use(
     response.data = iconv.decode(response.data, 'WINDOWS-1252');
     return Promise.resolve(response);
   },
-  error => {
+  (error) => {
     PENDING_REQUESTS = Math.max(0, PENDING_REQUESTS - 1);
 
     WAITING = false;
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

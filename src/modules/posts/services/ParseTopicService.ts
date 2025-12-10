@@ -23,8 +23,8 @@ export default class ParseTopicService {
     $(posts)
       .find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr')
       .toArray()
-      .forEach(e => {
-        const postHeader = $(e).find("td.td_headerandpost td > div[id*='subject'] > a");
+      .forEach((e) => {
+        const postHeader = $(e).find('td.td_headerandpost td > div[id*=\'subject\'] > a');
 
         if (postHeader && postHeader.attr('href')) {
           if (!found) {
@@ -33,7 +33,7 @@ export default class ParseTopicService {
             const post_id = Number(
               $(postHeader)
                 .attr('href')
-                .match(/\d\.msg(\d+)#msg/i)[1]
+                .match(/\d\.msg(\d+)#msg/i)[1],
             );
             const title = postHeader.text().trim();
             const author = receiver.html();
@@ -51,7 +51,8 @@ export default class ParseTopicService {
               const boardIdRegEx = /board=(\d+)/;
               const boardUrl = $(board).find('a').attr('href');
 
-              if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) return;
+              if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board='))
+                return;
 
               if (boardIndex < length - 1 && boardIndex !== 0) {
                 const boardId = boardUrl.match(boardIdRegEx)[1];
@@ -70,7 +71,7 @@ export default class ParseTopicService {
                 .find('td.td_headerandpost > table:nth-child(1) div:nth-child(2)')
                 .text()
                 .replace('Today at', today)
-                .replace(/Last edit:.*/, '')
+                .replace(/Last edit:.*/, ''),
             );
 
             post = createPost.execute({
@@ -85,7 +86,7 @@ export default class ParseTopicService {
               board_id: boardsArray[boardsArray.length - 1],
               checked: false,
               notified: false,
-              notified_to: []
+              notified_to: [],
             });
 
             found = true;

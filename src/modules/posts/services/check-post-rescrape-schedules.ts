@@ -1,12 +1,13 @@
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+
 import { isBefore } from 'date-fns';
 import { container } from 'tsyringe';
 
 import { addForumScraperJob } from '../../../shared/infra/bull/queues/forumScraperQueue';
-import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 
-export type RescrapeSchedule = { time: number; post_id: number };
+export interface RescrapeSchedule { time: number; post_id: number }
 
-const checkPostRescrapeSchedules = async () => {
+async function checkPostRescrapeSchedules() {
   const postScraper = container.resolve<PostScraper>('PostScraper');
   const rescrapeSchedules = await postScraper.getScheduledPostRescrapes();
 
@@ -17,13 +18,13 @@ const checkPostRescrapeSchedules = async () => {
 
   for await (const rescrapeSchedule of rescrapeSchedulesToRun) {
     const newJob = await addForumScraperJob('scrapePostForChanges', {
-      post_id: rescrapeSchedule.post_id
+      post_id: rescrapeSchedule.post_id,
     });
 
     if (newJob) {
       await postScraper.deleteScheduledPostRescrape(rescrapeSchedule);
     }
   }
-};
+}
 
 export default checkPostRescrapeSchedules;

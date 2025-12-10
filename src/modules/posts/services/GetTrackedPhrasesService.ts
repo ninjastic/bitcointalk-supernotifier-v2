@@ -1,9 +1,8 @@
 import { inject, injectable } from 'tsyringe';
 
-import TrackedPhrase from '../infra/typeorm/entities/TrackedPhrase';
-
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import ITrackedPhrasesRepository from '../repositories/ITrackedPhrasesRepository';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type TrackedPhrase from '../infra/typeorm/entities/TrackedPhrase';
+import type ITrackedPhrasesRepository from '../repositories/ITrackedPhrasesRepository';
 
 @injectable()
 export default class GetTrackedPhrasesService {
@@ -12,7 +11,7 @@ export default class GetTrackedPhrasesService {
     private trackedPhrasesRepository: ITrackedPhrasesRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(): Promise<TrackedPhrase[]> {

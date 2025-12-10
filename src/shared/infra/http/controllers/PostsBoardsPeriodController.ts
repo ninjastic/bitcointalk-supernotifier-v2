@@ -1,12 +1,13 @@
 import type { Request, Response } from 'express';
-import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
+
+import { addMinutes, endOfHour, startOfHour, sub } from 'date-fns';
 import Joi from 'joi';
 
-import logger from '../../../services/logger';
-
 import type { GetPostsBoardsPeriodParams } from '../services/GetPostsBoardsPeriodService';
-import GetPostsBoardsPeriodService from '../services/GetPostsBoardsPeriodService';
+
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+import logger from '../../../services/logger';
+import GetPostsBoardsPeriodService from '../services/GetPostsBoardsPeriodService';
 
 export default class PostsBoardsPeriodController {
   public async show(request: Request, response: Response): Promise<Response> {
@@ -23,23 +24,24 @@ export default class PostsBoardsPeriodController {
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
       interval: Joi.string(),
-      limit: Joi.number().allow('', null)
+      limit: Joi.number().allow('', null),
     });
 
     const query = {
       from: (request.query.from || defaultFrom) as string,
       to: (request.query.to || defaultTo) as string,
       interval: (request.query.interval || '1h') as string,
-      limit: Number(request.query.limit) || null
+      limit: Number(request.query.limit) || null,
     };
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -49,23 +51,24 @@ export default class PostsBoardsPeriodController {
 
       const data = results.map(result => ({
         board_name: boards.find(board => board.board_id === result.board_id)?.name,
-        ...result
+        ...result,
       }));
 
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(
         {
           error,
-          controller: 'PostsBoardsPeriodController'
+          controller: 'PostsBoardsPeriodController',
         },
-        'Error on '
+        'Error on ',
       );
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

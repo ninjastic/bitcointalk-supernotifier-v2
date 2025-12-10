@@ -1,70 +1,70 @@
-/* eslint-disable no-console */
 import 'dotenv/config';
 import 'reflect-metadata';
-import { getManager } from 'typeorm';
+import chalk from 'chalk';
 import inquirer from 'inquirer';
 import { container } from 'tsyringe';
 
 import '../../container';
 
-import chalk from 'chalk';
-import logger from '../../services/logger';
+import { getManager } from 'typeorm';
+
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';
 import CreatePostService from '../../../modules/posts/services/CreatePostService';
+import logger from '../../services/logger';
 
-export const createPostMenu = async (): Promise<void> =>
-  inquirer
+export async function createPostMenu(): Promise<void> {
+  return inquirer
     .prompt([
       {
         type: 'input',
         name: 'title',
         message: `Title of the post`,
         initial: 'This is a post',
-        validate: value => value
+        validate: value => value,
       },
       {
         type: 'input',
         name: 'content',
         message: 'Content of the post',
         initial: 'Hello @TryNinja!',
-        validate: value => value
+        validate: value => value,
       },
       {
         type: 'input',
         name: 'author',
         message: 'Author of the post',
         initial: 'satoshi',
-        validate: value => value
+        validate: value => value,
       },
       {
         type: 'input',
         name: 'author_uid',
         message: 'Author UID of the post',
         initial: '3',
-        validate: value => value && !Number.isNaN(Number(value))
+        validate: value => value && !Number.isNaN(Number(value)),
       },
       {
         type: 'input',
         name: 'board_id',
         message: 'Board ID of the post',
         initial: '24',
-        validate: value => value && !Number.isNaN(Number(value))
+        validate: value => value && !Number.isNaN(Number(value)),
       },
       {
         type: 'input',
         name: 'post_id',
         message: 'ID of the post (optional)',
-        validate: value => !Number.isNaN(Number(value))
+        validate: value => !Number.isNaN(Number(value)),
       },
       {
         type: 'input',
         name: 'topic_id',
         message: 'Topic ID of the post',
         initial: '5248878',
-        validate: value => value && !Number.isNaN(Number(value))
-      }
+        validate: value => value && !Number.isNaN(Number(value)),
+      },
     ])
-    .then(async response => {
+    .then(async (response) => {
       const randomId = Math.floor(Math.random() * Math.floor(10000));
       const createPost = container.resolve(CreatePostService);
 
@@ -76,7 +76,7 @@ export const createPostMenu = async (): Promise<void> =>
         notified_to: [],
         checked: false,
         boards: [],
-        archive: false
+        archive: false,
       } as Post;
 
       const createdPost = createPost.execute(post);
@@ -90,7 +90,7 @@ export const createPostMenu = async (): Promise<void> =>
           type: 'confirm',
           name: 'choice',
           message: 'Insert into database?',
-          default: false
+          default: false,
         })
         .catch(() => process.exit())) as { choice: boolean };
 
@@ -105,10 +105,12 @@ export const createPostMenu = async (): Promise<void> =>
           .onConflict('("post_id") DO NOTHING')
           .execute()
           .then(r => console.info(`Inserted with id ${r.identifiers[0].id}`));
-      } else {
+      }
+      else {
         console.info('Canceled!');
       }
 
       process.exit();
     })
     .catch(err => logger.error(err));
+}

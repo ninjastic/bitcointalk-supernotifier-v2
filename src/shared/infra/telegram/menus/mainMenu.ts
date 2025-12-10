@@ -2,27 +2,29 @@ import { MenuMiddleware, MenuTemplate } from 'grammy-inline-menu';
 
 import type IMenuContext from '../@types/IMenuContext';
 
-import trackedTopicsMenu from './trackedTopicsMenu';
-import trackedPhrasesMenu from './trackedPhrasesMenu';
-import trackedBoardsMenu from './trackedBoardsMenu';
-import trackedUsersMenu from './trackedUsersMenu';
-import ignoredUsersMenu from './ignoredUsersMenu';
-import ignoredTopicsMenu from './ignoredTopicsMenu';
-import ignoredBoardsMenu from './ignoredBoardsMenu';
-import notificationsMenu from './notificationsMenu';
 import aboutMenu from './aboutMenu';
+import ignoredBoardsMenu from './ignoredBoardsMenu';
+import ignoredTopicsMenu from './ignoredTopicsMenu';
+import ignoredUsersMenu from './ignoredUsersMenu';
+import notificationsMenu from './notificationsMenu';
+import trackedBoardsMenu from './trackedBoardsMenu';
+import trackedPhrasesMenu from './trackedPhrasesMenu';
+import trackedTopicsMenu from './trackedTopicsMenu';
+import trackedUsersMenu from './trackedUsersMenu';
 
 function getUsername(ctx: IMenuContext): string {
-  if (ctx.session.isGroup) return ctx.from.username || ctx.from.first_name;
-  if (ctx.session.username) return ctx.session.username;
+  if (ctx.session.isGroup)
+    return ctx.from.username || ctx.from.first_name;
+  if (ctx.session.username)
+    return ctx.session.username;
   return ctx.from.username || ctx.from.first_name;
 }
 
 const mainMenu = new MenuTemplate<IMenuContext>(async (ctx: IMenuContext) => ({
   text: `Hello, <b>${getUsername(
-    ctx
+    ctx,
   )}</b>.\nNice to see you. What do you want to do now?\n\nRun /help to see all available commands.`,
-  parse_mode: 'HTML'
+  parse_mode: 'HTML',
 }));
 
 mainMenu.submenu('💬 Tracked Phrases', 'tp', trackedPhrasesMenu);

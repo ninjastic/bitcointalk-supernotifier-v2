@@ -1,15 +1,17 @@
-import type { Job, JobsOptions } from 'bullmq';
-import { Queue, QueueEvents } from 'bullmq';
-import cacheConfig from '../../../../config/cache';
-import type { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
 import type PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+import type { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
+import type { Job, JobsOptions } from 'bullmq';
 
-export type ForumScraperQueueRecipes = {
+import { Queue, QueueEvents } from 'bullmq';
+
+import cacheConfig from '../../../../config/cache';
+
+export interface ForumScraperQueueRecipes {
   scrapePost: { input: { post_id: number }; output: ParsedPost };
   scrapeTopic: { input: { topic_id: number }; output: ParsedPost };
   scrapeUserMeritCount: { input: { uid: number }; output: number };
   scrapePostForChanges: { input: { post_id: number }; output: PostVersion };
-};
+}
 
 export type ForumScraperQueueJobName = keyof ForumScraperQueueRecipes;
 
@@ -25,7 +27,7 @@ export type ForumScraperQueue = Queue<
 
 export type JobRecipes = {
   [K in ForumScraperQueueJobName]: (
-    job: Job<ForumScraperQueueInput<K>, ForumScraperQueueOutput<K>, K>
+    job: Job<ForumScraperQueueInput<K>, ForumScraperQueueOutput<K>, K>,
   ) => Promise<ForumScraperQueueOutput<K>>;
 };
 
@@ -40,7 +42,7 @@ const QUEUE_NAME = 'ForumScraperQueue';
 const forumScraperQueue: ForumScraperQueue = new Queue(QUEUE_NAME, {
   connection: {
     ...cacheConfig.config.redis,
-    connectionName: 'ForumScraperQueue:Producer'
+    connectionName: 'ForumScraperQueue:Producer',
   },
   defaultJobOptions: {
     removeOnComplete: true,
@@ -48,37 +50,37 @@ const forumScraperQueue: ForumScraperQueue = new Queue(QUEUE_NAME, {
     attempts: 3,
     backoff: {
       type: 'exponential',
-      delay: 1000
-    }
-  }
+      delay: 1000,
+    },
+  },
 });
 
 export const queueEvents = new QueueEvents(QUEUE_NAME, {
   connection: {
     ...cacheConfig.config.redis,
-    connectionName: 'ForumScraperQueue:Events'
-  }
+    connectionName: 'ForumScraperQueue:Events',
+  },
 });
 
 export async function addForumScraperJob<T extends ForumScraperQueueJobName>(
   jobName: T,
   data: ForumScraperQueueInput<T>,
   waitUntilFinished: true,
-  opts?: JobsOptions
+  opts?: JobsOptions,
 ): Promise<ForumScraperQueueOutput<T>>;
 
 export async function addForumScraperJob<T extends ForumScraperQueueJobName>(
   jobName: T,
   data: ForumScraperQueueInput<T>,
   waitUntilFinished?: false,
-  opts?: JobsOptions
+  opts?: JobsOptions,
 ): Promise<ForumScraperJob<T>>;
 
 export async function addForumScraperJob<T extends ForumScraperQueueJobName>(
   jobName: T,
   data: ForumScraperQueueInput<T>,
   waitUntilFinished?: boolean,
-  opts: JobsOptions = {}
+  opts: JobsOptions = {},
 ): Promise<ForumScraperQueueOutput<T> | ForumScraperJob<T>> {
   const jobOptions: JobsOptions = { ...forumScraperQueue.defaultJobOptions, ...opts };
 
@@ -87,7 +89,8 @@ export async function addForumScraperJob<T extends ForumScraperQueueJobName>(
   if (waitUntilFinished) {
     const result = await job.waitUntilFinished(queueEvents);
     return result as ForumScraperQueueOutput<T>;
-  } else {
+  }
+  else {
     return job as ForumScraperJob<T>;
   }
 }

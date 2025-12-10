@@ -1,15 +1,15 @@
 import { Router } from 'express';
 
-import postsRouter from './postsRouter';
 import addressesRouter from './addressesRouter';
-import usersRouter from './usersRouter';
 import alertsRouter from './alertsRouter';
 import boardsRouter from './boardsRouter';
-import meritsRouter from './meritsRouter';
-import notFoundRouter from './notFoundRouter';
 import bpipRouter from './bpipRouter';
+import meritsRouter from './meritsRouter';
 import metaRouter from './metaRouter';
+import notFoundRouter from './notFoundRouter';
 import notificationRouter from './notificationRouter';
+import postsRouter from './postsRouter';
+import usersRouter from './usersRouter';
 
 const routes = Router();
 

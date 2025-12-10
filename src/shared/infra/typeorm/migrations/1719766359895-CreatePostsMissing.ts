@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreatePostsMissing1719766359895 implements MigrationInterface {
@@ -10,15 +11,15 @@ export class CreatePostsMissing1719766359895 implements MigrationInterface {
           {
             name: 'id',
             type: 'integer',
-            isPrimary: true
+            isPrimary: true,
           },
           {
             name: 'verified_at',
             type: 'timestamp',
-            default: 'now()'
-          }
-        ]
-      })
+            default: 'now()',
+          },
+        ],
+      }),
     );
   }
 

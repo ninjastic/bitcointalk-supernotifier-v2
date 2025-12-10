@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { TableColumn } from 'typeorm';
 
 export class CreateBoardIntegerColumnOnPostsHistory1600346232951 implements MigrationInterface {
@@ -8,8 +9,8 @@ export class CreateBoardIntegerColumnOnPostsHistory1600346232951 implements Migr
       new TableColumn({
         name: 'board_id',
         type: 'integer',
-        isNullable: true
-      })
+        isNullable: true,
+      }),
     );
   }
 

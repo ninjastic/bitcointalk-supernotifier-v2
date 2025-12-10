@@ -1,9 +1,8 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import ITrackedPhrasesRepository from '../../../../modules/posts/repositories/ITrackedPhrasesRepository';
-
-import TrackedPhrase from '../../../../modules/posts/infra/typeorm/entities/TrackedPhrase';
+import type TrackedPhrase from '../../../../modules/posts/infra/typeorm/entities/TrackedPhrase';
+import type ITrackedPhrasesRepository from '../../../../modules/posts/repositories/ITrackedPhrasesRepository';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
 @injectable()
 export default class RemoveTrackedPhraseService {
@@ -12,13 +11,13 @@ export default class RemoveTrackedPhraseService {
     private trackedPhrasesRepository: ITrackedPhrasesRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(id: string, telegram_id?: string): Promise<TrackedPhrase> {
     const phraseExists = await this.trackedPhrasesRepository.findOne({
       id,
-      telegram_id
+      telegram_id,
     });
 
     if (!phraseExists) {

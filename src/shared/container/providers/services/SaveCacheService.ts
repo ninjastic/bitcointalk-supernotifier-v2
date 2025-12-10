@@ -1,13 +1,14 @@
-import { inject, injectable } from 'tsyringe';
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
 
-import ICacheProvider from '../models/ICacheProvider';
+import { inject, injectable } from 'tsyringe';
+
+import type ICacheProvider from '../models/ICacheProvider';
 
 @injectable()
 export default class SaveCacheService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(key: string, value: any, arg?: string, time?: number): Promise<Redis.Ok | null> {

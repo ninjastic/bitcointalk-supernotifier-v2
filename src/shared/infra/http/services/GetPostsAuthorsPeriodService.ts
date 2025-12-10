@@ -27,18 +27,18 @@ export default class GetPostsAuthorsPeriodService {
               range: {
                 date: {
                   gte: from,
-                  lte: to
-                }
-              }
-            }
-          ]
-        }
+                  lte: to,
+                },
+              },
+            },
+          ],
+        },
       },
       aggs: {
         authors: {
           terms: {
             field: 'author',
-            size: 10
+            size: 10,
           },
           aggs: {
             date: {
@@ -47,18 +47,18 @@ export default class GetPostsAuthorsPeriodService {
                 calendar_interval: '1h',
                 extended_bounds: {
                   min: from,
-                  max: to
-                }
-              }
-            }
-          }
-        }
-      }
+                  max: to,
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const data = (dataRaw.aggregations.authors as any).buckets.map(author => ({
       author: author.key,
-      timestamps: author.date.buckets
+      timestamps: author.date.buckets,
     }));
 
     return data;

@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { TableColumn } from 'typeorm';
 
 export class AddOnlyTopicsToTrackedUsers1677589907536 implements MigrationInterface {
@@ -8,8 +9,8 @@ export class AddOnlyTopicsToTrackedUsers1677589907536 implements MigrationInterf
       new TableColumn({
         name: 'only_topics',
         type: 'boolean',
-        default: false
-      })
+        default: false,
+      }),
     );
   }
 

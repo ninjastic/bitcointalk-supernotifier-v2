@@ -1,12 +1,12 @@
 import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 @injectable()
 export default class GetNextPostChangeCheckService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute({ post_id }: { post_id: number }): Promise<number | undefined> {

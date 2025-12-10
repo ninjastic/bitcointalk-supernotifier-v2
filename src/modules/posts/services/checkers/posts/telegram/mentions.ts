@@ -1,68 +1,62 @@
-import { isUserMentionedInPost, shouldNotifyUser } from '##/shared/services/utils';
-import logger from '../../../../../../shared/services/logger';
-import type Post from '../../../../infra/typeorm/entities/Post';
-import type User from '../../../../../users/infra/typeorm/entities/User';
-import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
-import type IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
-import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
-import { NotificationType } from '../../../../../notifications/infra/typeorm/entities/Notification';
-import type PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import type IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
+import type PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+
+import { isUserMentionedInPost, shouldNotifyUser } from '##/shared/services/utils';
+
+import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
+import type User from '../../../../../users/infra/typeorm/entities/User';
+import type IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
+import type Post from '../../../../infra/typeorm/entities/Post';
+
+import logger from '../../../../../../shared/services/logger';
+import { NotificationType } from '../../../../../notifications/infra/typeorm/entities/Notification';
 
 type TelegramMentionsCheckerNotificationResult = NotificationResult<RecipeMetadata['sendMentionNotification']>;
 
-type TelegramMentionsCheckerParams = {
+interface TelegramMentionsCheckerParams {
   posts: Post[];
   postsVersions: PostVersion[];
   users: User[];
   ignoredUsers: IgnoredUser[];
   ignoredTopics: IgnoredTopic[];
   ignoredBoards: IgnoredBoard[];
-};
+}
 
-const processPost = (
-  post: Post,
-  users: User[],
-  ignoredUsers: IgnoredUser[],
-  ignoredTopics: IgnoredTopic[],
-  ignoredBoards: IgnoredBoard[]
-): TelegramMentionsCheckerNotificationResult[] => {
+function processPost(post: Post, users: User[], ignoredUsers: IgnoredUser[], ignoredTopics: IgnoredTopic[], ignoredBoards: IgnoredBoard[]): TelegramMentionsCheckerNotificationResult[] {
   const data: TelegramMentionsCheckerNotificationResult[] = [];
 
   for (const user of users) {
     try {
       const { isMentioned, mentionType } = isUserMentionedInPost(post.content, user, user.enable_only_direct_mentions);
-      if (!user.username || !isMentioned) continue;
-      if (!shouldNotifyUser(post, user, ignoredUsers, ignoredTopics, ignoredBoards)) continue;
+      if (!user.username || !isMentioned)
+        continue;
+      if (!shouldNotifyUser(post, user, ignoredUsers, ignoredTopics, ignoredBoards))
+        continue;
 
       data.push({
         userId: user.id,
         type: NotificationType.POST_MENTION,
-        metadata: { post, user, history: false, mentionType }
+        metadata: { post, user, history: false, mentionType },
       });
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(
         { error, postId: post.post_id, telegramId: user.telegram_id },
-        `Error processing user ${user.telegram_id} for post ${post.post_id}`
+        `Error processing user ${user.telegram_id} for post ${post.post_id}`,
       );
     }
   }
 
   return data;
-};
+}
 
-const processPostVersion = (
-  postVersion: PostVersion,
-  users: User[],
-  ignoredUsers: IgnoredUser[],
-  ignoredTopics: IgnoredTopic[],
-  ignoredBoards: IgnoredBoard[]
-): TelegramMentionsCheckerNotificationResult[] => {
+function processPostVersion(postVersion: PostVersion, users: User[], ignoredUsers: IgnoredUser[], ignoredTopics: IgnoredTopic[], ignoredBoards: IgnoredBoard[]): TelegramMentionsCheckerNotificationResult[] {
   const data: TelegramMentionsCheckerNotificationResult[] = [];
   const postWithNewContent = {
     ...postVersion.post,
     content: postVersion.new_content,
-    title: postVersion.new_title ?? postVersion.post.title
+    title: postVersion.new_title ?? postVersion.post.title,
   };
 
   for (const user of users) {
@@ -70,42 +64,46 @@ const processPostVersion = (
       const { isMentioned, mentionType } = isUserMentionedInPost(
         postVersion.new_content,
         user,
-        user.enable_only_direct_mentions
+        user.enable_only_direct_mentions,
       );
-      if (!user.username || !isMentioned) continue;
-      if (!shouldNotifyUser(postWithNewContent, user, ignoredUsers, ignoredTopics, ignoredBoards)) continue;
+      if (!user.username || !isMentioned)
+        continue;
+      if (!shouldNotifyUser(postWithNewContent, user, ignoredUsers, ignoredTopics, ignoredBoards))
+        continue;
 
       data.push({
         userId: user.id,
         type: NotificationType.POST_MENTION,
-        metadata: { post: postWithNewContent, user, history: false, mentionType }
+        metadata: { post: postWithNewContent, user, history: false, mentionType },
       });
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(
         { error, postId: postWithNewContent.post_id, telegramId: user.telegram_id },
-        `Error processing user ${user.telegram_id} for post ${postWithNewContent.post_id}`
+        `Error processing user ${user.telegram_id} for post ${postWithNewContent.post_id}`,
       );
     }
   }
 
   return data;
-};
+}
 
-export const telegramMentionsChecker = async ({
+export async function telegramMentionsChecker({
   posts,
   postsVersions,
   users,
   ignoredUsers,
   ignoredTopics,
-  ignoredBoards
-}: TelegramMentionsCheckerParams): Promise<TelegramMentionsCheckerNotificationResult[]> => {
+  ignoredBoards,
+}: TelegramMentionsCheckerParams): Promise<TelegramMentionsCheckerNotificationResult[]> {
   const data: TelegramMentionsCheckerNotificationResult[] = [];
 
   for (const post of posts) {
     try {
       const notifications = processPost(post, users, ignoredUsers, ignoredTopics, ignoredBoards);
       data.push(...notifications);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ error, postId: post.post_id }, `Error processing post ${post.post_id}`);
     }
   }
@@ -114,10 +112,11 @@ export const telegramMentionsChecker = async ({
     try {
       const notifications = processPostVersion(postVersion, users, ignoredUsers, ignoredTopics, ignoredBoards);
       data.push(...notifications);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ error, postVersionId: postVersion.id }, `Error processing post version ${postVersion.id}`);
     }
   }
 
   return data;
-};
+}

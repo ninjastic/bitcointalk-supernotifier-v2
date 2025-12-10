@@ -1,12 +1,12 @@
 import type { Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
 
-import PostAddress from '../entities/PostAddress';
-
+import type ICreatePostAddressDTO from '../../../dtos/ICreatePostAddressDTO';
+import type IFindPostAddressesDTO from '../../../dtos/IFindPostAddressesDTO';
 import type IPostsAddressesRepository from '../../../repositories/IPostsAddressesRepository';
 
-import type IFindPostAddressesDTO from '../../../dtos/IFindPostAddressesDTO';
-import type ICreatePostAddressDTO from '../../../dtos/ICreatePostAddressDTO';
+import PostAddress from '../entities/PostAddress';
 
 export default class PostsAddressesRepository implements IPostsAddressesRepository {
   private ormRepository: Repository<PostAddress>;
@@ -30,8 +30,8 @@ export default class PostsAddressesRepository implements IPostsAddressesReposito
       where: rest,
       take: limit || 100,
       order: {
-        post_id: order.toUpperCase() as 'ASC' | 'DESC'
-      }
+        post_id: order.toUpperCase() as 'ASC' | 'DESC',
+      },
     });
   }
 
@@ -41,8 +41,8 @@ export default class PostsAddressesRepository implements IPostsAddressesReposito
     return this.ormRepository.findOne({
       where: rest,
       order: {
-        post_id: order.toUpperCase() as 'ASC' | 'DESC'
-      }
+        post_id: order.toUpperCase() as 'ASC' | 'DESC',
+      },
     });
   }
 }

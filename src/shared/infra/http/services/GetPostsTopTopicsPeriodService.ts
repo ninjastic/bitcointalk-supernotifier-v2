@@ -28,18 +28,18 @@ export default class GetPostsTopTopicsPeriodService {
               range: {
                 date: {
                   gte: from,
-                  lte: to
-                }
-              }
-            }
-          ]
-        }
+                  lte: to,
+                },
+              },
+            },
+          ],
+        },
       },
       aggs: {
         topics: {
           terms: {
             field: 'topic_id',
-            size: 10
+            size: 10,
           },
           aggs: {
             date: {
@@ -48,27 +48,27 @@ export default class GetPostsTopTopicsPeriodService {
                 calendar_interval: '1h',
                 extended_bounds: {
                   min: from,
-                  max: to
-                }
-              }
+                  max: to,
+                },
+              },
             },
             title: {
               top_hits: {
                 size: 1,
                 _source: {
-                  includes: ['title']
-                }
-              }
-            }
-          }
-        }
-      }
+                  includes: ['title'],
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const data = (dataRaw.aggregations.topics as any).buckets.map(topic => ({
       title: topic.title.hits.hits[0]._source.title,
       topic_id: topic.key,
-      timestamps: topic.date.buckets
+      timestamps: topic.date.buckets,
     }));
 
     return data;

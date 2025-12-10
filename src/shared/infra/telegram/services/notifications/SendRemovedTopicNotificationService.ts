@@ -1,28 +1,28 @@
-import { container, injectable } from 'tsyringe';
-import pluralize from 'pluralize';
-import escape from 'escape-html';
+import type ModLog from '##/modules/modlog/infra/typeorm/entities/ModLog';
+import type {
+  RemoveTopicNotification,
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type Post from '##/modules/posts/infra/typeorm/entities/Post';
+import type TelegramBot from '##/shared/infra/telegram/bot';
 
-import logger from '##/shared/services/logger';
-import TelegramBot from '##/shared/infra/telegram/bot';
-
-import Post from '##/modules/posts/infra/typeorm/entities/Post';
-import ModLog from '##/modules/modlog/infra/typeorm/entities/ModLog';
-
-import { checkBotNotificationError } from '##/shared/services/utils';
 import SetModLogNotifiedService from '##/modules/modlog/services/SetModLogNotifiedService';
-import { NotificationService } from '##/modules/posts/services/notification-service';
 import {
   NotificationType,
-  RemoveTopicNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationService } from '##/modules/posts/services/notification-service';
 import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
+import logger from '##/shared/services/logger';
+import { checkBotNotificationError } from '##/shared/services/utils';
+import escape from 'escape-html';
+import pluralize from 'pluralize';
+import { container, injectable } from 'tsyringe';
 
-type RemovedTopicNotificationData = {
+interface RemovedTopicNotificationData {
   bot: TelegramBot;
   telegramId: string;
   posts: Post[];
   modLog: ModLog;
-};
+}
 
 @injectable()
 export default class SendRemovedTopicNotificationService {
@@ -31,7 +31,7 @@ export default class SendRemovedTopicNotificationService {
     await notificationService.createNotification<RemoveTopicNotification>({
       type: NotificationType.REMOVE_TOPIC,
       telegram_id,
-      metadata
+      metadata,
     });
   }
 
@@ -42,9 +42,9 @@ export default class SendRemovedTopicNotificationService {
     const sponsor = getSponsorPhrase(telegramId);
 
     return (
-      `🗑️ You had <b>${postCount}</b> ${postPlural} deleted because ${possessivePronoun} parent topic got nuked.\n\n` +
-      `<b>Archived Topic:</b> <a href="https://ninjastic.space/topic/${modLog.topic_id}">${escape(
-        modLog.title
+      `🗑️ You had <b>${postCount}</b> ${postPlural} deleted because ${possessivePronoun} parent topic got nuked.\n\n`
+      + `<b>Archived Topic:</b> <a href="https://ninjastic.space/topic/${modLog.topic_id}">${escape(
+        modLog.title,
       )}</a>${sponsor}`
     );
   }
@@ -62,29 +62,31 @@ export default class SendRemovedTopicNotificationService {
 
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
         parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true }
+        link_preview_options: { is_disabled: true },
       });
 
       if (messageSent) {
         logger.info(
           { telegram_id: telegramId, topic_id: modLog.topic_id, message, messageSent },
-          'Removed Topic notification was sent'
+          'Removed Topic notification was sent',
         );
         await this.markModLogAsNotified(modLog, telegramId);
         await this.createNotification(telegramId, {
           user_id: modLog.user_id,
           topic_id: modLog.topic_id,
-          posts_removed_count: posts.length
+          posts_removed_count: posts.length,
         });
-      } else {
+      }
+      else {
         logger.warn(
           { telegram_id: telegramId, topic_id: modLog.topic_id, message },
-          'Could not get Removed Topic notification data'
+          'Could not get Removed Topic notification data',
         );
       }
 
       return true;
-    } catch (error) {
+    }
+    catch (error) {
       await checkBotNotificationError(error, telegramId, { topic_id: modLog.topic_id, message });
       return false;
     }

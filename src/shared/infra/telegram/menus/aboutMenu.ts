@@ -1,9 +1,10 @@
 import { MenuTemplate } from 'grammy-inline-menu';
+
 import type IMenuContext from '../@types/IMenuContext';
 
 const aboutMenu = new MenuTemplate<IMenuContext>(() => ({
   text: `<b>About</b>\n\nMore information about the bot.`,
-  parse_mode: 'HTML'
+  parse_mode: 'HTML',
 }));
 
 const donationMenu = new MenuTemplate<IMenuContext>(() => {
@@ -13,15 +14,15 @@ const donationMenu = new MenuTemplate<IMenuContext>(() => {
 
   return {
     text: message,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
 donationMenu.interact('₿ BTC (bech32)', 'bech32-donate', {
-  do: async ctx => {
+  do: async (ctx) => {
     await ctx.reply('bc1qlfzjqgleh3pg7l63p9fc596uqv30hqr9dpg59q');
     return true;
-  }
+  },
 });
 
 // donationMenu.interact('₿ BTC (legacy)', 'legacy-donate', {
@@ -39,10 +40,10 @@ donationMenu.interact('₿ BTC (bech32)', 'bech32-donate', {
 // });
 
 donationMenu.interact('↩ Go Back', 'back', {
-  do: async ctx => {
+  do: async (ctx) => {
     await ctx.answerCallbackQuery();
     return '/';
-  }
+  },
 });
 
 aboutMenu.submenu('💖 Donate', 'donate', donationMenu);
@@ -50,10 +51,10 @@ aboutMenu.submenu('💖 Donate', 'donate', donationMenu);
 aboutMenu.url('📜 Topic', 'https://bitcointalk.org/index.php?topic=5248878.0');
 
 aboutMenu.interact('↩ Go Back', 'back', {
-  do: async ctx => {
+  do: async (ctx) => {
     await ctx.answerCallbackQuery();
     return '/';
-  }
+  },
 });
 
 export default aboutMenu;

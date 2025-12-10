@@ -1,12 +1,12 @@
-import { container } from 'tsyringe';
 import type { Request, Response } from 'express';
+
 import Joi from 'joi';
+import { container } from 'tsyringe';
 
-import logger from '../../../services/logger';
-
-import GetPostsHistoryByPostIdService from '../../../../modules/posts/services/GetPostsHistoryByPostIdService';
 import GetLatestPostHistoryService from '../../../../modules/posts/services/GetLatestPostHistoryService';
 import GetNextPostChangeCheckService from '../../../../modules/posts/services/GetNextPostChangeCheckService';
+import GetPostsHistoryByPostIdService from '../../../../modules/posts/services/GetPostsHistoryByPostIdService';
+import logger from '../../../services/logger';
 
 export default class PostsHistoryController {
   public async show(request: Request, response: Response): Promise<Response> {
@@ -16,16 +16,17 @@ export default class PostsHistoryController {
     const params = request.params as unknown as { post_id: number };
 
     const schemaValidation = Joi.object({
-      post_id: Joi.number().required()
+      post_id: Joi.number().required(),
     });
 
     try {
       await schemaValidation.validateAsync(params);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -46,13 +47,14 @@ export default class PostsHistoryController {
         message: null,
         data: {
           next_check: nextCheck || null,
-          post_history: postHistory ? [{ ...postHistory }] : []
-        }
+          post_history: postHistory ? [{ ...postHistory }] : [],
+        },
       });
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'PostsHistoryController'
+        controller: 'PostsHistoryController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }
@@ -72,22 +74,23 @@ export default class PostsHistoryController {
       after_date: Joi.string().isoDate().allow('', null),
       before_date: Joi.string().isoDate().allow('', null),
       limit: Joi.number().allow('', null),
-      order: Joi.string().valid('ASC', 'DESC').insensitive()
+      order: Joi.string().valid('ASC', 'DESC').insensitive(),
     });
 
     try {
       await schemaValidation.validateAsync(request.query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
     const query = {
       ...request.query,
-      deleted: !!(request.query.deleted === '1' || String(request.query.deleted).toLowerCase() === 'true')
+      deleted: !!(request.query.deleted === '1' || String(request.query.deleted).toLowerCase() === 'true'),
     };
 
     try {
@@ -96,11 +99,12 @@ export default class PostsHistoryController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ error, stack: error.stack }, 'Error on PostsHistoryController');
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

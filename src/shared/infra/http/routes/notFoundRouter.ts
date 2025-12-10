@@ -6,7 +6,7 @@ notFoundRouter.all('*', (request, response) => {
   response.status(404).json({
     result: 'fail',
     message: 'Invalid endpoint or method',
-    data: null
+    data: null,
   });
 });
 

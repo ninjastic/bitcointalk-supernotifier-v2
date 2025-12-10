@@ -1,20 +1,18 @@
-import type { Repository } from 'typeorm';
-import { MoreThanOrEqual, getRepository } from 'typeorm';
-import { sub } from 'date-fns';
 import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { Repository } from 'typeorm';
 
-import esClient from '../../../../../shared/services/elastic';
-import { getCensorJSON } from '../../../../../shared/services/utils';
-
-import Post from '../entities/Post';
-
-import type { PostFromES } from '../../../repositories/IPostsRepository';
-import type IPostsRepository from '../../../repositories/IPostsRepository';
+import { sub } from 'date-fns';
+import { getRepository, MoreThanOrEqual } from 'typeorm';
 
 import type CreatePostDTO from '../../../dtos/CreatePostDTO';
 import type IFindPostsConditionsDTO from '../../../dtos/IFindPostsConditionsDTO';
+import type { PostFromES } from '../../../repositories/IPostsRepository';
+import type IPostsRepository from '../../../repositories/IPostsRepository';
 
+import esClient from '../../../../../shared/services/elastic';
+import { getCensorJSON } from '../../../../../shared/services/utils';
 import GetBoardChildrensFromIdService from '../../../services/GetBoardChildrensFromIdService';
+import Post from '../entities/Post';
 
 export default class PostsRepository implements IPostsRepository {
   private ormRepository: Repository<Post>;
@@ -42,10 +40,10 @@ export default class PostsRepository implements IPostsRepository {
       where: {
         checked: false,
         archive: false,
-        date: MoreThanOrEqual(sub(new Date(), { hours: 3 }))
+        date: MoreThanOrEqual(sub(new Date(), { hours: 3 })),
       },
       order: { post_id: 'DESC' },
-      take: limit
+      take: limit,
     });
   }
 
@@ -55,10 +53,10 @@ export default class PostsRepository implements IPostsRepository {
       track_total_hits: true,
       query: {
         match: {
-          topic_id
-        }
+          topic_id,
+        },
       },
-      sort: [{ date: { order: 'desc' } }]
+      sort: [{ date: { order: 'desc' } }],
     });
 
     return results;
@@ -77,25 +75,25 @@ export default class PostsRepository implements IPostsRepository {
           must: [
             {
               match: {
-                author
-              }
-            }
+                author,
+              },
+            },
           ],
           must_not: [
             {
               terms: {
-                post_id: censor.postIds ?? []
-              }
+                post_id: censor.postIds ?? [],
+              },
             },
             {
               terms: {
-                topic_id: censor.topicIds ?? []
-              }
-            }
-          ]
-        }
+                topic_id: censor.topicIds ?? [],
+              },
+            },
+          ],
+        },
       },
-      sort: [{ date: { order: 'desc' } }]
+      sort: [{ date: { order: 'desc' } }],
     });
 
     return results;
@@ -115,7 +113,7 @@ export default class PostsRepository implements IPostsRepository {
       after_date,
       before_date,
       limit,
-      order
+      order,
     } = conditions;
     const must = [];
     const must_not = [];
@@ -125,17 +123,17 @@ export default class PostsRepository implements IPostsRepository {
         term: {
           author: {
             value: author,
-            case_insensitive: true
-          }
-        }
+            case_insensitive: true,
+          },
+        },
       });
     }
 
     if (author_uid) {
       must.push({
         match: {
-          author_uid
-        }
+          author_uid,
+        },
       });
     }
 
@@ -144,8 +142,8 @@ export default class PostsRepository implements IPostsRepository {
         simple_query_string: {
           fields: ['content'],
           query: content,
-          default_operator: 'AND'
-        }
+          default_operator: 'AND',
+        },
       });
     }
 
@@ -154,8 +152,8 @@ export default class PostsRepository implements IPostsRepository {
         simple_query_string: {
           fields: ['title'],
           query: title,
-          default_operator: 'AND'
-        }
+          default_operator: 'AND',
+        },
       });
     }
 
@@ -168,15 +166,15 @@ export default class PostsRepository implements IPostsRepository {
         range: {
           post_id: {
             gt: Number(after) ? after : null,
-            lt: Number(last) ? last : null
-          }
-        }
+            lt: Number(last) ? last : null,
+          },
+        },
       });
     }
 
     if (after_date || before_date) {
       must.push({
-        range: { date: { gte: after_date || null, lte: before_date || null } }
+        range: { date: { gte: after_date || null, lte: before_date || null } },
       });
     }
 
@@ -187,7 +185,8 @@ export default class PostsRepository implements IPostsRepository {
         const boardsIdList = boards.map(_board => _board.board_id);
 
         must.push({ terms: { board_id: boardsIdList } });
-      } else {
+      }
+      else {
         must.push({ terms: { board_id: [board] } });
       }
     }
@@ -208,10 +207,10 @@ export default class PostsRepository implements IPostsRepository {
       query: {
         bool: {
           must,
-          must_not
-        }
+          must_not,
+        },
       },
-      sort: [{ date: { order: (order as 'asc' | 'desc') || 'desc' } }]
+      sort: [{ date: { order: (order as 'asc' | 'desc') || 'desc' } }],
     });
 
     return results;
@@ -231,32 +230,32 @@ export default class PostsRepository implements IPostsRepository {
         'posts.content',
         'posts.date',
         'posts.board_id',
-        'posts.archive'
+        'posts.archive',
       ])
       .where(author ? `lower(author) = :author` : '1=1', {
         author: author
           ? {
               value: author,
-              case_insensitive: true
+              case_insensitive: true,
             }
-          : undefined
+          : undefined,
       })
       .andWhere(author_uid ? `author_uid = :author_uid` : '1=1', {
-        author_uid
+        author_uid,
       })
       .andWhere(last ? `post_id < :last` : '1=1', {
-        last
+        last,
       })
       .andWhere(after ? `post_id > :after` : '1=1', {
-        after
+        after,
       })
       .andWhere(board ? `board_id = :board` : '1=1', { board })
       .andWhere(topic_id ? `topic_id = :topic_id` : '1=1', { topic_id })
       .andWhere(after_date ? `date >= :after_date` : '1=1', {
-        after_date
+        after_date,
       })
       .andWhere(before_date ? `date <= :before_date` : '1=1', {
-        before_date
+        before_date,
       })
       .addOrderBy('post_id', order || 'DESC')
       .limit(limit)
@@ -278,7 +277,7 @@ export default class PostsRepository implements IPostsRepository {
       .createQueryBuilder('posts')
       .select(['*'])
       .where(`posts.post_id = any(:ids::int4[])`, {
-        ids: `{${ids}}`
+        ids: `{${ids}}`,
       })
       .execute();
   }
@@ -295,28 +294,28 @@ export default class PostsRepository implements IPostsRepository {
           must: [
             {
               terms: {
-                post_id: ids
-              }
-            }
+                post_id: ids,
+              },
+            },
           ],
           must_not: [
             {
               terms: {
-                post_id: censor.postIds ?? []
-              }
+                post_id: censor.postIds ?? [],
+              },
             },
             {
               terms: {
-                topic_id: censor.topicIds ?? []
-              }
-            }
-          ]
-        }
+                topic_id: censor.topicIds ?? [],
+              },
+            },
+          ],
+        },
       },
-      sort: [{ date: { order: 'desc' } }]
+      sort: [{ date: { order: 'desc' } }],
     });
 
-    const data = results.hits.hits.map(post => {
+    const data = results.hits.hits.map((post) => {
       const postData = post._source;
 
       return {
@@ -330,7 +329,7 @@ export default class PostsRepository implements IPostsRepository {
         board_id: postData.board_id,
         archive: postData.archive,
         created_at: postData.created_at,
-        updated_at: postData.updated_at
+        updated_at: postData.updated_at,
       };
     });
 

@@ -1,27 +1,30 @@
 import 'reflect-metadata';
 import 'dotenv/config';
-import { container } from 'tsyringe';
-import { createConnection } from 'typeorm';
-import inquirer from 'inquirer';
+import type { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
 import '../container';
 
+import TopicMissing from '##/modules/posts/infra/typeorm/entities/TopicMissing';
+import inquirer from 'inquirer';
+import { container } from 'tsyringe';
+import { createConnection } from 'typeorm';
+
 import Post from '../../modules/posts/infra/typeorm/entities/Post';
 import { scrapeLoyceArchivePost } from './loyce/utils';
-import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
-import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import TopicMissing from '##/modules/posts/infra/typeorm/entities/TopicMissing';
-import type { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
 
-type PromptAnswers = {
+interface PromptAnswers {
   startTopicId: number;
   endTopicId: number;
-};
+}
 
-const sleep = ms =>
-  new Promise(resolve => {
+function sleep(ms) {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
 
 const BATCH_SIZE = 50;
 
@@ -29,13 +32,14 @@ async function retryScrapeTopicOp(
   postScraper: PostScraper,
   topicId: number,
   maxAttempts = 3,
-  delayMs = 2000
+  delayMs = 2000,
 ): Promise<ParsedTopicPost | null> {
   let lastError: any;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       return await postScraper.scrapeTopicOp(topicId);
-    } catch (err) {
+    }
+    catch (err) {
       lastError = err;
       console.warn(`scrapeTopicOp failed (attempt ${attempt}/${maxAttempts}): ${err.message}`);
       if (attempt < maxAttempts) {
@@ -47,19 +51,19 @@ async function retryScrapeTopicOp(
   return null;
 }
 
-const scrape = async () => {
+async function scrape() {
   const answers = await inquirer.prompt<PromptAnswers>([
     {
       name: 'startTopicId',
       type: 'number',
-      message: 'Topic ID start?'
+      message: 'Topic ID start?',
     },
     {
       name: 'endTopicId',
       type: 'number',
       message: 'Topic ID end?',
-      validate: (value, { startTopicId }) => value >= startTopicId || 'Can not be lower than the start value'
-    }
+      validate: (value, { startTopicId }) => value >= startTopicId || 'Can not be lower than the start value',
+    },
   ]);
 
   const connection = await createConnection();
@@ -106,7 +110,6 @@ const scrape = async () => {
     const topicsToInsert: Topic[] = [];
     const idsNotFound = [];
 
-    // eslint-disable-next-line no-await-in-loop
     for await (const id of batch) {
       console.log(`Checking topic of id ${id}`);
 
@@ -119,7 +122,7 @@ const scrape = async () => {
       const { post: forumPost, topic } = result;
 
       if (forumPost && topic) {
-        const loycePost = await scrapeLoyceArchivePost(forumPost.post_id).catch(err => {
+        const loycePost = await scrapeLoyceArchivePost(forumPost.post_id).catch((err) => {
           console.log(`Loyce archive for post ${forumPost.post_id} request failed: ${err.message}`);
           return null;
         });
@@ -136,19 +139,16 @@ const scrape = async () => {
 
     console.log('postsToInsert length', postsToInsert.length);
     if (postsToInsert.length) {
-      // eslint-disable-next-line no-await-in-loop
       await connection.manager.createQueryBuilder().insert().into(Post).values(postsToInsert).orIgnore().execute();
     }
 
     console.log('topicsToInsert length', topicsToInsert.length);
     if (topicsToInsert.length) {
-      // eslint-disable-next-line no-await-in-loop
       await connection.manager.createQueryBuilder().insert().into(Topic).values(topicsToInsert).orIgnore().execute();
     }
 
     console.log('idsNotFound length', idsNotFound.length);
     if (idsNotFound.length) {
-      // eslint-disable-next-line no-await-in-loop
       await connection.manager
         .createQueryBuilder()
         .insert()
@@ -158,12 +158,11 @@ const scrape = async () => {
         .execute();
     }
 
-    // eslint-disable-next-line no-await-in-loop
     await sleep(1000);
   }
 
   console.log(`Finished range [${answers.startTopicId}, ${answers.endTopicId}]`);
-};
+}
 
 scrape().then(() => {
   process.exit(0);

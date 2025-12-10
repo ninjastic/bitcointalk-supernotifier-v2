@@ -1,10 +1,11 @@
 import type { Request, Response } from 'express';
-import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
+
+import { addMinutes, endOfHour, startOfHour, sub } from 'date-fns';
 import Joi from 'joi';
 
-import logger from '../../../services/logger';
-
 import type { GetPostsCountPeriodParams } from '../services/GetPostsCountPeriodService';
+
+import logger from '../../../services/logger';
 import GetPostsCountPeriodService from '../services/GetPostsCountPeriodService';
 
 export default class PostsCountPeriodController {
@@ -23,24 +24,25 @@ export default class PostsCountPeriodController {
     const query = {
       from: from || startOfHour(sub(dateUTC, { days: 1 })).toISOString(),
       to: to || endOfHour(sub(dateUTC, { hours: 1 })).toISOString(),
-      interval: interval || '1h'
+      interval: interval || '1h',
     };
 
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
       interval: Joi.string()
-        .regex(/^\d{0,3}(m|h|d|w|M)$/)
-        .allow('', null)
+        .regex(/^\d{0,3}([mhdwM])$/)
+        .allow('', null),
     });
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -50,14 +52,15 @@ export default class PostsCountPeriodController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'PostsCountPeriodController'
+        controller: 'PostsCountPeriodController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

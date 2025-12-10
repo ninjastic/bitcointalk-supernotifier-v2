@@ -1,11 +1,12 @@
 import type { Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
 
-import type FindOneUserDTO from '../../../dtos/FindOneUserDTO';
 import type CreateUserDTO from '../../../dtos/CreateUserDTO';
+import type FindOneUserDTO from '../../../dtos/FindOneUserDTO';
+import type IUsersRepository from '../../../repositories/IUsersRepository';
 
 import User from '../entities/User';
-import type IUsersRepository from '../../../repositories/IUsersRepository';
 
 export default class UsersRepository implements IUsersRepository {
   private ormRepository: Repository<User>;
@@ -36,19 +37,19 @@ export default class UsersRepository implements IUsersRepository {
 
   public async getUsersWithMentions(): Promise<User[]> {
     return this.ormRepository.find({
-      where: { enable_mentions: true, blocked: false, is_group: false }
+      where: { enable_mentions: true, blocked: false, is_group: false },
     });
   }
 
   public async getUsersWithMerits(): Promise<User[]> {
     return this.ormRepository.find({
-      where: { enable_merits: true, blocked: false, is_group: false }
+      where: { enable_merits: true, blocked: false, is_group: false },
     });
   }
 
   public async getUsersWithModlogs(): Promise<User[]> {
     return this.ormRepository.find({
-      where: { enable_modlogs: true, blocked: false, is_group: false }
+      where: { enable_modlogs: true, blocked: false, is_group: false },
     });
   }
 

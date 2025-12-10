@@ -24,17 +24,17 @@ export default class GetPostsTopicsPeriodService {
         range: {
           date: {
             gte: from,
-            lte: to
-          }
-        }
-      }
+            lte: to,
+          },
+        },
+      },
     ] as any[];
 
     if (board_id) {
       matches.push({
         match: {
-          board_id
-        }
+          board_id,
+        },
       });
     }
 
@@ -44,32 +44,32 @@ export default class GetPostsTopicsPeriodService {
       track_total_hits: true,
       query: {
         bool: {
-          must: matches
-        }
+          must: matches,
+        },
       },
       aggs: {
         topics: {
           terms: {
             field: 'topic_id',
-            size: Math.min(limit ?? 10, 1000)
+            size: Math.min(limit ?? 10, 1000),
           },
           aggs: {
             title: {
               top_hits: {
                 size: 1,
                 _source: {
-                  includes: ['title']
-                }
-              }
-            }
-          }
-        }
-      }
+                  includes: ['title'],
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const data = (dataRaw.aggregations.topics as any).buckets.map(topic => ({
       title: topic.title.hits.hits[0]._source.title,
-      topic_id: topic.key
+      topic_id: topic.key,
     }));
 
     return data;

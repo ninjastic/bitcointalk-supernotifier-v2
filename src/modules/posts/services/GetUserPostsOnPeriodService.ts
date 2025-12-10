@@ -1,10 +1,10 @@
-import { container } from 'tsyringe';
 import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
-import esClient from '../../../shared/services/elastic';
+import { container } from 'tsyringe';
 
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
+import esClient from '../../../shared/services/elastic';
 
 interface Params {
   author_uid: number;
@@ -40,25 +40,25 @@ export default class GetUserPostsOnPeriodService {
           must: [
             {
               match: {
-                author_uid
-              }
+                author_uid,
+              },
             },
             {
               range: {
                 date: {
                   from,
-                  to
-                }
-              }
-            }
-          ]
-        }
+                  to,
+                },
+              },
+            },
+          ],
+        },
       },
       aggs: {
         posts: {
           value_count: {
-            field: 'post_id'
-          }
+            field: 'post_id',
+          },
         },
         date: {
           date_histogram: {
@@ -66,11 +66,11 @@ export default class GetUserPostsOnPeriodService {
             calendar_interval: interval,
             extended_bounds: {
               min: from,
-              max: to
-            }
-          }
-        }
-      }
+              max: to,
+            },
+          },
+        },
+      },
     });
 
     const data = (results.aggregations.date as any).buckets;

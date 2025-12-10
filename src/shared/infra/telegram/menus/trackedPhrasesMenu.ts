@@ -1,22 +1,21 @@
+import { StatelessQuestion } from '@grammyjs/stateless-question';
 import { MenuTemplate, replyMenuToContext } from 'grammy-inline-menu';
 import { container } from 'tsyringe';
-import { StatelessQuestion } from '@grammyjs/stateless-question';
-
-import logger from '../../../services/logger';
 
 import type IMenuContext from '../@types/IMenuContext';
 
-import FindTrackedPhrasesByTelegramIdService from '../services/FindTrackedPhrasesByTelegramIdService';
+import logger from '../../../services/logger';
 import CreateTrackedPhraseService from '../services/CreateTrackedPhraseService';
-import RemoveTrackedPhraseService from '../services/RemoveTrackedPhraseService';
 import FindTrackedPhrasesByIdService from '../services/FindTrackedPhrasesByIdService';
+import FindTrackedPhrasesByTelegramIdService from '../services/FindTrackedPhrasesByTelegramIdService';
+import RemoveTrackedPhraseService from '../services/RemoveTrackedPhraseService';
 
 const trackedPhrasesMenu = new MenuTemplate<IMenuContext>(() => ({
   text: '<b>Tracked Phrases</b>\n\nAdd or remove phrases so you get notified when they are mentioned.',
-  parse_mode: 'HTML'
+  parse_mode: 'HTML',
 }));
 
-const trackedPhraseInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
+const trackedPhraseInfoMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   const phraseId = ctx.match[1];
 
   const findTrackedPhrasesById = container.resolve(FindTrackedPhrasesByIdService);
@@ -29,37 +28,37 @@ const trackedPhraseInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
 
   return {
     text: message,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
-const confirmRemoveTrackedPhraseMenu = new MenuTemplate<IMenuContext>(async ctx => {
+const confirmRemoveTrackedPhraseMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   const phraseId = ctx.match[1];
   const findTrackedPhrasesById = container.resolve(FindTrackedPhrasesByIdService);
   const { phrase } = await findTrackedPhrasesById.execute(phraseId);
 
   return {
     text: `Are you sure you want to remove the tracked phrase: <b>${phrase}</b>?`,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
 confirmRemoveTrackedPhraseMenu.interact('Yes, do it!', 'yes', {
-  do: async ctx => {
+  do: async (ctx) => {
     const removeTrackedPhrase = container.resolve(RemoveTrackedPhraseService);
     await removeTrackedPhrase.execute(ctx.match[1], String(ctx.chat.id));
     return '/tp/';
-  }
+  },
 });
 
 confirmRemoveTrackedPhraseMenu.interact('No, go back!', 'no', {
-  do: async () => `..`
+  do: async () => `..`,
 });
 
 trackedPhraseInfoMenu.submenu('🗑️ Remove Phrase', 'remove', confirmRemoveTrackedPhraseMenu);
 
 trackedPhraseInfoMenu.interact('↩ Go Back', 'back', {
-  do: () => '..'
+  do: () => '..',
 });
 
 const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (ctx: IMenuContext) => {
@@ -70,7 +69,7 @@ const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (c
   try {
     const trackedPhrase = await createTrackedPhrase.execute({
       telegram_id: String(ctx.chat.id),
-      phrase: text
+      phrase: text,
     });
 
     let message = '';
@@ -79,14 +78,15 @@ const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (c
 
     await ctx.reply(message, {
       parse_mode: 'HTML',
-      reply_markup: { remove_keyboard: true }
+      reply_markup: { remove_keyboard: true },
     });
 
     await replyMenuToContext(trackedPhrasesMenu, ctx, '/tp/');
-  } catch (error) {
+  }
+  catch (error) {
     if (error.message === 'Tracked phrase already exists') {
       await ctx.reply('You are already tracking this phrase.', {
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
 
       return;
@@ -95,24 +95,24 @@ const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (c
     logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Tracked Phrase.');
 
     await ctx.reply('Something went wrong...', {
-      reply_markup: { remove_keyboard: true }
+      reply_markup: { remove_keyboard: true },
     });
   }
 });
 
-const getTrackedPhrasesList = async (ctx: IMenuContext) => {
+async function getTrackedPhrasesList(ctx: IMenuContext) {
   const findTrackedPhrasesByTelegramId = container.resolve(FindTrackedPhrasesByTelegramIdService);
 
   const choices = await findTrackedPhrasesByTelegramId.execute(String(ctx.chat.id));
 
   const formatted = {};
 
-  choices.forEach(choice => {
+  choices.forEach((choice) => {
     formatted[choice.id] = choice.phrase;
   });
 
   return formatted;
-};
+}
 
 trackedPhrasesMenu.chooseIntoSubmenu('tp', getTrackedPhrasesList, trackedPhraseInfoMenu, {
   maxRows: 10,
@@ -121,21 +121,21 @@ trackedPhrasesMenu.chooseIntoSubmenu('tp', getTrackedPhrasesList, trackedPhraseI
   setPage: (ctx, page) => {
     ctx.session.page = page;
   },
-  disableChoiceExistsCheck: true
+  disableChoiceExistsCheck: true,
 });
 
 trackedPhrasesMenu.interact('✨ Add new', 'add', {
-  do: async ctx => {
+  do: async (ctx) => {
     const message = 'What is the phrase that you want to track?';
 
     await addTrackedPhraseLinkQuestion.replyWithHTML(ctx, message);
     return true;
-  }
+  },
 });
 
 trackedPhrasesMenu.interact('↩ Go Back', 'back', {
   do: () => '..',
-  joinLastRow: true
+  joinLastRow: true,
 });
 
 export { addTrackedPhraseLinkQuestion };

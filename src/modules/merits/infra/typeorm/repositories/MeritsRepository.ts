@@ -1,12 +1,13 @@
-import type { Repository, FindManyOptions } from 'typeorm';
-import { getRepository, MoreThanOrEqual } from 'typeorm';
+import type { FindManyOptions, Repository } from 'typeorm';
+
 import { sub } from 'date-fns';
+import { getRepository, MoreThanOrEqual } from 'typeorm';
 
 import type CreateMeritDTO from '../../../dtos/CreateMeritDTO';
 import type FindMeritDTO from '../../../dtos/FindMeritDTO';
+import type IMeritsRepository from '../../../repositories/IMeritsRepository';
 
 import Merit from '../entities/Merit';
-import type IMeritsRepository from '../../../repositories/IMeritsRepository';
 
 export default class MeritsRepository implements IMeritsRepository {
   private ormRepository: Repository<Merit>;
@@ -32,7 +33,7 @@ export default class MeritsRepository implements IMeritsRepository {
       date: new Date(data.date),
       amount: data.amount,
       post_id: data.post_id,
-      sender_uid: data.sender_uid
+      sender_uid: data.sender_uid,
     });
 
     return merit;
@@ -48,11 +49,11 @@ export default class MeritsRepository implements IMeritsRepository {
     const merits = await this.ormRepository.find({
       where: {
         checked: false,
-        date: MoreThanOrEqual(sub(new Date(), { hours: 24 }))
+        date: MoreThanOrEqual(sub(new Date(), { hours: 24 })),
       },
       relations: ['post'],
       order: { created_at: -1 },
-      take: limit
+      take: limit,
     });
 
     return merits;
@@ -60,8 +61,8 @@ export default class MeritsRepository implements IMeritsRepository {
 
   public async getAmountByUserOnPeriod(author_uid: number): Promise<Array<{ date: string; count: string }>> {
     return this.ormRepository.query(
-      "SELECT date_trunc('day', date) as date, sum(amount) as amount FROM merits WHERE receiver_uid = $1 GROUP BY 1 ORDER BY 1;",
-      [author_uid]
+      'SELECT date_trunc(\'day\', date) as date, sum(amount) as amount FROM merits WHERE receiver_uid = $1 GROUP BY 1 ORDER BY 1;',
+      [author_uid],
     );
   }
 }

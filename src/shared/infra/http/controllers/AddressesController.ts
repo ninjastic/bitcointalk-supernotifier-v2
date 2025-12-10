@@ -1,9 +1,9 @@
-import { container } from 'tsyringe';
 import type { Request, Response } from 'express';
+
 import Joi from 'joi';
+import { container } from 'tsyringe';
 
 import logger from '../../../services/logger';
-
 import GetAddressesService from '../services/GetAddressesService';
 
 export default class AddressesController {
@@ -23,16 +23,17 @@ export default class AddressesController {
       child_boards: Joi.string().allow('1', '0', 'true', 'false').insensitive(),
       last: Joi.number(),
       order: Joi.string().valid('ASC', 'DESC').insensitive(),
-      limit: Joi.number()
+      limit: Joi.number(),
     });
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -42,14 +43,15 @@ export default class AddressesController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'AddressesController'
+        controller: 'AddressesController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

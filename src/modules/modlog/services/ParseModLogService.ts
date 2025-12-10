@@ -1,17 +1,16 @@
 import 'dotenv/config';
 import { load } from 'cheerio';
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import IModLogRepository from '../repositories/IModLogRepository';
-
-import ModLog from '../infra/typeorm/entities/ModLog';
-import CreateModLogDTO from '../dtos/CreateModLogDTO';
+import type CreateModLogDTO from '../dtos/CreateModLogDTO';
+import type ModLog from '../infra/typeorm/entities/ModLog';
+import type IModLogRepository from '../repositories/IModLogRepository';
 
 @injectable()
 export default class ParseModLogService {
   constructor(
     @inject('ModLogRepository')
-    private modLogRepository: IModLogRepository
+    private modLogRepository: IModLogRepository,
   ) {}
 
   public execute(element: cheerio.Element): ModLog | false {
@@ -34,13 +33,16 @@ export default class ParseModLogService {
 
     if (message.startsWith('Remove topic:')) {
       type = 'remove_topic';
-    } else if (message.startsWith('Delete reply:')) {
+    }
+    else if (message.startsWith('Delete reply:')) {
       type = 'delete_reply';
       return false;
-    } else if (message.startsWith('Nuke user:')) {
+    }
+    else if (message.startsWith('Nuke user:')) {
       type = 'nuke_user';
       return false;
-    } else if (message.startsWith('Autoban user:')) {
+    }
+    else if (message.startsWith('Autoban user:')) {
       type = 'autoban_user';
       return false;
     }
@@ -52,7 +54,7 @@ export default class ParseModLogService {
       title,
       notified: false,
       notified_to: [],
-      checked: false
+      checked: false,
     } as CreateModLogDTO;
 
     const modLog = this.modLogRepository.create(log);

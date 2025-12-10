@@ -1,19 +1,18 @@
-/* eslint-disable no-await-in-loop */
+/* eslint-disable regexp/no-dupe-disjunctions */
 import 'reflect-metadata';
 import 'dotenv/config';
-import { container } from 'tsyringe';
 import type { InsertResult } from 'typeorm';
-import { createConnection, getManager } from 'typeorm';
-import { load } from 'cheerio';
+
 import validate from 'bitcoin-address-validation';
+import { load } from 'cheerio';
+import { container } from 'tsyringe';
+import { createConnection, getManager } from 'typeorm';
 
 import '../../container';
-
 import PostAddress from '../../../modules/posts/infra/typeorm/entities/PostAddress';
-
 import GetPostsService from '../../../modules/posts/services/GetPostsService';
-import SaveCacheService from '../../container/providers/services/SaveCacheService';
 import GetCacheService from '../../container/providers/services/GetCacheService';
+import SaveCacheService from '../../container/providers/services/SaveCacheService';
 import { validateTronAddress } from '../../services/utils';
 
 createConnection().then(async () => {
@@ -21,8 +20,8 @@ createConnection().then(async () => {
   const saveCache = container.resolve(SaveCacheService);
   const getCache = container.resolve(GetCacheService);
 
-  const bitcoinRegex =
-    /(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/g;
+  const bitcoinRegex
+    = /(bc(0([ac-hj-np-z02-9]{39}|[ac-hj-np-z02-9]{59})|1[ac-hj-np-z02-9]{8,87})|[13][a-km-zA-HJ-NP-Z1-9]{25,35})/g;
   const ethereumRegex = /0x[a-fA-F0-9]{40}/g;
   const tronRegex = /\bT[A-Za-z1-9]{33}\b/g;
 
@@ -39,23 +38,25 @@ createConnection().then(async () => {
 
     const operations = [];
 
-    posts.forEach(post => {
+    posts.forEach((post) => {
       const $ = load(post.content);
       const data = $('body');
       data.children('div.quoteheader').remove();
       data.children('div.quote').remove();
       data.find('br').replaceWith('&nbsp;');
-      const contentWithoutQuotes = data.text().replace(/\s\s+/g, ' ').trim();
+      const contentWithoutQuotes = data.text().replace(/\s{2,}/g, ' ').trim();
 
       const bitcoinAddresses = contentWithoutQuotes.match(bitcoinRegex);
       const ethereumAddresses = contentWithoutQuotes.match(ethereumRegex);
       const tronAddresses = contentWithoutQuotes.match(tronRegex);
 
       if (bitcoinAddresses && coins.includes('BTC')) {
-        bitcoinAddresses.forEach(address => {
+        bitcoinAddresses.forEach((address) => {
           try {
-            if (!validate(address)) return;
-          } catch (error) {
+            if (!validate(address))
+              return;
+          }
+          catch (error) {
             return;
           }
 
@@ -63,26 +64,26 @@ createConnection().then(async () => {
             operations.push({
               post_id: post.post_id,
               coin: 'BTC',
-              address
+              address,
             });
           }
         });
       }
 
       if (ethereumAddresses && coins.includes('ETH')) {
-        ethereumAddresses.forEach(address => {
+        ethereumAddresses.forEach((address) => {
           if (operations.findIndex(m => m.post_id === post.post_id && m.address === address) === -1) {
             operations.push({
               post_id: post.post_id,
               coin: 'ETH',
-              address
+              address,
             });
           }
         });
       }
 
       if (tronAddresses && coins.includes('TRX')) {
-        tronAddresses.forEach(address => {
+        tronAddresses.forEach((address) => {
           if (!validateTronAddress(address)) {
             return;
           }
@@ -90,7 +91,7 @@ createConnection().then(async () => {
             operations.push({
               post_id: post.post_id,
               coin: 'TRX',
-              address
+              address,
             });
           }
         });
@@ -121,7 +122,8 @@ createConnection().then(async () => {
 
     if (last && inserted) {
       console.log(`Inserted ${inserted.raw.length}, first: ${first.post_id} last: ${last.post_id}`);
-    } else {
+    }
+    else {
       console.log('Nothing was inserted...');
     }
 

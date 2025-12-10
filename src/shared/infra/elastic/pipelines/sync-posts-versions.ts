@@ -1,10 +1,9 @@
-/* eslint-disable no-await-in-loop */
-import type { Connection } from 'typeorm';
-import { MoreThan } from 'typeorm';
 import type { Client } from '@elastic/elasticsearch';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
-import baseLogger from '##/shared/services/logger';
+import type { Connection } from 'typeorm';
+
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+import baseLogger from '##/shared/services/logger';
 import { isValidPostgresInt } from '##/shared/services/utils';
 import { load } from 'cheerio';
 
@@ -53,19 +52,21 @@ export class SyncPostsVersionsPipeline {
   constructor(
     private readonly connection: Connection,
     private readonly esClient: Client,
-    private readonly cacheRepository: RedisProvider
+    private readonly cacheRepository: RedisProvider,
   ) {}
 
   public async execute(bootstrap?: boolean): Promise<{ lastUpdatedAt: string }> {
     try {
       return this.syncVersions(bootstrap);
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
   }
 
   private extractPostContent(html: string | null): PostContent {
-    if (!html) return { content: null, content_without_quotes: null, quotes: [], urls: [], image_urls: [] };
+    if (!html)
+      return { content: null, content_without_quotes: null, quotes: [], urls: [], image_urls: [] };
 
     const $ = load(html);
     const quotes: QuoteContent[] = [];
@@ -76,10 +77,12 @@ export class SyncPostsVersionsPipeline {
       const quoteDiv = quoteHeader.next('div.quote');
 
       const isRegularQuote = quoteHeader.children('a:not(.ul)').length === 0;
-      if (isRegularQuote) return;
+      if (isRegularQuote)
+        return;
 
       const authorMatch = quoteHeader.text().match(/Quote from: (.*?) on/);
-      if (!authorMatch) return;
+      if (!authorMatch)
+        return;
 
       const author = authorMatch[1];
 
@@ -104,13 +107,15 @@ export class SyncPostsVersionsPipeline {
       const fullQuoteHtml = quoteHeader.prop('outerHTML') + quoteDiv.prop('outerHTML');
 
       const postUrl = quoteHeader.find('a').attr('href');
-      if (!postUrl) return;
+      if (!postUrl)
+        return;
 
       const url = new URL(postUrl);
       const topicParam = url.searchParams.get('topic');
       const hashPart = url.hash;
 
-      if (!topicParam || !hashPart) return;
+      if (!topicParam || !hashPart)
+        return;
 
       let topicId = Number(topicParam.split('.')[0]);
       let postId = Number(hashPart.split('msg')[1]);
@@ -127,7 +132,7 @@ export class SyncPostsVersionsPipeline {
         content: quoteText.trim(),
         author,
         topic_id: topicId,
-        post_id: postId
+        post_id: postId,
       });
 
       contentWithoutQuotes = contentWithoutQuotes.replace(fullQuoteHtml, '');
@@ -156,7 +161,8 @@ export class SyncPostsVersionsPipeline {
 
           try {
             src = imageUrl ? decodeURIComponent(imageUrl) : src;
-          } catch (error) {
+          }
+          catch (error) {
             this.logger.warn({ src }, '[SyncPosts] Invalid decodeURIComponent image url');
           }
         }
@@ -185,7 +191,7 @@ export class SyncPostsVersionsPipeline {
       content_without_quotes: contentWithoutQuotes,
       quotes,
       urls: Array.from(urls),
-      image_urls: Array.from(imageUrls)
+      image_urls: Array.from(imageUrls),
     };
   }
 
@@ -194,7 +200,7 @@ export class SyncPostsVersionsPipeline {
 
     for (const version of versions) {
       const { content_without_quotes, content, quotes, urls, image_urls } = this.extractPostContent(
-        version.new_content
+        version.new_content,
       );
       const newVersion: PostDocVersion = {
         id: version.id,
@@ -207,7 +213,7 @@ export class SyncPostsVersionsPipeline {
         deleted: version.deleted,
         urls,
         image_urls,
-        created_at: version.created_at
+        created_at: version.created_at,
       };
       versiosToUpdateMap.set(version.post_id, [...(versiosToUpdateMap.get(version.post_id) ?? []), newVersion]);
     }
@@ -245,9 +251,9 @@ export class SyncPostsVersionsPipeline {
           `,
           lang: 'painless',
           params: {
-            newVersions
-          }
-        }
+            newVersions,
+          },
+        },
       };
 
       if (updateChunks.length === 0) {
@@ -277,7 +283,7 @@ export class SyncPostsVersionsPipeline {
         .map(item => ({
           id: item.index?._id,
           error: item.index?.error || item.create?.error || item.update?.error || item.delete?.error,
-          status: item.index?.status
+          status: item.index?.status,
         }));
 
       this.logger.error({ errored: erroredItems }, 'Index errored');
@@ -292,9 +298,10 @@ export class SyncPostsVersionsPipeline {
 
     if (bootstrap) {
       lastUpdatedAt = new Date(0).toISOString();
-    } else {
+    }
+    else {
       ({ lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('syncState:posts-versions')) ?? {
-        lastUpdatedAt: new Date(0).toISOString()
+        lastUpdatedAt: new Date(0).toISOString(),
       });
     }
 

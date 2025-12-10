@@ -1,12 +1,12 @@
-import { container } from 'tsyringe';
 import type { Request, Response } from 'express';
-import Joi from 'joi';
 
-import logger from '../../../services/logger';
+import Joi from 'joi';
+import { container } from 'tsyringe';
 
 import type IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
 
 import GetPostsFromListService from '../../../../modules/posts/services/GetPostsFromListService';
+import logger from '../../../services/logger';
 import GetPostsService from '../services/GetPostsService';
 
 export default class PostsController {
@@ -18,16 +18,17 @@ export default class PostsController {
     const id_list = params.id_list.split(',').map(id => Number(id));
 
     const schemaValidation = Joi.object({
-      id_list: Joi.array().items(Joi.number())
+      id_list: Joi.array().items(Joi.number()),
     });
 
     try {
       await schemaValidation.validateAsync({ id_list });
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -36,7 +37,7 @@ export default class PostsController {
     const result = {
       result: 'success',
       message: null,
-      data
+      data,
     };
 
     return response.json(result);
@@ -57,18 +58,19 @@ export default class PostsController {
       after_date: Joi.string().isoDate().allow('', null),
       before_date: Joi.string().isoDate().allow('', null),
       limit: Joi.number().allow('', null),
-      order: Joi.string().valid('ASC', 'DESC').insensitive()
+      order: Joi.string().valid('ASC', 'DESC').insensitive(),
     });
 
     const query = request.query as unknown;
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -78,14 +80,15 @@ export default class PostsController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'PostsController'
+        controller: 'PostsController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

@@ -1,8 +1,10 @@
 import type { Redis as RedisClient } from 'ioredis';
+
 import Redis from 'ioredis';
-import cacheConfig from '../../../../config/cache';
 
 import type ICacheProvider from '../models/ICacheProvider';
+
+import cacheConfig from '../../../../config/cache';
 
 interface SaveManyData {
   key: string;
@@ -29,7 +31,7 @@ export default class RedisProvider implements ICacheProvider {
   public async saveMany(values: SaveManyData[]): Promise<void> {
     const pipeline = this.client.pipeline();
 
-    values.forEach(value => {
+    values.forEach((value) => {
       pipeline.set(value.key, JSON.stringify(value.value), value.arg, value.time);
     });
 
@@ -51,17 +53,18 @@ export default class RedisProvider implements ICacheProvider {
   public async recoverMany<T>(keys: string[]): Promise<T[]> {
     const pipeline = this.client.pipeline();
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       pipeline.get(key);
     });
 
     const values = [];
 
-    await pipeline.exec((err, result) => {
-      result.forEach(res => {
+    await pipeline.exec((_err, result) => {
+      result.forEach((res) => {
         if (res[0]) {
           values.push(res[0]);
-        } else {
+        }
+        else {
           values.push(JSON.parse(res[1]));
         }
       });
@@ -75,17 +78,18 @@ export default class RedisProvider implements ICacheProvider {
 
     const pipeline = this.client.pipeline();
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       pipeline.get(key);
     });
 
     const values = [];
 
-    await pipeline.exec((err, result) => {
-      result.forEach(res => {
+    await pipeline.exec((_err, result) => {
+      result.forEach((res) => {
         if (res[0]) {
           values.push(res[0]);
-        } else {
+        }
+        else {
           values.push(JSON.parse(res[1]));
         }
       });
@@ -103,7 +107,7 @@ export default class RedisProvider implements ICacheProvider {
 
     const pipeline = this.client.pipeline();
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       pipeline.del(key);
     });
 

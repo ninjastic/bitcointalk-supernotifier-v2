@@ -1,12 +1,11 @@
-import { inject, injectable, container } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 import { getManager } from 'typeorm';
 
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type IPostsAddressesRepository from '../repositories/IPostsAddressesRepository';
+import type IPostsRepository from '../repositories/IPostsRepository';
+
 import PostAddress from '../infra/typeorm/entities/PostAddress';
-
-import IPostsRepository from '../repositories/IPostsRepository';
-import IPostsAddressesRepository from '../repositories/IPostsAddressesRepository';
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-
 import ParsePostAddressesService from './ParsePostAddressesService';
 
 @injectable()
@@ -19,7 +18,7 @@ export default class CheckPostsService {
     private postsAddressesRepository: IPostsAddressesRepository,
 
     @inject('CacheRepository')
-    private cacheProvider: ICacheProvider
+    private cacheProvider: ICacheProvider,
   ) {}
 
   public async execute(): Promise<void> {
@@ -29,7 +28,7 @@ export default class CheckPostsService {
 
     if (!lastId) {
       const last = await this.postsAddressesRepository.findOne({
-        order: 'desc'
+        order: 'desc',
       });
       lastId = last?.post_id;
     }
@@ -37,19 +36,19 @@ export default class CheckPostsService {
     const posts = await this.postsRepository.findPosts({
       after: lastId || 0,
       limit: 150,
-      order: 'ASC'
+      order: 'ASC',
     });
 
     const addressesGroup = await Promise.all(
-      posts.map(post => parsePostAddresses.execute(post)).filter(response => response.length)
+      posts.map(post => parsePostAddresses.execute(post)).filter(response => response.length),
     );
 
     const operations = [];
 
     addressesGroup.forEach(addressGroup =>
-      addressGroup.forEach(address => {
+      addressGroup.forEach((address) => {
         operations.push(address);
-      })
+      }),
     );
 
     if (operations.length) {

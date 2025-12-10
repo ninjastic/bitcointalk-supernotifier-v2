@@ -13,13 +13,13 @@ export class AlterNotificationTypeToEnum1731603556682 implements MigrationInterf
         'remove_topic'
       )`);
     await queryRunner.query(
-      `ALTER TABLE "notifications" ALTER COLUMN "type" TYPE "notification_type" USING "type"::"notification_type"`
+      `ALTER TABLE "notifications" ALTER COLUMN "type" TYPE "notification_type" USING "type"::"notification_type"`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "notifications" ALTER COLUMN "type" TYPE character varying USING "type"::character varying`
+      `ALTER TABLE "notifications" ALTER COLUMN "type" TYPE character varying USING "type"::character varying`,
     );
     await queryRunner.query(`DROP TYPE "notification_type"`);
   }

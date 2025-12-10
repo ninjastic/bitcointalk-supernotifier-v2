@@ -2,8 +2,8 @@ import { Router } from 'express';
 
 import MeritsController from '../controllers/MeritsController';
 import MeritsCountController from '../controllers/MeritsCountController';
-import MeritsTopFansController from '../controllers/MeritsTopFansController';
 import MeritsTopBoardsController from '../controllers/MeritsTopBoardsController';
+import MeritsTopFansController from '../controllers/MeritsTopFansController';
 import MeritsTopUsersController from '../controllers/MeritsTopUsersController';
 
 const meritsController = new MeritsController();

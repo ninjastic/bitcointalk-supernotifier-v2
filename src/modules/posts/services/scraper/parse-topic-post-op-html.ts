@@ -1,16 +1,16 @@
-import { load } from 'cheerio';
-import { getRepository } from 'typeorm';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
+import { load } from 'cheerio';
+import { getRepository } from 'typeorm';
 
-export type ParsedTopicPost = {
+export interface ParsedTopicPost {
   success: boolean;
   post: Post | null;
   failedReason: string | null;
   topic?: Topic;
-};
+}
 
-const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
+function parseTopicPostOpHtml(html: string): ParsedTopicPost {
   const postsRepository = getRepository(Post);
   const topicsRepository = getRepository(Topic);
 
@@ -19,8 +19,8 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
 
   const postElements = [...$(posts).find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr')];
 
-  const postElement = postElements.find(postElement => {
-    const postHeader = $(postElement).find("td.td_headerandpost td > div[id*='subject'] > a");
+  const postElement = postElements.find((postElement) => {
+    const postHeader = $(postElement).find('td.td_headerandpost td > div[id*=\'subject\'] > a');
     return postHeader && postHeader.attr('href');
   });
 
@@ -28,18 +28,18 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
     return { success: false, post: null, failedReason: 'No topic found' };
   }
 
-  const postHeader = $(postElement).find("td.td_headerandpost td > div[id*='subject'] > a");
+  const postHeader = $(postElement).find('td.td_headerandpost td > div[id*=\'subject\'] > a');
 
   const postId = Number(
     $(postHeader)
       .attr('href')
-      .match(/\d\.msg(\d+)#msg/i)[1]
+      .match(/\d\.msg(\d+)#msg/i)[1],
   );
 
   const topicId = Number(
     $(postHeader)
       .attr('href')
-      .match(/topic=(\d+)/i)[1]
+      .match(/topic=(\d+)/i)[1],
   );
 
   const authorElement = $(postElement).find('td.poster_info > b > a');
@@ -62,7 +62,8 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
     const boardIdRegEx = /board=(\d+)/;
     const boardUrl = $(board).find('a').attr('href');
 
-    if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) return;
+    if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board='))
+      return;
 
     if (boardIndex < length - 1 && boardIndex !== 0) {
       const boardId = boardUrl.match(boardIdRegEx)[1];
@@ -81,7 +82,7 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
       .find('td.td_headerandpost > table:nth-child(1) div:nth-child(2)')
       .text()
       .replace('Today at', today)
-      .replace(/Last edit:.*/, '')
+      .replace(/Last edit:.*/, ''),
   );
 
   const post = postsRepository.create({
@@ -96,15 +97,15 @@ const parseTopicPostOpHtml = (html: string): ParsedTopicPost => {
     board_id: boardsArray[boardsArray.length - 1],
     checked: false,
     notified: false,
-    notified_to: []
+    notified_to: [],
   });
 
   const topic = topicsRepository.create({
     post_id: post.post_id,
-    topic_id: post.topic_id
+    topic_id: post.topic_id,
   });
 
   return { success: true, post, topic, failedReason: null };
-};
+}
 
 export default parseTopicPostOpHtml;

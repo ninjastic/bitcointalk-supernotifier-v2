@@ -1,13 +1,13 @@
 import { inject, injectable } from 'tsyringe';
 
-import IMeritsRepository from '../repositories/IMeritsRepository';
-import FindMeritDTO from '../dtos/FindMeritDTO';
+import type FindMeritDTO from '../dtos/FindMeritDTO';
+import type IMeritsRepository from '../repositories/IMeritsRepository';
 
 @injectable()
 export default class SetMeritNotifiedService {
   constructor(
     @inject('MeritsRepository')
-    private meritsRepository: IMeritsRepository
+    private meritsRepository: IMeritsRepository,
   ) {}
 
   public async execute(data: FindMeritDTO, telegram_id: string): Promise<void> {

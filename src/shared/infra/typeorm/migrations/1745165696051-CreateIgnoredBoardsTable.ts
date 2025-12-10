@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateIgnoredBoardsTable1745165696051 implements MigrationInterface {
@@ -12,46 +13,46 @@ export class CreateIgnoredBoardsTable1745165696051 implements MigrationInterface
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'telegram_id',
-            type: 'bigint'
+            type: 'bigint',
           },
           {
             name: 'board_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
+            default: 'now()',
+          },
         ],
         indices: [
           {
             columnNames: ['telegram_id', 'board_id'],
-            isUnique: true
-          }
+            isUnique: true,
+          },
         ],
         foreignKeys: [
           {
             columnNames: ['telegram_id'],
             referencedColumnNames: ['telegram_id'],
-            referencedTableName: 'users'
+            referencedTableName: 'users',
           },
           {
             columnNames: ['board_id'],
             referencedColumnNames: ['board_id'],
-            referencedTableName: 'boards'
-          }
-        ]
-      })
+            referencedTableName: 'boards',
+          },
+        ],
+      }),
     );
   }
 

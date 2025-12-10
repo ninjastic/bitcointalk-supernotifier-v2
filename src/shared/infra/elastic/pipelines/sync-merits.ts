@@ -1,8 +1,8 @@
-/* eslint-disable no-await-in-loop */
-import type { Connection, ObjectLiteral } from 'typeorm';
 import type { Client } from '@elastic/elasticsearch';
-import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { Connection, ObjectLiteral } from 'typeorm';
+
+import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import baseLogger from '##/shared/services/logger';
 
 type RawMerit = Merit & {
@@ -41,7 +41,7 @@ export class SyncMeritsPipeline {
   constructor(
     private readonly connection: Connection,
     private readonly esClient: Client,
-    private readonly cacheRepository: RedisProvider
+    private readonly cacheRepository: RedisProvider,
   ) {}
 
   public async execute(bootstrap?: boolean): Promise<{ lastUpdatedAt: string; lastDate: string }> {
@@ -49,7 +49,8 @@ export class SyncMeritsPipeline {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
       return this.syncMerits(bootstrap);
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
   }
@@ -64,15 +65,15 @@ export class SyncMeritsPipeline {
             normalizer: {
               lowercase_normalizer: {
                 type: 'custom',
-                filter: ['lowercase']
-              }
-            }
-          }
+                filter: ['lowercase'],
+              },
+            },
+          },
         },
         mappings: {
           properties: {
             id: {
-              type: 'keyword'
+              type: 'keyword',
             },
             amount: { type: 'integer' },
             post_id: { type: 'integer' },
@@ -82,18 +83,18 @@ export class SyncMeritsPipeline {
               fields: {
                 keyword: {
                   type: 'keyword',
-                  ignore_above: 256
-                }
-              }
+                  ignore_above: 256,
+                },
+              },
             },
             receiver: {
               type: 'keyword',
               fields: {
                 lowercase: {
                   type: 'keyword',
-                  normalizer: 'lowercase_normalizer'
-                }
-              }
+                  normalizer: 'lowercase_normalizer',
+                },
+              },
             },
             receiver_uid: { type: 'integer' },
             sender: {
@@ -101,19 +102,20 @@ export class SyncMeritsPipeline {
               fields: {
                 lowercase: {
                   type: 'keyword',
-                  normalizer: 'lowercase_normalizer'
-                }
-              }
+                  normalizer: 'lowercase_normalizer',
+                },
+              },
             },
             sender_uid: { type: 'integer' },
             board_id: { type: 'integer' },
             date: { type: 'date' },
-            updated_at: { type: 'date' }
-          }
-        }
+            updated_at: { type: 'date' },
+          },
+        },
       });
       this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
     }
@@ -125,13 +127,15 @@ export class SyncMeritsPipeline {
 
       if (!indexExists.valueOf()) {
         await this.esClient.indices.create({
-          index: this.INDEX_NAME
+          index: this.INDEX_NAME,
         });
         this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
-      } else {
+      }
+      else {
         this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
       throw error;
     }
@@ -155,9 +159,9 @@ export class SyncMeritsPipeline {
           sender_uid: merit.sender_uid,
           board_id: merit.post_board_id,
           date: merit.date,
-          updated_at: new Date(merit.updated_at).toISOString()
+          updated_at: new Date(merit.updated_at).toISOString(),
         },
-        doc_as_upsert: true
+        doc_as_upsert: true,
       };
 
       bulkOperations.push(updateOperationInfo, updateOperationContent);
@@ -177,7 +181,7 @@ export class SyncMeritsPipeline {
         sender_uid: merit.sender_uid,
         receiver: merit.receiver,
         receiver_uid: merit.receiver_uid,
-        date: merit.date
+        date: merit.date,
       };
       postsToUpdateMap.set(merit.post_id, [...(postsToUpdateMap.get(merit.post_id) ?? []), newMerit]);
     }
@@ -208,8 +212,8 @@ export class SyncMeritsPipeline {
             }
           `,
           lang: 'painless',
-          params: { newMerits }
-        }
+          params: { newMerits },
+        },
       };
 
       bulkOperations.push(updateOperationInfo, updateOperationContent);
@@ -230,7 +234,7 @@ export class SyncMeritsPipeline {
         .map(item => ({
           id: item.update._id,
           error: item.update.error,
-          status: item.update.status
+          status: item.update.status,
         }));
 
       this.logger.error({ errored: erroredItems }, 'Update errored');
@@ -247,7 +251,8 @@ export class SyncMeritsPipeline {
     if (type === 'updated_at') {
       where = ['merits.updated_at > :lastUpdatedAt', { lastUpdatedAt: last }];
       orderBy = ['merits.updated_at', 'ASC'];
-    } else if (type === 'date') {
+    }
+    else if (type === 'date') {
       where = ['merits.date > :lastDate', { lastDate: last }];
       orderBy = ['merits.date', 'ASC'];
     }
@@ -259,7 +264,7 @@ export class SyncMeritsPipeline {
         'merits.updated_at::text',
         'posts.post_id',
         'posts.title as post_title',
-        'posts.board_id as post_board_id'
+        'posts.board_id as post_board_id',
       ])
       .where(where[0], where[1])
       .innerJoinAndSelect('merits.post', 'posts')
@@ -277,21 +282,22 @@ export class SyncMeritsPipeline {
     if (bootstrap) {
       lastUpdatedAt = new Date(0).toISOString();
       lastDate = new Date(0).toISOString();
-    } else {
+    }
+    else {
       ({ lastUpdatedAt, lastDate } = (await this.cacheRepository.recover<LastSyncState>('syncState:merits')) ?? {
         lastUpdatedAt: new Date(0).toISOString(),
-        lastDate: new Date(0).toISOString()
+        lastDate: new Date(0).toISOString(),
       });
     }
 
     const lastSync = bootstrap
       ? {
           type: 'date' as 'date' | 'updated_at',
-          last: lastDate
+          last: lastDate,
         }
       : {
           type: 'updated_at' as 'date' | 'updated_at',
-          last: lastUpdatedAt
+          last: lastUpdatedAt,
         };
 
     let stop = false;
@@ -307,7 +313,8 @@ export class SyncMeritsPipeline {
 
         if (lastSync.type === 'updated_at') {
           lastSync.last = lastUpdatedAt;
-        } else if (lastSync.type === 'date') {
+        }
+        else if (lastSync.type === 'date') {
           lastSync.last = lastDate;
         }
 
@@ -316,7 +323,7 @@ export class SyncMeritsPipeline {
         }
 
         this.logger.debug(
-          `Processed ${merits.length} merits. Last updated_at: ${lastUpdatedAt} | Last date: ${lastDate}`
+          `Processed ${merits.length} merits. Last updated_at: ${lastUpdatedAt} | Last date: ${lastDate}`,
         );
       }
 

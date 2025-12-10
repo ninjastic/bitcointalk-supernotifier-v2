@@ -1,5 +1,7 @@
 import type { Repository } from 'typeorm';
+
 import { getRepository, IsNull } from 'typeorm';
+
 import Board from '../entities/Board';
 
 export default class BoardRepository {

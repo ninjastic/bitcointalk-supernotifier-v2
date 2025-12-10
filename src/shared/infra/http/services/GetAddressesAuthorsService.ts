@@ -1,8 +1,7 @@
-import esClient from '../../../services/elastic';
-
 import type IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
 
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import esClient from '../../../services/elastic';
 import { getCensorJSON } from '../../../services/utils';
 
 interface Author {
@@ -44,9 +43,9 @@ export default class GetAddressesAuthorsService {
         term: {
           'author.keyword': {
             value: author,
-            case_insensitive: true
-          }
-        }
+            case_insensitive: true,
+          },
+        },
       });
     }
 
@@ -57,7 +56,8 @@ export default class GetAddressesAuthorsService {
         const boardsIdList = boards.map(_board => _board.board_id);
 
         must.push({ terms: { board_id: boardsIdList } });
-      } else {
+      }
+      else {
         must.push({ terms: { board_id: [board] } });
       }
     }
@@ -74,35 +74,35 @@ export default class GetAddressesAuthorsService {
       query: {
         bool: {
           must,
-          must_not
-        }
+          must_not,
+        },
       },
       aggs: {
         authors: {
           terms: {
             field: 'author.keyword',
-            size: Math.min(limit || 1000, 10000000)
+            size: Math.min(limit || 1000, 10000000),
           },
           aggs: {
             author_uid: {
               terms: {
-                field: 'author_uid'
-              }
-            }
-          }
-        }
-      }
+                field: 'author_uid',
+              },
+            },
+          },
+        },
+      },
     });
 
     const authors = (results.aggregations.authors as any).buckets.map(record => ({
       author: record.key,
       author_uid: record.author_uid.buckets[0].key,
-      count: record.doc_count
+      count: record.doc_count,
     }));
 
     const response = {
       total_results: authors.length,
-      authors
+      authors,
     };
 
     return response;

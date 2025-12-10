@@ -1,14 +1,14 @@
+import Board from '##/modules/posts/infra/typeorm/entities/Board';
 import {
-  Entity,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
   Index,
-  PrimaryGeneratedColumn,
+  JoinColumn,
   OneToOne,
-  JoinColumn
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import Board from '##/modules/posts/infra/typeorm/entities/Board';
 
 @Entity('posts')
 class Post {

@@ -1,17 +1,16 @@
-/* eslint-disable no-console */
 import 'dotenv/config';
 import 'reflect-metadata';
-import inquirer from 'inquirer';
 import chalk from 'chalk';
+import inquirer from 'inquirer';
 
 import esClient from '../../services/elastic';
 import logger from '../../services/logger';
 
-type PromptResponse = {
+interface PromptResponse {
   newContent: string;
-};
+}
 
-export const censorAddressesMenu = async (): Promise<void> => {
+export async function censorAddressesMenu(): Promise<void> {
   const matches = [];
 
   await inquirer
@@ -20,14 +19,14 @@ export const censorAddressesMenu = async (): Promise<void> => {
         type: 'input',
         name: 'post_id',
         message: 'Address to remove',
-        validate: async value => {
+        validate: async (value) => {
           const search = await esClient.search({
             index: 'posts_addresses',
             query: {
               match: {
-                address: value
-              }
-            }
+                address: value,
+              },
+            },
           });
 
           if (!search.hits.hits.length) {
@@ -39,10 +38,10 @@ export const censorAddressesMenu = async (): Promise<void> => {
           }
 
           return search.hits.hits.length > 0;
-        }
-      }
+        },
+      },
     ])
-    .catch(error => {
+    .catch((error) => {
       logger.error({ error });
       process.exit();
     });
@@ -62,7 +61,7 @@ export const censorAddressesMenu = async (): Promise<void> => {
       type: 'confirm',
       name: 'choice',
       message: 'Remove from database?',
-      default: false
+      default: false,
     })
     .catch(() => process.exit())) as { choice: boolean };
 
@@ -70,12 +69,13 @@ export const censorAddressesMenu = async (): Promise<void> => {
     for await (const match of matches) {
       await esClient.delete({
         index: 'posts_addresses',
-        id: `${match.address}_${match.post_id}`
+        id: `${match.address}_${match.post_id}`,
       });
     }
-  } else {
+  }
+  else {
     console.log('Canceled!');
   }
 
   process.exit();
-};
+}

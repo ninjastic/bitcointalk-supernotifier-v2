@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
+
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
-
 import GetAuthorDataService from '../services/GetAuthorDataService';
 
 export default class UserInfoController {
@@ -10,40 +10,42 @@ export default class UserInfoController {
     const getAuthorData = new GetAuthorDataService();
 
     const schemaValidation = Joi.object({
-      author_uid: Joi.number().required()
+      author_uid: Joi.number().required(),
     });
 
     try {
       await schemaValidation.validateAsync({ author_uid: request.author_uid });
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
     try {
       const data = await getAuthorData.execute({
-        author_uid: request.author_uid
+        author_uid: request.author_uid,
       });
 
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'UserInfoController'
+        controller: 'UserInfoController',
       });
       return response.status(500).json({
         result: 'fail',
         message: error.message || 'Something went wrong',
-        data: null
+        data: null,
       });
     }
   }

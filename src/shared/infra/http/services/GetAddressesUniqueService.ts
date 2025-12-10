@@ -1,7 +1,7 @@
-import esClient from '../../../services/elastic';
-
 import type IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
+
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import esClient from '../../../services/elastic';
 import { getCensorJSON } from '../../../services/utils';
 
 interface Address {
@@ -17,15 +17,16 @@ interface Data {
 
 export default class GetAddressesUniqueService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
-    const { address, addresses, author, author_uid, coin, post_id, topic_id, board, child_boards, last, limit } =
-      conditions || {};
+    const { address, addresses, author, author_uid, coin, post_id, topic_id, board, child_boards, last, limit }
+      = conditions || {};
 
     const must = [];
     const must_not = [];
 
     if (address) {
       must.push({ match: { address } });
-    } else if (addresses) {
+    }
+    else if (addresses) {
       must.push({ terms: { address: addresses } });
     }
 
@@ -46,9 +47,9 @@ export default class GetAddressesUniqueService {
         term: {
           'author.keyword': {
             value: author,
-            case_insensitive: true
-          }
-        }
+            case_insensitive: true,
+          },
+        },
       });
     }
 
@@ -63,7 +64,8 @@ export default class GetAddressesUniqueService {
         const boardsIdList = boards.map(_board => _board.board_id);
 
         must.push({ terms: { board_id: boardsIdList } });
-      } else {
+      }
+      else {
         must.push({ terms: { board_id: [board] } });
       }
     }
@@ -82,8 +84,8 @@ export default class GetAddressesUniqueService {
       query: {
         bool: {
           must,
-          must_not
-        }
+          must_not,
+        },
       },
       aggs: {
         addresses: {
@@ -93,44 +95,44 @@ export default class GetAddressesUniqueService {
               {
                 address: {
                   terms: {
-                    field: 'address.keyword'
-                  }
-                }
-              }
+                    field: 'address.keyword',
+                  },
+                },
+              },
             ],
             after: {
-              address: last || ''
-            }
+              address: last || '',
+            },
           },
           aggs: {
             authors: {
               terms: {
                 field: 'author.keyword',
-                size: 100
-              }
+                size: 100,
+              },
             },
             coin: {
               top_hits: {
                 size: 1,
-                _source: ['coin']
-              }
-            }
-          }
-        }
-      }
+                _source: ['coin'],
+              },
+            },
+          },
+        },
+      },
     });
 
     const data_addresses = (results.aggregations.addresses as any).buckets.map(record => ({
       address: record.key.address,
       coin: record.coin.hits.hits[0]._source.coin as 'BTC' | 'ETH',
       count: record.doc_count,
-      authors: record.authors.buckets
+      authors: record.authors.buckets,
     }));
 
     const data = {
       after_key:
         data_addresses.length < actual_limit ? null : (results.aggregations.addresses as any).after_key.address,
-      addresses: data_addresses
+      addresses: data_addresses,
     };
 
     return data;

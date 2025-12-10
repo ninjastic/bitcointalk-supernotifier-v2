@@ -1,34 +1,33 @@
-import { container } from 'tsyringe';
-import { MenuTemplate, replyMenuToContext } from 'grammy-inline-menu';
 import { StatelessQuestion } from '@grammyjs/stateless-question';
 import { format } from 'date-fns';
-
-import logger from '../../../services/logger';
+import { MenuTemplate, replyMenuToContext } from 'grammy-inline-menu';
+import { container } from 'tsyringe';
 
 import type IMenuContext from '../@types/IMenuContext';
 
 import AddTrackedTopicService from '../../../../modules/posts/services/AddTrackedTopicService';
 import RemoveTrackedTopicService from '../../../../modules/posts/services/RemoveTrackedTopicService';
-import FindTrackedTopicsByTelegramIdService from '../services/FindTrackedTopicsByTelegramIdService';
-import FindTrackedTopicUsersService from '../services/FindTrackedTopicUsersService';
+import logger from '../../../services/logger';
 import CreateTrackedTopicUserService from '../services/CreateTrackedTopicUserService';
 import DeleteTrackedTopicUserService from '../services/DeleteTrackedTopicUserService';
 import FindPostByTrackedTopicService from '../services/FindPostByTrackedTopicService';
+import FindTrackedTopicsByTelegramIdService from '../services/FindTrackedTopicsByTelegramIdService';
+import FindTrackedTopicUsersService from '../services/FindTrackedTopicUsersService';
 
 const trackedTopicsMenu = new MenuTemplate<IMenuContext>(() => ({
   text: '<b>Tracked Topics</b>\n\nAdd or remove topics so you get notified of new replies.\n\n<code>* Topic with whitelisted users</code>',
-  parse_mode: 'HTML'
+  parse_mode: 'HTML',
 }));
 
-const getTopicInfo = async (topic_id: number) => {
+async function getTopicInfo(topic_id: number) {
   const findPostByTrackedTopic = container.resolve(FindPostByTrackedTopicService);
 
   const post = await findPostByTrackedTopic.execute({ topic_id });
 
   return post;
-};
+}
 
-const trackedTopicInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
+const trackedTopicInfoMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   const postId = Number(ctx.match[1]);
   const post = await getTopicInfo(postId);
 
@@ -36,11 +35,12 @@ const trackedTopicInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
 
   const users = await findTrackedTopicUsers.execute({
     telegram_id: String(ctx.chat.id),
-    topic_id: Number(ctx.match[1])
+    topic_id: Number(ctx.match[1]),
   });
 
   const usersMessage = users.reduce((p, c, i) => {
-    if (i === 0) return `<pre>${c.username}</pre>`;
+    if (i === 0)
+      return `<pre>${c.username}</pre>`;
     return `${p}, <pre>${c.username}</pre>`;
   }, '');
 
@@ -56,22 +56,22 @@ const trackedTopicInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
 
   return {
     text: message,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
-const getTrackedTopicUrl = async (ctx: IMenuContext): Promise<string> => {
+async function getTrackedTopicUrl(ctx: IMenuContext): Promise<string> {
   const topicId = Number(ctx.match[1]);
 
   const findPostByTrackedTopic = container.resolve(FindPostByTrackedTopicService);
   const post = await findPostByTrackedTopic.execute({ topic_id: topicId });
 
   return `https://bitcointalk.org/index.php?topic=${post.topic_id}.msg${post.post_id}#msg${post.post_id}`;
-};
+}
 
 trackedTopicInfoMenu.url('🔗 Visit Topic', getTrackedTopicUrl);
 
-const trackedTopicAuthorsMenu = new MenuTemplate<IMenuContext>(async ctx => {
+const trackedTopicAuthorsMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   const post = await getTopicInfo(Number(ctx.match[1]));
 
   const formattedDate = format(new Date(post.date), 'Pp');
@@ -85,18 +85,18 @@ const trackedTopicAuthorsMenu = new MenuTemplate<IMenuContext>(async ctx => {
 
   return {
     text: message,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
 trackedTopicInfoMenu.submenu('👤 Whitelist Authors', 'a', trackedTopicAuthorsMenu);
 
-const getTrackedTopicUsersList = async (ctx: IMenuContext) => {
+async function getTrackedTopicUsersList(ctx: IMenuContext) {
   const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
 
   const trackedTopicUsers = await findTrackedTopicUsers.execute({
     telegram_id: String(ctx.chat.id),
-    topic_id: Number(ctx.match[1])
+    topic_id: Number(ctx.match[1]),
   });
 
   const choices = {};
@@ -106,9 +106,9 @@ const getTrackedTopicUsersList = async (ctx: IMenuContext) => {
   }
 
   return choices;
-};
+}
 
-const trackedTopicUsersInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
+const trackedTopicUsersInfoMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   const post = await getTopicInfo(Number(ctx.match[1]));
 
   let message = '';
@@ -119,40 +119,40 @@ const trackedTopicUsersInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
 
   return {
     text: message,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
 const confirmRemoveTrackedTopicUser = new MenuTemplate<IMenuContext>(async ctx => ({
   text: `Are you sure you want to remove the user: <b>${ctx.match[2]}</b>?`,
-  parse_mode: 'HTML'
+  parse_mode: 'HTML',
 }));
 
 confirmRemoveTrackedTopicUser.interact('Yes, do it!', 'yes', {
-  do: async ctx => {
+  do: async (ctx) => {
     const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
     const deleteTrackedTopicUser = container.resolve(DeleteTrackedTopicUserService);
 
     const trackedTopicUser = await findTrackedTopicUsers.execute({
       telegram_id: String(ctx.chat.id),
       topic_id: Number(ctx.match[1]),
-      username: ctx.match[2]
+      username: ctx.match[2],
     });
 
     await deleteTrackedTopicUser.execute(trackedTopicUser[0]);
     return `/tt/tt:${ctx.match[1]}/a/`;
-  }
+  },
 });
 
 confirmRemoveTrackedTopicUser.interact('No, go back!', 'no', {
-  do: async () => `..`
+  do: async () => `..`,
 });
 
 trackedTopicUsersInfoMenu.submenu('🗑️ Remove User', 'remove', confirmRemoveTrackedTopicUser);
 
 trackedTopicUsersInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..',
-  joinLastRow: true
+  joinLastRow: true,
 });
 
 const addTrackedTopicUserQuestion = new StatelessQuestion('addUser', async (ctx: IMenuContext) => {
@@ -165,7 +165,7 @@ const addTrackedTopicUserQuestion = new StatelessQuestion('addUser', async (ctx:
       await createTrackedTopicUser.execute({
         username: text,
         telegram_id: String(ctx.message.chat.id),
-        topic_id: ctx.session.addTrackedTopicUserTopicId
+        topic_id: ctx.session.addTrackedTopicUserTopicId,
       });
 
       let message = '';
@@ -174,14 +174,15 @@ const addTrackedTopicUserQuestion = new StatelessQuestion('addUser', async (ctx:
 
       await ctx.reply(message, {
         parse_mode: 'HTML',
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
 
       await replyMenuToContext(trackedTopicsMenu, ctx, '/tt/');
-    } catch (error) {
+    }
+    catch (error) {
       if (error.message === 'User already exists in the specified tracked topic') {
         await ctx.reply('You already added this user.', {
-          reply_markup: { remove_keyboard: true }
+          reply_markup: { remove_keyboard: true },
         });
 
         return;
@@ -190,10 +191,11 @@ const addTrackedTopicUserQuestion = new StatelessQuestion('addUser', async (ctx:
       logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Tracked Topic User.');
 
       await ctx.reply('Something went wrong...', {
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
     }
-  } else {
+  }
+  else {
     const message = 'Invalid Username. What is the username of the user you want to add?';
     await addTrackedTopicUserQuestion.replyWithHTML(ctx, message);
   }
@@ -206,11 +208,11 @@ trackedTopicAuthorsMenu.chooseIntoSubmenu('authors', getTrackedTopicUsersList, t
   setPage: (ctx, page) => {
     ctx.session.page = page;
   },
-  disableChoiceExistsCheck: true
+  disableChoiceExistsCheck: true,
 });
 
 trackedTopicAuthorsMenu.interact('✨ Add new', 'add', {
-  do: async ctx => {
+  do: async (ctx) => {
     const message = 'What is the username of the user you want to add?';
     const topicId = ctx.match[1];
 
@@ -218,40 +220,40 @@ trackedTopicAuthorsMenu.interact('✨ Add new', 'add', {
 
     await addTrackedTopicUserQuestion.replyWithHTML(ctx, message);
     return true;
-  }
+  },
 });
 
 trackedTopicAuthorsMenu.interact('↩ Go Back', 'back', {
   do: () => '..',
-  joinLastRow: true
+  joinLastRow: true,
 });
 
-const confirmRemoveTrackedTopicMenu = new MenuTemplate<IMenuContext>(async ctx => {
+const confirmRemoveTrackedTopicMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   const post = await getTopicInfo(Number(ctx.match[1]));
   return {
     text: `Are you sure you want to remove the tracked topic: <b>${post.title}</b>?`,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
 confirmRemoveTrackedTopicMenu.interact('Yes, do it!', 'yes', {
-  do: async ctx => {
+  do: async (ctx) => {
     const removeTrackedTopic = container.resolve(RemoveTrackedTopicService);
 
     await removeTrackedTopic.execute(Number(ctx.match[1]), String(ctx.chat.id));
 
     return '/tt/';
-  }
+  },
 });
 
 confirmRemoveTrackedTopicMenu.interact('No, go back!', 'no', {
-  do: async () => `..`
+  do: async () => `..`,
 });
 
 trackedTopicInfoMenu.submenu('🗑️ Remove Topic', 'remove', confirmRemoveTrackedTopicMenu);
 
 trackedTopicInfoMenu.interact('↩ Go Back', 'back', {
-  do: () => '..'
+  do: () => '..',
 });
 
 const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx: IMenuContext) => {
@@ -265,7 +267,7 @@ const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx
     if (!topic_id || !topic_id[1]) {
       await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id);
       await ctx.reply('Hmm... are you sure this link is valid and from a BitcoinTalk topic?', {
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
 
       return;
@@ -277,7 +279,7 @@ const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx
       await ctx.api.editMessageText(
         statusMessage.chat.id,
         statusMessage.message_id,
-        'We have added your request to the queue.\n\nThis will take a few seconds...'
+        'We have added your request to the queue.\n\nThis will take a few seconds...',
       );
 
       const trackedTopic = await addTrackedTopic.execute(Number(topic_id[1]), String(ctx.message.chat.id));
@@ -290,16 +292,17 @@ const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx
 
       await ctx.reply(message, {
         parse_mode: 'HTML',
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
 
       await replyMenuToContext(trackedTopicsMenu, ctx, '/tt/');
-    } catch (error) {
+    }
+    catch (error) {
       await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id).catch();
 
       if (error.message === 'Topic already being tracked.') {
         await ctx.reply('You are already tracking this topic.', {
-          reply_markup: { remove_keyboard: true }
+          reply_markup: { remove_keyboard: true },
         });
 
         return;
@@ -308,28 +311,29 @@ const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx
       logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Tracked Topic.');
 
       await ctx.reply('Something went wrong...', {
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
     }
-  } else {
+  }
+  else {
     const message = 'Invalid URL. What is the URL of the topic you want to track?';
     await addTrackedTopicLinkQuestion.replyWithHTML(ctx, message);
   }
 });
 
-const getTrackedTopicsList = async (ctx: IMenuContext) => {
+async function getTrackedTopicsList(ctx: IMenuContext) {
   const findTrackedTopicsByTelegramId = container.resolve(FindTrackedTopicsByTelegramIdService);
   const findTrackedTopicUsers = container.resolve(FindTrackedTopicUsersService);
 
   const trackedTopics = await findTrackedTopicsByTelegramId.execute(String(ctx.chat.id));
 
   const trackedTopicUsers = await findTrackedTopicUsers.execute({
-    telegram_id: String(ctx.chat.id)
+    telegram_id: String(ctx.chat.id),
   });
 
   const userTopicsWithWhitelist = [];
 
-  trackedTopicUsers.forEach(trackedUser => {
+  trackedTopicUsers.forEach((trackedUser) => {
     if (!userTopicsWithWhitelist.includes(trackedUser.tracked_topic_id)) {
       userTopicsWithWhitelist.push(trackedUser.tracked_topic_id);
     }
@@ -337,7 +341,7 @@ const getTrackedTopicsList = async (ctx: IMenuContext) => {
 
   const formatted = {};
 
-  trackedTopics.forEach(choice => {
+  trackedTopics.forEach((choice) => {
     let formattedTitle = userTopicsWithWhitelist.includes(choice.topic_id) ? '* ' : '';
     formattedTitle += choice.post.title.substr(0, 35);
     formattedTitle += choice.post.title.length >= 35 ? '...' : '';
@@ -346,7 +350,7 @@ const getTrackedTopicsList = async (ctx: IMenuContext) => {
   });
 
   return formatted;
-};
+}
 
 trackedTopicsMenu.chooseIntoSubmenu('tt', getTrackedTopicsList, trackedTopicInfoMenu, {
   maxRows: 10,
@@ -355,21 +359,21 @@ trackedTopicsMenu.chooseIntoSubmenu('tt', getTrackedTopicsList, trackedTopicInfo
   setPage: (ctx, page) => {
     ctx.session.page = page;
   },
-  disableChoiceExistsCheck: true
+  disableChoiceExistsCheck: true,
 });
 
 trackedTopicsMenu.interact('✨ Add new', 'add', {
-  do: async ctx => {
+  do: async (ctx) => {
     const message = 'What is the URL of the topic you want to track?';
 
     await addTrackedTopicLinkQuestion.replyWithHTML(ctx, message);
     return true;
-  }
+  },
 });
 
 trackedTopicsMenu.interact('↩ Go Back', 'back', {
   do: () => '..',
-  joinLastRow: true
+  joinLastRow: true,
 });
 
 export { addTrackedTopicLinkQuestion, addTrackedTopicUserQuestion };

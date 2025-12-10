@@ -1,13 +1,15 @@
 import 'reflect-metadata';
 import 'module-alias/register';
 import 'dotenv/config';
+import type { ChatEvent } from '@simplex-chat/types';
+
+import logger from '##/shared/services/logger';
 import { ChatClient } from 'simplex-chat';
 import { createConnection } from 'typeorm';
-import logger from '##/shared/services/logger';
-import { handlers } from './handlers';
-import Db from './db';
+
 import Checker from './checker';
-import type { ChatEvent } from '@simplex-chat/types';
+import Db from './db';
+import { handlers } from './handlers';
 
 export class SimpleX {
   chat: ChatClient;
@@ -46,7 +48,7 @@ export class SimpleX {
     await this.chat.disableAddressAutoAccept(profileId);
     await this.chat.apiUpdateProfile(profileId, {
       displayName: 'BitcoinTalk SuperNotifier',
-      fullName: 'BitcoinTalk SuperNotifier'
+      fullName: 'BitcoinTalk SuperNotifier',
     });
 
     logger.info({ address: this.address }, 'Bot is ready');
@@ -74,7 +76,7 @@ export class SimpleX {
       return;
     }
 
-    await handlers[r.type](r, this).catch(err => {
+    await handlers[r.type](r, this).catch((err) => {
       logger.fatal(err);
     });
   }
@@ -86,10 +88,10 @@ export class SimpleX {
       {
         msgContent: {
           type: 'text',
-          text: text
+          text,
         },
-        mentions: {}
-      }
+        mentions: {},
+      },
     ];
 
     try {
@@ -101,7 +103,8 @@ export class SimpleX {
             logger.warn({ contactId }, 'Contact has deleted the chat, deleting contact');
             this.deleteContact(contactId);
             return { sent: false, deleted: true };
-          } else {
+          }
+          else {
             logger.warn({ contactId }, 'Contact not ready to receive messages');
             return { sent: false, deleted: false };
           }
@@ -112,7 +115,8 @@ export class SimpleX {
       }
 
       return { sent: true, deleted: false };
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ contactId, error }, 'Failed to send message due to unknown error');
       return { sent: false, deleted: false };
     }
@@ -120,8 +124,8 @@ export class SimpleX {
 
   async processUnsentNotifications(contactId: number) {
     const unsentNotifications = await this.db.getNotifications(
-      qb => qb.where({ sent: false, contact_id: contactId }).andWhereRaw("created_at >= datetime('now', '-48 hours')"),
-      'asc'
+      qb => qb.where({ sent: false, contact_id: contactId }).andWhereRaw('created_at >= datetime(\'now\', \'-48 hours\')'),
+      'asc',
     );
 
     for (const unsentNotification of unsentNotifications) {
@@ -131,9 +135,11 @@ export class SimpleX {
       const msg = await this.sendMessage(contactId, unsentNotification.message);
       if (msg.sent) {
         await this.db.updateNotification(unsentNotification.id, { sent: true });
-      } else if (!msg.deleted) {
+      }
+      else if (!msg.deleted) {
         logger.warn({ contactId, unsentNotification }, 'Failed to send unsent notification');
-      } else {
+      }
+      else {
         break;
       }
 
@@ -142,7 +148,8 @@ export class SimpleX {
   }
 
   async addConnectedUser(contactId: number) {
-    if (this.connectedUsers.has(contactId) && !contactId) return;
+    if (this.connectedUsers.has(contactId) && !contactId)
+      return;
     this.connectedUsers.add(contactId);
     logger.info({ contactId }, `Contact ${contactId} connected`);
 
@@ -154,7 +161,7 @@ export class SimpleX {
     await this.db.deleteUser(contactId);
 
     this.connectedUsers.delete(contactId);
-    logger.info({ contactId: contactId }, 'Contact deleted');
+    logger.info({ contactId }, 'Contact deleted');
   }
 }
 

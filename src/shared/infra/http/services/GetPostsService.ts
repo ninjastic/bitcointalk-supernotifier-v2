@@ -1,8 +1,8 @@
-import { container, inject, injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
-
-import IPostsRepository, { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
+import type IFindPostsConditionsDTO from '../../../../modules/posts/dtos/IFindPostsConditionsDTO';
+import type { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
+import type IPostsRepository from '../../../../modules/posts/repositories/IPostsRepository';
 
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 
@@ -15,7 +15,7 @@ interface Data {
 export default class GetPostSearchService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository
+    private postsRepository: IPostsRepository,
   ) {}
 
   public async execute(query: IFindPostsConditionsDTO): Promise<Data> {
@@ -26,7 +26,7 @@ export default class GetPostSearchService {
     const getBoardsList = new GetBoardsListService();
     const boards = await getBoardsList.execute(true);
 
-    const data = results.hits.hits.map(post => {
+    const data = results.hits.hits.map((post) => {
       const boardName = boards.find(board => board.board_id === post._source.board_id)?.name;
 
       const postData = { ...post._source, board_name: boardName };
@@ -43,13 +43,13 @@ export default class GetPostSearchService {
         board_name: postData.board_name,
         archive: postData.archive,
         created_at: postData.created_at,
-        updated_at: postData.updated_at
+        updated_at: postData.updated_at,
       };
     });
 
     const response = {
       total_results: (results.hits.total as { value: number }).value,
-      posts: data
+      posts: data,
     };
 
     return response;

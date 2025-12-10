@@ -1,7 +1,8 @@
 import type { Knex } from 'knex';
+
 import knex from 'knex';
 
-export type SimpleXUser = {
+export interface SimpleXUser {
   contact_id: number;
   forum_username: string | null;
   forum_user_uid: number | null;
@@ -10,72 +11,72 @@ export type SimpleXUser = {
   only_direct: boolean;
   deleted_at: string | null;
   created_at: string;
-};
+}
 
-export type TrackedPhrase = {
+export interface TrackedPhrase {
   id: number;
   contact_id: number;
   phrase: string;
   created_at: string;
-};
+}
 
-export type TrackedTopic = {
+export interface TrackedTopic {
   id: number;
   contact_id: number;
   topic_id: number;
   created_at: string;
-};
+}
 
-export type TrackedUser = {
+export interface TrackedUser {
   id: number;
   contact_id: number;
   username: string;
   created_at: string;
-};
+}
 
-export type IgnoredUser = {
+export interface IgnoredUser {
   id: number;
   contact_id: number;
   username: string;
   created_at: string;
-};
+}
 
-export type IgnoredTopic = {
+export interface IgnoredTopic {
   id: number;
   contact_id: number;
   topic_id: number;
   created_at: string;
-};
+}
 
-type ConversationData = {
+interface ConversationData {
   step: string;
   forum_username: string;
   forum_user_uid: number;
-};
+}
 
-export type RawConversation = {
+export interface RawConversation {
   id: number;
   contact_id: number;
   data: string;
   created_at: string;
-};
+}
 
-export type Conversation = {
+export interface Conversation {
   id: number;
   contact_id: number;
   data: ConversationData;
   created_at: string;
-};
+}
 
 export enum NotificationType {
   MENTION = 'MENTION',
   MERIT = 'MERIT',
   TRACKED_PHRASE = 'TRACKED_PHRASE',
   TRACKED_TOPIC = 'TRACKED_TOPIC',
-  TRACKED_USER = 'TRACKED_USER'
+  TRACKED_USER = 'TRACKED_USER',
 }
 
-export type Notification = {
+export interface Notification {
   id: number;
   contact_id: number;
   type: NotificationType;
@@ -83,19 +84,19 @@ export type Notification = {
   message: string;
   sent: boolean;
   created_at: string;
-};
+}
 
 export enum LastCheckedType {
   POST_ID = 'POST_ID',
-  MERIT_DATE = 'MERIT_DATE'
+  MERIT_DATE = 'MERIT_DATE',
 }
 
-export type LastChecked = {
+export interface LastChecked {
   id: number;
   type: LastCheckedType;
   key: string;
   created_at: string;
-};
+}
 
 class Db {
   db: Knex;
@@ -104,9 +105,9 @@ class Db {
     this.db = knex({
       client: 'better-sqlite3',
       connection: {
-        filename: './simplex.db'
+        filename: './simplex.db',
       },
-      useNullAsDefault: true
+      useNullAsDefault: true,
     });
 
     this.initDB();
@@ -116,7 +117,7 @@ class Db {
     const userTableExists = await this.db.schema.hasTable('users');
 
     if (!userTableExists) {
-      await this.db.schema.createTable('users', table => {
+      await this.db.schema.createTable('users', (table) => {
         table.increments('contact_id').primary();
         table.string('forum_username');
         table.integer('forum_user_uid');
@@ -131,7 +132,7 @@ class Db {
     const conversationTableExists = await this.db.schema.hasTable('conversations');
 
     if (!conversationTableExists) {
-      await this.db.schema.createTable('conversations', table => {
+      await this.db.schema.createTable('conversations', (table) => {
         table.increments('id').primary();
         table.integer('contact_id').notNullable();
         table.json('data');
@@ -142,7 +143,7 @@ class Db {
     const trackedPhraseTableExists = await this.db.schema.hasTable('tracked_phrases');
 
     if (!trackedPhraseTableExists) {
-      await this.db.schema.createTable('tracked_phrases', table => {
+      await this.db.schema.createTable('tracked_phrases', (table) => {
         table.increments('id').primary();
         table.integer('contact_id').notNullable();
         table.string('phrase').notNullable();
@@ -153,7 +154,7 @@ class Db {
     const trackedTopicTableExists = await this.db.schema.hasTable('tracked_topics');
 
     if (!trackedTopicTableExists) {
-      await this.db.schema.createTable('tracked_topics', table => {
+      await this.db.schema.createTable('tracked_topics', (table) => {
         table.increments('id').primary();
         table.integer('contact_id').notNullable();
         table.integer('topic_id').notNullable();
@@ -164,7 +165,7 @@ class Db {
     const notificationTableExists = await this.db.schema.hasTable('notifications');
 
     if (!notificationTableExists) {
-      await this.db.schema.createTable('notifications', table => {
+      await this.db.schema.createTable('notifications', (table) => {
         table.increments('id').primary();
         table.integer('contact_id').notNullable();
         table.string('type').notNullable();
@@ -178,7 +179,7 @@ class Db {
     const trackedUserTableExists = await this.db.schema.hasTable('tracked_users');
 
     if (!trackedUserTableExists) {
-      await this.db.schema.createTable('tracked_users', table => {
+      await this.db.schema.createTable('tracked_users', (table) => {
         table.increments('id').primary();
         table.integer('contact_id').notNullable();
         table.string('username').notNullable();
@@ -189,7 +190,7 @@ class Db {
     const ignoredUserTableExists = await this.db.schema.hasTable('ignored_users');
 
     if (!ignoredUserTableExists) {
-      await this.db.schema.createTable('ignored_users', table => {
+      await this.db.schema.createTable('ignored_users', (table) => {
         table.increments('id').primary();
         table.integer('contact_id').notNullable();
         table.string('username').notNullable();
@@ -200,7 +201,7 @@ class Db {
     const ignoredTopicTableExists = await this.db.schema.hasTable('ignored_topics');
 
     if (!ignoredTopicTableExists) {
-      await this.db.schema.createTable('ignored_topics', table => {
+      await this.db.schema.createTable('ignored_topics', (table) => {
         table.increments('id').primary();
         table.integer('contact_id').notNullable();
         table.integer('topic_id').notNullable();
@@ -211,7 +212,7 @@ class Db {
     const lastCheckedTableExists = await this.db.schema.hasTable('last_checked');
 
     if (!lastCheckedTableExists) {
-      await this.db.schema.createTable('last_checked', table => {
+      await this.db.schema.createTable('last_checked', (table) => {
         table.increments('id').primary();
         table.string('type').notNullable();
         table.string('key').notNullable();
@@ -220,12 +221,12 @@ class Db {
 
       await this.db<LastChecked>('last_checked').insert({
         type: LastCheckedType.POST_ID,
-        key: '0'
+        key: '0',
       });
 
       await this.db<LastChecked>('last_checked').insert({
         type: LastCheckedType.MERIT_DATE,
-        key: new Date().toISOString()
+        key: new Date().toISOString(),
       });
     }
 
@@ -239,17 +240,17 @@ class Db {
   async updateLastChecked(lastChecked: Omit<LastChecked, 'id' | 'created_at'>): Promise<void> {
     await this.db<LastChecked>('last_checked')
       .where({
-        type: lastChecked.type
+        type: lastChecked.type,
       })
       .update({
         type: lastChecked.type,
-        key: lastChecked.key
+        key: lastChecked.key,
       });
   }
 
   async getNotifications(
     where: Partial<Notification> | ((qb: Knex.QueryBuilder<Notification>) => void),
-    order = 'asc'
+    order = 'asc',
   ): Promise<Notification[]> {
     return (await this.db<Notification>('notifications').where(where).orderBy('created_at', order)) as Notification[];
   }
@@ -276,7 +277,7 @@ class Db {
 
   async updateUser(
     contact_id: number,
-    user: Partial<Omit<SimpleXUser, 'contact_id' | 'created_at' | 'deleted_at'>>
+    user: Partial<Omit<SimpleXUser, 'contact_id' | 'created_at' | 'deleted_at'>>,
   ): Promise<SimpleXUser> {
     return this.db<SimpleXUser>('users')
       .where({ contact_id })
@@ -294,7 +295,7 @@ class Db {
   async createConversation(conversation: Omit<Conversation, 'id' | 'created_at'>): Promise<void> {
     await this.db<RawConversation>('conversations').insert({
       contact_id: conversation.contact_id,
-      data: JSON.stringify(conversation.data)
+      data: JSON.stringify(conversation.data),
     });
   }
 
@@ -321,7 +322,7 @@ class Db {
   async createTrackedPhrase(trackedPhrase: Omit<TrackedPhrase, 'id' | 'created_at'>): Promise<void> {
     await this.db<TrackedPhrase>('tracked_phrases').insert({
       contact_id: trackedPhrase.contact_id,
-      phrase: trackedPhrase.phrase.toLowerCase()
+      phrase: trackedPhrase.phrase.toLowerCase(),
     });
   }
 
@@ -342,7 +343,7 @@ class Db {
   async createTrackedTopic(trackedTopic: Omit<TrackedTopic, 'id' | 'created_at'>): Promise<void> {
     await this.db<TrackedTopic>('tracked_topics').insert({
       contact_id: trackedTopic.contact_id,
-      topic_id: trackedTopic.topic_id
+      topic_id: trackedTopic.topic_id,
     });
   }
 
@@ -363,7 +364,7 @@ class Db {
   async createIgnoredTopic(ignoredTopic: Omit<IgnoredTopic, 'id' | 'created_at'>): Promise<void> {
     await this.db<IgnoredTopic>('ignored_topics').insert({
       contact_id: ignoredTopic.contact_id,
-      topic_id: ignoredTopic.topic_id
+      topic_id: ignoredTopic.topic_id,
     });
   }
 
@@ -384,7 +385,7 @@ class Db {
   async createTrackedUser(trackedUser: Omit<TrackedUser, 'id' | 'created_at'>): Promise<void> {
     await this.db<TrackedUser>('tracked_users').insert({
       contact_id: trackedUser.contact_id,
-      username: trackedUser.username.toLowerCase()
+      username: trackedUser.username.toLowerCase(),
     });
   }
 
@@ -405,7 +406,7 @@ class Db {
   async createIgnoredUser(ignoredUser: Omit<IgnoredUser, 'id' | 'created_at'>): Promise<void> {
     await this.db<IgnoredUser>('ignored_users').insert({
       contact_id: ignoredUser.contact_id,
-      username: ignoredUser.username.toLowerCase()
+      username: ignoredUser.username.toLowerCase(),
     });
   }
 

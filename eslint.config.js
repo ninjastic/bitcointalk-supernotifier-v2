@@ -1,57 +1,25 @@
-import eslint from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tseslintParser from '@typescript-eslint/parser';
-import prettier from 'eslint-plugin-prettier';
-import * as importPlugin from 'eslint-plugin-import';
+import antfu from '@antfu/eslint-config';
 
-export default [
-  eslint.configs.recommended,
+export default antfu(
   {
-    files: ['**/*.ts', '**/*.tsx'],
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-      parser: tseslintParser,
-      parserOptions: {
-        project: './tsconfig.eslint.json',
-      },
+    stylistic: {
+      quotes: 'single',
+      semi: true,
     },
-    plugins: {
-      '@typescript-eslint': tseslint,
-      'prettier': prettier,
-      'import': importPlugin,
-    },
+  },
+  {
     rules: {
-      ...tseslint.configs.recommended.rules,
-      'prettier/prettier': 'error',
-      'import/prefer-default-export': 'off',
-      'class-methods-use-this': 'off',
-      'no-useless-constructor': 'off',
+      'node/prefer-global/buffer': 'off',
+      'unused-imports/no-unused-vars': ['error', { caughtErrors: 'none' }],
       'no-console': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
-      '@typescript-eslint/no-explicit-any': 'off',
-      'import/extensions': [
+      'node/prefer-global/process': 'off',
+      'perfectionist/sort-imports': [
         'error',
-        'ignorePackages',
         {
-          ts: 'never',
-          tsx: 'never',
-          js: 'never',
-          jsx: 'never',
+          newlinesBetween: 'always',
+          internalPattern: ['^\\$lib/.+'],
         },
       ],
-      'import/no-extraneous-dependencies': ['error', { devDependencies: true }],
-      'max-len': ['error', { code: 120, ignoreUrls: true, ignoreTemplateLiterals: true }],
-      'no-underscore-dangle': 'off',
-      'no-param-reassign': 'off',
-      'no-undef': 'off'
     },
-    settings: {
-      'import/resolver': {
-        typescript: {},
-      },
-    },
-    ignores: ['.eslintrc.js', 'dist', 'node_modules'],
-  }
-];
+  },
+);

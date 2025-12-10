@@ -1,13 +1,13 @@
 import { inject, injectable } from 'tsyringe';
 
-import IModLogRepository from '../repositories/IModLogRepository';
-import FindModLogDTO from '../dtos/FindModLogDTO';
+import type FindModLogDTO from '../dtos/FindModLogDTO';
+import type IModLogRepository from '../repositories/IModLogRepository';
 
 @injectable()
 export default class SetModLogCheckedService {
   constructor(
     @inject('ModLogRepository')
-    private modLogRepository: IModLogRepository
+    private modLogRepository: IModLogRepository,
   ) {}
 
   public async execute(data: FindModLogDTO): Promise<void> {

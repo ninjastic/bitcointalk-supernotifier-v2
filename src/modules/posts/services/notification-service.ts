@@ -1,4 +1,6 @@
 import type Notification from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type { DeepPartial, Repository } from 'typeorm';
+
 import {
   AutoTrackTopicRequestNotification,
   MeritNotification,
@@ -8,16 +10,15 @@ import {
   TrackedBoardNotification,
   TrackedPhraseNotification,
   TrackedTopicNotification,
-  TrackedUserNotification
+  TrackedUserNotification,
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import type { DeepPartial, Repository } from 'typeorm';
 import { getRepository } from 'typeorm';
 
-type FindOneNotificationConditions<T extends Notification> = {
+interface FindOneNotificationConditions<T extends Notification> {
   type: T['type'];
   telegram_id: string;
   metadata: Record<string, any>;
-};
+}
 
 export class NotificationService {
   private notificationRepositoryClassMap = {
@@ -28,7 +29,7 @@ export class NotificationService {
     [NotificationType.TRACKED_USER]: TrackedUserNotification,
     [NotificationType.TRACKED_PHRASE]: TrackedPhraseNotification,
     [NotificationType.AUTO_TRACK_TOPIC_REQUEST]: AutoTrackTopicRequestNotification,
-    [NotificationType.REMOVE_TOPIC]: RemoveTopicNotification
+    [NotificationType.REMOVE_TOPIC]: RemoveTopicNotification,
   };
 
   private getTypeRepository(type: NotificationType) {
@@ -60,7 +61,7 @@ export class NotificationService {
 
     Object.entries(conditions.metadata).forEach(([key, value]) => {
       queryBuilder.andWhere(`notification.metadata->>'${key}' = :${key}`, {
-        [key]: value.toString()
+        [key]: value.toString(),
       });
     });
 

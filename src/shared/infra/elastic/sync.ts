@@ -1,24 +1,21 @@
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable no-constant-condition */
-/* eslint-disable no-await-in-loop */
 import 'reflect-metadata';
 import 'dotenv/config';
-import { container } from 'tsyringe';
-import yargs from 'yargs';
-import { createConnection } from 'typeorm';
-import esClient from 'shared/services/elastic';
-
-import 'shared/container';
-import logger from '##/shared/services/logger';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 
-import { SyncPostsPipeline } from './pipelines/sync-posts';
-import { SyncPostsVersionsPipeline } from './pipelines/sync-posts-versions';
-import { SyncMeritsPipeline } from './pipelines/sync-merits';
-import { SyncTopicsPipeline } from './pipelines/sync-topics';
-import { SyncPostsHistoryPipeline } from './pipelines/sync-posts-history';
-import { SyncPostsAddressesPipeline } from './pipelines/sync-posts-addresses';
+import logger from '##/shared/services/logger';
+import esClient from 'shared/services/elastic';
+import { container } from 'tsyringe';
+import 'shared/container';
+import { createConnection } from 'typeorm';
+import yargs from 'yargs';
+
 import { SyncBoardsPipeline } from './pipelines/sync-boards';
+import { SyncMeritsPipeline } from './pipelines/sync-merits';
+import { SyncPostsPipeline } from './pipelines/sync-posts';
+import { SyncPostsAddressesPipeline } from './pipelines/sync-posts-addresses';
+import { SyncPostsHistoryPipeline } from './pipelines/sync-posts-history';
+import { SyncPostsVersionsPipeline } from './pipelines/sync-posts-versions';
+import { SyncTopicsPipeline } from './pipelines/sync-topics';
 
 async function syncAll() {
   const connection = await createConnection();
@@ -35,17 +32,17 @@ async function syncAll() {
   const argv = yargs
     .option('bootstrap', {
       type: 'boolean',
-      default: false
+      default: false,
     })
     .option('exitAfter', {
       type: 'boolean',
-      default: false
+      default: false,
     })
     .implies('exitAfter', 'bootstrap')
     .option('lastPostId', {
       type: 'number',
       default: 0,
-      requiresArg: true
+      requiresArg: true,
     })
     .implies('lastPostId', 'bootstrap')
     .parseSync();
@@ -65,7 +62,7 @@ async function syncAll() {
 
     logger.info(
       { syncPostsLastState, syncPostsVersionsLastState, syncMeritsLastState },
-      'Bootstrap synchronization completed'
+      'Bootstrap synchronization completed',
     );
 
     if (exitAfter) {

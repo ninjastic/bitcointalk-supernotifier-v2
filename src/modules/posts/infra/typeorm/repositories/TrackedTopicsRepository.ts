@@ -1,11 +1,12 @@
 import type { Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
 
 import type CreateTrackedTopicDTO from '../../../dtos/CreateTrackedTopicDTO';
-
-import TrackedTopic from '../entities/TrackedTopic';
 import type { TrackedTopicWithReturningUser } from '../../../repositories/ITrackedTopicsRepository';
 import type ITrackedTopicsRepository from '../../../repositories/ITrackedTopicsRepository';
+
+import TrackedTopic from '../entities/TrackedTopic';
 
 export default class TrackedTopicsRepository implements ITrackedTopicsRepository {
   private ormRepository: Repository<TrackedTopic>;
@@ -27,9 +28,9 @@ export default class TrackedTopicsRepository implements ITrackedTopicsRepository
   public async findOneByTopicId(topic_id: number): Promise<TrackedTopic | null> {
     const trackedTopic = await this.ormRepository.findOne({
       where: {
-        topic_id
+        topic_id,
       },
-      relations: ['post']
+      relations: ['post'],
     });
 
     return trackedTopic;
@@ -38,9 +39,9 @@ export default class TrackedTopicsRepository implements ITrackedTopicsRepository
   public async findOneByPostId(post_id: number): Promise<TrackedTopic | null> {
     const trackedTopic = await this.ormRepository.findOne({
       where: {
-        post_id
+        post_id,
       },
-      relations: ['post']
+      relations: ['post'],
     });
 
     return trackedTopic;
@@ -48,7 +49,7 @@ export default class TrackedTopicsRepository implements ITrackedTopicsRepository
 
   public async findAllByTelegramId(telegram_id: string): Promise<TrackedTopic[]> {
     const trackedTopics = await this.ormRepository.find({
-      relations: ['post']
+      relations: ['post'],
     });
 
     const filtered = trackedTopics.filter(topic => topic.tracking.includes(telegram_id));

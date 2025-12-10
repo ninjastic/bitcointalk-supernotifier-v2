@@ -1,10 +1,8 @@
-import { container } from 'tsyringe';
-
-import esClient from '../../../services/elastic';
-
 import type IFindPostAddressesDTO from '../../../../modules/posts/dtos/IFindPostAddressesDTO';
-import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
+import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+import esClient from '../../../services/elastic';
 import { getCensorJSON } from '../../../services/utils';
 
 interface Address {
@@ -30,8 +28,8 @@ export default class GetAddressesService {
   public async execute(conditions: IFindPostAddressesDTO): Promise<Data> {
     const getBoardsList = new GetBoardsListService();
 
-    const { address, author, author_uid, coin, post_id, topic_id, board, child_boards, last, order, limit } =
-      conditions || {};
+    const { address, author, author_uid, coin, post_id, topic_id, board, child_boards, last, order, limit }
+      = conditions || {};
 
     const must = [];
     const must_not = [];
@@ -57,9 +55,9 @@ export default class GetAddressesService {
         term: {
           'author.keyword': {
             value: author,
-            case_insensitive: true
-          }
-        }
+            case_insensitive: true,
+          },
+        },
       });
     }
 
@@ -74,7 +72,8 @@ export default class GetAddressesService {
         const boardsIdList = boards.map(_board => _board.board_id);
 
         must.push({ terms: { board_id: boardsIdList } });
-      } else {
+      }
+      else {
         must.push({ terms: { board_id: [board] } });
       }
     }
@@ -95,10 +94,10 @@ export default class GetAddressesService {
       query: {
         bool: {
           must,
-          must_not
-        }
+          must_not,
+        },
       },
-      sort: [{ date: { order: order || 'desc' } }]
+      sort: [{ date: { order: order || 'desc' } }],
     });
 
     const boards = await getBoardsList.execute(true);
@@ -114,12 +113,12 @@ export default class GetAddressesService {
       content: record.content,
       date: record.date,
       board_id: record.board_id,
-      board_name: boards.find(b => b.board_id === record.board_id)?.name || null
+      board_name: boards.find(b => b.board_id === record.board_id)?.name || null,
     }));
 
     const data = {
       total_results: (results.hits.total as { value: number }).value,
-      addresses
+      addresses,
     };
 
     return data;

@@ -1,9 +1,9 @@
 import type { Request as ExpressRequest, Response } from 'express';
+
 import Joi from 'joi';
 
-import logger from '../../../services/logger';
-
 import GetUserPostsDataService from '../../../../modules/posts/services/GetUserPostsDataService';
+import logger from '../../../services/logger';
 
 interface Request extends ExpressRequest {
   query: {
@@ -19,22 +19,23 @@ export default class UserPostsBoardsController {
     const schemaValidation = Joi.object({
       author_uid: Joi.number().required(),
       from: Joi.string().isoDate().allow('', null),
-      to: Joi.string().isoDate().allow('', null)
+      to: Joi.string().isoDate().allow('', null),
     });
 
     const query = {
       author_uid: request.author_uid,
       from: request.query.from || null,
-      to: request.query.to || null
+      to: request.query.to || null,
     };
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -44,14 +45,15 @@ export default class UserPostsBoardsController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'UserPostsBoardsController'
+        controller: 'UserPostsBoardsController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

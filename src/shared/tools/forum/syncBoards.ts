@@ -1,17 +1,18 @@
 import 'dotenv/config';
 import { load } from 'cheerio';
-import { createConnection, createQueryBuilder } from 'typeorm';
-import { container } from 'tsyringe';
 import ora from 'ora';
+import { container } from 'tsyringe';
+import { createConnection, createQueryBuilder } from 'typeorm';
 
 import '../../container';
 
-import api from '../../services/api';
 import type ICacheProvider from '../../container/providers/models/ICacheProvider';
+
+import api from '../../services/api';
 
 const spinner = ora();
 
-const requestBoardsUrl = async () => {
+async function requestBoardsUrl() {
   spinner.text = 'Getting forum boards';
   const response = await api.get('/sitemap.php?t=b');
   const $ = load(response.data);
@@ -20,21 +21,19 @@ const requestBoardsUrl = async () => {
 
   const boardIdRegEx = /board=(\d+)/;
 
-  return boards.toArray().map(e => {
+  return boards.toArray().map((e) => {
     const url = $(e).text();
 
     const id = Number(url.match(boardIdRegEx)[1]);
 
     return { id, url };
   });
-};
+}
 
-const getExistentBoardsInDatabase = async (
-  boards: Array<{
-    id: number;
-    url: string;
-  }>
-) => {
+async function getExistentBoardsInDatabase(boards: Array<{
+  id: number;
+  url: string;
+}>) {
   spinner.text = 'Getting boards in database';
   const ids = boards.map(board => board.id);
 
@@ -42,19 +41,17 @@ const getExistentBoardsInDatabase = async (
     .select('board_id')
     .from('boards', 'boards')
     .where('board_id = any(:board_ids)', {
-      board_ids: ids
+      board_ids: ids,
     })
     .getRawMany();
 
   return results;
-};
+}
 
-const scrapeBoards = async (
-  boards: Array<{
-    id: number;
-    url: string;
-  }>
-) => {
+async function scrapeBoards(boards: Array<{
+  id: number;
+  url: string;
+}>) {
   for await (const board of boards) {
     spinner.text = `Scraping missing boards (${boards.length}) - ID ${board.id}`;
     const response = await api.get(board.url);
@@ -87,10 +84,11 @@ const scrapeBoards = async (
       const baordsWithRelation = boardsArray.reverse().map((originalBoard, index) => ({
         id: () => 'uuid_generate_v4()',
         ...originalBoard,
-        parent_id: boardsArray.reverse()[index + 1] ? boardsArray.reverse()[index + 1].board_id : null
+        parent_id: boardsArray.reverse()[index + 1] ? boardsArray.reverse()[index + 1].board_id : null,
       }));
       finalBoardsArray.push(...baordsWithRelation);
-    } else {
+    }
+    else {
       finalBoardsArray.push(...boardsArray);
     }
 
@@ -103,9 +101,9 @@ const scrapeBoards = async (
         .execute();
     }
   }
-};
+}
 
-export const syncBoards = async (): Promise<void> => {
+export async function syncBoards(): Promise<void> {
   await createConnection();
   const cacheRepository = container.resolve<ICacheProvider>('CacheRepository');
 
@@ -120,7 +118,8 @@ export const syncBoards = async (): Promise<void> => {
     await scrapeBoards(missingBoards);
     await cacheRepository.invalidateByPrefix('boards:*');
     spinner.succeed('Synced!');
-  } else {
+  }
+  else {
     spinner.succeed('Boards are already synced');
   }
-};
+}

@@ -1,46 +1,35 @@
+import { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
+import { NotificationService } from '##/modules/posts/services/notification-service';
+import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import { container } from 'tsyringe';
 
-import { NotificationService } from '##/modules/posts/services/notification-service';
-import type IUsersRepository from '../../modules/users/repositories/IUsersRepository';
-import UsersRepository from '../../modules/users/infra/typeorm/repositories/UsersRepository';
-
-import type IIgnoredUserRepository from '../../modules/users/repositories/IIgnoredUserRepository';
-import IgnoredUserRepository from '../../modules/users/infra/typeorm/repositories/IgnoredUserRepository';
-
-import type IPostsRepository from '../../modules/posts/repositories/IPostsRepository';
-import PostsRepository from '../../modules/posts/infra/typeorm/repositories/PostsRepository';
-
-import type ITrackedTopicsRepository from '../../modules/posts/repositories/ITrackedTopicsRepository';
-import TrackedTopicsRepository from '../../modules/posts/infra/typeorm/repositories/TrackedTopicsRepository';
-
-import type ITrackedTopicUsersRepository from '../../modules/posts/repositories/ITrackedTopicUsersRepository';
-import TrackedTopicUsersRepository from '../../modules/posts/infra/typeorm/repositories/TrackedTopicUsersRepository';
-
-import type ITrackedPhrasesRepository from '../../modules/posts/repositories/ITrackedPhrasesRepository';
-import TrackedPhrasesRepository from '../../modules/posts/infra/typeorm/repositories/TrackedPhrasesRepository';
-
-import type IIgnoredTopicsRepository from '../../modules/posts/repositories/IIgnoredTopicsRepository';
-import IgnoredTopicsRepository from '../../modules/posts/infra/typeorm/repositories/IgnoredTopicsRepository';
-
 import type IMeritsRepository from '../../modules/merits/repositories/IMeritsRepository';
-import MeritsRepository from '../../modules/merits/infra/typeorm/repositories/MeritsRepository';
-
 import type IModLogRepository from '../../modules/modlog/repositories/IModLogRepository';
-import ModLogRepository from '../../modules/modlog/infra/typeorm/repositories/ModLogRepository';
-
 import type IAddressesRepository from '../../modules/posts/repositories/IAddressesRepository';
-import AddressesRepository from '../../modules/posts/infra/typeorm/repositories/AddressesRepository';
-
+import type IIgnoredTopicsRepository from '../../modules/posts/repositories/IIgnoredTopicsRepository';
 import type IPostsAddressesRepository from '../../modules/posts/repositories/IPostsAddressesRepository';
-import PostsAddressesRepository from '../../modules/posts/infra/typeorm/repositories/PostsAddressesRepository';
-
 import type IPostsHistoryRepository from '../../modules/posts/repositories/IPostsHistoryRepository';
-import PostsHistoryRepository from '../../modules/posts/infra/typeorm/repositories/PostsHistoryRepository';
-
+import type IPostsRepository from '../../modules/posts/repositories/IPostsRepository';
+import type ITrackedPhrasesRepository from '../../modules/posts/repositories/ITrackedPhrasesRepository';
+import type ITrackedTopicsRepository from '../../modules/posts/repositories/ITrackedTopicsRepository';
+import type ITrackedTopicUsersRepository from '../../modules/posts/repositories/ITrackedTopicUsersRepository';
+import type IIgnoredUserRepository from '../../modules/users/repositories/IIgnoredUserRepository';
+import type IUsersRepository from '../../modules/users/repositories/IUsersRepository';
 import type ICacheRepository from './providers/models/ICacheProvider';
+
+import MeritsRepository from '../../modules/merits/infra/typeorm/repositories/MeritsRepository';
+import ModLogRepository from '../../modules/modlog/infra/typeorm/repositories/ModLogRepository';
+import AddressesRepository from '../../modules/posts/infra/typeorm/repositories/AddressesRepository';
+import IgnoredTopicsRepository from '../../modules/posts/infra/typeorm/repositories/IgnoredTopicsRepository';
+import PostsAddressesRepository from '../../modules/posts/infra/typeorm/repositories/PostsAddressesRepository';
+import PostsHistoryRepository from '../../modules/posts/infra/typeorm/repositories/PostsHistoryRepository';
+import PostsRepository from '../../modules/posts/infra/typeorm/repositories/PostsRepository';
+import TrackedPhrasesRepository from '../../modules/posts/infra/typeorm/repositories/TrackedPhrasesRepository';
+import TrackedTopicsRepository from '../../modules/posts/infra/typeorm/repositories/TrackedTopicsRepository';
+import TrackedTopicUsersRepository from '../../modules/posts/infra/typeorm/repositories/TrackedTopicUsersRepository';
+import IgnoredUserRepository from '../../modules/users/infra/typeorm/repositories/IgnoredUserRepository';
+import UsersRepository from '../../modules/users/infra/typeorm/repositories/UsersRepository';
 import RedisProvider from './providers/implementations/RedisProvider';
-import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
-import { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
 
 container.registerSingleton<IUsersRepository>('UsersRepository', UsersRepository);
 

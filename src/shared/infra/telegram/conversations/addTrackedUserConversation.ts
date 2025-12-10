@@ -1,14 +1,16 @@
-import { container } from 'tsyringe';
 import type { Conversation, ConversationFlavor } from '@grammyjs/conversations';
+
 import { Menu } from '@grammyjs/menu';
 import { replyMenuToContext } from 'grammy-inline-menu';
+import { container } from 'tsyringe';
 import { z } from 'zod';
 
-import type IMenuContext from '../@types/IMenuContext';
-import { mainMenu } from '../menus/mainMenu';
 import type TrackedUser from '../../../../modules/posts/infra/typeorm/entities/TrackedUser';
-import trackedUsersMenu from '../menus/trackedUsersMenu';
+import type IMenuContext from '../@types/IMenuContext';
+
 import TrackedUsersRepository from '../../../../modules/posts/infra/typeorm/repositories/TrackedUsersRepository';
+import { mainMenu } from '../menus/mainMenu';
+import trackedUsersMenu from '../menus/trackedUsersMenu';
 
 export const confirmAddTrackedUserInlineMenu = new Menu('addTrackedUserConfirm')
   .text({ text: 'Yes, all posts', payload: 'yes-posts' })
@@ -19,14 +21,11 @@ export const confirmAddTrackedUserInlineMenu = new Menu('addTrackedUserConfirm')
 
 export const cancelAddTrackedUserPromptInlineMenu = new Menu('cancelAddTrackedUser').text({ text: 'Cancel' });
 
-const askForPrompt = async (
-  conversation: Conversation<IMenuContext & ConversationFlavor>,
-  ctx: IMenuContext
-): Promise<TrackedUser | null> => {
+async function askForPrompt(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext): Promise<TrackedUser | null> {
   const trackedUsersRepository = container.resolve(TrackedUsersRepository);
 
   const promptMessage = await ctx.reply('What is the username of the user you want to track?', {
-    reply_markup: cancelAddTrackedUserPromptInlineMenu
+    reply_markup: cancelAddTrackedUserPromptInlineMenu,
   });
 
   const { message, callbackQuery } = await conversation.wait();
@@ -56,7 +55,7 @@ const askForPrompt = async (
       .string()
       .max(25)
       .regex(/^(?!.*bitcointalk\.org\/index\.php\?action=profile).*/),
-    only_topics: z.boolean().optional()
+    only_topics: z.boolean().optional(),
   });
 
   if (!validation.safeParse(trackedUser).success) {
@@ -66,7 +65,7 @@ const askForPrompt = async (
 
   await ctx.reply(`Do you want to track the user <b>${trackedUser.username}</b>?`, {
     parse_mode: 'HTML',
-    reply_markup: confirmAddTrackedUserInlineMenu
+    reply_markup: confirmAddTrackedUserInlineMenu,
   });
 
   const answerCb = await conversation.waitForCallbackQuery(/addTrackedUserConfirm/);
@@ -82,12 +81,9 @@ const askForPrompt = async (
 
   await ctx.api.deleteMessage(ctx.chat.id, answerCb.callbackQuery.message.message_id);
   return askForPrompt(conversation, ctx);
-};
+}
 
-const addTrackedUserConversation = async (
-  conversation: Conversation<IMenuContext & ConversationFlavor>,
-  ctx: IMenuContext
-): Promise<void> => {
+async function addTrackedUserConversation(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext): Promise<void> {
   const trackedUsersRepository = container.resolve(TrackedUsersRepository);
   const newTrackedUser = await askForPrompt(conversation, ctx);
 
@@ -97,7 +93,7 @@ const addTrackedUserConversation = async (
 
   const userTrackedUsers = await trackedUsersRepository.findByTelegramId(String(ctx.chat.id));
   const trackedUserExists = userTrackedUsers.find(
-    userTrackedUser => userTrackedUser.username === newTrackedUser.username
+    userTrackedUser => userTrackedUser.username === newTrackedUser.username,
   );
 
   if (trackedUserExists) {
@@ -110,6 +106,6 @@ const addTrackedUserConversation = async (
   }
 
   await replyMenuToContext(trackedUsersMenu, ctx, '/tu/');
-};
+}
 
 export default addTrackedUserConversation;

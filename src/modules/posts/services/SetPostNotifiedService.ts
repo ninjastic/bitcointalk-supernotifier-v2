@@ -1,12 +1,12 @@
 import { inject, injectable } from 'tsyringe';
 
-import IPostsRepository from '../repositories/IPostsRepository';
+import type IPostsRepository from '../repositories/IPostsRepository';
 
 @injectable()
 export default class SetPostNotifiedService {
   constructor(
     @inject('PostsRepository')
-    private postsRepository: IPostsRepository
+    private postsRepository: IPostsRepository,
   ) {}
 
   public async execute(post_id: number, telegram_id: string): Promise<void> {

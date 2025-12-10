@@ -1,13 +1,13 @@
 import { inject, injectable } from 'tsyringe';
 import { getManager } from 'typeorm';
 
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
 
 @injectable()
 export default class GetBoardNameFromIdService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(board_id: number): Promise<string | undefined> {

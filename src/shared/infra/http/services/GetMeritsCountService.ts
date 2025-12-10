@@ -1,10 +1,10 @@
-import { container } from 'tsyringe';
 import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
-import esClient from '../../../services/elastic';
+import { container } from 'tsyringe';
 
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
+import esClient from '../../../services/elastic';
 
 interface Params {
   from: string;
@@ -43,15 +43,15 @@ export default class GetMeritsCountService {
         range: {
           date: {
             from,
-            to
-          }
-        }
+            to,
+          },
+        },
       },
       aggs: {
         merits: {
           value_count: {
-            field: 'id'
-          }
+            field: 'id',
+          },
         },
         date: {
           date_histogram: {
@@ -59,23 +59,23 @@ export default class GetMeritsCountService {
             calendar_interval: interval,
             extended_bounds: {
               min: from,
-              max: to
-            }
+              max: to,
+            },
           },
           aggs: {
             count: {
               sum: {
-                field: 'amount'
-              }
-            }
-          }
+                field: 'amount',
+              },
+            },
+          },
         },
         total_sum_merits: {
           sum_bucket: {
-            buckets_path: 'date.count'
-          }
-        }
-      }
+            buckets_path: 'date.count',
+          },
+        },
+      },
     });
 
     const data = {
@@ -84,8 +84,8 @@ export default class GetMeritsCountService {
       dates: (results.aggregations.date as any).buckets.map(b => ({
         key: b.key,
         transactions: b.doc_count,
-        total_sum: b.count.value
-      }))
+        total_sum: b.count.value,
+      })),
     };
 
     await saveCache.execute(`meritsCountPeriod:${from}-${to}-${interval}`, data, 'EX', 180);

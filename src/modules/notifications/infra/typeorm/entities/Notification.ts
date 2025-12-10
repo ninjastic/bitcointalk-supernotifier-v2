@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 import {
   ChildEntity,
   Column,
@@ -6,7 +5,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   TableInheritance,
-  UpdateDateColumn
+  UpdateDateColumn,
 } from 'typeorm';
 
 export enum NotificationType {
@@ -17,48 +16,48 @@ export enum NotificationType {
   TRACKED_USER = 'tracked_user',
   TRACKED_PHRASE = 'tracked_phrase',
   AUTO_TRACK_TOPIC_REQUEST = 'auto_track_topic_request',
-  REMOVE_TOPIC = 'remove_topic'
+  REMOVE_TOPIC = 'remove_topic',
 }
 
-type PostMentionData = {
+interface PostMentionData {
   post_id: number;
   history: boolean;
-};
+}
 
-type MeritData = {
+interface MeritData {
   post_id: number;
   merit_id: string;
-};
+}
 
-type TrackedTopicData = {
+interface TrackedTopicData {
   post_id: number;
-};
+}
 
-type TrackedBoardData = {
+interface TrackedBoardData {
   post_id: number;
   board_id: number;
-};
+}
 
-type TrackedUserData = {
+interface TrackedUserData {
   post_id: number;
   author: string;
-};
+}
 
-type TrackedPhraseData = {
+interface TrackedPhraseData {
   post_id: number;
   phrase: string;
-};
+}
 
-type AutoTrackTopicRequestData = {
+interface AutoTrackTopicRequestData {
   topic_id: number;
   post_id: number;
-};
+}
 
-type RemoveTopicData = {
+interface RemoveTopicData {
   topic_id: number;
   user_id: number;
   posts_removed_count: number;
-};
+}
 
 @Entity('notifications')
 @TableInheritance({ column: { type: 'enum', enum: NotificationType, name: 'type' } })

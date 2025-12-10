@@ -2,11 +2,11 @@ import 'dotenv/config';
 import { load } from 'cheerio';
 import { container } from 'tsyringe';
 
-import api from '../../../shared/services/api';
+import type ModLog from '../infra/typeorm/entities/ModLog';
 
+import api from '../../../shared/services/api';
 import ParseModLogService from './ParseModLogService';
 import SaveModLogService from './SaveModLogService';
-import type ModLog from '../infra/typeorm/entities/ModLog';
 
 export default class ScrapeModLogService {
   public async execute(): Promise<number> {

@@ -1,17 +1,18 @@
-import { getRepository } from 'typeorm';
-import { container } from 'tsyringe';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
-import Post from '##/modules/posts/infra/typeorm/entities/Post';
-import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
-import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
-type GetPostParams = {
+import Post from '##/modules/posts/infra/typeorm/entities/Post';
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
+import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
+import { container } from 'tsyringe';
+import { getRepository } from 'typeorm';
+
+interface GetPostParams {
   postId: number;
   shouldScrape: boolean;
   shouldCache: boolean;
-};
+}
 
-const getPost = async (params: GetPostParams): Promise<Post | undefined> => {
+async function getPost(params: GetPostParams): Promise<Post | undefined> {
   const postsRepository = getRepository(Post);
   const topicsRepository = getRepository(Topic);
   const cacheRepository = container.resolve<RedisProvider>('CacheRepository');
@@ -36,7 +37,7 @@ const getPost = async (params: GetPostParams): Promise<Post | undefined> => {
     const { post: scrapedPost, topic: scrapedTopic } = await addForumScraperJob(
       'scrapePost',
       { post_id: params.postId },
-      true
+      true,
     );
     if (scrapedPost) {
       post = scrapedPost;
@@ -48,6 +49,6 @@ const getPost = async (params: GetPostParams): Promise<Post | undefined> => {
   }
 
   return post;
-};
+}
 
 export default getPost;

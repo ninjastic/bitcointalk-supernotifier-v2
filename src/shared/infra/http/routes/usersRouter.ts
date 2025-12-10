@@ -1,13 +1,12 @@
 import { Router } from 'express';
 
-import getAuthorUid from '../middlewares/getAuthorUid';
-
 import UserInfoController from '../controllers/UserInfoController';
+import UserMeritsCountController from '../controllers/UserMeritsCountController';
 import UserPostsBoardsController from '../controllers/UserPostsBoardsController';
 import UserPostsPeriodsController from '../controllers/UserPostsPeriodsController';
-import UserMeritsCountController from '../controllers/UserMeritsCountController';
-import UserTopTopicsController from '../controllers/UserTopTopicsController';
 import UserTopicsUniqueController from '../controllers/UserTopicsUniqueController';
+import UserTopTopicsController from '../controllers/UserTopTopicsController';
+import getAuthorUid from '../middlewares/getAuthorUid';
 
 const userInfoController = new UserInfoController();
 const userPostsBoardsController = new UserPostsBoardsController();

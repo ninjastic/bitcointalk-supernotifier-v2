@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import GetUsersDataService from '../../services/bpip/GetUsersDataService';
 
+import GetUsersDataService from '../../services/bpip/GetUsersDataService';
 import ParseUsersScopeService from '../../services/bpip/ParseUsersScopeService';
 
 export default class UsersController {
@@ -15,11 +15,12 @@ export default class UsersController {
       const data = await getUsersData.execute({ scope, items: body.items });
 
       return response.json({ result: 'success', message: null, data });
-    } catch (error) {
+    }
+    catch (error) {
       return response.json({
         result: 'fail',
         message: error.message || 'Something went wrong',
-        data: null
+        data: null,
       });
     }
   }

@@ -3,32 +3,32 @@ module.exports = {
     {
       name: 'scraper',
       script: 'yarn start:scraper',
-      out_file: './logs/scraper.log'
+      out_file: './logs/scraper.log',
     },
     {
       name: 'server',
       script: 'yarn start:server',
-      out_file: './logs/server.log'
+      out_file: './logs/server.log',
     },
     {
       name: 'checker',
       script: 'yarn start:checker',
-      out_file: './logs/checker.log'
+      out_file: './logs/checker.log',
     },
     {
       name: 'telegram',
       script: 'yarn start:telegram',
-      out_file: './logs/telegram.log'
+      out_file: './logs/telegram.log',
     },
     {
       name: 'elastic-sync',
       script: 'yarn start:sync',
-      out_file: './logs/sync.log'
+      out_file: './logs/sync.log',
     },
     {
       name: 'simplex',
       script: 'yarn start:simplex',
-      out_file: './logs/simplex.log'
-    }
-  ]
+      out_file: './logs/simplex.log',
+    },
+  ],
 };

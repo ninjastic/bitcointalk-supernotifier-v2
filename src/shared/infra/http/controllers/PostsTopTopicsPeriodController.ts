@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
-import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
+
+import { addMinutes, endOfHour, startOfHour, sub } from 'date-fns';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
-
 import GetPostsTopTopicsPeriodService from '../services/GetPostsTopTopicsPeriodService';
 
 export default class PostsTopTopicsPeriodController {
@@ -18,21 +18,22 @@ export default class PostsTopTopicsPeriodController {
 
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
-      to: Joi.string().isoDate().allow('', null)
+      to: Joi.string().isoDate().allow('', null),
     });
 
     const query = {
       from: (request.query.from || defaultFrom) as string,
-      to: (request.query.to || defaultTo) as string
+      to: (request.query.to || defaultTo) as string,
     };
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -42,14 +43,15 @@ export default class PostsTopTopicsPeriodController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'PostsTopTopicsPeriodController'
+        controller: 'PostsTopTopicsPeriodController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

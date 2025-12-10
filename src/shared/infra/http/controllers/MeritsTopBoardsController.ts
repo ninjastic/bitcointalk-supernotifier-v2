@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
+
 import Joi from 'joi';
 
-import logger from '../../../services/logger';
-
-import GetMeritsTopBoardsService from '../services/GetMeritsTopBoardsService';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+import logger from '../../../services/logger';
+import GetMeritsTopBoardsService from '../services/GetMeritsTopBoardsService';
 
 export default class MeritsTopBoardsController {
   public async index(request: Request, response: Response): Promise<Response> {
@@ -23,16 +23,17 @@ export default class MeritsTopBoardsController {
       after_date: Joi.string().isoDate(),
       before_date: Joi.string().isoDate(),
       order: Joi.string().allow('asc', 'desc').insensitive(),
-      limit: Joi.number()
+      limit: Joi.number(),
     });
 
     try {
       await schemaValidation.validateAsync(request.query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -42,20 +43,21 @@ export default class MeritsTopBoardsController {
 
       const data = results.map(result => ({
         board_name: boards.find(board => board.board_id === Number(result.board_id))?.name,
-        ...result
+        ...result,
       }));
 
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'MeritsTopBoardsController'
+        controller: 'MeritsTopBoardsController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

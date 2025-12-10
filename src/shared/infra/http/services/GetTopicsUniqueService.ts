@@ -1,9 +1,8 @@
 import { container } from 'tsyringe';
 
-import esClient from '../../../services/elastic';
-
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
+import esClient from '../../../services/elastic';
 
 interface SearchResponse {
   aggregations: {
@@ -43,28 +42,28 @@ export default class GetTopicsUniqueService {
           must: [
             {
               match: {
-                author_uid
-              }
+                author_uid,
+              },
             },
             {
               range: {
-                date: { gte: from || null, lte: to || null }
-              }
-            }
-          ]
-        }
+                date: { gte: from || null, lte: to || null },
+              },
+            },
+          ],
+        },
       },
       aggs: {
         unique_topics: {
           cardinality: {
-            field: 'topic_id'
-          }
-        }
-      }
+            field: 'topic_id',
+          },
+        },
+      },
     });
 
     const data = {
-      unique_topics: (results.aggregations.unique_topics as { value: number }).value
+      unique_topics: (results.aggregations.unique_topics as { value: number }).value,
     };
 
     await saveCache.execute(`users:Topics:${author_uid}:${from}:${to}`, data, 'EX', 600);

@@ -1,10 +1,12 @@
 import type { Repository } from 'typeorm';
-import { getRepository } from 'typeorm';
-import hat from 'hat';
 
-import NotificationApiKey from '../entities/NotificationApiKey';
+import hat from 'hat';
+import { getRepository } from 'typeorm';
+
 import type CreateNotificationApiKeyDTO from '../../../dtos/CreateNotificationApiKeyDTO';
 import type FindOneNotificationApiKeyDTO from '../../../dtos/FindOneNotificationApiKeyDTO';
+
+import NotificationApiKey from '../entities/NotificationApiKey';
 
 export default class NotificationApiKeyRepository {
   private ormRepository: Repository<NotificationApiKey>;
@@ -16,7 +18,7 @@ export default class NotificationApiKeyRepository {
   public create(data: CreateNotificationApiKeyDTO): NotificationApiKey {
     return this.ormRepository.create({
       api_key: hat(),
-      telegram_id: data.telegram_id
+      telegram_id: data.telegram_id,
     });
   }
 

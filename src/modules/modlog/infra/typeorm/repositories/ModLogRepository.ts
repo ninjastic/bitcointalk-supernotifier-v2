@@ -1,11 +1,12 @@
 import type { Repository } from 'typeorm';
-import { getRepository, MoreThanOrEqual } from 'typeorm';
-import { sub } from 'date-fns';
 
+import { sub } from 'date-fns';
+import { getRepository, MoreThanOrEqual } from 'typeorm';
+
+import type CreateModLogDTO from '../../../dtos/CreateModLogDTO';
 import type FindModLogDTO from '../../../dtos/FindModLogDTO';
 import type FindUncheckedTypeDTO from '../../../dtos/FindUncheckedTypeDTO';
 import type IModLogRepository from '../../../repositories/IModLogRepository';
-import type CreateModLogDTO from '../../../dtos/CreateModLogDTO';
 
 import ModLog from '../entities/ModLog';
 
@@ -29,15 +30,15 @@ export default class ModLogRepository implements IModLogRepository {
       where: {
         type: data.type,
         user_id: data.user_id,
-        topic_id: data.topic_id
-      }
+        topic_id: data.topic_id,
+      },
     });
   }
 
   public async findUnchecked(type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user'): Promise<ModLog[]> {
     const where = {
       checked: false,
-      created_at: MoreThanOrEqual(sub(new Date(), { minutes: 60 }))
+      created_at: MoreThanOrEqual(sub(new Date(), { minutes: 60 })),
     } as FindUncheckedTypeDTO;
 
     if (type) {
@@ -46,7 +47,7 @@ export default class ModLogRepository implements IModLogRepository {
 
     return this.ormRepository.find({
       where,
-      order: { created_at: -1 }
+      order: { created_at: -1 },
     });
   }
 }

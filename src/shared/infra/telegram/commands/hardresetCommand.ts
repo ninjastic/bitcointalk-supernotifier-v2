@@ -1,15 +1,16 @@
+import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 import type { CommandContext } from 'grammy';
 
-import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
+import { Menu } from '@grammyjs/menu';
+import { container } from 'tsyringe';
+import { getManager } from 'typeorm';
+
 import type IMenuContext from '../@types/IMenuContext';
 
-import { Menu } from '@grammyjs/menu';
-import { getManager } from 'typeorm';
-import { container } from 'tsyringe';
 import logger from '../../../services/logger';
 
 export const hardResetConfirmInlineMenu = new Menu('hardreset')
-  .text('Yes, I want to delete everything', async ctx => {
+  .text('Yes, I want to delete everything', async (ctx) => {
     const telegramId = ctx.chat.id;
 
     if (ctx.message.chat.type === 'group') {
@@ -36,21 +37,21 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
       `UPDATE tracked_topics 
    SET tracking = array_remove(tracking, $1)
    WHERE $1 = ANY(tracking);`,
-      [telegramId]
+      [telegramId],
     );
 
     await manager.query(
       `UPDATE ignored_users 
    SET ignoring = array_remove(ignoring, $1)
    WHERE $1 = ANY(ignoring);`,
-      [telegramId]
+      [telegramId],
     );
 
     await manager.query(
       `UPDATE ignored_topics 
    SET ignoring = array_remove(ignoring, $1)
    WHERE $1 = ANY(ignoring);`,
-      [telegramId]
+      [telegramId],
     );
 
     await manager.query(`DELETE FROM ignored_boards WHERE telegram_id = $1;`, [telegramId]);
@@ -65,7 +66,7 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
         enable_auto_track_topics = FALSE
         enable_only_direct_mentions = FALSE,
       WHERE telegram_id = $1;`,
-      [telegramId]
+      [telegramId],
     );
 
     await cacheRepository.invalidate(`meritCount:${telegramId}`);
@@ -86,9 +87,9 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
     await ctx.reply('Done, you can start over running the command /start');
   })
   .row()
-  .text("No, I don't want", ctx => ctx.deleteMessage());
+  .text('No, I don\'t want', ctx => ctx.deleteMessage());
 
-const hardresetCommand = async (ctx: CommandContext<IMenuContext>): Promise<void> => {
+async function hardresetCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
   if (ctx.message.chat.type === 'group') {
     const user = await ctx.api.getChatMember(ctx.chat.id, ctx.from.id);
     if (user.status !== 'creator' && user.status !== 'administrator') {
@@ -98,8 +99,8 @@ const hardresetCommand = async (ctx: CommandContext<IMenuContext>): Promise<void
 
   await ctx.reply(
     'Are you sure you want to hard reset your account?\n\nThis will delete <b>EVERYTHING</b> related to your account from our database:\n\n<b>Username</b>\n<b>Forum ID</b>\n<b>Tracked Users</b>\n<b>Tracked Topics</b>\n<b>Tracked Boards</b>\n<b>Ignored Users</b>\n<b>Ignored Topics</b>\n<b>Ignored Boards</b>',
-    { reply_markup: hardResetConfirmInlineMenu, parse_mode: 'HTML' }
+    { reply_markup: hardResetConfirmInlineMenu, parse_mode: 'HTML' },
   );
-};
+}
 
 export default hardresetCommand;

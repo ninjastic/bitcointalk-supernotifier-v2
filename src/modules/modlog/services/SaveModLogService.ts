@@ -1,9 +1,8 @@
 import { inject, injectable } from 'tsyringe';
 
-import ModLog from '../infra/typeorm/entities/ModLog';
-
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import IModLogRepository from '../repositories/IModLogRepository';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ModLog from '../infra/typeorm/entities/ModLog';
+import type IModLogRepository from '../repositories/IModLogRepository';
 
 @injectable()
 export default class SaveModLogService {
@@ -12,12 +11,12 @@ export default class SaveModLogService {
     private modLogRepository: IModLogRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(modLog: ModLog): Promise<ModLog> {
     const cachedModLog = await this.cacheRepository.recover<ModLog>(
-      `modLog:${modLog.type}-${modLog.user_id}-${modLog.topic_id}`
+      `modLog:${modLog.type}-${modLog.user_id}-${modLog.topic_id}`,
     );
 
     if (cachedModLog) {
@@ -37,7 +36,7 @@ export default class SaveModLogService {
       `modLog:${modLog.type}-${modLog.user_id}-${modLog.topic_id}`,
       savedModLog,
       'EX',
-      300
+      300,
     );
 
     return savedModLog;

@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
-import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
+
+import { addMinutes, endOfHour, startOfHour, sub } from 'date-fns';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
-
 import GetPostsAuthorsPeriodService from '../services/GetPostsAuthorsPeriodService';
 
 export default class PostsAuthorsPeriodController {
@@ -23,21 +23,22 @@ export default class PostsAuthorsPeriodController {
 
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
-      to: Joi.string().isoDate().allow('', null)
+      to: Joi.string().isoDate().allow('', null),
     });
 
     const settings = {
       from: query.from || defaultFrom,
-      to: query.to || defaultTo
+      to: query.to || defaultTo,
     };
 
     try {
       await schemaValidation.validateAsync(settings);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -47,14 +48,15 @@ export default class PostsAuthorsPeriodController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'PostsAuthorsPeriodController'
+        controller: 'PostsAuthorsPeriodController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

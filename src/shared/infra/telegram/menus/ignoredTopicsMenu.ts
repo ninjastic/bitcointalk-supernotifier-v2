@@ -1,27 +1,26 @@
+import { StatelessQuestion } from '@grammyjs/stateless-question';
+import getPost from '##/modules/posts/services/get-post';
+import { format } from 'date-fns';
 import { MenuTemplate, replyMenuToContext } from 'grammy-inline-menu';
 import { container } from 'tsyringe';
-import { StatelessQuestion } from '@grammyjs/stateless-question';
-import { format } from 'date-fns';
 
 import type IMenuContext from '../@types/IMenuContext';
 
-import logger from '../../../services/logger';
-
-import FindIgnoredTopicsByTelegramIdService from '../services/FindIgnoredTopicsByTelegramIdService';
 import AddIgnoredTopicService from '../../../../modules/posts/services/AddIgnoredTopicService';
 import RemoveIgnoredTopicService from '../../../../modules/posts/services/RemoveIgnoredTopicService';
-import getPost from '##/modules/posts/services/get-post';
+import logger from '../../../services/logger';
+import FindIgnoredTopicsByTelegramIdService from '../services/FindIgnoredTopicsByTelegramIdService';
 
 const ignoredTopicsMenu = new MenuTemplate<IMenuContext>(() => ({
   text: `<b>Ignored Topics</b>\n\nAdd or remove ignored topics so you don't get notifications from them.`,
-  parse_mode: 'HTML'
+  parse_mode: 'HTML',
 }));
 
-const getPostInfo = async (postId: number) => {
+async function getPostInfo(postId: number) {
   return getPost({ postId, shouldCache: true, shouldScrape: false });
-};
+}
 
-const ignoredTopicsMenuInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
+const ignoredTopicsMenuInfoMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   const post = await getPostInfo(Number(ctx.match[1]));
 
   const formattedDate = format(new Date(post.date), 'Pp');
@@ -34,36 +33,36 @@ const ignoredTopicsMenuInfoMenu = new MenuTemplate<IMenuContext>(async ctx => {
 
   return {
     text: message,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
-const confirmRemoveIgnoredTopicMenu = new MenuTemplate<IMenuContext>(async ctx => {
+const confirmRemoveIgnoredTopicMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   const post = await getPostInfo(Number(ctx.match[1]));
 
   return {
     text: `Are you sure you want to stop ignoring the topic: <b>${post.title}</b>?`,
-    parse_mode: 'HTML'
+    parse_mode: 'HTML',
   };
 });
 
 confirmRemoveIgnoredTopicMenu.interact('Yes, do it!', 'yes', {
-  do: async ctx => {
+  do: async (ctx) => {
     const removeIgnoredTopic = container.resolve(RemoveIgnoredTopicService);
     await removeIgnoredTopic.execute(Number(ctx.match[1]), String(ctx.chat.id));
 
     return '/ignoredTopics/';
-  }
+  },
 });
 
 confirmRemoveIgnoredTopicMenu.interact('No, go back!', 'no', {
-  do: async () => `..`
+  do: async () => `..`,
 });
 
 ignoredTopicsMenuInfoMenu.submenu('🚫 Stop Ignoring', 'remove', confirmRemoveIgnoredTopicMenu);
 
 ignoredTopicsMenuInfoMenu.interact('↩ Go Back', 'back', {
-  do: () => '..'
+  do: () => '..',
 });
 
 const addIgnoredTopicLinkQuestion = new StatelessQuestion('addIgnoredTopic', async (ctx: IMenuContext) => {
@@ -77,7 +76,7 @@ const addIgnoredTopicLinkQuestion = new StatelessQuestion('addIgnoredTopic', asy
     if (!topic_id || !topic_id[1]) {
       await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id);
       await ctx.reply('Hmm... are you sure this link is valid and from a BitcoinTalk topic?', {
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
 
       return;
@@ -89,7 +88,7 @@ const addIgnoredTopicLinkQuestion = new StatelessQuestion('addIgnoredTopic', asy
       await ctx.api.editMessageText(
         statusMessage.chat.id,
         statusMessage.message_id,
-        'We have added your request to the queue.\n\nThis will take a few seconds...'
+        'We have added your request to the queue.\n\nThis will take a few seconds...',
       );
 
       const ignoredTopic = await addIgnoredTopic.execute(Number(topic_id[1]), String(ctx.message.chat.id));
@@ -102,16 +101,17 @@ const addIgnoredTopicLinkQuestion = new StatelessQuestion('addIgnoredTopic', asy
 
       await ctx.reply(message, {
         parse_mode: 'HTML',
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
 
       await replyMenuToContext(ignoredTopicsMenu, ctx, '/');
-    } catch (error) {
+    }
+    catch (error) {
       await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id).catch();
 
       if (error.message === 'Topic already being ignored.') {
         await ctx.reply('You are already ignoring this topic.', {
-          reply_markup: { remove_keyboard: true }
+          reply_markup: { remove_keyboard: true },
         });
 
         return;
@@ -120,22 +120,23 @@ const addIgnoredTopicLinkQuestion = new StatelessQuestion('addIgnoredTopic', asy
       logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Ignored Topic.');
 
       await ctx.reply('Something went wrong...', {
-        reply_markup: { remove_keyboard: true }
+        reply_markup: { remove_keyboard: true },
       });
     }
-  } else {
+  }
+  else {
     const message = `Invalid URL. What is the URL of the topic you want to track?`;
     await addIgnoredTopicLinkQuestion.replyWithHTML(ctx, message);
   }
 });
 
-const getIgnoredTopics = async (ctx: IMenuContext) => {
+async function getIgnoredTopics(ctx: IMenuContext) {
   const findIgnoredTopicsByTelegramId = container.resolve(FindIgnoredTopicsByTelegramIdService);
   const ignoredTopics = await findIgnoredTopicsByTelegramId.execute(String(ctx.chat.id));
 
   const formatted = {};
 
-  ignoredTopics.forEach(choice => {
+  ignoredTopics.forEach((choice) => {
     let formattedTitle = '';
     formattedTitle += choice.post.title.substring(0, 35);
     formattedTitle += choice.post.title.length >= 35 ? '...' : '';
@@ -144,7 +145,7 @@ const getIgnoredTopics = async (ctx: IMenuContext) => {
   });
 
   return formatted;
-};
+}
 
 ignoredTopicsMenu.chooseIntoSubmenu('ignoredTopics', getIgnoredTopics, ignoredTopicsMenuInfoMenu, {
   maxRows: 10,
@@ -153,21 +154,21 @@ ignoredTopicsMenu.chooseIntoSubmenu('ignoredTopics', getIgnoredTopics, ignoredTo
   setPage: (ctx, page) => {
     ctx.session.page = page;
   },
-  disableChoiceExistsCheck: true
+  disableChoiceExistsCheck: true,
 });
 
 ignoredTopicsMenu.interact('✨ Add new', 'add', {
-  do: async ctx => {
+  do: async (ctx) => {
     const message = 'What is the URL of the topic you want to ignore?';
 
     await addIgnoredTopicLinkQuestion.replyWithHTML(ctx, message);
     return true;
-  }
+  },
 });
 
 ignoredTopicsMenu.interact('↩ Go Back', 'back', {
   do: () => '..',
-  joinLastRow: true
+  joinLastRow: true,
 });
 
 export { addIgnoredTopicLinkQuestion };

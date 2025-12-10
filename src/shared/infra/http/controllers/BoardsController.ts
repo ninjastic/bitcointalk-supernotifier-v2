@@ -1,12 +1,12 @@
-import { container } from 'tsyringe';
 import type { Request, Response } from 'express';
+
 import Joi from 'joi';
+import { container } from 'tsyringe';
 
-import logger from '../../../services/logger';
-
+import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
-import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
+import logger from '../../../services/logger';
 
 export default class BoardsController {
   public async index(request: Request, response: Response): Promise<Response> {
@@ -17,16 +17,17 @@ export default class BoardsController {
     const query = request.query as unknown as { raw: string };
 
     const schemaValidation = Joi.object({
-      raw: Joi.valid('1', '0', 'true', 'false')
+      raw: Joi.valid('1', '0', 'true', 'false'),
     });
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -45,7 +46,7 @@ export default class BoardsController {
         const result = {
           result: 'success',
           message: null,
-          data
+          data,
         };
 
         await saveCache.execute('boards:raw', result);
@@ -58,16 +59,17 @@ export default class BoardsController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       await saveCache.execute('boards:organized', result);
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'BoardsController'
+        controller: 'BoardsController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

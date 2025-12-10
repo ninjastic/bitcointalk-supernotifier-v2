@@ -1,9 +1,8 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import TrackedTopic from '../../../../modules/posts/infra/typeorm/entities/TrackedTopic';
-
-import ITrackedTopicsRepository from '../../../../modules/posts/repositories/ITrackedTopicsRepository';
+import type TrackedTopic from '../../../../modules/posts/infra/typeorm/entities/TrackedTopic';
+import type ITrackedTopicsRepository from '../../../../modules/posts/repositories/ITrackedTopicsRepository';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
 @injectable()
 export default class FindTrackedTopicsByTelegramIdService {
@@ -12,7 +11,7 @@ export default class FindTrackedTopicsByTelegramIdService {
     private trackedTopicsRepository: ITrackedTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(telegram_id: string): Promise<TrackedTopic[]> {

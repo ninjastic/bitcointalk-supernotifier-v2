@@ -1,15 +1,15 @@
 import {
-  Entity,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  PrimaryGeneratedColumn,
+  Entity,
+  JoinColumn,
   OneToOne,
-  JoinColumn
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
-import TrackedTopic from './TrackedTopic';
 import User from '../../../../users/infra/typeorm/entities/User';
+import TrackedTopic from './TrackedTopic';
 
 @Entity('tracked_topics_users')
 class TrackedTopicUser {

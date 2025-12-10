@@ -1,32 +1,31 @@
-import { container, injectable, inject } from 'tsyringe';
-import pluralize from 'pluralize';
-import escape from 'escape-html';
+import type Merit from '##/modules/merits/infra/typeorm/entities/Merit';
+import type { MeritNotification } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
+import type TelegramBot from '##/shared/infra/telegram/bot';
 
-import logger from '##/shared/services/logger';
-import TelegramBot from '##/shared/infra/telegram/bot';
-
-import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
-import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
-
-import { checkBotNotificationError } from '##/shared/services/utils';
-import forumScraperQueue, { queueEvents } from '##/shared/infra/bull/queues/forumScraperQueue';
 import SetMeritNotifiedService from '##/modules/merits/services/SetMeritNotifiedService';
-import { MeritNotification, NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
+import forumScraperQueue, { queueEvents } from '##/shared/infra/bull/queues/forumScraperQueue';
 import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
+import logger from '##/shared/services/logger';
+import { checkBotNotificationError } from '##/shared/services/utils';
+import escape from 'escape-html';
+import pluralize from 'pluralize';
+import { container, inject, injectable } from 'tsyringe';
 
-type MeritNoficationData = {
+interface MeritNoficationData {
   bot: TelegramBot;
   telegramId: string;
   merit: Merit;
   scrapedPostTitle: string | null;
-};
+}
 
 @injectable()
 export default class SendMeritNotificationService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   private async getTotalMeritCount(telegram_id: string, receiver_uid: number, amount: number): Promise<number> {
@@ -54,7 +53,7 @@ export default class SendMeritNotificationService {
     await notificationService.createNotification<MeritNotification>({
       type: NotificationType.MERIT,
       telegram_id,
-      metadata
+      metadata,
     });
   }
 
@@ -62,7 +61,7 @@ export default class SendMeritNotificationService {
     telegramId: string,
     merit: Merit,
     totalMeritCount: number,
-    scrapedPostTitle: string | null
+    scrapedPostTitle: string | null,
   ): Promise<string> {
     const { post_id, topic_id, amount, sender, post } = merit;
     const { title } = post;
@@ -73,9 +72,9 @@ export default class SendMeritNotificationService {
     return (
       `${
         totalMeritCount === -1 ? '⭐️ ' : `⭐️ (Merits: <b>${totalMeritCount}</b>) `
-      }You received <b>${amount}</b> ${pluralize('merit', amount)} ` +
-      `from <b>${escape(sender)}</b> ` +
-      `for <a href="${postUrl}">${escape(scrapedPostTitle || title)}</a>${sponsor}`
+      }You received <b>${amount}</b> ${pluralize('merit', amount)} `
+      + `from <b>${escape(sender)}</b> `
+      + `for <a href="${postUrl}">${escape(scrapedPostTitle || title)}</a>${sponsor}`
     );
   }
 
@@ -92,23 +91,25 @@ export default class SendMeritNotificationService {
 
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
         parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true }
+        link_preview_options: { is_disabled: true },
       });
 
       if (messageSent) {
         logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Merit notification was sent');
         await setMeritNotified.execute(merit, telegramId);
         await this.createNotification(telegramId, { post_id, merit_id });
-      } else {
+      }
+      else {
         logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get Merit notification data');
       }
 
       return true;
-    } catch (error) {
+    }
+    catch (error) {
       await checkBotNotificationError(error, telegramId, {
         post_id: merit.post_id,
         id: merit.id,
-        message
+        message,
       });
       return false;
     }

@@ -1,4 +1,5 @@
 import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
+
 import esClient from '../../../services/elastic';
 
 export interface GetPostsBoardsPeriodParams {
@@ -30,18 +31,18 @@ export default class GetPostsBoardsPeriodService {
               range: {
                 date: {
                   gte: from,
-                  lte: to
-                }
-              }
-            }
-          ]
-        }
+                  lte: to,
+                },
+              },
+            },
+          ],
+        },
       },
       aggs: {
         boards: {
           terms: {
             field: 'board_id',
-            size: Math.min(limit || 10, 20)
+            size: Math.min(limit || 10, 20),
           },
           aggs: {
             date: {
@@ -50,18 +51,18 @@ export default class GetPostsBoardsPeriodService {
                 calendar_interval: interval,
                 extended_bounds: {
                   min: from,
-                  max: to
-                }
-              }
-            }
-          }
-        }
-      }
+                  max: to,
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const data = (dataRaw.aggregations.boards as any).buckets.map(board => ({
       board_id: board.key,
-      timestamps: board.date.buckets
+      timestamps: board.date.buckets,
     }));
 
     return data;

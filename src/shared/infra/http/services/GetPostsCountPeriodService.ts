@@ -1,10 +1,10 @@
-import { container } from 'tsyringe';
 import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
 
-import esClient from '../../../services/elastic';
+import { container } from 'tsyringe';
 
 import GetCacheService from '../../../container/providers/services/GetCacheService';
 import SaveCacheService from '../../../container/providers/services/SaveCacheService';
+import esClient from '../../../services/elastic';
 
 export interface GetPostsCountPeriodParams {
   from: string;
@@ -37,15 +37,15 @@ export default class GetPostsCountPeriodService {
         range: {
           date: {
             from,
-            to
-          }
-        }
+            to,
+          },
+        },
       },
       aggs: {
         posts: {
           value_count: {
-            field: 'post_id'
-          }
+            field: 'post_id',
+          },
         },
         date: {
           date_histogram: {
@@ -53,11 +53,11 @@ export default class GetPostsCountPeriodService {
             calendar_interval: interval,
             extended_bounds: {
               min: from,
-              max: to
-            }
-          }
-        }
-      }
+              max: to,
+            },
+          },
+        },
+      },
     });
 
     const data = (results.aggregations.date as any).buckets;

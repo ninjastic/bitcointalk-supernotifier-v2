@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { TableColumn } from 'typeorm';
 
 export class AddOwnTopicsFieldToUsers1700095223414 implements MigrationInterface {
@@ -9,8 +10,8 @@ export class AddOwnTopicsFieldToUsers1700095223414 implements MigrationInterface
         name: 'enable_auto_track_topics',
         type: 'boolean',
         default: false,
-        isNullable: false
-      })
+        isNullable: false,
+      }),
     );
   }
 

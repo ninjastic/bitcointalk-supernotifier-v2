@@ -1,43 +1,46 @@
 import 'reflect-metadata';
 import 'dotenv/config';
-import { container } from 'tsyringe';
-import { createConnection } from 'typeorm';
+import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+
+import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import inquirer from 'inquirer';
 
 import '../container';
 
-import CreatePostService from '../../modules/posts/services/CreatePostService';
+import { container } from 'tsyringe';
+import { createConnection } from 'typeorm';
+
 import Post from '../../modules/posts/infra/typeorm/entities/Post';
 import PostMissing from '../../modules/posts/infra/typeorm/entities/PostMissing';
+import CreatePostService from '../../modules/posts/services/CreatePostService';
 import { scrapeLoyceArchivePost } from './loyce/utils';
-import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
-import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 
-type PromptAnswers = {
+interface PromptAnswers {
   startPostId: number;
   endPostId: number;
-};
+}
 
-const sleep = ms =>
-  new Promise(resolve => {
+function sleep(ms) {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
 
 const BATCH_SIZE = 50;
 
-const scrape = async () => {
+async function scrape() {
   const answers = await inquirer.prompt<PromptAnswers>([
     {
       name: 'startPostId',
       type: 'number',
-      message: 'Post ID start?'
+      message: 'Post ID start?',
     },
     {
       name: 'endPostId',
       type: 'number',
       message: 'Post ID end?',
-      validate: (value, { startPostId }) => value >= startPostId || 'Can not be lower than the start value'
-    }
+      validate: (value, { startPostId }) => value >= startPostId || 'Can not be lower than the start value',
+    },
   ]);
 
   const connection = await createConnection();
@@ -85,7 +88,6 @@ const scrape = async () => {
     const topicsToInsert: Topic[] = [];
     const idsNotFound = [];
 
-    // eslint-disable-next-line no-await-in-loop
     for await (const id of batch) {
       console.log(`Checking post of id ${id}`);
 
@@ -114,26 +116,22 @@ const scrape = async () => {
 
     console.log('postsToInsert length', postsToInsert.length);
     if (postsToInsert.length) {
-      // eslint-disable-next-line no-await-in-loop
       await connection.manager.createQueryBuilder().insert().into(Post).values(postsToInsert).orIgnore().execute();
     }
 
     console.log('topicsToInsert length', topicsToInsert.length);
     if (topicsToInsert.length) {
-      // eslint-disable-next-line no-await-in-loop
       await connection.manager.createQueryBuilder().insert().into(Topic).values(topicsToInsert).orIgnore().execute();
     }
 
     console.log('idsNotFound length', idsNotFound.length);
     if (idsNotFound.length) {
-      // eslint-disable-next-line no-await-in-loop
       await connection.manager.createQueryBuilder().insert().into(PostMissing).values(idsNotFound).orIgnore().execute();
     }
 
-    // eslint-disable-next-line no-await-in-loop
     await sleep(1000);
   }
-};
+}
 
 scrape().then(() => {
   process.exit(0);

@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable unused-imports/no-unused-vars */
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class ModifyPostsContentIndex1599426302667 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {}
+  public async up(_queryRunner: QueryRunner): Promise<void> {}
 
-  public async down(queryRunner: QueryRunner): Promise<void> {}
+  public async down(_queryRunner: QueryRunner): Promise<void> {}
 }

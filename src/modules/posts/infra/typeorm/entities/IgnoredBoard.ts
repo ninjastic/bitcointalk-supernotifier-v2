@@ -1,12 +1,13 @@
 import {
-  Entity,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  PrimaryGeneratedColumn,
+  Entity,
+  JoinColumn,
   OneToOne,
-  JoinColumn
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
+
 import Board from './Board';
 
 @Entity('ignored_boards')

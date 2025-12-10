@@ -1,13 +1,13 @@
 import 'dotenv/config';
 import 'reflect-metadata';
 import inquirer from 'inquirer';
-import { createConnection } from 'typeorm';
+
+import { censorAddressesMenu } from './forum/censorAddressesMenu';
 import { censorPostsMenu } from './forum/censorPostsMenu';
 import { createPostMenu } from './forum/createPostsMenu';
+import { scrapeMeritDump } from './forum/scrapeMeritDump';
 import { scrapePostMenu } from './forum/scrapePostMenu';
 import { syncBoards } from './forum/syncBoards';
-import { scrapeMeritDump } from './forum/scrapeMeritDump';
-import { censorAddressesMenu } from './forum/censorAddressesMenu';
 
 import '##/shared/container';
 
@@ -25,14 +25,14 @@ interface PromptResponse {
   addressesMenu: AddressesMenuOptions;
 }
 
-const mainMenu = async () =>
-  inquirer
+async function mainMenu() {
+  return inquirer
     .prompt<PromptResponse>([
       {
         name: 'mainMenu',
         message: 'Choose the category',
         type: 'list',
-        choices: ['Posts', 'Merits', 'Boards', 'Addresses']
+        choices: ['Posts', 'Merits', 'Boards', 'Addresses'],
       },
       {
         name: 'postsMenu',
@@ -41,7 +41,7 @@ const mainMenu = async () =>
         choices: ['Scrape', 'Create', 'Privacy'],
         when(answers) {
           return answers.mainMenu === 'Posts';
-        }
+        },
       },
       {
         name: 'meritsMenu',
@@ -50,7 +50,7 @@ const mainMenu = async () =>
         choices: ['Scrape Last Dump', 'Scrape Loyce'],
         when(answers) {
           return answers.mainMenu === 'Merits';
-        }
+        },
       },
       {
         name: 'boardsMenu',
@@ -59,7 +59,7 @@ const mainMenu = async () =>
         choices: ['Sync'],
         when(answers) {
           return answers.mainMenu === 'Boards';
-        }
+        },
       },
       {
         name: 'addressesMenu',
@@ -68,24 +68,30 @@ const mainMenu = async () =>
         choices: ['Privacy'],
         when(answers) {
           return answers.mainMenu === 'Addresses';
-        }
-      }
+        },
+      },
     ])
-    .then(async response => {
+    .then(async (response) => {
       if (response.postsMenu === 'Create') {
         await createPostMenu();
-      } else if (response.postsMenu === 'Censor') {
+      }
+      else if (response.postsMenu === 'Censor') {
         await censorPostsMenu();
-      } else if (response.postsMenu === 'Scrape') {
+      }
+      else if (response.postsMenu === 'Scrape') {
         await scrapePostMenu();
-      } else if (response.meritsMenu) {
+      }
+      else if (response.meritsMenu) {
         const shouldScrapeLoyce = response.meritsMenu === 'Scrape Loyce';
         await scrapeMeritDump(shouldScrapeLoyce);
-      } else if (response.boardsMenu === 'Sync') {
+      }
+      else if (response.boardsMenu === 'Sync') {
         await syncBoards();
-      } else if (response.addressesMenu === 'Censor') {
+      }
+      else if (response.addressesMenu === 'Censor') {
         await censorAddressesMenu();
       }
     });
+}
 
 mainMenu().then(() => process.exit());

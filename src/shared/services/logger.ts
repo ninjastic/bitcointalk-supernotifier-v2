@@ -10,15 +10,15 @@ const logger = pino({
   timestamp: () => `,"time":"${new Date(Date.now()).toISOString()}"`,
   serializers: {
     error: pinoErrSerializer,
-    ...redaction
-  }
+    ...redaction,
+  },
 });
 
-process.on('uncaughtException', error => {
+process.on('uncaughtException', (error) => {
   logger.fatal({ error });
 });
 
-process.on('unhandledRejection', error => {
+process.on('unhandledRejection', (error) => {
   logger.fatal({ error });
 });
 

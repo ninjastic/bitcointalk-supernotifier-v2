@@ -1,11 +1,10 @@
 import { container, inject, injectable } from 'tsyringe';
 
+import type IPostsRepository from '../../posts/repositories/IPostsRepository';
+import type IUsersRepository from '../../users/repositories/IUsersRepository';
+import type IModLogRepository from '../repositories/IModLogRepository';
+
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
-
-import IPostsRepository from '../../posts/repositories/IPostsRepository';
-import IUsersRepository from '../../users/repositories/IUsersRepository';
-import IModLogRepository from '../repositories/IModLogRepository';
-
 import SetModLogCheckedService from './SetModLogCheckedService';
 
 @injectable()
@@ -18,7 +17,7 @@ export default class CheckModLogsService {
     private modLogRepository: IModLogRepository,
 
     @inject('UsersRepository')
-    private usersRepository: IUsersRepository
+    private usersRepository: IUsersRepository,
   ) {}
 
   public async execute(): Promise<void> {
@@ -40,7 +39,7 @@ export default class CheckModLogsService {
         await addTelegramJob('sendRemovedTopicNotification', {
           user,
           postsDeleted,
-          modLog
+          modLog,
         });
 
         await setModLogChecked.execute(modLog);

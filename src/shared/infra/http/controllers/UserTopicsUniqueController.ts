@@ -1,9 +1,9 @@
 import type { Request as ExpressRequest, Response } from 'express';
-import { endOfHour, addMinutes } from 'date-fns';
+
+import { addMinutes, endOfHour } from 'date-fns';
 import Joi from 'joi';
 
 import logger from '../../../services/logger';
-
 import GetTopicsUniqueService from '../services/GetTopicsUniqueService';
 
 interface Request extends ExpressRequest {
@@ -25,22 +25,23 @@ export default class UserTopicsUniqueController {
     const schemaValidation = Joi.object({
       author_uid: Joi.number().required(),
       from: Joi.string().isoDate().allow('', null),
-      to: Joi.string().isoDate().allow('', null)
+      to: Joi.string().isoDate().allow('', null),
     });
 
     const query = {
       author_uid: request.author_uid,
       from: request.query.from || undefined,
-      to: request.query.to || defaultTo
+      to: request.query.to || defaultTo,
     };
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -50,14 +51,15 @@ export default class UserTopicsUniqueController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({
         error,
-        controller: 'UserTopicsUniqueController'
+        controller: 'UserTopicsUniqueController',
       });
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

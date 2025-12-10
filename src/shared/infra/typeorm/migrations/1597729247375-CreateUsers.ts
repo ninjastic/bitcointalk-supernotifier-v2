@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateUsers1597729247375 implements MigrationInterface {
@@ -12,55 +13,55 @@ export class CreateUsers1597729247375 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'user_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'username',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'alternative_usernames',
             type: 'varchar',
-            isArray: true
+            isArray: true,
           },
           {
             name: 'language',
             type: 'varchar',
-            default: "'en'"
+            default: '\'en\'',
           },
           {
             name: 'telegram_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'enable_mentions',
-            type: 'boolean'
+            type: 'boolean',
           },
           {
             name: 'enable_merits',
-            type: 'boolean'
+            type: 'boolean',
           },
           {
             name: 'blocked',
             type: 'boolean',
-            default: false
+            default: false,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
-        ]
-      })
+            default: 'now()',
+          },
+        ],
+      }),
     );
   }
 

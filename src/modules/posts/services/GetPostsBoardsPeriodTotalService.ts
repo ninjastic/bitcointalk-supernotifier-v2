@@ -1,9 +1,9 @@
 import { container } from 'tsyringe';
 import { getManager } from 'typeorm';
-import esClient from '../../../shared/services/elastic';
 
 import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
 import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
+import esClient from '../../../shared/services/elastic';
 
 interface Params {
   from?: string;
@@ -39,32 +39,32 @@ export default class GetPostsBoardsPeriodTotalService {
               range: {
                 date: {
                   gte: from,
-                  lte: to
-                }
-              }
-            }
-          ]
-        }
+                  lte: to,
+                },
+              },
+            },
+          ],
+        },
       },
       aggs: {
         posts: {
           value_count: {
-            field: 'post_id'
-          }
+            field: 'post_id',
+          },
         },
         boards: {
           terms: {
             field: 'board_id',
-            size: limit || 10
-          }
-        }
-      }
+            size: limit || 10,
+          },
+        },
+      },
     });
 
     const boardsData = (results.aggregations.boards as any).buckets;
 
     const boards = await Promise.all(
-      boardsData.map(async board => {
+      boardsData.map(async (board) => {
         const cachedBoardsData = await getCache.execute(`boardsRecursive:${board.key}:${from}:${to}`);
 
         if (cachedBoardsData) {
@@ -73,7 +73,7 @@ export default class GetPostsBoardsPeriodTotalService {
 
         const query = await getManager().query(
           'WITH RECURSIVE child_board AS (SELECT board_id, name, parent_id FROM boards where board_id = $1 UNION SELECT b.board_id, b.name, b.parent_id FROM boards b INNER JOIN child_board c ON b.parent_id = c.board_id ) SELECT * FROM child_board',
-          [board.key]
+          [board.key],
         );
 
         const { name } = query[0];
@@ -82,26 +82,26 @@ export default class GetPostsBoardsPeriodTotalService {
         await saveCache.execute(`boardsRecursive:${board.key}:${from}:${to}`, data, 'EX', 604800);
 
         return data;
-      })
+      }),
     );
 
     const organized = {
       hits: results.hits,
       aggregations: {
         boards: {
-          buckets: boards
-        }
-      }
+          buckets: boards,
+        },
+      },
     };
 
     const posts_count = organized.aggregations.boards.buckets.reduce(
       (accum: number, curr: { count: number }) => accum + curr.count,
-      0
+      0,
     );
 
     const data = {
       total_results: posts_count,
-      boards: organized.aggregations.boards.buckets
+      boards: organized.aggregations.boards.buckets,
     } as unknown as Data;
 
     return data;

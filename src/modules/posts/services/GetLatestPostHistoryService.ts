@@ -1,15 +1,15 @@
+import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+
 import { inject, injectable } from 'tsyringe';
-import { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
 
-import IFindAllPostsHistoryDTO from '../dtos/IFindAllPostsHistoryDTO';
-
-import IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
+import type IFindAllPostsHistoryDTO from '../dtos/IFindAllPostsHistoryDTO';
+import type IPostsHistoryRepository from '../repositories/IPostsHistoryRepository';
 
 @injectable()
 export default class GetLatestPostHistoryService {
   constructor(
     @inject('PostsHistoryRepository')
-    private postsHistoryRepository: IPostsHistoryRepository
+    private postsHistoryRepository: IPostsHistoryRepository,
   ) {}
 
   public async execute(query: IFindAllPostsHistoryDTO): Promise<SearchResponse> {
@@ -17,7 +17,7 @@ export default class GetLatestPostHistoryService {
 
     return this.postsHistoryRepository.findAll({
       ...query,
-      limit
+      limit,
     });
   }
 }

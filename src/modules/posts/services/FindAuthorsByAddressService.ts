@@ -1,12 +1,12 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import IAddressesRepository from '../repositories/IAddressesRepository';
+import type IAddressesRepository from '../repositories/IAddressesRepository';
 
 @injectable()
 export default class FindAuthorsByAddressService {
   constructor(
     @inject('AddressesRepository')
-    private addressesRepository: IAddressesRepository
+    private addressesRepository: IAddressesRepository,
   ) {}
 
   public async execute({ address }: { address: string }): Promise<string[]> {

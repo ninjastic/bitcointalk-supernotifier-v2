@@ -1,13 +1,15 @@
 import type { ConversationFlavor } from '@grammyjs/conversations';
 import type { CommandContext } from 'grammy';
-import { container } from 'tsyringe';
+
 import { replyMenuToContext } from 'grammy-inline-menu';
+import { container } from 'tsyringe';
 
 import type IMenuContext from '../@types/IMenuContext';
+
 import UsersRepository from '../../../../modules/users/infra/typeorm/repositories/UsersRepository';
 import { mainMenu } from '../menus/mainMenu';
 
-const startCommand = async (ctx: ConversationFlavor & CommandContext<IMenuContext>): Promise<void> => {
+async function startCommand(ctx: ConversationFlavor & CommandContext<IMenuContext>): Promise<void> {
   if (ctx.message.chat.type === 'private') {
     ctx.session.isGroup = false;
     await ctx.reply('Hello! Welcome to the BitcoinTalk SuperNotifier V2!');
@@ -27,7 +29,8 @@ const startCommand = async (ctx: ConversationFlavor & CommandContext<IMenuContex
     if (group) {
       group.blocked = false;
       await userRepository.save(group);
-    } else {
+    }
+    else {
       group = userRepository.create({
         enable_mentions: false,
         enable_merits: false,
@@ -37,7 +40,7 @@ const startCommand = async (ctx: ConversationFlavor & CommandContext<IMenuContex
         user_id: null,
         alternative_usernames: [],
         language: 'en',
-        is_group: true
+        is_group: true,
       });
       await userRepository.save(group);
       await ctx.reply('Group initiated!');
@@ -45,6 +48,6 @@ const startCommand = async (ctx: ConversationFlavor & CommandContext<IMenuContex
 
     await replyMenuToContext(mainMenu, ctx, '/');
   }
-};
+}
 
 export default startCommand;

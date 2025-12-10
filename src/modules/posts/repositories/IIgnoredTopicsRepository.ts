@@ -1,11 +1,11 @@
-import type IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
 import type CreateIgnoredTopicDTO from '../dtos/CreateIgnoredTopicDTO';
+import type IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
 
 export default interface IIgnoredUserRepository {
-  create(data: CreateIgnoredTopicDTO): IgnoredTopic;
-  save(user: IgnoredTopic): Promise<IgnoredTopic>;
-  findOneByTopicId(topic_id: number): Promise<IgnoredTopic | undefined>;
-  findOneByPostId(post_id: number): Promise<IgnoredTopic | undefined>;
-  findAllByTelegramId(telegram_id: string): Promise<IgnoredTopic[]>;
-  findAllWithUsers(): Promise<IgnoredTopic[]>;
+  create: (data: CreateIgnoredTopicDTO) => IgnoredTopic;
+  save: (user: IgnoredTopic) => Promise<IgnoredTopic>;
+  findOneByTopicId: (topic_id: number) => Promise<IgnoredTopic | undefined>;
+  findOneByPostId: (post_id: number) => Promise<IgnoredTopic | undefined>;
+  findAllByTelegramId: (telegram_id: string) => Promise<IgnoredTopic[]>;
+  findAllWithUsers: () => Promise<IgnoredTopic[]>;
 }

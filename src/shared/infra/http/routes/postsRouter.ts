@@ -1,12 +1,12 @@
 import { Router } from 'express';
 
+import PostsAuthorsController from '../controllers/PostsAuthorsController';
+import PostsAuthorsPeriodController from '../controllers/PostsAuthorsPeriodController';
 import PostsController from '../controllers/PostsController';
 import PostsCountPeriodController from '../controllers/PostsCountPeriodController';
-import PostsAuthorsController from '../controllers/PostsAuthorsController';
 import PostsHistoryController from '../controllers/PostsHistoryController';
 import PostsTopicsPeriodController from '../controllers/PostsTopicsPeriodController';
 import PostsTopTopicsPeriodController from '../controllers/PostsTopTopicsPeriodController';
-import PostsAuthorsPeriodController from '../controllers/PostsAuthorsPeriodController';
 
 const postsController = new PostsController();
 const postsHistoryController = new PostsHistoryController();

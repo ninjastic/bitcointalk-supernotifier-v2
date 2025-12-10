@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
-import { sub, startOfHour, endOfHour, addMinutes } from 'date-fns';
+
+import { addMinutes, endOfHour, startOfHour, sub } from 'date-fns';
 import Joi from 'joi';
 
-import logger from '../../../services/logger';
-
 import GetPostsBoardsPeriodTotalService from '../../../../modules/posts/services/GetPostsBoardsPeriodTotalService';
+import logger from '../../../services/logger';
 
 export default class PostsBoardsPeriodTotalController {
   public async show(request: Request, response: Response): Promise<Response> {
@@ -19,22 +19,23 @@ export default class PostsBoardsPeriodTotalController {
     const schemaValidation = Joi.object({
       from: Joi.string().isoDate().allow('', null),
       to: Joi.string().isoDate().allow('', null),
-      limit: Joi.number().allow('', null)
+      limit: Joi.number().allow('', null),
     });
 
     const query = {
       from: (request.query.from || defaultFrom) as string,
       to: (request.query.to || defaultTo) as string,
-      limit: Number(request.query.limit) || null
+      limit: Number(request.query.limit) || null,
     };
 
     try {
       await schemaValidation.validateAsync(query);
-    } catch (error) {
+    }
+    catch (error) {
       return response.status(400).json({
         result: 'fail',
         message: error.details[0].message,
-        data: null
+        data: null,
       });
     }
 
@@ -44,17 +45,18 @@ export default class PostsBoardsPeriodTotalController {
       const result = {
         result: 'success',
         message: null,
-        data
+        data,
       };
 
       return response.json(result);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(
         {
           error,
-          controller: 'PostsBoardsPeriodTotalController'
+          controller: 'PostsBoardsPeriodTotalController',
         },
-        'Error on '
+        'Error on ',
       );
       return response.status(500).json({ result: 'fail', message: 'Something went wrong', data: null });
     }

@@ -1,8 +1,9 @@
-import { injectable, inject } from 'tsyringe';
-import esClient from '../../../services/elastic';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
+import type { PostFromES } from '../../../../modules/posts/repositories/IPostsRepository';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
+
+import esClient from '../../../services/elastic';
 
 interface Response {
   author: string;
@@ -17,7 +18,7 @@ interface Params {
 export default class GetAuthorBaseDataService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute({ author_uid }: Params): Promise<Response> {
@@ -34,9 +35,9 @@ export default class GetAuthorBaseDataService {
       size: 1,
       query: {
         match: {
-          author_uid: Number(author_uid)
-        }
-      }
+          author_uid: Number(author_uid),
+        },
+      },
     });
 
     if (!results.hits.hits.length) {
@@ -45,7 +46,7 @@ export default class GetAuthorBaseDataService {
 
     const data = {
       author: results.hits.hits[0]._source.author.toLowerCase(),
-      author_uid: results.hits.hits[0]._source.author_uid
+      author_uid: results.hits.hits[0]._source.author_uid,
     };
 
     await this.cacheRepository.save(`authorBaseData:${author_uid}`, data, 'EX', 604800);

@@ -1,8 +1,10 @@
 import type { FindOneOptions, Repository } from 'typeorm';
+
 import { getRepository } from 'typeorm';
 
-import Notification from '../entities/Notification';
 import type { CreateNotificationDTO } from '../dtos/CreateNotificationDTO';
+
+import Notification from '../entities/Notification';
 
 export default class NotificationRepository {
   private ormRepository: Repository<Notification>;

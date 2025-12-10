@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreatePosts1597725891319 implements MigrationInterface {
@@ -12,75 +13,75 @@ export class CreatePosts1597725891319 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'post_id',
             type: 'integer',
-            isUnique: true
+            isUnique: true,
           },
           {
             name: 'topic_id',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'title',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'author',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'author_uid',
-            type: 'integer'
+            type: 'integer',
           },
           {
             name: 'content',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'date',
-            type: 'timestamp with time zone'
+            type: 'timestamp with time zone',
           },
           {
             name: 'boards',
             type: 'varchar',
-            isArray: true
+            isArray: true,
           },
           {
             name: 'notified',
             type: 'boolean',
-            default: false
+            default: false,
           },
           {
             name: 'notified_to',
             type: 'integer',
-            isArray: true
+            isArray: true,
           },
           {
             name: 'checked',
             type: 'boolean',
-            default: false
+            default: false,
           },
           {
             name: 'archive',
             type: 'boolean',
             isNullable: true,
-            default: false
+            default: false,
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
-        ]
-      })
+            default: 'now()',
+          },
+        ],
+      }),
     );
   }
 

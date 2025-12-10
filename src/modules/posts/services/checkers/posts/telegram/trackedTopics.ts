@@ -1,30 +1,27 @@
-import { container } from 'tsyringe';
-
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { shouldNotifyUser } from '##/shared/services/utils';
-import type Post from '../../../../infra/typeorm/entities/Post';
-import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
-import type TrackedTopic from '../../../../infra/typeorm/entities/TrackedTopic';
-import UsersRepository from '../../../../../users/infra/typeorm/repositories/UsersRepository';
-import FindTrackedTopicUsersService from '../../../../../../shared/infra/telegram/services/FindTrackedTopicUsersService';
+import { container } from 'tsyringe';
+
 import type { NotificationResult, RecipeMetadata } from '../../../../../../shared/infra/bull/types/telegram';
+import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
+import type Post from '../../../../infra/typeorm/entities/Post';
+import type TrackedTopic from '../../../../infra/typeorm/entities/TrackedTopic';
+
+import FindTrackedTopicUsersService from '../../../../../../shared/infra/telegram/services/FindTrackedTopicUsersService';
 import logger from '../../../../../../shared/services/logger';
+import UsersRepository from '../../../../../users/infra/typeorm/repositories/UsersRepository';
 
 type TelegramTrackedTopicsCheckerNotificationResult = NotificationResult<
   RecipeMetadata['sendTopicTrackingNotification']
 >;
 
-type TelegramTrackedTopicsCheckerParams = {
+interface TelegramTrackedTopicsCheckerParams {
   posts: Post[];
   trackedTopics: TrackedTopic[];
   ignoredUsers: IgnoredUser[];
-};
+}
 
-const processPost = async (
-  post: Post,
-  trackedTopics: TrackedTopic[],
-  ignoredUsers: IgnoredUser[]
-): Promise<TelegramTrackedTopicsCheckerNotificationResult[]> => {
+async function processPost(post: Post, trackedTopics: TrackedTopic[], ignoredUsers: IgnoredUser[]): Promise<TelegramTrackedTopicsCheckerNotificationResult[]> {
   const data: TelegramTrackedTopicsCheckerNotificationResult[] = [];
   const trackedTopic = trackedTopics.find(topic => topic.topic_id === post.topic_id);
 
@@ -42,55 +39,59 @@ const processPost = async (
       if (!user) {
         logger.error(
           { post_id: post.post_id, trackedTopic_id: trackedTopic.topic_id, trackingTelegramId },
-          `User not found for trackingTelegramId ${trackingTelegramId}`
+          `User not found for trackingTelegramId ${trackingTelegramId}`,
         );
         continue;
       }
 
-      if (!shouldNotifyUser(post, user, ignoredUsers, [], [])) continue;
+      if (!shouldNotifyUser(post, user, ignoredUsers, [], []))
+        continue;
 
       const trackedTopicUsers = await findTrackedTopicUsers.execute({
         telegram_id: user.telegram_id,
-        topic_id: post.topic_id
+        topic_id: post.topic_id,
       });
 
       const isAuthorWhitelisted = trackedTopicUsers.find(
-        trackedTopicUser => trackedTopicUser.username.toLowerCase() === post.author.toLowerCase()
+        trackedTopicUser => trackedTopicUser.username.toLowerCase() === post.author.toLowerCase(),
       );
 
-      if (trackedTopicUsers.length && !isAuthorWhitelisted) continue;
+      if (trackedTopicUsers.length && !isAuthorWhitelisted)
+        continue;
 
       data.push({
         userId: user.id,
         type: NotificationType.TRACKED_TOPIC,
-        metadata: { post, user }
+        metadata: { post, user },
       });
-    } catch (error) {
+    }
+    catch (error) {
       logger.error(
         { error, postId: post.post_id, trackingTelegramId },
-        `Error processing user ${trackingTelegramId} for post ${post.post_id}`
+        `Error processing user ${trackingTelegramId} for post ${post.post_id}`,
       );
     }
   }
 
   return data;
-};
+}
 
-export const telegramTrackedTopicsChecker = async ({
+export async function telegramTrackedTopicsChecker({
   posts,
   trackedTopics,
-  ignoredUsers
-}: TelegramTrackedTopicsCheckerParams): Promise<TelegramTrackedTopicsCheckerNotificationResult[]> => {
+  ignoredUsers,
+}: TelegramTrackedTopicsCheckerParams): Promise<TelegramTrackedTopicsCheckerNotificationResult[]> {
   const data: TelegramTrackedTopicsCheckerNotificationResult[] = [];
 
   for await (const post of posts) {
     try {
       const notifications = await processPost(post, trackedTopics, ignoredUsers);
       data.push(...notifications);
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ error, postId: post.post_id }, `Error processing post ${post.post_id}`);
     }
   }
 
   return data;
-};
+}

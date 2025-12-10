@@ -1,34 +1,34 @@
-import { container, inject, injectable } from 'tsyringe';
-import { load } from 'cheerio';
-import escape from 'escape-html';
+import type {
+  TrackedUserNotification,
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type Post from '##/modules/posts/infra/typeorm/entities/Post';
+import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
+import type TelegramBot from '##/shared/infra/telegram/bot';
 
-import logger from '##/shared/services/logger';
-import TelegramBot from '##/shared/infra/telegram/bot';
-
-import Post from '##/modules/posts/infra/typeorm/entities/Post';
-
-import { checkBotNotificationError, isAprilFools } from '##/shared/services/utils';
-import SetPostNotifiedService from '##/modules/posts/services/SetPostNotifiedService';
-import ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 import {
   NotificationType,
-  TrackedUserNotification
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
+import SetPostNotifiedService from '##/modules/posts/services/SetPostNotifiedService';
 import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
 import { sarcasticAprilFoolsMessage } from '##/shared/services/ai';
+import logger from '##/shared/services/logger';
+import { checkBotNotificationError, isAprilFools } from '##/shared/services/utils';
+import { load } from 'cheerio';
+import escape from 'escape-html';
+import { container, inject, injectable } from 'tsyringe';
 
-type TrackedUserNotificationData = {
+interface TrackedUserNotificationData {
   bot: TelegramBot;
   telegramId: string;
   post: Post;
-};
+}
 
 @injectable()
 export default class SendTrackedUserNotificationService {
   constructor(
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   private filterPostContent(content: string): string {
@@ -36,7 +36,7 @@ export default class SendTrackedUserNotificationService {
     const data = $('body');
     data.children('div.quote, div.quoteheader').remove();
     data.find('br').replaceWith('&nbsp;');
-    return data.text().replace(/\s\s+/g, ' ').trim();
+    return data.text().replace(/\s{2,}/g, ' ').trim();
   }
 
   private async markPostAsNotified(post: Post, telegramId: string): Promise<void> {
@@ -49,7 +49,7 @@ export default class SendTrackedUserNotificationService {
     await notificationService.createNotification<TrackedUserNotification>({
       type: NotificationType.TRACKED_USER,
       telegram_id: telegramId,
-      metadata
+      metadata,
     });
   }
 
@@ -60,17 +60,17 @@ export default class SendTrackedUserNotificationService {
     const sponsor = getSponsorPhrase(telegramId);
 
     return (
-      `👤 There is a new post by the tracked user <b>${escape(author)}</b>: ` +
-      `<a href="${postUrl}">${escape(title)}</a>\n` +
-      `<pre>${escape(contentFiltered.substring(0, postLength))}` +
-      `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsor}`
+      `👤 There is a new post by the tracked user <b>${escape(author)}</b>: `
+      + `<a href="${postUrl}">${escape(title)}</a>\n`
+      + `<pre>${escape(contentFiltered.substring(0, postLength))}`
+      + `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsor}`
     );
   }
 
   private async buildNotificationMessageAprilFools(
     post: Post,
     postLength: number,
-    telegramId: string
+    telegramId: string,
   ): Promise<string> {
     const { topic_id, post_id, title, author, content } = post;
     const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
@@ -78,16 +78,16 @@ export default class SendTrackedUserNotificationService {
     const sponsor = getSponsorPhrase(telegramId);
 
     const jokeMessage = await sarcasticAprilFoolsMessage(
-      `👤 There is a new post by the tracked user <b>${escape(author)}</b>: ` +
-        `<a href="${postUrl}">${escape(title)}</a>\n` +
-        contentFiltered
+      `👤 There is a new post by the tracked user <b>${escape(author)}</b>: `
+      + `<a href="${postUrl}">${escape(title)}</a>\n${
+        contentFiltered}`,
     );
 
     return (
-      `👤 There is a new post by the tracked user <b>${escape(author)}</b>: ` +
-      `<a href="${postUrl}">${escape(title)}</a>\n\n` +
-      `<a href="https://bitcointalk.org/index.php?topic=5248878.msg65230609#msg65230609">SuperNotifier Ninja-AI:</a> ${jokeMessage}` +
-      sponsor
+      `👤 There is a new post by the tracked user <b>${escape(author)}</b>: `
+      + `<a href="${postUrl}">${escape(title)}</a>\n\n`
+      + `<a href="https://bitcointalk.org/index.php?topic=5248878.msg65230609#msg65230609">SuperNotifier Ninja-AI:</a> ${jokeMessage}${
+        sponsor}`
     );
   }
 
@@ -101,34 +101,37 @@ export default class SendTrackedUserNotificationService {
 
       if (aprilFools) {
         message = await this.buildNotificationMessageAprilFools(post, postLength, telegramId);
-      } else {
+      }
+      else {
         message = await this.buildNotificationMessage(post, postLength, telegramId);
       }
 
       const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
         parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true }
+        link_preview_options: { is_disabled: true },
       });
 
       if (messageSent) {
         logger.info(
           { telegram_id: telegramId, post_id: post.post_id, message, messageSent },
-          'Tracked User notification was sent'
+          'Tracked User notification was sent',
         );
         await this.markPostAsNotified(post, telegramId);
         await this.createNotification(telegramId, { post_id: post.post_id, author: post.author });
-      } else {
+      }
+      else {
         logger.warn(
           { telegram_id: telegramId, post_id: post.post_id, message },
-          'Could not get Tracked User notification data'
+          'Could not get Tracked User notification data',
         );
       }
 
       return true;
-    } catch (error) {
+    }
+    catch (error) {
       await checkBotNotificationError(error, telegramId, {
         post_id: post.post_id,
-        message
+        message,
       });
       return false;
     }

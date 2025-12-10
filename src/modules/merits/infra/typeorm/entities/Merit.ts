@@ -1,12 +1,12 @@
 import {
-  Entity,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
   Index,
-  PrimaryGeneratedColumn,
+  JoinColumn,
   OneToOne,
-  JoinColumn
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 import Post from '../../../../posts/infra/typeorm/entities/Post';

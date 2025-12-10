@@ -5,8 +5,9 @@ import {
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
 } from 'typeorm';
+
 import Post from './Post';
 
 @Entity('topics')

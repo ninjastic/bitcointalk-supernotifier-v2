@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateBoards1599870673731 implements MigrationInterface {
@@ -12,24 +13,24 @@ export class CreateBoards1599870673731 implements MigrationInterface {
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'board_id',
             type: 'integer',
-            isUnique: true
+            isUnique: true,
           },
           {
             name: 'name',
-            type: 'varchar'
+            type: 'varchar',
           },
           {
             name: 'parent_id',
             type: 'integer',
-            isNullable: true
-          }
-        ]
-      })
+            isNullable: true,
+          },
+        ],
+      }),
     );
   }
 

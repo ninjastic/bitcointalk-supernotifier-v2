@@ -1,5 +1,5 @@
-import fetch from 'node-fetch';
 import FormData from 'form-data';
+import fetch from 'node-fetch';
 
 import api from '../../../shared/services/api';
 import logger from '../../../shared/services/logger';
@@ -18,7 +18,7 @@ export default class LoginService {
 
     const response = await fetch(
       `https://bitcointalk.org/index.php?action=login2;ccode=${process.env.BITCOINTALK_BYPASS_CAPTCHA_CODE}`,
-      { method: 'POST', body: bodyFormData, redirect: 'manual' }
+      { method: 'POST', body: bodyFormData, redirect: 'manual' },
     );
 
     const cookies = response.headers.raw()['set-cookie'];
@@ -30,6 +30,6 @@ export default class LoginService {
     }
 
     logger.error('[ForumLoginService] Authentication failed.');
-    return Promise.reject();
+    return Promise.reject(new Error('Authentication failed.'));
   }
 }

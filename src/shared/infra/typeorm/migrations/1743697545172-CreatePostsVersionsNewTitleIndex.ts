@@ -1,5 +1,4 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
-import { TableIndex } from 'typeorm';
 
 export class CreatePostsVersionsNewTitleIndex1743697545172 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {

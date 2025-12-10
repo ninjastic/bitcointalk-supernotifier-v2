@@ -1,7 +1,7 @@
 import { addMinutes, sub } from 'date-fns';
 
-import GetTopicsUniqueService from '../GetTopicsUniqueService';
 import GetAddressesTopUniqueService from '../GetAddressesTopUniqueService';
+import GetTopicsUniqueService from '../GetTopicsUniqueService';
 import GetUserTopTopicsService from '../GetUserTopTopicsService';
 
 interface Params {
@@ -29,45 +29,45 @@ export default class GetUsersDataService {
 
     const data = {};
 
-    items.forEach(item => {
+    items.forEach((item) => {
       data[item] = {};
     });
 
     if (scope.includes('[UT]')) {
       await Promise.all(
-        items.map(async item => {
+        items.map(async (item) => {
           const { unique_topics } = await getTopicsUnique.execute({
-            author_uid: Number(item)
+            author_uid: Number(item),
           });
           data[item].unique_topics = unique_topics;
-        })
+        }),
       );
     }
 
     if (scope.includes('[AD]')) {
       await Promise.all(
-        items.map(async item => {
+        items.map(async (item) => {
           const { addresses } = await getAddressesTopUnique.execute({
             author_uid: Number(item),
-            limit: 5
+            limit: 5,
           });
 
           data[item].addresses = addresses;
-        })
+        }),
       );
     }
 
     if (scope.includes('[FT]')) {
       await Promise.all(
-        items.map(async item => {
+        items.map(async (item) => {
           const topics = await getUserTopTopics.execute({
             author_uid: Number(item),
             from: sub(dateUTC, { days: 120 }).toISOString(),
-            limit: 5
+            limit: 5,
           });
 
           data[item].topics = topics;
-        })
+        }),
       );
     }
 

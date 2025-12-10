@@ -1,9 +1,8 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../container/providers/models/ICacheProvider';
-import ITrackedPhrasesRepository from '../../../../modules/posts/repositories/ITrackedPhrasesRepository';
-
-import TrackedPhrase from '../../../../modules/posts/infra/typeorm/entities/TrackedPhrase';
+import type TrackedPhrase from '../../../../modules/posts/infra/typeorm/entities/TrackedPhrase';
+import type ITrackedPhrasesRepository from '../../../../modules/posts/repositories/ITrackedPhrasesRepository';
+import type ICacheProvider from '../../../container/providers/models/ICacheProvider';
 
 @injectable()
 export default class CreateTrackedPhraseService {
@@ -12,13 +11,13 @@ export default class CreateTrackedPhraseService {
     private trackedPhrasesRepository: ITrackedPhrasesRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute({ telegram_id, phrase }: { telegram_id: string; phrase: string }): Promise<TrackedPhrase> {
     const exists = await this.trackedPhrasesRepository.findOne({
       telegram_id,
-      phrase
+      phrase,
     });
 
     if (exists) {
@@ -27,7 +26,7 @@ export default class CreateTrackedPhraseService {
 
     const trackedTopicUser = this.trackedPhrasesRepository.create({
       telegram_id,
-      phrase
+      phrase,
     });
 
     await this.trackedPhrasesRepository.save(trackedTopicUser);

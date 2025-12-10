@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { Table } from 'typeorm';
 
 export class CreateNotificationApiKeys1678989837725 implements MigrationInterface {
@@ -12,36 +13,36 @@ export class CreateNotificationApiKeys1678989837725 implements MigrationInterfac
             type: 'uuid',
             isPrimary: true,
             isGenerated: true,
-            generationStrategy: 'uuid'
+            generationStrategy: 'uuid',
           },
           {
             name: 'api_key',
             type: 'varchar',
-            isUnique: true
+            isUnique: true,
           },
           {
             name: 'telegram_id',
-            type: 'bigint'
+            type: 'bigint',
           },
           {
             name: 'created_at',
             type: 'timestamp',
-            default: 'now()'
+            default: 'now()',
           },
           {
             name: 'updated_at',
             type: 'timestamp',
-            default: 'now()'
-          }
+            default: 'now()',
+          },
         ],
         foreignKeys: [
           {
             referencedTableName: 'users',
             columnNames: ['telegram_id'],
-            referencedColumnNames: ['telegram_id']
-          }
-        ]
-      })
+            referencedColumnNames: ['telegram_id'],
+          },
+        ],
+      }),
     );
   }
 

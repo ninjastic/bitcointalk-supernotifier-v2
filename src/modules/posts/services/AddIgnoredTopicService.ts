@@ -1,9 +1,9 @@
-import { injectable, inject } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
+import type IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
 
-import IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
 import { addForumScraperJob } from '../../../shared/infra/bull/queues/forumScraperQueue';
 
 @injectable()
@@ -13,7 +13,7 @@ export default class AddIgnoredTopicService {
     private ignoredTopicsRepository: IIgnoredTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(topic_id: number, telegram_id?: string): Promise<IgnoredTopic> {
@@ -43,7 +43,7 @@ export default class AddIgnoredTopicService {
     const ignoredTopic = this.ignoredTopicsRepository.create({
       post_id: topicPost.post_id,
       topic_id: topicPost.topic_id,
-      ignoring: telegram_id ? [telegram_id] : []
+      ignoring: telegram_id ? [telegram_id] : [],
     });
 
     await this.ignoredTopicsRepository.save(ignoredTopic);

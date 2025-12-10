@@ -7,9 +7,9 @@ const rateLimiter = rateLimit({
     res.status(429).json({
       result: 'fail',
       error: 'Too many requests',
-      data: null
+      data: null,
     });
-  }
+  },
 });
 
 export default rateLimiter;

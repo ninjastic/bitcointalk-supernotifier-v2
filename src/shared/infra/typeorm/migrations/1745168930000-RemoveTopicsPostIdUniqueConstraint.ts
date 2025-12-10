@@ -1,4 +1,5 @@
 import type { MigrationInterface, QueryRunner } from 'typeorm';
+
 import { TableUnique } from 'typeorm';
 
 export class RemoveTopicsPostIdUniqueConstraint1752693945182 implements MigrationInterface {
@@ -11,8 +12,8 @@ export class RemoveTopicsPostIdUniqueConstraint1752693945182 implements Migratio
       'topics',
       new TableUnique({
         name: 'UQ_6a488a437cdeb901a8d71831d6e',
-        columnNames: ['post_id']
-      })
+        columnNames: ['post_id'],
+      }),
     );
   }
 }

@@ -1,11 +1,11 @@
-import { container } from 'tsyringe';
-import { load } from 'cheerio';
-import { getRepository } from 'typeorm';
 import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
-import { format } from 'date-fns';
-import getPost from '##/modules/posts/services/get-post';
 
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
+import getPost from '##/modules/posts/services/get-post';
+import { load } from 'cheerio';
+import { format } from 'date-fns';
+import { container } from 'tsyringe';
+import { getRepository } from 'typeorm';
 
 function fixPostContentWithTodayQuoteDate(content: string, date: Date): string {
   const $ = load(content);
@@ -31,7 +31,7 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion | n
 
   const latestPostVersion = await postsVersionsRepository.findOne({
     where: { post_id: postId },
-    order: { created_at: 'DESC' }
+    order: { created_at: 'DESC' },
   });
 
   if (latestPostVersion?.deleted) {
@@ -43,7 +43,7 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion | n
   if (!currentPost?.title) {
     const postVersion = postsVersionsRepository.create({
       post_id: postId,
-      deleted: true
+      deleted: true,
     });
 
     await postsVersionsRepository.save(postVersion);
@@ -70,7 +70,7 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion | n
 
   const newPostVersion = postsVersionsRepository.create({
     post_id: postId,
-    edit_date: currentPost.edited
+    edit_date: currentPost.edited,
   });
 
   if (previousPostToCompare.title !== currentPost.title) {
@@ -78,8 +78,8 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion | n
   }
 
   if (
-    fixPostContentWithTodayQuoteDate(previousPostToCompare.content, savedPost.date) !==
-    fixPostContentWithTodayQuoteDate(currentPost.content, savedPost.date)
+    fixPostContentWithTodayQuoteDate(previousPostToCompare.content, savedPost.date)
+    !== fixPostContentWithTodayQuoteDate(currentPost.content, savedPost.date)
   ) {
     newPostVersion.new_content = currentPost.content;
   }

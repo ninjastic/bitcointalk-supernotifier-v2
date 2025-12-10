@@ -1,31 +1,30 @@
-import type { AxiosRequestConfig } from 'axios';
-import { container } from 'tsyringe';
-import { scrapePostVersion } from '##/modules/posts/services/scraper/scrape-post-version';
 import type PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
-import api from '##/shared/services/api';
+import type { RescrapeSchedule } from '##/modules/posts/services/check-post-rescrape-schedules';
 import type { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
-import parsePostHtml from '##/modules/posts/services/scraper/parse-post-html';
-import { sub, addMinutes } from 'date-fns';
-import type Cheerio from 'cheerio';
-import { load } from 'cheerio';
-
+import type { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type { AxiosRequestConfig } from 'axios';
+import type Cheerio from 'cheerio';
+import type { Repository } from 'typeorm';
+
 import ForumLoginService from '##/modules/merits/services/ForumLoginService';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-
-import logger from '##/shared/services/logger';
-import type { Repository } from 'typeorm';
-import { getRepository } from 'typeorm';
-import type { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
+import parsePostHtml from '##/modules/posts/services/scraper/parse-post-html';
 import parseTopicPostOpHtml from '##/modules/posts/services/scraper/parse-topic-post-op-html';
-import type { RescrapeSchedule } from '##/modules/posts/services/check-post-rescrape-schedules';
+import { scrapePostVersion } from '##/modules/posts/services/scraper/scrape-post-version';
 import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
+import api from '##/shared/services/api';
+import logger from '##/shared/services/logger';
+import { load } from 'cheerio';
+import { addMinutes, sub } from 'date-fns';
+import { container } from 'tsyringe';
+import { getRepository } from 'typeorm';
 
-export type RecentPostWithFooter = {
+export interface RecentPostWithFooter {
   postElement: cheerio.Element;
   footerElement: cheerio.Element;
-};
+}
 
 export class PostScraper {
   RECENT_POSTS_URL = 'index.php?action=recent';
@@ -42,7 +41,7 @@ export class PostScraper {
 
   private async getPageContent(
     url: string,
-    config: AxiosRequestConfig<any> = {}
+    config: AxiosRequestConfig<any> = {},
   ): Promise<{ $: typeof Cheerio; html: string }> {
     const response = await api.get(url, config);
     return { $: load(response.data, { decodeEntities: true }) as typeof Cheerio, html: response.data };
@@ -50,7 +49,7 @@ export class PostScraper {
 
   private async ensureLoggedIn(
     url: string,
-    config: AxiosRequestConfig<any> = {}
+    config: AxiosRequestConfig<any> = {},
   ): Promise<{ $: typeof Cheerio; html: string }> {
     let { $, html } = await this.getPageContent(url, config);
     const isLoggedIn = !!$('#hellomember').length;
@@ -66,7 +65,7 @@ export class PostScraper {
 
   private extractCurrentDate($: typeof Cheerio): Date {
     const dateString = $(
-      'body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span'
+      'body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span',
     ).text();
     return sub(new Date(dateString), { minutes: new Date().getTimezoneOffset() });
   }
@@ -84,7 +83,8 @@ export class PostScraper {
 
       if (isPostContent) {
         acc[recentPostIndex] = { ...acc[recentPostIndex], postElement: element };
-      } else {
+      }
+      else {
         acc[recentPostIndex] = { ...acc[recentPostIndex], footerElement: element };
       }
 
@@ -105,14 +105,14 @@ export class PostScraper {
       fullTitleWithBoards
         .find('b > a')
         .attr('href')
-        .match(/#msg(\d*)/)[1]
+        .match(/#msg(\d*)/)[1],
     );
 
     const topicId = Number(
       fullTitleWithBoards
         .find('b > a')
         .attr('href')
-        .match(/topic=(\d*)/)[1]
+        .match(/topic=(\d*)/)[1],
     );
 
     const title = fullTitleWithBoards.find('b > a').text().trim();
@@ -125,9 +125,9 @@ export class PostScraper {
           elementHtml: postCreatorDetails.find('td.catbg > span.middletext > a:nth-child(1)').first().html(),
           author,
           postId,
-          topicId
+          topicId,
         },
-        '[PostScraper] topicAuthor missing in recent post'
+        '[PostScraper] topicAuthor missing in recent post',
       );
     }
 
@@ -136,14 +136,14 @@ export class PostScraper {
         .find('td.catbg > span.middletext > a:last-child')
         .first()
         .attr('href')
-        .match(/u=(\d*)/)[1]
+        .match(/u=(\d*)/)[1],
     );
 
     const content = $('.post').html();
 
     const today = `${currentDate.getUTCFullYear()}/${currentDate.getUTCMonth() + 1}/${currentDate.getUTCDate()}`;
     const date = new Date(
-      $(postElement).find('td.middletext > div:nth-child(3)').text().replace('on: Today at', today).trim()
+      $(postElement).find('td.middletext > div:nth-child(3)').text().replace('on: Today at', today).trim(),
     );
 
     const boards = $(fullTitleWithBoards).find('a');
@@ -168,7 +168,7 @@ export class PostScraper {
       $('td.maintab_back > a:nth-child(1)')
         .attr('href')
         .match(/topic=\d+\.(\d+)/)
-        .at(1)
+        .at(1),
     );
 
     const post = this.postsRepository.create({
@@ -183,7 +183,7 @@ export class PostScraper {
       board_id: boardsArray[boardsArray.length - 1],
       checked: false,
       notified: false,
-      notified_to: []
+      notified_to: [],
     });
 
     post.topicAuthor = topicAuthor;
@@ -197,7 +197,8 @@ export class PostScraper {
 
     try {
       const existingPostOnRedis = await this.redisProvider.recover<string>(scrapedPostKey);
-      if (existingPostOnRedis) return;
+      if (existingPostOnRedis)
+        return;
 
       const existingPostOnDb = await this.postsRepository.findOne({ where: { post_id: post.post_id } });
 
@@ -217,17 +218,20 @@ export class PostScraper {
             await this.topicsRepository.save(topic);
             logger.debug(`[PostScraper] Created topic ${topic.topic_id}`);
           }
-        } else {
+        }
+        else {
           const existingTopic = await this.topicsRepository.findOne({ where: { topic_id: post.topic_id } });
           if (!existingTopic) {
             await addForumScraperJob('scrapeTopic', { topic_id: post.topic_id }, false);
           }
         }
-      } else {
+      }
+      else {
         await this.redisProvider.save(scrapedPostKey, true, 'EX', 1800); // 30 minutes
         logger.debug(`[PostScraper] Post ${post.post_id} already exists.`);
       }
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ error, postId: post.post_id }, `[PostScraper] Error processing post ${post.post_id}`);
     }
   }
@@ -249,7 +253,8 @@ export class PostScraper {
       }
 
       return scrapedPosts;
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ error }, '[PostScraper] Error scraping recent posts');
       return [];
     }
@@ -257,7 +262,7 @@ export class PostScraper {
 
   async scrapePost(postId: number): Promise<ParsedPost> {
     const { html } = await this.ensureLoggedIn(`index.php?topic=*.msg${postId}`, {
-      validateStatus: status => (status >= 200 && status < 300) || status === 404
+      validateStatus: status => (status >= 200 && status < 300) || status === 404,
     });
 
     return parsePostHtml(html, postId);
@@ -285,7 +290,7 @@ export class PostScraper {
 
   async scrapeTopicOp(topicId: number): Promise<ParsedTopicPost> {
     const { html } = await this.ensureLoggedIn(`index.php?topic=${topicId}`, {
-      validateStatus: status => (status >= 200 && status < 300) || status === 404
+      validateStatus: status => (status >= 200 && status < 300) || status === 404,
     });
     const topicPost = parseTopicPostOpHtml(html);
 
@@ -311,7 +316,7 @@ export class PostScraper {
     const rescrapeKey = `rescrapePost:${postId}:${dateUnix}`;
     await this.redisProvider.save(rescrapeKey, {
       time: dateUnix,
-      post_id: postId
+      post_id: postId,
     });
   }
 

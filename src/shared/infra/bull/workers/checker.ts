@@ -5,36 +5,34 @@ import { container } from 'tsyringe';
 import { createConnection } from 'typeorm';
 
 import '../../../container';
-
-import { queueRepeatableFunction } from '../../../services/utils';
-
-import CheckPostsService from '../../../../modules/posts/services/CheckPostsService';
 import CheckMeritsService from '../../../../modules/merits/services/CheckMeritsService';
 import CheckModLogsService from '../../../../modules/modlog/services/CheckModLogsService';
-import CheckPostsAddressesService from '../../../../modules/posts/services/CheckPostsAddressesService';
 import checkPostRescrapeSchedules from '../../../../modules/posts/services/check-post-rescrape-schedules';
+import CheckPostsAddressesService from '../../../../modules/posts/services/CheckPostsAddressesService';
+import CheckPostsService from '../../../../modules/posts/services/CheckPostsService';
+import { queueRepeatableFunction } from '../../../services/utils';
 
-const checkPosts = async () => {
+async function checkPosts() {
   const checkPostsService = container.resolve(CheckPostsService);
   await checkPostsService.execute();
-};
+}
 
-const checkMerits = async () => {
+async function checkMerits() {
   const checkMeritsService = container.resolve(CheckMeritsService);
   await checkMeritsService.execute();
-};
+}
 
-const checkModLogs = async () => {
+async function checkModLogs() {
   const checkModLogsService = container.resolve(CheckModLogsService);
   await checkModLogsService.execute();
-};
+}
 
-const checkPostsAddresses = async () => {
+async function checkPostsAddresses() {
   const checkPostsAddressesService = container.resolve(CheckPostsAddressesService);
   await checkPostsAddressesService.execute();
-};
+}
 
-const checker = async () => {
+async function checker() {
   await createConnection();
 
   queueRepeatableFunction(checkPosts, 1000 * 5);
@@ -42,6 +40,6 @@ const checker = async () => {
   queueRepeatableFunction(checkModLogs, 1000 * 60 * 5);
   queueRepeatableFunction(checkPostsAddresses, 1000 * 20);
   queueRepeatableFunction(checkPostRescrapeSchedules, 1000 * 30);
-};
+}
 
 checker();

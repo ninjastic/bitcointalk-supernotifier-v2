@@ -1,16 +1,16 @@
-/* eslint-disable no-console */
 import 'dotenv/config';
 import 'reflect-metadata';
+import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import chalk from 'chalk';
 import inquirer from 'inquirer';
-import { createConnection, getManager } from 'typeorm';
 
 import '../../container';
 
-import Post from '../../../modules/posts/infra/typeorm/entities/Post';
-import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
+import { createConnection, getManager } from 'typeorm';
 
-export const scrapePostMenu = async (): Promise<void> => {
+import Post from '../../../modules/posts/infra/typeorm/entities/Post';
+
+export async function scrapePostMenu(): Promise<void> {
   await createConnection();
   const postScraper = new PostScraper();
   await inquirer
@@ -19,12 +19,12 @@ export const scrapePostMenu = async (): Promise<void> => {
         type: 'input',
         name: 'data',
         message: 'URL of post',
-        filter: value => {
+        filter: (value) => {
           const [, postId] = value.match(/\.msg(\d+)/);
           return [postId];
         },
-        validate: data => data.length === 2
-      }
+        validate: data => data.length === 2,
+      },
     ])
     .then(async ({ data: [post_id] }) => {
       const { post } = await postScraper.scrapePost(post_id);
@@ -43,7 +43,7 @@ export const scrapePostMenu = async (): Promise<void> => {
           type: 'confirm',
           name: 'choice',
           message: 'Insert into database?',
-          default: false
+          default: false,
         })
         .catch(() => process.exit())) as { choice: boolean };
 
@@ -56,18 +56,19 @@ export const scrapePostMenu = async (): Promise<void> => {
           .into(Post)
           .values([post])
           .onConflict(
-            '("post_id") DO UPDATE SET title=EXCLUDED.title, content=EXCLUDED.content, updated_at=EXCLUDED.updated_at'
+            '("post_id") DO UPDATE SET title=EXCLUDED.title, content=EXCLUDED.content, updated_at=EXCLUDED.updated_at',
           )
           .execute()
           .then(r =>
             r.identifiers.length
               ? console.info(`Inserted with id ${r.identifiers[0].id}`)
-              : console.log('Could not insert post')
+              : console.log('Could not insert post'),
           );
-      } else {
+      }
+      else {
         console.info('Canceled!');
       }
 
       process.exit();
     });
-};
+}

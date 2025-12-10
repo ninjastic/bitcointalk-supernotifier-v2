@@ -1,28 +1,24 @@
 import type { Conversation, ConversationFlavor } from '@grammyjs/conversations';
-import { replyMenuToContext } from 'grammy-inline-menu';
+
 import { Menu } from '@grammyjs/menu';
+import { replyMenuToContext } from 'grammy-inline-menu';
 import { container } from 'tsyringe';
 
 import type IMenuContext from '../@types/IMenuContext';
+
 import CreateUserService from '../../../../modules/users/services/CreateUserService';
+import { mainMenu } from '../menus/mainMenu';
 import FindUserByTelegramIdService from '../services/FindUserByTelegramIdService';
 import UpdateUserByTelegramIdService from '../services/UpdateUserByTelegramIdService';
 
-import { mainMenu } from '../menus/mainMenu';
+const uidHelpInlineMenu = new Menu('uidHelp').text('I don\'t know', async ctx =>
+  ctx.replyWithPhoto('https://i.imgur.com/XFB3TeA.png'));
 
-const uidHelpInlineMenu = new Menu('uidHelp').text("I don't know", async ctx =>
-  ctx.replyWithPhoto('https://i.imgur.com/XFB3TeA.png')
-);
-
-const askForPrompt = async (
-  conversation: Conversation<IMenuContext & ConversationFlavor>,
-  ctx: IMenuContext,
-  type: 'username' | 'userId'
-): Promise<string | number> => {
+async function askForPrompt(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext, type: 'username' | 'userId'): Promise<string | number> {
   const typeText = type === 'username' ? 'username' : 'UID';
 
   await ctx.reply(`What is your BitcoinTalk ${typeText}?`, {
-    reply_markup: type === 'userId' ? uidHelpInlineMenu : null
+    reply_markup: type === 'userId' ? uidHelpInlineMenu : null,
   });
 
   const input = type === 'username' ? await conversation.form.text() : await conversation.form.number();
@@ -37,7 +33,7 @@ const askForPrompt = async (
 
   const promptMsg = await ctx.reply(`Is your BitcoinTalk ${typeText} <b>${input}</b>?`, {
     parse_mode: 'HTML',
-    reply_markup: confirmMenu
+    reply_markup: confirmMenu,
   });
 
   const cb = await conversation.waitForCallbackQuery(/confirm/);
@@ -50,19 +46,15 @@ const askForPrompt = async (
   }
 
   return askForPrompt(conversation, ctx, type);
-};
+}
 
-const askForConfirmation = async (
-  conversation: Conversation<IMenuContext>,
-  ctx: IMenuContext,
-  type: string
-): Promise<boolean> => {
+async function askForConfirmation(conversation: Conversation<IMenuContext>, ctx: IMenuContext, type: string): Promise<boolean> {
   const confirmMenu = new Menu<IMenuContext>('confirm').text('Yes').text('No');
   await conversation.run(confirmMenu);
 
   const promptMsg = await ctx.reply(`Do you want to be notified of new <b>${type}</b>?`, {
     parse_mode: 'HTML',
-    reply_markup: confirmMenu
+    reply_markup: confirmMenu,
   });
 
   const cb = await conversation.waitForCallbackQuery(/confirm/);
@@ -72,7 +64,7 @@ const askForConfirmation = async (
     ctx.chat.id,
     promptMsg.message_id,
     answer ? `✅ We will notify you of new ${type}` : `🚫 We won't notify you of new ${type}`,
-    { reply_markup: null }
+    { reply_markup: null },
   );
 
   if (answer) {
@@ -80,9 +72,9 @@ const askForConfirmation = async (
   }
 
   return false;
-};
+}
 
-const askForMentionType = async (conversation: Conversation<IMenuContext>, ctx: IMenuContext): Promise<boolean> => {
+async function askForMentionType(conversation: Conversation<IMenuContext>, ctx: IMenuContext): Promise<boolean> {
   const mentionTypeMenu = new Menu<IMenuContext>('mentionTypeMenu').text('All mentions').text('Only quotes and @ tags');
   await conversation.run(mentionTypeMenu);
 
@@ -90,8 +82,8 @@ const askForMentionType = async (conversation: Conversation<IMenuContext>, ctx: 
     `Do you want to be notified every time someone writes your username <b>${conversation.session.username}</b>...\n\nOr <b>only</b> when they quote your post or tag you with <b>@${conversation.session.username}</b>?`,
     {
       parse_mode: 'HTML',
-      reply_markup: mentionTypeMenu
-    }
+      reply_markup: mentionTypeMenu,
+    },
   );
 
   const cb = await conversation.waitForCallbackQuery(/mentionTypeMenu/);
@@ -103,7 +95,7 @@ const askForMentionType = async (conversation: Conversation<IMenuContext>, ctx: 
     answer
       ? `✅ We will notify you of <b>all mentions</b>`
       : `✅ We will only notify you of <b>quotes</b> and <b>@ tags</b>`,
-    { parse_mode: 'HTML', reply_markup: null }
+    { parse_mode: 'HTML', reply_markup: null },
   );
 
   if (answer) {
@@ -111,12 +103,9 @@ const askForMentionType = async (conversation: Conversation<IMenuContext>, ctx: 
   }
 
   return false;
-};
+}
 
-const setupConversation = async (
-  conversation: Conversation<IMenuContext & ConversationFlavor>,
-  ctx: IMenuContext
-): Promise<void> => {
+async function setupConversation(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext): Promise<void> {
   const username = (await askForPrompt(conversation, ctx, 'username')) as string;
   conversation.session.username = username;
 
@@ -152,9 +141,10 @@ const setupConversation = async (
       language: 'en',
       telegram_id: String(ctx.chat.id),
       blocked: false,
-      is_group: false
+      is_group: false,
     });
-  } else {
+  }
+  else {
     await createUser.execute({
       user_id: userId,
       username,
@@ -164,11 +154,11 @@ const setupConversation = async (
       language: 'en',
       telegram_id: String(ctx.chat.id),
       blocked: false,
-      is_group: false
+      is_group: false,
     });
   }
 
   await replyMenuToContext(mainMenu, ctx, '/');
-};
+}
 
 export { setupConversation, uidHelpInlineMenu };

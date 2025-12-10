@@ -1,10 +1,9 @@
-import { injectable, inject } from 'tsyringe';
-
-import ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
-
-import TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
 import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
+import { inject, injectable } from 'tsyringe';
+
+import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
+import type ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
 
 @injectable()
 export default class AddTrackedTopicService {
@@ -13,7 +12,7 @@ export default class AddTrackedTopicService {
     private trackedTopicsRepository: ITrackedTopicsRepository,
 
     @inject('CacheRepository')
-    private cacheRepository: ICacheProvider
+    private cacheRepository: ICacheProvider,
   ) {}
 
   public async execute(topic_id: number, telegram_id?: string): Promise<TrackedTopic> {
@@ -43,7 +42,7 @@ export default class AddTrackedTopicService {
     const trackedTopic = this.trackedTopicsRepository.create({
       post_id: topicPost.post_id,
       topic_id: topicPost.topic_id,
-      tracking: telegram_id ? [telegram_id] : []
+      tracking: telegram_id ? [telegram_id] : [],
     });
 
     await this.trackedTopicsRepository.save(trackedTopic);

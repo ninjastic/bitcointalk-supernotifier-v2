@@ -1,17 +1,18 @@
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type Cheerio from 'cheerio';
+import type { Repository } from 'typeorm';
+
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
 import ForumLoginService from '##/modules/merits/services/ForumLoginService';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import forumScraperQueue, { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
 import api from '##/shared/services/api';
 import logger from '##/shared/services/logger';
-import type Cheerio from 'cheerio';
 import { load } from 'cheerio';
 import { sub } from 'date-fns';
 import { container } from 'tsyringe';
-import type { Repository } from 'typeorm';
 import { getRepository, IsNull, Not } from 'typeorm';
 
 export class MeritScraper {
@@ -53,7 +54,7 @@ export class MeritScraper {
 
   private extractCurrentDate($: typeof Cheerio): Date {
     const dateString = $(
-      'body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span'
+      'body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span',
     ).text();
     return sub(new Date(dateString), { minutes: new Date().getTimezoneOffset() });
   }
@@ -104,13 +105,13 @@ export class MeritScraper {
       topic_id,
       notified: false,
       notified_to: [],
-      checked: false
+      checked: false,
     });
 
     if (post && post.title !== meritPostTitle) {
       const latestPostVersionWithNewTitle = await this.postsVersionsRepository.findOne({
         where: { post_id, new_title: Not(IsNull()) },
-        order: { created_at: 'DESC' }
+        order: { created_at: 'DESC' },
       });
 
       const scrapePostForChangesJobId = `scrapePostForChanges-${post_id}`;
@@ -119,10 +120,10 @@ export class MeritScraper {
       if (!alreadyHasJob && !latestPostVersionWithNewTitle) {
         logger.debug(
           { post, meritPostTitle },
-          'Merit post title mismatch with archived post title, scheduling version rescrape for post'
+          'Merit post title mismatch with archived post title, scheduling version rescrape for post',
         );
         await addForumScraperJob('scrapePostForChanges', { post_id }, false, {
-          jobId: scrapePostForChangesJobId
+          jobId: scrapePostForChangesJobId,
         });
       }
 
@@ -138,15 +139,16 @@ export class MeritScraper {
 
     try {
       const existingMeritOnRedis = await this.redisProvider.recover<string>(meritKey);
-      if (existingMeritOnRedis) return;
+      if (existingMeritOnRedis)
+        return;
 
       const existingMeritOnDb = await this.meritsRepository.findOne({
         where: {
           amount: merit.amount,
           sender_uid: merit.sender_uid,
           post_id: merit.post_id,
-          date: merit.date
-        }
+          date: merit.date,
+        },
       });
 
       if (!existingMeritOnDb) {
@@ -158,7 +160,8 @@ export class MeritScraper {
 
       logger.debug(`[MeritScraper] Merit ${meritKey} already exists.`);
       await this.redisProvider.save(meritKey, true, 'EX', 3600); // 1 hour
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ error, meritKey }, `[MeritScraper] Error processing merit ${meritKey}`);
     }
   }
@@ -181,7 +184,8 @@ export class MeritScraper {
       }
 
       return scrapedMerits;
-    } catch (error) {
+    }
+    catch (error) {
       logger.error({ error }, '[MeritScraper] Error scraping recent merits');
       return [];
     }

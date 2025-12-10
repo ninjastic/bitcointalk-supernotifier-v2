@@ -1,32 +1,33 @@
+/* eslint-disable regexp/no-misleading-capturing-group */
+/* eslint-disable regexp/no-super-linear-backtracking */
 import 'dotenv/config';
 import 'reflect-metadata';
+import axios from 'axios';
 import { load } from 'cheerio';
+import { sub } from 'date-fns';
+import iconv from 'iconv-lite';
+import inquirer from 'inquirer';
 import { container } from 'tsyringe';
 import { createConnection, getManager } from 'typeorm';
-import iconv from 'iconv-lite';
-import axios from 'axios';
-import { sub } from 'date-fns';
-import inquirer from 'inquirer';
 
 import '../../container';
-
 import Post from '../../../modules/posts/infra/typeorm/entities/Post';
-
 import CreatePostService from '../../../modules/posts/services/CreatePostService';
 
-const sleep = ms =>
-  new Promise(resolve => {
+function sleep(ms) {
+  return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
 
-const scrapePostFromBuffer = buffer => {
+function scrapePostFromBuffer(buffer) {
   const utf8String = iconv.decode(buffer, 'ISO-8859-1');
 
   const $ = load(utf8String, { decodeEntities: true });
 
   const notFound = $('body > h3:nth-child(2) > strong').text();
 
-  if (notFound === "The page you're looking for doesn't exist.") {
+  if (notFound === 'The page you\'re looking for doesn\'t exist.') {
     return 404;
   }
 
@@ -35,16 +36,17 @@ const scrapePostFromBuffer = buffer => {
   const topic_id = Number(post_url.match(/topic=(\d+)\./i)[1]);
   const author = $('body > b > a:nth-child(2)').text();
 
-  if (!author) return null;
+  if (!author)
+    return null;
 
   const author_url = $('body > b > a:nth-child(2)').attr('href');
   const author_uid = Number(author_url.match(/u=(\d+)/i)[1]);
   const dateRaw = $('body')
     .html()
     .match(/scraped on (.*)\):/i)[1];
-  const dateFull = dateRaw.match(/\w{3}\s+(\w{3})\s+(\d+) .* \w+\s+(\d+)/i);
+  const dateFull = dateRaw.match(/\w{3}\s+(\w{3})\s+(\d+) .* \w+\s+(\d+)/);
   const date = `${dateFull[1]} ${dateFull[2]} ${dateFull[3]}`;
-  const hourFull = dateRaw.match(/\w{3}\s+\w{3}\s+\d+\s+(.*)\s+\w+\s+\d+/i);
+  const hourFull = dateRaw.match(/\w{3}\s+\w{3}\s+\d+\s+(.*)\s+\w+\s+\d+/);
   const hour = hourFull[1];
   const dateHour = `${date} ${hour}`;
   const dateFixed = new Date(dateHour);
@@ -55,7 +57,8 @@ const scrapePostFromBuffer = buffer => {
     return null;
   }
 
-  if (author_uid && author_uid >= 999999999) return null;
+  if (author_uid && author_uid >= 999999999)
+    return null;
 
   const boards = [];
   const checked = false;
@@ -75,16 +78,16 @@ const scrapePostFromBuffer = buffer => {
     checked,
     notified,
     notified_to,
-    archive
+    archive,
   };
 
   return post;
-};
+}
 
-type PromptResponse = {
+interface PromptResponse {
   from: string;
   to: string;
-};
+}
 
 createConnection().then(async () => {
   const manager = getManager();
@@ -96,21 +99,21 @@ createConnection().then(async () => {
         type: 'input',
         name: 'from',
         message: 'From Id',
-        validate: value => !Number.isNaN(Number(value))
+        validate: value => !Number.isNaN(Number(value)),
       },
       {
         type: 'input',
         name: 'to',
         message: 'To Id',
-        validate: value => !Number.isNaN(Number(value))
-      }
+        validate: value => !Number.isNaN(Number(value)),
+      },
     ])
     .catch(() => process.exit());
 
   console.log(`Scraping range: ${from} ~ ${to}`);
 
   const numberOfPosts = Number(to) - Number(from);
-  const loop = new Array(numberOfPosts);
+  const loop = Array.from({ length: numberOfPosts });
 
   let operations = [];
   let sinceLastBatch = 0;
@@ -123,14 +126,16 @@ createConnection().then(async () => {
 
     if (exists) {
       console.log('Exists', currentId);
-    } else {
+    }
+    else {
       const response = await axios.get(`https://loyce.club/archive/posts/${currentIdFolder}/${currentId}.html`);
 
       const post = scrapePostFromBuffer(response.data);
 
       if (post === 404) {
         console.log(`${currentId} not found.`);
-      } else if (post.post_id) {
+      }
+      else if (post.post_id) {
         const postCreated = createPost.execute(post as Post);
 
         if (postCreated.post_id) {
@@ -152,7 +157,8 @@ createConnection().then(async () => {
             sinceLastBatch = 0;
           }
         }
-      } else {
+      }
+      else {
         console.log('ERRO >>', currentIdFolder, currentId);
       }
 
