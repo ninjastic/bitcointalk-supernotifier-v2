@@ -21,7 +21,7 @@ export default class ParseTopicService {
     let found = false;
 
     $(posts)
-      .find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr')
+      .find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*=\'subject\'])')
       .toArray()
       .forEach((e) => {
         const postHeader = $(e).find('td.td_headerandpost td > div[id*=\'subject\'] > a');

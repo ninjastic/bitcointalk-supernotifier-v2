@@ -1,5 +1,6 @@
 import type PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import type { ParsedPost } from '##/modules/posts/services/scraper/parse-post-html';
+import type { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
 import type { Job, JobsOptions } from 'bullmq';
 
 import { Queue, QueueEvents } from 'bullmq';
@@ -8,9 +9,9 @@ import cacheConfig from '../../../../config/cache';
 
 export interface ForumScraperQueueRecipes {
   scrapePost: { input: { post_id: number }; output: ParsedPost };
-  scrapeTopic: { input: { topic_id: number }; output: ParsedPost };
+  scrapeTopic: { input: { topic_id: number }; output: ParsedTopicPost };
   scrapeUserMeritCount: { input: { uid: number }; output: number };
-  scrapePostForChanges: { input: { post_id: number }; output: PostVersion };
+  scrapePostForChanges: { input: { post_id: number }; output: PostVersion[] };
 }
 
 export type ForumScraperQueueJobName = keyof ForumScraperQueueRecipes;

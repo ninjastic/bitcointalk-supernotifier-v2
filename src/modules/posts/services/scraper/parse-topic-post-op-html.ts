@@ -17,7 +17,7 @@ function parseTopicPostOpHtml(html: string): ParsedTopicPost {
   const $ = load(html, { decodeEntities: true });
   const posts = $('#quickModForm > table.bordercolor');
 
-  const postElements = [...$(posts).find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr')];
+  const postElements = [...$(posts).find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*=\'subject\'])')];
 
   const postElement = postElements.find((postElement) => {
     const postHeader = $(postElement).find('td.td_headerandpost td > div[id*=\'subject\'] > a');

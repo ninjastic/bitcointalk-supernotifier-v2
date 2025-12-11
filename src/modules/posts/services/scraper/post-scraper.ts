@@ -268,14 +268,8 @@ export class PostScraper {
     return parsePostHtml(html, postId);
   }
 
-  async scrapePostVersion(postId: number): Promise<PostVersion | null> {
-    const result = await scrapePostVersion(postId);
-
-    if (result) {
-      await this.redisProvider.save(`lastPostRescrapedDate:${postId}`, result.created_at);
-    }
-
-    return result;
+  async scrapePostVersion(postId: number): Promise<PostVersion[]> {
+    return scrapePostVersion(postId);
   }
 
   async getLastPostScrapeDate(postId: number): Promise<Date | null> {

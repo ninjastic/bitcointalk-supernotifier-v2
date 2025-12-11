@@ -2,7 +2,7 @@ import pino from 'pino';
 import noir from 'pino-noir';
 import { err as pinoErrSerializer } from 'pino-std-serializers';
 
-const redaction = noir(['post.content', 'value.new_content', 'value.post.content', 'data.post.content'], 'TRIMMED');
+const redaction = noir(['post.content', 'value.new_content', 'value.post.content', 'data.post.content', 'value.pagePosts.*'], 'TRIMMED');
 
 const logger = pino({
   level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',

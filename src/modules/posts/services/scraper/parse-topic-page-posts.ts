@@ -5,16 +5,15 @@ import { load } from 'cheerio';
 import { isValid, sub } from 'date-fns';
 import { getRepository } from 'typeorm';
 
-export interface ParsedPost {
+export interface ParsedTopicPagePosts {
   success: boolean;
+  posts: Post[];
   failedReason: string | null;
   scrapedForumDate?: Date;
-  post: Post | null;
   topic?: Topic;
-  pagePosts: Post[];
 }
 
-async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> {
+async function parseTopicPagePosts(html: string): Promise<ParsedTopicPagePosts> {
   const postsRepository = getRepository(Post);
   const topicsRepository = getRepository(Topic);
 
@@ -32,8 +31,8 @@ async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> 
         .includes('The topic or board you are looking for appears to be either missing or off limits to you.');
 
   if (topicNotFound || topicOffLimit) {
-    logger.info(`[ParsePostElementService] Topic of post ${postId} was not found or is off limit`);
-    return { success: false, post: null, pagePosts: [], failedReason: 'Topic not found' };
+    logger.info(`[ParsePostElementService] Topic was not found or is off limit`);
+    return { success: false, posts: [], failedReason: 'Topic not found' };
   }
 
   const forumDateString = $(
@@ -46,7 +45,6 @@ async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> 
 
   const boards = $(titleBoard).find('b');
   const boardsArray = [];
-
   $(boards).each(async (boardIndex, board) => {
     const { length } = boards;
 
@@ -77,7 +75,7 @@ async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> 
     .find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*=\'subject\'])')
     .toArray();
 
-  const pagePosts = postsElements.map((postElement) => {
+  const posts = postsElements.map((postElement) => {
     const postHeader = $(postElement).find('td.td_headerandpost td > div[id*=\'subject\'] > a');
     const title = postHeader.text().trim();
     const postId = Number(
@@ -144,16 +142,14 @@ async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> 
 
   let topic: Topic | undefined;
 
-  if (isTopicFirstPage && pagePosts[0]) {
+  if (isTopicFirstPage && posts[0]) {
     topic = topicsRepository.create({
-      post_id: pagePosts[0].post_id,
-      topic_id: pagePosts[0].topic_id,
+      post_id: posts[0].post_id,
+      topic_id: posts[0].topic_id,
     });
   }
 
-  const targetPost = pagePosts.find(post => post.post_id === postId);
-
-  return { success: true, post: targetPost, pagePosts, topic, failedReason: null, scrapedForumDate: scrapeDate };
+  return { success: true, posts, topic, failedReason: null, scrapedForumDate: scrapeDate };
 }
 
-export default parsePostHtml;
+export default parseTopicPagePosts;

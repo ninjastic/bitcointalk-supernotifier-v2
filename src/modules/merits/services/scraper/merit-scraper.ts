@@ -83,9 +83,20 @@ export class MeritScraper {
 
     if (!post) {
       const result = await addForumScraperJob('scrapePost', { post_id }, true);
-      post = await this.postsRepository.save(result.post);
+
+      if (result.post) {
+        post = await this.postsRepository.save(result.post);
+      }
+
       if (result.topic) {
-        await this.topicsRepository.save(result.topic);
+        const topicExists = await this.topicsRepository.findOne({ where: { topic_id: result.topic.topic_id } });
+        if (!topicExists && result.pagePosts.length > 0) {
+          const topicPostExists = await this.postsRepository.findOne({ where: { post_id: result.topic.post_id } });
+          if (!topicPostExists) {
+            await this.postsRepository.save(result.pagePosts[0]);
+          }
+          await this.topicsRepository.save(result.topic);
+        }
       }
     }
 

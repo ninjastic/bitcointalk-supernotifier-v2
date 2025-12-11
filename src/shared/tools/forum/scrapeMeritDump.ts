@@ -166,7 +166,7 @@ export async function scrapeMeritDump(shouldScrapeLoyce: boolean) {
 
     const scrapePostsJob = postsMissingInDb.map(postMissing =>
       queue.add(async () => {
-        const post = await postScraper.scrapePost(postMissing.post_id);
+        const { post } = await postScraper.scrapePost(postMissing.post_id);
 
         if (!post) {
           throw new Error('Could not scrape post');
