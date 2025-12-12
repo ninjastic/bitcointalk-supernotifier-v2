@@ -23,6 +23,26 @@ export default class CheckModLogsService {
     private usersRepository: IUsersRepository,
   ) {}
 
+  private async markPostAsDeleted(
+    postId: number,
+    postsVersionRepository: ReturnType<typeof getRepository<PostVersion>>,
+    redisProvider: RedisProvider,
+  ): Promise<void> {
+    const deletedPostVersionExists = await postsVersionRepository.findOne({
+      where: { post_id: postId, deleted: true },
+    });
+
+    if (!deletedPostVersionExists) {
+      const newDeletedPostVersion = postsVersionRepository.create({
+        post_id: postId,
+        deleted: true,
+      });
+
+      await postsVersionRepository.save(newDeletedPostVersion);
+      await redisProvider.invalidateByPrefix(`rescrapePost:${postId}:*`);
+    }
+  }
+
   public async execute(): Promise<void> {
     const postsVersionRepository = getRepository(PostVersion);
     const redisProvider = container.resolve(RedisProvider);
@@ -32,15 +52,14 @@ export default class CheckModLogsService {
 
     const setModLogChecked = container.resolve(SetModLogCheckedService);
 
-    for await (const removedTopicModlog of removedTopicModlogs) {
+    for (const removedTopicModlog of removedTopicModlogs) {
       const topicPosts = await this.postsRepository.findPosts({ topic_id: removedTopicModlog.topic_id });
 
-      for await (const user of users) {
-        const postsDeleted = topicPosts.filter(topicPost => topicPost.author_uid === user.user_id);
+      const authorUids = new Set(topicPosts.map(p => p.author_uid));
+      const relevantUsers = users.filter(u => authorUids.has(u.user_id));
 
-        if (postsDeleted.length === 0) {
-          continue;
-        }
+      for (const user of relevantUsers) {
+        const postsDeleted = topicPosts.filter(topicPost => topicPost.author_uid === user.user_id);
 
         await addTelegramJob('sendRemovedTopicNotification', {
           user,
@@ -54,7 +73,7 @@ export default class CheckModLogsService {
 
     const deletedReplyModlogs = await this.modLogRepository.findUnchecked('delete_reply');
 
-    for await (const deletedReplyModlog of deletedReplyModlogs) {
+    for (const deletedReplyModlog of deletedReplyModlogs) {
       const post = await this.postsRepository.findOneByPostId(deletedReplyModlog.post_id);
 
       if (!post) {
@@ -62,24 +81,13 @@ export default class CheckModLogsService {
         continue;
       }
 
-      const deletedPostVersionExists = await postsVersionRepository.findOne({ where: { post_id: post.post_id, deleted: true } });
-
-      if (!deletedPostVersionExists) {
-        const newDeletedPostVersion = postsVersionRepository.create({
-          post_id: post.post_id,
-          deleted: true,
-        });
-
-        await postsVersionRepository.save(newDeletedPostVersion);
-        await redisProvider.invalidateByPrefix(`rescrapePost:${post.post_id}:*`);
-      }
-
+      await this.markPostAsDeleted(post.post_id, postsVersionRepository, redisProvider);
       await setModLogChecked.execute(deletedReplyModlog);
     }
 
     const nukedUserModlogs = await this.modLogRepository.findUnchecked('nuke_user');
 
-    for await (const nukedUserModlog of nukedUserModlogs) {
+    for (const nukedUserModlog of nukedUserModlogs) {
       const userPosts = await this.postsRepository.findPosts({ author_uid: nukedUserModlog.user_id });
 
       if (!userPosts.length) {
@@ -88,17 +96,7 @@ export default class CheckModLogsService {
       }
 
       for (const userPost of userPosts) {
-        const deletedPostVersionExists = await postsVersionRepository.findOne({ where: { post_id: userPost.post_id, deleted: true } });
-
-        if (!deletedPostVersionExists) {
-          const newDeletedPostVersion = postsVersionRepository.create({
-            post_id: userPost.post_id,
-            deleted: true,
-          });
-
-          await postsVersionRepository.save(newDeletedPostVersion);
-          await redisProvider.invalidateByPrefix(`rescrapePost:${userPost.post_id}:*`);
-        }
+        await this.markPostAsDeleted(userPost.post_id, postsVersionRepository, redisProvider);
       }
 
       await setModLogChecked.execute(nukedUserModlog);
