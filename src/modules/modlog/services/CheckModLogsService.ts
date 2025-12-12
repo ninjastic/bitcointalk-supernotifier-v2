@@ -27,7 +27,7 @@ export default class CheckModLogsService {
     const postsVersionRepository = getRepository(PostVersion);
     const redisProvider = container.resolve(RedisProvider);
 
-    const removedTopicModlogs = await this.modLogRepository.findUnchecked('remove_topic');
+    const removedTopicModlogs = await this.modLogRepository.findUnchecked('remove_topic', 60);
     const users = await this.usersRepository.getUsersWithModlogs();
 
     const setModLogChecked = container.resolve(SetModLogCheckedService);
