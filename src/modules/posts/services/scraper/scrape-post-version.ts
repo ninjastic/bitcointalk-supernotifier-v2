@@ -150,6 +150,16 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion[]> 
     await redisProvider.save(`lastPostRescrapedDate:${postId}`, scrapedForumDate.toISOString());
   }
   else {
+    const deletedPostVersionExists = await postsVersionsRepository.findOne({
+      where: { post_id: postId, deleted: true },
+      order: { created_at: 'DESC' },
+    });
+
+    if (deletedPostVersionExists) {
+      logger.debug(`Post version check id ${postId} - post was already deleted`);
+      return;
+    }
+
     const newDeletedPostVersion = postsVersionsRepository.create({
       post_id: postId,
       deleted: true,

@@ -9,6 +9,9 @@ class ModLog {
   type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user';
 
   @Column({ type: 'integer', nullable: true })
+  post_id: number;
+
+  @Column({ type: 'integer', nullable: true })
   topic_id: number;
 
   @Column('integer')
