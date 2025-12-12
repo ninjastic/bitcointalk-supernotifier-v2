@@ -107,7 +107,7 @@ async function scraper() {
 
   queueRepeatableFunction(scrapeRecentPosts, 1000 * 5);
   queueRepeatableFunction(scrapeMerits, 1000 * 15);
-  queueRepeatableFunction(scrapeModLog, 100 * 60 * 5);
+  queueRepeatableFunction(scrapeModLog, 1000 * 60 * 5);
 }
 
 scraper();
