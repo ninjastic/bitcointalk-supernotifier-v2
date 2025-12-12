@@ -50,22 +50,25 @@ export default class RedisProvider implements ICacheProvider {
     return parsedData;
   }
 
-  public async recoverMany<T>(keys: string[]): Promise<T[]> {
+  public async recoverMany<T>(keys: string[]): Promise<(T | null)[]> {
     const pipeline = this.client.pipeline();
 
     keys.forEach((key) => {
       pipeline.get(key);
     });
 
-    const values = [];
+    const values: (T | null)[] = [];
 
     await pipeline.exec((_err, result) => {
       result.forEach((res) => {
         if (res[0]) {
-          values.push(res[0]);
+          values.push(null);
+        }
+        else if (res[1] === null || res[1] === undefined) {
+          values.push(null);
         }
         else {
-          values.push(JSON.parse(res[1]));
+          values.push(JSON.parse(res[1]) as T);
         }
       });
     });
@@ -76,21 +79,29 @@ export default class RedisProvider implements ICacheProvider {
   public async recoverByPrefix<T>(prefix: string): Promise<T[]> {
     const keys = await this.client.keys(prefix);
 
+    if (keys.length === 0) {
+      return [];
+    }
+
     const pipeline = this.client.pipeline();
 
     keys.forEach((key) => {
       pipeline.get(key);
     });
 
-    const values = [];
+    const values: T[] = [];
 
     await pipeline.exec((_err, result) => {
       result.forEach((res) => {
         if (res[0]) {
-          values.push(res[0]);
+          return;
         }
-        else {
-          values.push(JSON.parse(res[1]));
+        if (res[1] === null || res[1] === undefined) {
+          return;
+        }
+        const parsed = JSON.parse(res[1]) as T;
+        if (parsed !== null) {
+          values.push(parsed);
         }
       });
     });
