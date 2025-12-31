@@ -1,5 +1,7 @@
+import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
+
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
-import RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import { container, inject, injectable } from 'tsyringe';
 import { getRepository } from 'typeorm';
 
@@ -45,7 +47,7 @@ export default class CheckModLogsService {
 
   public async execute(): Promise<void> {
     const postsVersionRepository = getRepository(PostVersion);
-    const redisProvider = container.resolve(RedisProvider);
+    const redisProvider = container.resolve<ICacheProvider>('CacheRepository');
 
     const removedTopicModlogs = await this.modLogRepository.findUnchecked('remove_topic', 60);
     const users = await this.usersRepository.getUsersWithModlogs();
