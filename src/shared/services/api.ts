@@ -11,7 +11,7 @@ let LAST_REQUEST = null;
 
 export const api = axios.create({
   baseURL: 'https://bitcointalk.org',
-  timeout: 5000,
+  timeout: 10_000,
   headers: {
     'Cookie': process.env.BITCOINTALK_COOKIE || '',
     'User-Agent': new UserAgent().toString(),
