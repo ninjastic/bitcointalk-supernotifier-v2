@@ -14,33 +14,50 @@ export interface ParsedPost {
   pagePosts: Post[];
 }
 
-async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> {
+async function parsePostHtml(
+  html: string,
+  postId: number,
+): Promise<ParsedPost> {
   const postsRepository = getRepository(Post);
   const topicsRepository = getRepository(Topic);
 
   const $ = load(html, { decodeEntities: true });
 
   const topicNotFound
-    = $('#bodyarea > div:nth-child(1) > table > tbody > tr.windowbg > td')?.text()?.trim()
+    = $('#bodyarea > div:nth-child(1) > table > tbody > tr.windowbg > td')
+      ?.text()
+      ?.trim()
       === 'The topic or board you are looking for appears to be either missing or off limits to you.';
 
   const topicOffLimit
-    = $('#frmLogin > table > tbody > tr.catbg > td')?.text()?.trim() === 'Warning!'
+    = $('#frmLogin > table > tbody > tr.catbg > td')?.text()?.trim()
+      === 'Warning!'
       && $('form table tr td.windowbg')
         ?.text()
         ?.trim()
-        .includes('The topic or board you are looking for appears to be either missing or off limits to you.');
+        .includes(
+          'The topic or board you are looking for appears to be either missing or off limits to you.',
+        );
 
   if (topicNotFound || topicOffLimit) {
-    logger.info(`[ParsePostElementService] Topic of post ${postId} was not found or is off limit`);
-    return { success: false, post: null, pagePosts: [], failedReason: 'Topic not found' };
+    logger.info(
+      `[ParsePostElementService] Topic of post ${postId} was not found or is off limit`,
+    );
+    return {
+      success: false,
+      post: null,
+      pagePosts: [],
+      failedReason: 'Topic not found',
+    };
   }
 
   const forumDateString = $(
     'body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span',
   ).text();
 
-  const scrapeDate = sub(new Date(forumDateString), { minutes: new Date().getTimezoneOffset() });
+  const scrapeDate = sub(new Date(forumDateString), {
+    minutes: new Date().getTimezoneOffset(),
+  });
 
   const titleBoard = $('#bodyarea > div > div > b').parent();
 
@@ -74,11 +91,15 @@ async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> 
   const postsContainer = $('#quickModForm > table.bordercolor');
 
   const postsElements = $(postsContainer)
-    .find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*=\'subject\'])')
+    .find(
+      'tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*=\'subject\'])',
+    )
     .toArray();
 
   const pagePosts = postsElements.map((postElement) => {
-    const postHeader = $(postElement).find('td.td_headerandpost td > div[id*=\'subject\'] > a');
+    const postHeader = $(postElement).find(
+      'td.td_headerandpost td > div[id*=\'subject\'] > a',
+    );
     const title = postHeader.text().trim();
     const postId = Number(
       postHeader
@@ -97,30 +118,43 @@ async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> 
     const author = authorElement.html() ?? 'Guest';
     const authorUrl = author && authorElement.attr('href');
     const authorUid = authorUrl
-      ? Number(authorUrl.replace('https://bitcointalk.org/index.php?action=profile;u=', ''))
+      ? Number(
+          authorUrl.replace(
+            'https://bitcointalk.org/index.php?action=profile;u=',
+            '',
+          ),
+        )
       : -1;
 
-    const content = $(postElement).find('td.td_headerandpost div.post').html();
+    const content = $(postElement)
+      .find('td.td_headerandpost div.post')
+      .html();
 
     const d = new Date();
     const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 
     const date = new Date(
       $(postElement)
-        .find('td.td_headerandpost > table:nth-child(1) div:nth-child(2)')
+        .find(
+          'td.td_headerandpost > table:nth-child(1) div:nth-child(2)',
+        )
         .text()
         .replace('Today at', today)
         .replace(/Last edit:.*/, ''),
     );
 
-    const editedDate
-      = new Date(
-        $(postElement)
-          .find('span.edited')
-          .text()
-          .replace('Today at', today)
-          .replace(/Last edit:.*/, ''),
-      ) || null;
+    const editedDateTitle = $(postElement)
+      .find('span.edited')
+      .attr('title');
+
+    const editedDate = editedDateTitle
+      ? new Date(
+          editedDateTitle
+            .replace('Today at', today)
+            .replace(/Last edit:.*/, '')
+            .trim(),
+        )
+      : null;
 
     const post = postsRepository.create({
       post_id: postId,
@@ -153,7 +187,14 @@ async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> 
 
   const targetPost = pagePosts.find(post => post.post_id === postId);
 
-  return { success: true, post: targetPost, pagePosts, topic, failedReason: null, scrapedForumDate: scrapeDate };
+  return {
+    success: true,
+    post: targetPost,
+    pagePosts,
+    topic,
+    failedReason: null,
+    scrapedForumDate: scrapeDate,
+  };
 }
 
 export default parsePostHtml;
