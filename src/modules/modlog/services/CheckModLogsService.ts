@@ -1,4 +1,3 @@
-import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
@@ -28,7 +27,7 @@ export default class CheckModLogsService {
   private async markPostAsDeleted(
     postId: number,
     postsVersionRepository: ReturnType<typeof getRepository<PostVersion>>,
-    redisProvider: RedisProvider,
+    redisProvider: ICacheProvider,
   ): Promise<void> {
     const deletedPostVersionExists = await postsVersionRepository.findOne({
       where: { post_id: postId, deleted: true },
@@ -68,6 +67,10 @@ export default class CheckModLogsService {
           postsDeleted,
           modLog: removedTopicModlog,
         });
+      }
+
+      for (const topicPost of topicPosts) {
+        await this.markPostAsDeleted(topicPost.post_id, postsVersionRepository, redisProvider);
       }
 
       await setModLogChecked.execute(removedTopicModlog);
