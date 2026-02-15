@@ -143,7 +143,7 @@ export class SyncPostsAddressesPipeline {
 
   private async batchProcessAddresses(addresses: any[]): Promise<void> {
     const esBulkContent = addresses.flatMap(address => [
-      { index: { _index: this.INDEX_NAME, _id: `${address.address}_${address.post_id}` } },
+      { index: { _index: this.INDEX_NAME, _id: address.posts_addresses_id } },
       {
         id: address.posts_addresses_id,
         address: address.posts_addresses_address,
