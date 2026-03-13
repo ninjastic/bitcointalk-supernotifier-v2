@@ -6,6 +6,7 @@ import type User from '##/modules/users/infra/typeorm/entities/User';
 import type { MentionType } from '##/shared/infra/bull/types/telegram';
 
 import bs58 from 'bs58';
+import { load } from 'cheerio';
 import JSsha from 'jssha';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -118,29 +119,38 @@ export function isUserMentionedInPost(content: string, user: { username?: string
   if (!user.username)
     return { isMentioned: false, mentionType: null };
 
+  const post$ = load(content);
+  const quoteHeaderText = post$('div.quoteheader').text();
+
+  post$('div.quoteheader').remove();
+
+  const contentWithoutQuoteHeaders = post$.text();
+
   const regexList: Array<{
-    regex: RegExp;
+    expression: RegExp;
     mentionType: MentionType;
   }> = [];
 
   const quoteRegex = new RegExp(`Quote from: ${escapeUsername(user.username)} on`, 'gi');
-  regexList.push({ regex: quoteRegex, mentionType: 'quoted_mention' });
+  regexList.push({ expression: quoteRegex, mentionType: 'quoted_mention' });
 
   const directMentionRegex = new RegExp(`@${escapeUsername(user.username)}`, 'gi');
-  regexList.push({ regex: directMentionRegex, mentionType: 'direct_mention' });
+  regexList.push({ expression: directMentionRegex, mentionType: 'direct_mention' });
 
   if (!onlyDirectAndQuote) {
     const usernameRegex = createMentionRegex(user.username);
-    regexList.push({ regex: usernameRegex, mentionType: 'username' });
+    regexList.push({ expression: usernameRegex, mentionType: 'username' });
   }
 
   if (user.alternative_usernames?.length) {
     const altUsernameRegex = createMentionRegex(user.alternative_usernames[0]);
-    regexList.push({ regex: altUsernameRegex, mentionType: 'alternative_username' });
+    regexList.push({ expression: altUsernameRegex, mentionType: 'alternative_username' });
   }
 
   for (const regex of regexList) {
-    if (regex.regex && content.match(regex.regex)) {
+    const textToSearch = regex.mentionType === 'quoted_mention' ? quoteHeaderText : contentWithoutQuoteHeaders;
+
+    if (textToSearch.match(regex.expression)) {
       return { isMentioned: true, mentionType: regex.mentionType };
     }
   }
