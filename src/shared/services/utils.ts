@@ -120,6 +120,12 @@ export function isUserMentionedInPost(content: string, user: { username?: string
     return { isMentioned: false, mentionType: null };
 
   const post$ = load(content);
+
+  post$('br').replaceWith('\n');
+  post$('div, p').each((_, el) => {
+    post$(el).prepend('\n').append('\n');
+  });
+
   const quoteHeaderText = post$('div.quoteheader').text();
 
   post$('div.quoteheader').remove();
