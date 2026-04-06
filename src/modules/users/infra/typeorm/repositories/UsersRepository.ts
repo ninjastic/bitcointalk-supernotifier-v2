@@ -1,6 +1,6 @@
 import type { Repository } from 'typeorm';
 
-import { getRepository } from 'typeorm';
+import { getRepository, In } from 'typeorm';
 
 import type CreateUserDTO from '../../../dtos/CreateUserDTO';
 import type FindOneUserDTO from '../../../dtos/FindOneUserDTO';
@@ -33,6 +33,12 @@ export default class UsersRepository implements IUsersRepository {
 
   public async findByTelegramId(telegram_id: string): Promise<User | undefined> {
     return this.ormRepository.findOne({ telegram_id });
+  }
+
+  public async findByTelegramIds(telegramIds: string[]): Promise<User[]> {
+    if (!telegramIds.length) return [];
+
+    return this.ormRepository.find({ where: { telegram_id: In(telegramIds) } });
   }
 
   public async getUsersWithMentions(): Promise<User[]> {

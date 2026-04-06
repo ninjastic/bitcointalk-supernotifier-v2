@@ -31,6 +31,17 @@ export default class PostsRepository implements IPostsRepository {
     return postSaved;
   }
 
+  public async markChecked(postIds: number[]): Promise<void> {
+    if (!postIds.length) return;
+
+    await this.ormRepository
+      .createQueryBuilder()
+      .update(Post)
+      .set({ checked: true })
+      .where('post_id = ANY(:postIds::int4[])', { postIds: `{${postIds.join(',')}}` })
+      .execute();
+  }
+
   public async findOneByPostId(post_id: number): Promise<Post | undefined> {
     return this.ormRepository.findOne({ post_id });
   }
@@ -62,7 +73,10 @@ export default class PostsRepository implements IPostsRepository {
     return results;
   }
 
-  public async findPostsByAuthor(author: string, limit: number): Promise<SearchResponse<PostFromES>> {
+  public async findPostsByAuthor(
+    author: string,
+    limit: number,
+  ): Promise<SearchResponse<PostFromES>> {
     const actual_limit = Math.min(limit || 20, 200);
     const censor = getCensorJSON();
 
@@ -99,7 +113,9 @@ export default class PostsRepository implements IPostsRepository {
     return results;
   }
 
-  public async findPostsES(conditions: IFindPostsConditionsDTO): Promise<SearchResponse<PostFromES>> {
+  public async findPostsES(
+    conditions: IFindPostsConditionsDTO,
+  ): Promise<SearchResponse<PostFromES>> {
     const {
       author,
       author_uid,
@@ -182,11 +198,10 @@ export default class PostsRepository implements IPostsRepository {
       if (child_boards && (child_boards === '1' || child_boards.toLowerCase() === 'true')) {
         const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
         const boards = await getBoardChildrensFromId.execute(board);
-        const boardsIdList = boards.map(_board => _board.board_id);
+        const boardsIdList = boards.map((_board) => _board.board_id);
 
         must.push({ terms: { board_id: boardsIdList } });
-      }
-      else {
+      } else {
         must.push({ terms: { board_id: [board] } });
       }
     }
@@ -217,7 +232,18 @@ export default class PostsRepository implements IPostsRepository {
   }
 
   public async findPosts(conditions: IFindPostsConditionsDTO): Promise<Post[]> {
-    const { author, author_uid, topic_id, last, after, after_date, before_date, board, limit, order } = conditions;
+    const {
+      author,
+      author_uid,
+      topic_id,
+      last,
+      after,
+      after_date,
+      before_date,
+      board,
+      limit,
+      order,
+    } = conditions;
 
     return this.ormRepository
       .createQueryBuilder('posts')

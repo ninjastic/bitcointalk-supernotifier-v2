@@ -23,6 +23,10 @@ export default class TrackedTopicUsersRepository implements ITrackedTopicUsersRe
     return this.ormRepository.save(trackedTopicUser);
   }
 
+  public async findAll(): Promise<TrackedTopicUser[]> {
+    return this.ormRepository.find();
+  }
+
   public async find(conditions: IFindTrackedTopicUsersDTO): Promise<TrackedTopicUser[]> {
     return this.ormRepository.find({
       where: conditions,

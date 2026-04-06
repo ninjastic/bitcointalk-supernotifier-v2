@@ -1,7 +1,9 @@
 import type Post from '##/modules/posts/infra/typeorm/entities/Post';
+import type TrackedTopicUser from '##/modules/posts/infra/typeorm/entities/TrackedTopicUser';
 import type { NotificationService } from '##/modules/posts/services/notification-service';
 import type User from '##/modules/users/infra/typeorm/entities/User';
 
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import GetIgnoredUsersService from '##/modules/users/services/GetIgnoredUsersService';
 import { sub } from 'date-fns';
@@ -12,12 +14,25 @@ import type ICacheProvider from '../../../shared/container/providers/models/ICac
 import type { NotificationResult, RecipeNames } from '../../../shared/infra/bull/types/telegram';
 import type IUsersRepository from '../../users/repositories/IUsersRepository';
 import type IPostsRepository from '../repositories/IPostsRepository';
+import type {
+  PreparedCheckerPost,
+  PreparedTrackedBoardContext,
+  PreparedTrackedPhrase,
+  PreparedTrackedTopicContext,
+  PreparedTrackedUserContext,
+} from './checkers/posts/telegram/prepared-checker-data';
 
 import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
 import logger from '../../../shared/services/logger';
+import {
+  createMentionRegex,
+  createNotificationIgnoreIndex,
+  preparePostMentionContent,
+} from '../../../shared/services/utils';
 import IgnoredBoard from '../infra/typeorm/entities/IgnoredBoard';
 import TopicRepository from '../infra/typeorm/repositories/TopicRepository';
 import TrackedBoardsRepository from '../infra/typeorm/repositories/TrackedBoardsRepository';
+import TrackedTopicUsersRepository from '../infra/typeorm/repositories/TrackedTopicUsersRepository';
 import TrackedUsersRepository from '../infra/typeorm/repositories/TrackedUsersRepository';
 import { telegramAutoTrackTopicsChecker } from './checkers/posts/telegram/autoTrackTopics';
 import { telegramMentionsChecker } from './checkers/posts/telegram/mentions';
@@ -40,6 +55,66 @@ interface Processor<T extends ProcessorCheckerPromise<any>> {
 
 type ProcessorResult = NotificationResult<any>;
 
+interface ProcessorResultWithJob {
+  jobName: RecipeNames;
+  result: ProcessorResult;
+}
+
+interface QueuedNotificationCandidate extends ProcessorResultWithJob {
+  notificationKey: string;
+  notificationSignature: string;
+}
+
+function groupByNumberKey<T>(
+  items: T[],
+  keySelector: (item: T) => number | null | undefined,
+): Map<number, T[]> {
+  const grouped = new Map<number, T[]>();
+
+  items.forEach((item) => {
+    const key = keySelector(item);
+    if (key === null || key === undefined) return;
+
+    const current = grouped.get(key) ?? [];
+    current.push(item);
+    grouped.set(key, current);
+  });
+
+  return grouped;
+}
+
+function groupByStringKey<T>(
+  items: T[],
+  keySelector: (item: T) => string | null | undefined,
+): Map<string, T[]> {
+  const grouped = new Map<string, T[]>();
+
+  items.forEach((item) => {
+    const key = keySelector(item)?.toLowerCase();
+    if (!key) return;
+
+    const current = grouped.get(key) ?? [];
+    current.push(item);
+    grouped.set(key, current);
+  });
+
+  return grouped;
+}
+
+function mapUsersByTelegramId(users: User[]): Map<string, User> {
+  return new Map(users.map((user) => [user.telegram_id, user]));
+}
+
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
+}
+
 @injectable()
 export default class CheckPostsService {
   postsVersionRepository = getRepository(PostVersion);
@@ -58,42 +133,139 @@ export default class CheckPostsService {
     private notificationService: NotificationService,
   ) {}
 
-  private async fetchData() {
-    const ignoredBoardsRepository = getRepository(IgnoredBoard);
-
-    const posts = await this.postsRepository.findLatestUncheckedPosts();
-    const users = await this.usersRepository.getUsersWithMentions();
-    const trackedBoards = await container.resolve(TrackedBoardsRepository).find();
-    const trackedUsers = await container.resolve(TrackedUsersRepository).find();
-    const uncheckedTopics = await container.resolve(TopicRepository).findUncheckedAndUnnotified();
-    const trackedPhrases = await container.resolve(GetTrackedPhrasesService).execute();
-    const trackedTopics = await container.resolve(GetTrackedTopicsService).execute();
-    const ignoredUsers = await container.resolve(GetIgnoredUsersService).execute();
-    const ignoredTopics = await container.resolve(GetIgnoredTopicsService).execute();
-    const ignoredBoards = await ignoredBoardsRepository.find({ relations: ['board'] });
-
-    const postsVersions = await this.postsVersionRepository.find({
-      relations: ['post'],
-      where: {
-        new_content: Not(IsNull()),
-        deleted: false,
-        post: { date: MoreThanOrEqual(sub(new Date(), { hours: 3 })) },
-      },
-    });
+  private async fetchCandidateData() {
+    const [posts, uncheckedTopics, postsVersions] = await Promise.all([
+      this.postsRepository.findLatestUncheckedPosts(),
+      container.resolve(TopicRepository).findUncheckedAndUnnotified(),
+      this.postsVersionRepository.find({
+        relations: ['post'],
+        where: {
+          new_content: Not(IsNull()),
+          deleted: false,
+          post: { date: MoreThanOrEqual(sub(new Date(), { hours: 3 })) },
+        },
+      }),
+    ]);
 
     return {
       posts,
+      uncheckedTopics,
+      postsVersions,
+    };
+  }
+
+  private async fetchSupportData() {
+    const ignoredBoardsRepository = getRepository(IgnoredBoard);
+
+    const [
       users,
       trackedBoards,
       trackedUsers,
-      uncheckedTopics,
       trackedPhrases,
       trackedTopics,
       ignoredUsers,
       ignoredTopics,
       ignoredBoards,
-      postsVersions,
+      trackedTopicUsersFilters,
+    ] = await Promise.all([
+      this.usersRepository.getUsersWithMentions(),
+      container.resolve(TrackedBoardsRepository).find(),
+      container.resolve(TrackedUsersRepository).find(),
+      container.resolve(GetTrackedPhrasesService).execute(),
+      container.resolve(GetTrackedTopicsService).execute(),
+      container.resolve(GetIgnoredUsersService).execute(),
+      container.resolve(GetIgnoredTopicsService).execute(),
+      ignoredBoardsRepository.find({ relations: ['board'] }),
+      container.resolve(TrackedTopicUsersRepository).findAll(),
+    ]);
+
+    const trackedTopicTelegramIds = Array.from(
+      new Set(trackedTopics.flatMap((topic) => topic.tracking)),
+    );
+    const trackedTopicUsers = await this.usersRepository.findByTelegramIds(trackedTopicTelegramIds);
+
+    return {
+      users,
+      trackedBoards,
+      trackedUsers,
+      trackedPhrases,
+      trackedTopics,
+      ignoredUsers,
+      ignoredTopics,
+      ignoredBoards,
+      trackedTopicUsers,
+      trackedTopicUsersFilters,
     };
+  }
+
+  private preparePosts(posts: Post[]): PreparedCheckerPost[] {
+    return posts.map((post) => ({
+      post,
+      preparedMentionContent: preparePostMentionContent(post.content),
+    }));
+  }
+
+  private preparePostVersions(postsVersions: PostVersion[]): PreparedCheckerPost[] {
+    return postsVersions
+      .filter((postVersion) => postVersion.new_content)
+      .map((postVersion) => ({
+        post: {
+          ...postVersion.post,
+          content: postVersion.new_content!,
+          title: postVersion.new_title ?? postVersion.post.title,
+        },
+        preparedMentionContent: preparePostMentionContent(postVersion.new_content!),
+      }));
+  }
+
+  private prepareTrackedUserContext(
+    trackedUsers: Awaited<ReturnType<TrackedUsersRepository['find']>>,
+  ): PreparedTrackedUserContext {
+    return {
+      trackedUsersByUsername: groupByStringKey(trackedUsers, (trackedUser) => trackedUser.username),
+    };
+  }
+
+  private prepareTrackedBoardContext(
+    trackedBoards: Awaited<ReturnType<TrackedBoardsRepository['find']>>,
+    ignoredUsers: Awaited<ReturnType<GetIgnoredUsersService['execute']>>,
+  ): PreparedTrackedBoardContext {
+    return {
+      trackedBoardsByBoardId: groupByNumberKey(
+        trackedBoards,
+        (trackedBoard) => trackedBoard.board_id,
+      ),
+      ignoredIndex: createNotificationIgnoreIndex(ignoredUsers, [], []),
+    };
+  }
+
+  private prepareTrackedTopicContext(
+    trackedTopics: Awaited<ReturnType<GetTrackedTopicsService['execute']>>,
+    trackedTopicUsers: User[],
+    trackedTopicUsersFilters: TrackedTopicUser[],
+    ignoredUsers: Awaited<ReturnType<GetIgnoredUsersService['execute']>>,
+  ): PreparedTrackedTopicContext {
+    return {
+      trackedTopicsByTopicId: new Map(
+        trackedTopics.map((trackedTopic) => [trackedTopic.topic_id, trackedTopic]),
+      ),
+      usersByTelegramId: mapUsersByTelegramId(trackedTopicUsers),
+      trackedTopicUsersByKey: groupByStringKey(
+        trackedTopicUsersFilters,
+        (trackedTopicUser) =>
+          `${trackedTopicUser.telegram_id}:${trackedTopicUser.tracked_topic_id}`,
+      ),
+      ignoredIndex: createNotificationIgnoreIndex(ignoredUsers, [], []),
+    };
+  }
+
+  private prepareTrackedPhrases(
+    trackedPhrases: Awaited<ReturnType<GetTrackedPhrasesService['execute']>>,
+  ): PreparedTrackedPhrase[] {
+    return trackedPhrases.map((trackedPhrase) => ({
+      trackedPhrase,
+      expression: createMentionRegex(trackedPhrase.phrase),
+    }));
   }
 
   private getResultMetadata(result: ProcessorResult): { post: Post | null; user: User | null } {
@@ -102,8 +274,7 @@ export default class CheckPostsService {
 
     if ('post' in result.metadata) {
       post = result.metadata.post;
-    }
-    else if ('topic' in result.metadata && 'post' in result.metadata.topic) {
+    } else if ('topic' in result.metadata && 'post' in result.metadata.topic) {
       post = result.metadata.topic.post;
     }
 
@@ -114,49 +285,190 @@ export default class CheckPostsService {
     return { post, user };
   }
 
-  private async shouldProcessNotification(
+  private getNotificationLookupMetadata(
     result: ProcessorResult,
-    notificationKey: string,
     post: Post,
-    user: User,
-  ): Promise<boolean> {
-    const isJobAlreadyInQueue = await this.cacheRepository.recover(notificationKey);
-    if (isJobAlreadyInQueue)
-      return false;
-
-    const redisAnswer = await this.cacheRepository.save(notificationKey, true, 'EX', 60 * 60 * 24);
-    if (redisAnswer !== 'OK') {
-      logger.error({ notificationKey, redisAnswer }, 'CheckPostsService Job lock did not return OK');
-      return false;
+  ): Record<string, string | number | boolean> | null {
+    if (result.type === NotificationType.POST_MENTION) {
+      return {
+        post_id: post.post_id,
+        history: Boolean(result.metadata.history),
+      };
     }
 
-    const notificationExists = await this.notificationService.findOne({
-      type: result.type,
-      telegram_id: user.telegram_id,
-      metadata: { post_id: post.id },
-    });
+    if (result.type === NotificationType.TRACKED_PHRASE) {
+      return {
+        post_id: post.post_id,
+        phrase: result.metadata.trackedPhrase.phrase,
+      };
+    }
 
-    return !notificationExists;
+    if (result.type === NotificationType.TRACKED_BOARD) {
+      return {
+        post_id: post.post_id,
+        board_id: result.metadata.trackedBoard.board_id,
+      };
+    }
+
+    if (result.type === NotificationType.TRACKED_USER) {
+      return {
+        post_id: post.post_id,
+        author: post.author,
+      };
+    }
+
+    if (result.type === NotificationType.TRACKED_TOPIC) {
+      return { post_id: post.post_id };
+    }
+
+    if (result.type === NotificationType.AUTO_TRACK_TOPIC_REQUEST && 'topic' in result.metadata) {
+      return {
+        topic_id: result.metadata.topic.topic_id,
+        post_id: result.metadata.topic.post_id,
+      };
+    }
+
+    return null;
   }
 
-  private async processResults(results: ProcessorResult[], jobName: RecipeNames, postNotificationSet: Set<string>) {
-    for await (const result of results) {
-      const { post, user } = this.getResultMetadata(result);
+  private buildNotificationSignature(
+    type: ProcessorResult['type'],
+    telegramId: string,
+    metadata: Record<string, string | number | boolean>,
+  ): string {
+    const metadataSignature = Object.entries(metadata)
+      .toSorted(([keyA], [keyB]) => keyA.localeCompare(keyB))
+      .map(([key, value]) => `${key}:${value}`)
+      .join('|');
 
-      if (!post || !user.telegram_id)
+    return `${type}:${telegramId}:${metadataSignature}`;
+  }
+
+  private async findExistingNotificationSignatures(
+    candidates: QueuedNotificationCandidate[],
+  ): Promise<Set<string>> {
+    const groupedConditions = new Map<
+      ProcessorResult['type'],
+      Map<string, { telegram_id: string; metadata: Record<string, string | number | boolean> }>
+    >();
+
+    candidates.forEach((candidate) => {
+      const { post, user } = this.getResultMetadata(candidate.result);
+
+      if (!post || !user?.telegram_id) return;
+
+      const metadata = this.getNotificationLookupMetadata(candidate.result, post);
+      if (!metadata) return;
+
+      const typeConditions = groupedConditions.get(candidate.result.type) ?? new Map();
+      typeConditions.set(candidate.notificationSignature, {
+        telegram_id: user.telegram_id,
+        metadata,
+      });
+      groupedConditions.set(candidate.result.type, typeConditions);
+    });
+
+    const existingSignatures = new Set<string>();
+
+    for (const [type, conditionsMap] of groupedConditions) {
+      const conditionChunks = chunkArray(Array.from(conditionsMap.values()), 100);
+
+      for (const conditionChunk of conditionChunks) {
+        const existingNotifications = await this.notificationService.findManyByType(
+          type,
+          conditionChunk,
+        );
+
+        existingNotifications.forEach((notification) => {
+          existingSignatures.add(
+            this.buildNotificationSignature(
+              notification.type,
+              notification.telegram_id,
+              notification.metadata as Record<string, string | number | boolean>,
+            ),
+          );
+        });
+      }
+    }
+
+    return existingSignatures;
+  }
+
+  private async processResults(results: ProcessorResultWithJob[]): Promise<void> {
+    const queuedNotificationSignatures = new Set<string>();
+    const candidates: QueuedNotificationCandidate[] = [];
+
+    for (const item of results) {
+      const { post, user } = this.getResultMetadata(item.result);
+
+      if (!post || !user?.telegram_id) continue;
+
+      const notificationMetadata = this.getNotificationLookupMetadata(item.result, post);
+      if (!notificationMetadata) continue;
+
+      const notificationSignature = this.buildNotificationSignature(
+        item.result.type,
+        user.telegram_id,
+        notificationMetadata,
+      );
+      if (queuedNotificationSignatures.has(notificationSignature)) continue;
+
+      queuedNotificationSignatures.add(notificationSignature);
+
+      candidates.push({
+        ...item,
+        notificationKey: `CheckPostsService:${notificationSignature}`,
+        notificationSignature,
+      });
+    }
+
+    if (!candidates.length) return;
+
+    const queueLocks = await this.cacheRepository.recoverMany<boolean>(
+      candidates.map((candidate) => candidate.notificationKey),
+    );
+    const unlockedCandidates = candidates.filter((_, index) => !queueLocks[index]);
+
+    if (!unlockedCandidates.length) return;
+
+    const existingNotificationSignatures =
+      await this.findExistingNotificationSignatures(unlockedCandidates);
+    const candidatesToQueue = unlockedCandidates.filter(
+      (candidate) => !existingNotificationSignatures.has(candidate.notificationSignature),
+    );
+
+    if (!candidatesToQueue.length) return;
+
+    for (const candidate of candidatesToQueue) {
+      const redisAnswer = await this.cacheRepository.save(
+        candidate.notificationKey,
+        true,
+        'EX',
+        60 * 60 * 24,
+        'NX',
+      );
+      if (redisAnswer !== 'OK') {
+        logger.error(
+          { notificationKey: candidate.notificationKey, redisAnswer },
+          'CheckPostsService Job lock did not return OK',
+        );
         continue;
+      }
 
-      const notificationKey = `CheckPostsService:${result.userId}:${post.id}`;
-      if (postNotificationSet.has(notificationKey))
-        continue;
-
-      postNotificationSet.add(notificationKey);
-
-      const shouldNotify = await this.shouldProcessNotification(result, notificationKey, post, user);
-      if (!shouldNotify)
-        continue;
-
-      await addTelegramJob(jobName, result.metadata);
+      try {
+        await addTelegramJob(candidate.jobName, candidate.result.metadata);
+      } catch (error) {
+        await this.cacheRepository.invalidate(candidate.notificationKey);
+        logger.error(
+          {
+            error,
+            jobName: candidate.jobName,
+            notificationKey: candidate.notificationKey,
+            notificationSignature: candidate.notificationSignature,
+          },
+          'CheckPostsService failed to enqueue notification job',
+        );
+      }
     }
   }
 
@@ -164,57 +476,96 @@ export default class CheckPostsService {
     try {
       logger.debug('Starting CheckPostsService');
 
+      const { posts, uncheckedTopics, postsVersions } = await this.fetchCandidateData();
+
+      if (!posts.length && !uncheckedTopics.length && !postsVersions.length) {
+        logger.debug('CheckPostsService skipped because there is no candidate work');
+        return;
+      }
+
       const {
-        posts,
         users,
         trackedBoards,
         trackedUsers,
-        uncheckedTopics,
         trackedPhrases,
         trackedTopics,
         ignoredUsers,
         ignoredTopics,
         ignoredBoards,
-        postsVersions,
-      } = await this.fetchData();
+        trackedTopicUsers,
+        trackedTopicUsersFilters,
+      } = await this.fetchSupportData();
 
-      logger.debug({ postsCount: posts.length, usersCount: users.length }, 'Fetched data');
+      logger.debug(
+        {
+          postsCount: posts.length,
+          topicsCount: uncheckedTopics.length,
+          postsVersionsCount: postsVersions.length,
+          usersCount: users.length,
+        },
+        'Fetched checker data',
+      );
+
+      const preparedPosts = this.preparePosts(posts);
+      const preparedPostVersions = this.preparePostVersions(postsVersions);
+      const preparedTrackedPhrases = this.prepareTrackedPhrases(trackedPhrases);
+      const trackedUserContext = this.prepareTrackedUserContext(trackedUsers);
+      const trackedBoardContext = this.prepareTrackedBoardContext(trackedBoards, ignoredUsers);
+      const trackedTopicContext = this.prepareTrackedTopicContext(
+        trackedTopics,
+        trackedTopicUsers,
+        trackedTopicUsersFilters,
+        ignoredUsers,
+      );
 
       const processors = [
         {
           checkerPromise: telegramMentionsChecker,
           jobName: 'sendMentionNotification',
-          data: { posts, postsVersions, users, ignoredUsers, ignoredTopics, ignoredBoards },
+          data: {
+            posts: preparedPosts,
+            postsVersions: preparedPostVersions,
+            users,
+            ignoredUsers,
+            ignoredTopics,
+            ignoredBoards,
+          },
         } as Processor<typeof telegramMentionsChecker>,
 
         {
           checkerPromise: telegramTrackedPhrasesChecker,
           jobName: 'sendPhraseTrackingNotification',
-          data: { posts, trackedPhrases, ignoredUsers, ignoredTopics, ignoredBoards },
+          data: {
+            posts,
+            trackedPhrases: preparedTrackedPhrases,
+            ignoredUsers,
+            ignoredTopics,
+            ignoredBoards,
+          },
         } as Processor<typeof telegramTrackedPhrasesChecker>,
 
         {
           checkerPromise: telegramTrackedTopicsChecker,
           jobName: 'sendTopicTrackingNotification',
-          data: { posts, trackedTopics, ignoredUsers },
+          data: { posts, context: trackedTopicContext },
         } as Processor<typeof telegramTrackedTopicsChecker>,
 
         {
           checkerPromise: telegramTrackedUsersChecker,
           jobName: 'sendTrackedUserNotification',
-          data: { posts, trackedUsers },
+          data: { posts, context: trackedUserContext },
         } as Processor<typeof telegramTrackedUsersChecker>,
 
         {
           checkerPromise: telegramTrackedBoardTopicsChecker,
           jobName: 'sendTrackedBoardNotification',
-          data: { topics: uncheckedTopics, trackedBoards, ignoredUsers },
+          data: { topics: uncheckedTopics, context: trackedBoardContext },
         } as Processor<typeof telegramTrackedBoardTopicsChecker>,
 
         {
           checkerPromise: telegramTrackedUserTopicsChecker,
           jobName: 'sendTrackedUserNotification',
-          data: { topics: uncheckedTopics, trackedUsers },
+          data: { topics: uncheckedTopics, context: trackedUserContext },
         } as Processor<typeof telegramTrackedUserTopicsChecker>,
 
         {
@@ -224,27 +575,22 @@ export default class CheckPostsService {
         } as Processor<typeof telegramAutoTrackTopicsChecker>,
       ];
 
-      const postNotificationSet = new Set<string>();
+      const processorResults: ProcessorResultWithJob[] = [];
 
       for await (const { checkerPromise, data, jobName } of processors) {
         try {
-          const results = await checkerPromise(data as any);
-          await this.processResults(results, jobName, postNotificationSet);
-        }
-        catch (error) {
+          const results = await checkerPromise(data as never);
+          processorResults.push(...results.map((result) => ({ result, jobName })));
+        } catch (error) {
           logger.error({ error, data, jobName }, `${jobName} errored`);
         }
       }
 
-      for await (const post of posts) {
-        post.checked = true;
-        await this.postsRepository.save(post);
-        logger.debug({ post }, 'Saved checked post');
-      }
+      await this.processResults(processorResults);
+      await this.postsRepository.markChecked(posts.map((post) => post.post_id));
 
       logger.debug('CheckPostsService completed successfully');
-    }
-    catch (error) {
+    } catch (error) {
       logger.error({ error }, 'CheckPostsService failed');
       throw error;
     }

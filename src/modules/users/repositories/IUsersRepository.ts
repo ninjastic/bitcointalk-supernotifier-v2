@@ -6,6 +6,7 @@ export default interface IUsersRepository {
   save: (user: User) => Promise<User>;
   findByUserId: (user_id: number) => Promise<User | undefined>;
   findByTelegramId: (telegram_id: string) => Promise<User | undefined>;
+  findByTelegramIds: (telegramIds: string[]) => Promise<User[]>;
   getUsersWithMentions: () => Promise<User[]>;
   getUsersWithMerits: () => Promise<User[]>;
   getUsersWithModlogs: () => Promise<User[]>;

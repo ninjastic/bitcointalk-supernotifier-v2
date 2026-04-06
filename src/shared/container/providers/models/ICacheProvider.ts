@@ -8,7 +8,13 @@ interface SaveManyData {
 }
 
 export default interface ICacheProvider {
-  save: (key: string, value: any, arg?: string, time?: number) => Promise<Redis.Ok | null>;
+  save: (
+    key: string,
+    value: any,
+    arg?: string,
+    time?: number,
+    condition?: string,
+  ) => Promise<Redis.Ok | null>;
   saveMany: (values: SaveManyData[]) => Promise<void>;
   recover: <T>(key: string) => Promise<T | null>;
   recoverMany: <T>(keys: string[]) => Promise<T[]>;

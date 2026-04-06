@@ -22,6 +22,7 @@ export interface PostFromES {
 export default interface IPostsRepository {
   create: (data: CreatePostDTO) => Post;
   save: (post: Post) => Promise<Post>;
+  markChecked: (postIds: number[]) => Promise<void>;
   findOneByPostId: (post_id: number) => Promise<Post | undefined>;
   findLatestUncheckedPosts: (limit?: number) => Promise<Post[]>;
   findPostsByTopicId: (topic_id: number) => Promise<SearchResponse<PostFromES>>;

@@ -12,7 +12,7 @@ import {
   TrackedTopicNotification,
   TrackedUserNotification,
 } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import { getRepository } from 'typeorm';
+import { Brackets, getRepository } from 'typeorm';
 
 interface FindOneNotificationConditions<T extends Notification> {
   type: T['type'];
@@ -42,7 +42,9 @@ export class NotificationService {
     return NotificationClass;
   }
 
-  async createNotification<T extends Notification>(notificationData: DeepPartial<T>): Promise<Notification> {
+  async createNotification<T extends Notification>(
+    notificationData: DeepPartial<T>,
+  ): Promise<Notification> {
     const repository = this.getTypeRepository(notificationData.type as unknown as NotificationType);
     const notificationRepository: Repository<Notification> = getRepository(repository);
     const notification = notificationRepository.create(notificationData);
@@ -68,5 +70,41 @@ export class NotificationService {
     const notification = await queryBuilder.getOne();
 
     return notification as T;
+  }
+
+  async findManyByType<T extends Notification>(
+    type: T['type'],
+    conditionsList: Array<Omit<FindOneNotificationConditions<T>, 'type'>>,
+  ): Promise<T[]> {
+    if (!conditionsList.length) return [];
+
+    const repository = this.getTypeRepository(type as unknown as NotificationType);
+    const notificationRepository: Repository<Notification> = getRepository(repository);
+
+    const queryBuilder = notificationRepository
+      .createQueryBuilder('notification')
+      .where('notification.type = :type', { type });
+
+    queryBuilder.andWhere(
+      new Brackets((conditionsQuery) => {
+        conditionsList.forEach((conditions, index) => {
+          conditionsQuery.orWhere(
+            new Brackets((metadataQuery) => {
+              metadataQuery.where(`notification.telegram_id = :telegramId_${index}`, {
+                [`telegramId_${index}`]: conditions.telegram_id,
+              });
+
+              Object.entries(conditions.metadata).forEach(([key, value]) => {
+                metadataQuery.andWhere(`notification.metadata->>'${key}' = :${key}_${index}`, {
+                  [`${key}_${index}`]: value.toString(),
+                });
+              });
+            }),
+          );
+        });
+      }),
+    );
+
+    return queryBuilder.getMany() as Promise<T[]>;
   }
 }

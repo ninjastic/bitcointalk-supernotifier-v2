@@ -35,11 +35,11 @@ async function checkPostsAddresses() {
 async function checker() {
   await createConnection();
 
-  queueRepeatableFunction(checkPosts, 1000 * 5);
+  queueRepeatableFunction(checkPosts, 1000 * 15);
   queueRepeatableFunction(checkMerits, 1000 * 60 * 5);
   queueRepeatableFunction(checkModLogs, 1000 * 60 * 5);
   queueRepeatableFunction(checkPostsAddresses, 1000 * 20);
-  queueRepeatableFunction(checkPostRescrapeSchedules, 1000 * 30);
+  queueRepeatableFunction(checkPostRescrapeSchedules, 1000 * 60);
 }
 
 checker();

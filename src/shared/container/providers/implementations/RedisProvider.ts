@@ -20,7 +20,17 @@ export default class RedisProvider implements ICacheProvider {
     this.client = new Redis({ ...cacheConfig.config.redis, connectionName: 'RedisProvider' });
   }
 
-  public async save(key: string, value: any, arg?: string, time?: number): Promise<Redis.Ok | null> {
+  public async save(
+    key: string,
+    value: any,
+    arg?: string,
+    time?: number,
+    condition?: string,
+  ): Promise<Redis.Ok | null> {
+    if (arg && condition) {
+      return this.client.set(key, JSON.stringify(value), arg, time, condition);
+    }
+
     if (arg) {
       return this.client.set(key, JSON.stringify(value), arg, time);
     }
@@ -63,11 +73,9 @@ export default class RedisProvider implements ICacheProvider {
       result.forEach((res) => {
         if (res[0]) {
           values.push(null);
-        }
-        else if (res[1] === null || res[1] === undefined) {
+        } else if (res[1] === null || res[1] === undefined) {
           values.push(null);
-        }
-        else {
+        } else {
           values.push(JSON.parse(res[1]) as T);
         }
       });

@@ -22,3 +22,4 @@ user-posts-deleted-ids.*.json
 *.db-shm
 *.db-wal
 simplex-cli
+docs/

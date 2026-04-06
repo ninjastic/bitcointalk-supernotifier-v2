@@ -6,14 +6,15 @@
     ],
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "baseUrl": "./src",
     "rootDir": "./src",
-    "module": "ESNext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "paths": {
-      "##/*": ["./*"]
+      "*": ["./src/*"],
+      "##/*": ["./src/*"]
     },
     "resolveJsonModule": true,
+    "types": ["node", "jest"],
     "strictPropertyInitialization": false,
     "outDir": "./dist",
     "sourceMap": true,
