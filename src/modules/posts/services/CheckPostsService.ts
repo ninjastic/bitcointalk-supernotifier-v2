@@ -65,6 +65,17 @@ interface QueuedNotificationCandidate extends ProcessorResultWithJob {
   notificationSignature: string;
 }
 
+const notificationTypePriority: Record<NotificationType, number> = {
+  [NotificationType.POST_MENTION]: 0,
+  [NotificationType.TRACKED_TOPIC]: 1,
+  [NotificationType.TRACKED_USER]: 2,
+  [NotificationType.TRACKED_BOARD]: 3,
+  [NotificationType.TRACKED_PHRASE]: 4,
+  [NotificationType.AUTO_TRACK_TOPIC_REQUEST]: 5,
+  [NotificationType.MERIT]: 6,
+  [NotificationType.REMOVE_TOPIC]: 7,
+};
+
 function groupByNumberKey<T>(
   items: T[],
   keySelector: (item: T) => number | null | undefined,
@@ -344,59 +355,63 @@ export default class CheckPostsService {
     return `${type}:${telegramId}:${metadataSignature}`;
   }
 
-  private async findExistingNotificationSignatures(
+  private getUserPostNotificationKey(result: ProcessorResult): string | null {
+    const { post, user } = this.getResultMetadata(result);
+
+    if (!post || !user?.telegram_id) return null;
+
+    return `CheckPostsService:${user.telegram_id}:${post.post_id}`;
+  }
+
+  private selectPreferredCandidate(
+    currentCandidate: QueuedNotificationCandidate | undefined,
+    nextCandidate: QueuedNotificationCandidate,
+  ): QueuedNotificationCandidate {
+    if (!currentCandidate) return nextCandidate;
+
+    return notificationTypePriority[nextCandidate.result.type] <
+      notificationTypePriority[currentCandidate.result.type]
+      ? nextCandidate
+      : currentCandidate;
+  }
+
+  private async findExistingUserPostNotificationKeys(
     candidates: QueuedNotificationCandidate[],
   ): Promise<Set<string>> {
-    const groupedConditions = new Map<
-      ProcessorResult['type'],
-      Map<string, { telegram_id: string; metadata: Record<string, string | number | boolean> }>
-    >();
+    const notificationConditions = new Map<string, { telegram_id: string; post_id: number }>();
 
     candidates.forEach((candidate) => {
       const { post, user } = this.getResultMetadata(candidate.result);
 
       if (!post || !user?.telegram_id) return;
 
-      const metadata = this.getNotificationLookupMetadata(candidate.result, post);
-      if (!metadata) return;
-
-      const typeConditions = groupedConditions.get(candidate.result.type) ?? new Map();
-      typeConditions.set(candidate.notificationSignature, {
+      notificationConditions.set(candidate.notificationKey, {
         telegram_id: user.telegram_id,
-        metadata,
+        post_id: post.post_id,
       });
-      groupedConditions.set(candidate.result.type, typeConditions);
     });
 
-    const existingSignatures = new Set<string>();
+    const existingKeys = new Set<string>();
 
-    for (const [type, conditionsMap] of groupedConditions) {
-      const conditionChunks = chunkArray(Array.from(conditionsMap.values()), 100);
+    const conditionChunks = chunkArray(Array.from(notificationConditions.values()), 100);
 
-      for (const conditionChunk of conditionChunks) {
-        const existingNotifications = await this.notificationService.findManyByType(
-          type,
-          conditionChunk,
-        );
+    for (const conditionChunk of conditionChunks) {
+      const existingNotifications =
+        await this.notificationService.findManyByTelegramAndPostId(conditionChunk);
 
-        existingNotifications.forEach((notification) => {
-          existingSignatures.add(
-            this.buildNotificationSignature(
-              notification.type,
-              notification.telegram_id,
-              notification.metadata as Record<string, string | number | boolean>,
-            ),
-          );
-        });
-      }
+      existingNotifications.forEach((notification) => {
+        const metadata = notification.metadata as { post_id?: number };
+        if (!metadata.post_id) return;
+
+        existingKeys.add(`CheckPostsService:${notification.telegram_id}:${metadata.post_id}`);
+      });
     }
 
-    return existingSignatures;
+    return existingKeys;
   }
 
   private async processResults(results: ProcessorResultWithJob[]): Promise<void> {
-    const queuedNotificationSignatures = new Set<string>();
-    const candidates: QueuedNotificationCandidate[] = [];
+    const candidatesByUserPostKey = new Map<string, QueuedNotificationCandidate>();
 
     for (const item of results) {
       const { post, user } = this.getResultMetadata(item.result);
@@ -411,16 +426,22 @@ export default class CheckPostsService {
         user.telegram_id,
         notificationMetadata,
       );
-      if (queuedNotificationSignatures.has(notificationSignature)) continue;
+      const notificationKey = this.getUserPostNotificationKey(item.result);
+      if (!notificationKey) continue;
 
-      queuedNotificationSignatures.add(notificationSignature);
-
-      candidates.push({
+      const candidate = {
         ...item,
-        notificationKey: `CheckPostsService:${notificationSignature}`,
+        notificationKey,
         notificationSignature,
-      });
+      };
+
+      candidatesByUserPostKey.set(
+        notificationKey,
+        this.selectPreferredCandidate(candidatesByUserPostKey.get(notificationKey), candidate),
+      );
     }
+
+    const candidates = Array.from(candidatesByUserPostKey.values());
 
     if (!candidates.length) return;
 
@@ -431,10 +452,10 @@ export default class CheckPostsService {
 
     if (!unlockedCandidates.length) return;
 
-    const existingNotificationSignatures =
-      await this.findExistingNotificationSignatures(unlockedCandidates);
+    const existingNotificationKeys =
+      await this.findExistingUserPostNotificationKeys(unlockedCandidates);
     const candidatesToQueue = unlockedCandidates.filter(
-      (candidate) => !existingNotificationSignatures.has(candidate.notificationSignature),
+      (candidate) => !existingNotificationKeys.has(candidate.notificationKey),
     );
 
     if (!candidatesToQueue.length) return;

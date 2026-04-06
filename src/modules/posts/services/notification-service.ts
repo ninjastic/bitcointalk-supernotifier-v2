@@ -1,7 +1,7 @@
 import type Notification from '##/modules/notifications/infra/typeorm/entities/Notification';
 import type { DeepPartial, Repository } from 'typeorm';
 
-import {
+import NotificationEntity, {
   AutoTrackTopicRequestNotification,
   MeritNotification,
   NotificationType,
@@ -106,5 +106,34 @@ export class NotificationService {
     );
 
     return queryBuilder.getMany() as Promise<T[]>;
+  }
+
+  async findManyByTelegramAndPostId(
+    conditionsList: Array<{ telegram_id: string; post_id: number }>,
+  ): Promise<Notification[]> {
+    if (!conditionsList.length) return [];
+
+    const notificationRepository = getRepository(NotificationEntity);
+
+    const queryBuilder = notificationRepository.createQueryBuilder('notification');
+
+    queryBuilder.andWhere(
+      new Brackets((conditionsQuery) => {
+        conditionsList.forEach((conditions, index) => {
+          conditionsQuery.orWhere(
+            new Brackets((metadataQuery) => {
+              metadataQuery.where(`notification.telegram_id = :telegramId_${index}`, {
+                [`telegramId_${index}`]: conditions.telegram_id,
+              });
+              metadataQuery.andWhere(`notification.metadata->>'post_id' = :postId_${index}`, {
+                [`postId_${index}`]: conditions.post_id.toString(),
+              });
+            }),
+          );
+        });
+      }),
+    );
+
+    return queryBuilder.getMany() as Promise<Notification[]>;
   }
 }
