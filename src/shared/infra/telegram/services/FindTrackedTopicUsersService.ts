@@ -51,7 +51,12 @@ export default class FindTrackedTopicUsersService {
 
     const trackedTopicUsers = await this.trackedTopicUsersRepository.find(conditions);
 
-    await this.cacheRepository.save(`trackedTopics:${telegram_id}:${topic_id}:${username}`, trackedTopicUsers);
+    await this.cacheRepository.save(
+      `trackedTopics:${telegram_id}:${topic_id}:${username}`,
+      trackedTopicUsers,
+      'EX',
+      1800,
+    );
 
     return trackedTopicUsers;
   }

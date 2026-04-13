@@ -15,7 +15,9 @@ export default class FindTrackedPhrasesByTelegramIdService {
   ) {}
 
   public async execute(telegram_id: string): Promise<TrackedPhrase[]> {
-    const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase[]>(`trackedPhrases:${telegram_id}`);
+    const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase[]>(
+      `trackedPhrases:${telegram_id}`,
+    );
 
     if (cachedTrackedPhrases) {
       return cachedTrackedPhrases;
@@ -25,7 +27,7 @@ export default class FindTrackedPhrasesByTelegramIdService {
       telegram_id,
     });
 
-    await this.cacheRepository.save(`trackedPhrases:${telegram_id}`, trackedPhrases);
+    await this.cacheRepository.save(`trackedPhrases:${telegram_id}`, trackedPhrases, 'EX', 1800);
 
     return trackedPhrases;
   }

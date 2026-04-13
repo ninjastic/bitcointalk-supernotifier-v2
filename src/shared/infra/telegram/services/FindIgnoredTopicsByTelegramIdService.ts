@@ -15,7 +15,9 @@ export default class FindIgnoredTopicsByTelegramIdService {
   ) {}
 
   public async execute(telegram_id: string): Promise<IgnoredTopic[]> {
-    const cachedIgnoredTopics = await this.cacheRepository.recover<IgnoredTopic[]>(`ignoredTopics:${telegram_id}`);
+    const cachedIgnoredTopics = await this.cacheRepository.recover<IgnoredTopic[]>(
+      `ignoredTopics:${telegram_id}`,
+    );
 
     if (cachedIgnoredTopics) {
       return cachedIgnoredTopics;
@@ -23,7 +25,7 @@ export default class FindIgnoredTopicsByTelegramIdService {
 
     const ignoredTopics = await this.ignoredTopicsRepository.findAllByTelegramId(telegram_id);
 
-    await this.cacheRepository.save(`ignoredTopics:${telegram_id}`, ignoredTopics);
+    await this.cacheRepository.save(`ignoredTopics:${telegram_id}`, ignoredTopics, 'EX', 1800);
 
     return ignoredTopics;
   }

@@ -15,7 +15,9 @@ export default class FindTrackedPhrasesByIdService {
   ) {}
 
   public async execute(id: string): Promise<TrackedPhrase> {
-    const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase>(`trackedPhrases:${id}`);
+    const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase>(
+      `trackedPhrases:${id}`,
+    );
 
     if (cachedTrackedPhrases) {
       return cachedTrackedPhrases;
@@ -25,7 +27,7 @@ export default class FindTrackedPhrasesByIdService {
       id,
     });
 
-    await this.cacheRepository.save(`trackedPhrases:${id}`, trackedPhrases);
+    await this.cacheRepository.save(`trackedPhrases:${id}`, trackedPhrases, 'EX', 1800);
 
     return trackedPhrases;
   }
