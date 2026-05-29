@@ -14,10 +14,21 @@ const ignoredUsersMenu = new MenuTemplate<IMenuContext>(() => ({
   parse_mode: 'HTML',
 }));
 
+async function getSelectedIgnoredUser(ctx: IMenuContext) {
+  const findIgnoredUsersByTelegramId = container.resolve(FindIgnoredUsersByTelegramIdService);
+  const ignoredUsers = await findIgnoredUsersByTelegramId.execute(String(ctx.chat.id));
+  const selected = ctx.match[1];
+
+  return ignoredUsers.find(
+    (ignoredUser) => ignoredUser.id === selected || ignoredUser.username === selected,
+  );
+}
+
 const ignoredUsersMenuInfoMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
+  const ignoredUser = await getSelectedIgnoredUser(ctx);
   let message = '';
   message += `<b>Ignored User:</b>\n\n`;
-  message += `🏷️ <b>Username:</b> ${ctx.match[1]}\n`;
+  message += `🏷️ <b>Username:</b> ${ignoredUser?.username || ctx.match[1]}\n`;
 
   return {
     text: message,
@@ -25,15 +36,21 @@ const ignoredUsersMenuInfoMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
   };
 });
 
-const confirmRemoveIgnoredUserMenu = new MenuTemplate<IMenuContext>(async ctx => ({
-  text: `Are you sure you want to stop ignoring the user: <b>${ctx.match[1]}</b>?`,
+const confirmRemoveIgnoredUserMenu = new MenuTemplate<IMenuContext>(async (ctx) => ({
+  text: `Are you sure you want to stop ignoring the user: <b>${(await getSelectedIgnoredUser(ctx))?.username || ctx.match[1]}</b>?`,
   parse_mode: 'HTML',
 }));
 
 confirmRemoveIgnoredUserMenu.interact('Yes, do it!', 'yes', {
   do: async (ctx) => {
+    const ignoredUser = await getSelectedIgnoredUser(ctx);
+
+    if (!ignoredUser) {
+      return '/ignoredUsers/';
+    }
+
     const removeIgnoredUser = container.resolve(RemoveIgnoredUserService);
-    await removeIgnoredUser.execute(ctx.match[1], String(ctx.chat.id));
+    await removeIgnoredUser.execute(ignoredUser.username, String(ctx.chat.id));
 
     return '/ignoredUsers/';
   },
@@ -49,47 +66,48 @@ ignoredUsersMenuInfoMenu.interact('↩ Go Back', 'back', {
   do: () => '..',
 });
 
-const addIgnoredUserQuestion = new StatelessQuestion('addIgnoredUser', async (ctx: IMenuContext) => {
-  const text = ctx.message.text.toLowerCase().trim();
+const addIgnoredUserQuestion = new StatelessQuestion(
+  'addIgnoredUser',
+  async (ctx: IMenuContext) => {
+    const text = ctx.message.text.toLowerCase().trim();
 
-  if (text) {
-    const addIgnoredUser = container.resolve(AddIgnoredUserService);
+    if (text) {
+      const addIgnoredUser = container.resolve(AddIgnoredUserService);
 
-    try {
-      await addIgnoredUser.execute(text, String(ctx.message.chat.id));
+      try {
+        await addIgnoredUser.execute(text, String(ctx.message.chat.id));
 
-      let message = '';
-      message += 'You are now ignoring the user: ';
-      message += `<b>${text}</b>`;
+        let message = '';
+        message += 'You are now ignoring the user: ';
+        message += `<b>${text}</b>`;
 
-      await ctx.reply(message, {
-        parse_mode: 'HTML',
-        reply_markup: { remove_keyboard: true },
-      });
-
-      await replyMenuToContext(ignoredUsersMenu, ctx, '/iu/');
-    }
-    catch (error) {
-      if (error.message === 'User already being ignored.') {
-        await ctx.reply('You are already ignoring this user.', {
+        await ctx.reply(message, {
+          parse_mode: 'HTML',
           reply_markup: { remove_keyboard: true },
         });
 
-        return;
+        await replyMenuToContext(ignoredUsersMenu, ctx, '/iu/');
+      } catch (error) {
+        if (error.message === 'User already being ignored.') {
+          await ctx.reply('You are already ignoring this user.', {
+            reply_markup: { remove_keyboard: true },
+          });
+
+          return;
+        }
+
+        logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Ignored User.');
+
+        await ctx.reply('Something went wrong...', {
+          reply_markup: { remove_keyboard: true },
+        });
       }
-
-      logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Ignored User.');
-
-      await ctx.reply('Something went wrong...', {
-        reply_markup: { remove_keyboard: true },
-      });
+    } else {
+      const message = `Invalid Username. What is the username of the user you want to ignore?`;
+      await addIgnoredUserQuestion.replyWithHTML(ctx, message);
     }
-  }
-  else {
-    const message = `Invalid Username. What is the username of the user you want to ignore?`;
-    await addIgnoredUserQuestion.replyWithHTML(ctx, message);
-  }
-});
+  },
+);
 
 async function getIgnoredUsers(ctx: IMenuContext) {
   const findIgnoredUsersByTelegramId = container.resolve(FindIgnoredUsersByTelegramIdService);
@@ -99,7 +117,7 @@ async function getIgnoredUsers(ctx: IMenuContext) {
   const formatted = {};
 
   choices.forEach((choice) => {
-    formatted[choice.username] = choice.username;
+    formatted[choice.id] = choice.username;
   });
 
   return formatted;
@@ -108,7 +126,7 @@ async function getIgnoredUsers(ctx: IMenuContext) {
 ignoredUsersMenu.chooseIntoSubmenu('ignoredUsers', getIgnoredUsers, ignoredUsersMenuInfoMenu, {
   maxRows: 10,
   columns: 1,
-  getCurrentPage: ctx => ctx.session.page,
+  getCurrentPage: (ctx) => ctx.session.page,
   setPage: (ctx, page) => {
     ctx.session.page = page;
   },
