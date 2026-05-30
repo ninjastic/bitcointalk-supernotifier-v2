@@ -3,6 +3,7 @@ export default interface ISession {
   userId: number;
   mentions: boolean;
   onlyDirectMentions: boolean;
+  ignoreNestedQuotes: boolean;
   merits: boolean;
   modlogs: boolean;
   track_topics: boolean;

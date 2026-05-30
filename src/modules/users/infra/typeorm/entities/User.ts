@@ -1,4 +1,11 @@
-import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  Index,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('users')
 class User {
@@ -27,6 +34,9 @@ class User {
 
   @Column('boolean')
   enable_only_direct_mentions: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  enable_ignore_nested_quotes: boolean;
 
   @Column('boolean')
   enable_merits: boolean;

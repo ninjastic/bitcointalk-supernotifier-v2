@@ -45,6 +45,7 @@ function processPost(
         preparedMentionContent,
         user,
         user.enable_only_direct_mentions,
+        user.enable_ignore_nested_quotes,
       );
       if (!user.username || !isMentioned) continue;
       if (!shouldNotifyUserWithIndex(post, user, ignoredIndex)) continue;

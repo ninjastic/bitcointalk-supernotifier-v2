@@ -63,8 +63,9 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
         enable_mentions = FALSE,
         enable_merits = FALSE,
         enable_modlogs = FALSE,
-        enable_auto_track_topics = FALSE
+        enable_auto_track_topics = FALSE,
         enable_only_direct_mentions = FALSE,
+        enable_ignore_nested_quotes = FALSE
       WHERE telegram_id = $1;`,
       [telegramId],
     );
@@ -87,7 +88,7 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
     await ctx.reply('Done, you can start over running the command /start');
   })
   .row()
-  .text('No, I don\'t want', ctx => ctx.deleteMessage());
+  .text("No, I don't want", (ctx) => ctx.deleteMessage());
 
 async function hardresetCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
   if (ctx.message.chat.type === 'group') {

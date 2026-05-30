@@ -29,10 +29,10 @@ async function startCommand(ctx: ConversationFlavor & CommandContext<IMenuContex
     if (group) {
       group.blocked = false;
       await userRepository.save(group);
-    }
-    else {
+    } else {
       group = userRepository.create({
         enable_mentions: false,
+        enable_ignore_nested_quotes: false,
         enable_merits: false,
         blocked: false,
         telegram_id: String(ctx.chat.id),

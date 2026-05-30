@@ -97,6 +97,7 @@ export function createMentionRegex(username: string): RegExp {
 
 export interface PreparedPostMentionContent {
   quoteHeaderText: string;
+  directQuoteHeaderText: string;
   contentWithoutQuoteHeaders: string;
 }
 
@@ -162,11 +163,13 @@ export function preparePostMentionContent(content: string): PreparedPostMentionC
   });
 
   const quoteHeaderText = post$('div.quoteheader').text();
+  const directQuoteHeaderText = post$('div.quoteheader:not(.quote *)').text();
 
   post$('div.quoteheader').remove();
 
   return {
     quoteHeaderText,
+    directQuoteHeaderText,
     contentWithoutQuoteHeaders: post$.root().text(),
   };
 }
@@ -232,6 +235,7 @@ export function isUserMentionedInPreparedContent(
   preparedContent: PreparedPostMentionContent,
   user: { username?: string; alternative_usernames?: string[] },
   onlyDirectAndQuote?: boolean,
+  ignoreNestedQuotes?: boolean,
 ): {
   isMentioned: boolean;
   mentionType: MentionType | null;
@@ -262,7 +266,9 @@ export function isUserMentionedInPreparedContent(
   for (const regex of regexList) {
     const textToSearch =
       regex.mentionType === 'quoted_mention'
-        ? preparedContent.quoteHeaderText
+        ? ignoreNestedQuotes
+          ? preparedContent.directQuoteHeaderText
+          : preparedContent.quoteHeaderText
         : preparedContent.contentWithoutQuoteHeaders;
 
     if (textToSearch.match(regex.expression)) {
@@ -277,6 +283,7 @@ export function isUserMentionedInPost(
   content: string,
   user: { username?: string; alternative_usernames?: string[] },
   onlyDirectAndQuote?: boolean,
+  ignoreNestedQuotes?: boolean,
 ): {
   isMentioned: boolean;
   mentionType: MentionType | null;
@@ -285,6 +292,7 @@ export function isUserMentionedInPost(
     preparePostMentionContent(content),
     user,
     onlyDirectAndQuote,
+    ignoreNestedQuotes,
   );
 }
 

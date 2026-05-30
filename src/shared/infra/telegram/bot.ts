@@ -4,7 +4,9 @@ import type { Api, Context, RawApi, SessionFlavor } from 'grammy';
 import { conversations, createConversation } from '@grammyjs/conversations';
 import { run } from '@grammyjs/runner';
 import { RedisAdapter } from '@grammyjs/storage-redis';
-import hardresetCommand, { hardResetConfirmInlineMenu } from '##/shared/infra/telegram/commands/hardresetCommand';
+import hardresetCommand, {
+  hardResetConfirmInlineMenu,
+} from '##/shared/infra/telegram/commands/hardresetCommand';
 import { Bot, session } from 'grammy';
 import IORedis from 'ioredis';
 import { container } from 'tsyringe';
@@ -51,8 +53,11 @@ export function initialSession(): ISession {
     username: null,
     userId: null,
     mentions: false,
+    onlyDirectMentions: false,
+    ignoreNestedQuotes: false,
     merits: false,
     modlogs: false,
+    track_topics: false,
   } as ISession;
 }
 
@@ -129,6 +134,7 @@ class TelegramBot {
           ctx.session.modlogs = user.enable_modlogs;
           ctx.session.track_topics = user.enable_auto_track_topics;
           ctx.session.onlyDirectMentions = user.enable_only_direct_mentions;
+          ctx.session.ignoreNestedQuotes = user.enable_ignore_nested_quotes;
           ctx.session.isGroup = ctx.chat.type !== 'private';
         }
       }

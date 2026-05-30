@@ -11,17 +11,23 @@ import { mainMenu } from '../menus/mainMenu';
 import FindUserByTelegramIdService from '../services/FindUserByTelegramIdService';
 import UpdateUserByTelegramIdService from '../services/UpdateUserByTelegramIdService';
 
-const uidHelpInlineMenu = new Menu('uidHelp').text('I don\'t know', async ctx =>
-  ctx.replyWithPhoto('https://i.imgur.com/XFB3TeA.png'));
+const uidHelpInlineMenu = new Menu('uidHelp').text("I don't know", async (ctx) =>
+  ctx.replyWithPhoto('https://i.imgur.com/XFB3TeA.png'),
+);
 
-async function askForPrompt(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext, type: 'username' | 'userId'): Promise<string | number> {
+async function askForPrompt(
+  conversation: Conversation<IMenuContext & ConversationFlavor>,
+  ctx: IMenuContext,
+  type: 'username' | 'userId',
+): Promise<string | number> {
   const typeText = type === 'username' ? 'username' : 'UID';
 
   await ctx.reply(`What is your BitcoinTalk ${typeText}?`, {
     reply_markup: type === 'userId' ? uidHelpInlineMenu : null,
   });
 
-  const input = type === 'username' ? await conversation.form.text() : await conversation.form.number();
+  const input =
+    type === 'username' ? await conversation.form.text() : await conversation.form.number();
 
   const confirmMenu = new Menu<IMenuContext & ConversationFlavor>('confirm').text('Yes').text('No');
   await conversation.run(confirmMenu);
@@ -48,7 +54,11 @@ async function askForPrompt(conversation: Conversation<IMenuContext & Conversati
   return askForPrompt(conversation, ctx, type);
 }
 
-async function askForConfirmation(conversation: Conversation<IMenuContext>, ctx: IMenuContext, type: string): Promise<boolean> {
+async function askForConfirmation(
+  conversation: Conversation<IMenuContext>,
+  ctx: IMenuContext,
+  type: string,
+): Promise<boolean> {
   const confirmMenu = new Menu<IMenuContext>('confirm').text('Yes').text('No');
   await conversation.run(confirmMenu);
 
@@ -74,8 +84,13 @@ async function askForConfirmation(conversation: Conversation<IMenuContext>, ctx:
   return false;
 }
 
-async function askForMentionType(conversation: Conversation<IMenuContext>, ctx: IMenuContext): Promise<boolean> {
-  const mentionTypeMenu = new Menu<IMenuContext>('mentionTypeMenu').text('All mentions').text('Only quotes and @ tags');
+async function askForMentionType(
+  conversation: Conversation<IMenuContext>,
+  ctx: IMenuContext,
+): Promise<boolean> {
+  const mentionTypeMenu = new Menu<IMenuContext>('mentionTypeMenu')
+    .text('All mentions')
+    .text('Only quotes and @ tags');
   await conversation.run(mentionTypeMenu);
 
   const promptMsg = await ctx.reply(
@@ -105,7 +120,10 @@ async function askForMentionType(conversation: Conversation<IMenuContext>, ctx: 
   return false;
 }
 
-async function setupConversation(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext): Promise<void> {
+async function setupConversation(
+  conversation: Conversation<IMenuContext & ConversationFlavor>,
+  ctx: IMenuContext,
+): Promise<void> {
   const username = (await askForPrompt(conversation, ctx, 'username')) as string;
   conversation.session.username = username;
 
@@ -114,6 +132,7 @@ async function setupConversation(conversation: Conversation<IMenuContext & Conve
 
   const mentionsEnabled = await askForConfirmation(conversation, ctx, 'mentions');
   conversation.session.mentions = mentionsEnabled;
+  conversation.session.ignoreNestedQuotes = false;
 
   if (mentionsEnabled) {
     const onlyDirectMentions = await askForMentionType(conversation, ctx);
@@ -137,19 +156,20 @@ async function setupConversation(conversation: Conversation<IMenuContext & Conve
       username,
       alternative_usernames: [],
       enable_mentions: mentionsEnabled,
+      enable_ignore_nested_quotes: false,
       enable_merits: meritsEnabled,
       language: 'en',
       telegram_id: String(ctx.chat.id),
       blocked: false,
       is_group: false,
     });
-  }
-  else {
+  } else {
     await createUser.execute({
       user_id: userId,
       username,
       alternative_usernames: [],
       enable_mentions: mentionsEnabled,
+      enable_ignore_nested_quotes: false,
       enable_merits: meritsEnabled,
       language: 'en',
       telegram_id: String(ctx.chat.id),

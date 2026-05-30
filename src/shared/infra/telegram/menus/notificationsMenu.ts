@@ -15,12 +15,20 @@ async function handleNotificationToggle(ctx: IMenuContext) {
 
   if (ctx.update.callback_query.data === '/notifications/merits') {
     ctx.session.merits = !ctx.session.merits;
-    await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'merits', ctx.session.merits);
+    await updateUserNotification.execute(
+      String(ctx.update.callback_query.from.id),
+      'merits',
+      ctx.session.merits,
+    );
   }
 
   if (ctx.update.callback_query.data === '/notifications/mentions') {
     ctx.session.mentions = !ctx.session.mentions;
-    await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'mentions', ctx.session.mentions);
+    await updateUserNotification.execute(
+      String(ctx.update.callback_query.from.id),
+      'mentions',
+      ctx.session.mentions,
+    );
   }
 
   if (ctx.update.callback_query.data === '/notifications/onlyDirectMentions') {
@@ -32,9 +40,22 @@ async function handleNotificationToggle(ctx: IMenuContext) {
     );
   }
 
+  if (ctx.update.callback_query.data === '/notifications/ignoreNestedQuotes') {
+    ctx.session.ignoreNestedQuotes = !ctx.session.ignoreNestedQuotes;
+    await updateUserNotification.execute(
+      String(ctx.update.callback_query.from.id),
+      'ignoreNestedQuotes',
+      ctx.session.ignoreNestedQuotes,
+    );
+  }
+
   if (ctx.update.callback_query.data === '/notifications/modlogs') {
     ctx.session.modlogs = !ctx.session.modlogs;
-    await updateUserNotification.execute(String(ctx.update.callback_query.from.id), 'modlogs', ctx.session.modlogs);
+    await updateUserNotification.execute(
+      String(ctx.update.callback_query.from.id),
+      'modlogs',
+      ctx.session.modlogs,
+    );
   }
 
   if (ctx.update.callback_query.data === '/notifications/track_topics') {
@@ -54,9 +75,10 @@ const meritsEnabled = (ctx: IMenuContext) => ctx.session.merits;
 const modlogsEnabled = (ctx: IMenuContext) => ctx.session.modlogs;
 const trackTopicsEnabled = (ctx: IMenuContext) => ctx.session.track_topics;
 const onlyDirectMentionsEnabled = (ctx: IMenuContext) => ctx.session.onlyDirectMentions;
+const ignoreNestedQuotesEnabled = (ctx: IMenuContext) => ctx.session.ignoreNestedQuotes;
 
 notificationsMenu.interact(
-  ctx => (mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '🚫 Mentions Disabled'),
+  (ctx) => (mentionsEnabled(ctx) ? '✅ Mentions Enabled ' : '🚫 Mentions Disabled'),
   'mentions',
   {
     do: async (ctx) => {
@@ -68,17 +90,21 @@ notificationsMenu.interact(
   },
 );
 
-notificationsMenu.interact(ctx => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '🚫 Merits Disabled'), 'merits', {
-  do: async (ctx) => {
-    await ctx.answerCallbackQuery();
-    await handleNotificationToggle(ctx);
+notificationsMenu.interact(
+  (ctx) => (meritsEnabled(ctx) ? '✅ Merits Enabled' : '🚫 Merits Disabled'),
+  'merits',
+  {
+    do: async (ctx) => {
+      await ctx.answerCallbackQuery();
+      await handleNotificationToggle(ctx);
 
-    return true;
+      return true;
+    },
   },
-});
+);
 
 notificationsMenu.interact(
-  ctx => (modlogsEnabled(ctx) ? '✅ Deleted Posts Enabled ' : '🚫 Deleted Posts Disabled'),
+  (ctx) => (modlogsEnabled(ctx) ? '✅ Deleted Posts Enabled ' : '🚫 Deleted Posts Disabled'),
   'modlogs',
   {
     do: async (ctx) => {
@@ -91,7 +117,10 @@ notificationsMenu.interact(
 );
 
 notificationsMenu.interact(
-  ctx => (trackTopicsEnabled(ctx) ? '✅ Auto-Track Own Topics Enabled ' : '🚫 Auto-Track Own Topics Disabled'),
+  (ctx) =>
+    trackTopicsEnabled(ctx)
+      ? '✅ Auto-Track Own Topics Enabled '
+      : '🚫 Auto-Track Own Topics Disabled',
   'track_topics',
   {
     do: async (ctx) => {
@@ -104,8 +133,27 @@ notificationsMenu.interact(
 );
 
 notificationsMenu.interact(
-  ctx => (onlyDirectMentionsEnabled(ctx) ? '✅ Only Direct Mentions Enabled ' : '🚫 Only Direct Mentions Disabled'),
+  (ctx) =>
+    onlyDirectMentionsEnabled(ctx)
+      ? '✅ Only Direct Mentions Enabled '
+      : '🚫 Only Direct Mentions Disabled',
   'onlyDirectMentions',
+  {
+    do: async (ctx) => {
+      await ctx.answerCallbackQuery();
+      await handleNotificationToggle(ctx);
+
+      return true;
+    },
+  },
+);
+
+notificationsMenu.interact(
+  (ctx) =>
+    ignoreNestedQuotesEnabled(ctx)
+      ? '✅ Ignore Nested Quotes Enabled '
+      : '🚫 Ignore Nested Quotes Disabled',
+  'ignoreNestedQuotes',
   {
     do: async (ctx) => {
       await ctx.answerCallbackQuery();

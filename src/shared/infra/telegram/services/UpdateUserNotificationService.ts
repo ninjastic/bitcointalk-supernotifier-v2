@@ -3,7 +3,13 @@ import { inject, injectable } from 'tsyringe';
 import type User from '../../../../modules/users/infra/typeorm/entities/User';
 import type IUsersRepository from '../../../../modules/users/repositories/IUsersRepository';
 
-type NotificationType = 'mentions' | 'merits' | 'modlogs' | 'track_topics' | 'onlyDirectMentions';
+type NotificationType =
+  | 'mentions'
+  | 'merits'
+  | 'modlogs'
+  | 'track_topics'
+  | 'onlyDirectMentions'
+  | 'ignoreNestedQuotes';
 
 @injectable()
 export default class UpdateUserNotificationService {
@@ -17,18 +23,16 @@ export default class UpdateUserNotificationService {
 
     if (type === 'mentions') {
       user.enable_mentions = value;
-    }
-    else if (type === 'merits') {
+    } else if (type === 'merits') {
       user.enable_merits = value;
-    }
-    else if (type === 'modlogs') {
+    } else if (type === 'modlogs') {
       user.enable_modlogs = value;
-    }
-    else if (type === 'track_topics') {
+    } else if (type === 'track_topics') {
       user.enable_auto_track_topics = value;
-    }
-    else if (type === 'onlyDirectMentions') {
+    } else if (type === 'onlyDirectMentions') {
       user.enable_only_direct_mentions = value;
+    } else if (type === 'ignoreNestedQuotes') {
+      user.enable_ignore_nested_quotes = value;
     }
 
     await this.usersRepository.save(user);
