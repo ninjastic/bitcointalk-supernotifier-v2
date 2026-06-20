@@ -7,11 +7,10 @@ import SetMeritNotifiedService from '##/modules/merits/services/SetMeritNotified
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
 import forumScraperQueue, { queueEvents } from '##/shared/infra/bull/queues/forumScraperQueue';
-import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
+import { buildMeritNotificationMessage } from '##/shared/infra/telegram/messages/notificationMessages';
+import sendRichTelegramMessage from '##/shared/infra/telegram/services/send-rich-telegram-message';
 import logger from '##/shared/services/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
-import escape from 'escape-html';
-import pluralize from 'pluralize';
 import { container, inject, injectable } from 'tsyringe';
 
 interface MeritNoficationData {
@@ -28,8 +27,14 @@ export default class SendMeritNotificationService {
     private cacheRepository: ICacheProvider,
   ) {}
 
-  private async getTotalMeritCount(telegram_id: string, receiver_uid: number, amount: number): Promise<number> {
-    let totalMeritCount = await this.cacheRepository.recover<number | null>(`meritCount:${telegram_id}`);
+  private async getTotalMeritCount(
+    telegram_id: string,
+    receiver_uid: number,
+    amount: number,
+  ): Promise<number> {
+    let totalMeritCount = await this.cacheRepository.recover<number | null>(
+      `meritCount:${telegram_id}`,
+    );
 
     if (totalMeritCount !== null) {
       totalMeritCount += amount;
@@ -39,7 +44,11 @@ export default class SendMeritNotificationService {
 
     const scraperWorkers = await forumScraperQueue.getWorkers();
     if (scraperWorkers.length > 0) {
-      const job = await forumScraperQueue.add('scrapeUserMeritCount', { uid: receiver_uid }, { delay: 5000 });
+      const job = await forumScraperQueue.add(
+        'scrapeUserMeritCount',
+        { uid: receiver_uid },
+        { delay: 5000 },
+      );
       totalMeritCount = await job.waitUntilFinished(queueEvents, 1000 * 60 * 2);
       await this.cacheRepository.save(`meritCount:${telegram_id}`, totalMeritCount);
       return totalMeritCount;
@@ -48,7 +57,10 @@ export default class SendMeritNotificationService {
     return -1;
   }
 
-  private async createNotification(telegram_id: string, metadata: MeritNotification['metadata']): Promise<void> {
+  private async createNotification(
+    telegram_id: string,
+    metadata: MeritNotification['metadata'],
+  ): Promise<void> {
     const notificationService = new NotificationService();
     await notificationService.createNotification<MeritNotification>({
       type: NotificationType.MERIT,
@@ -63,22 +75,15 @@ export default class SendMeritNotificationService {
     totalMeritCount: number,
     scrapedPostTitle: string | null,
   ): Promise<string> {
-    const { post_id, topic_id, amount, sender, post } = merit;
-    const { title } = post;
-
-    const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
-    const sponsor = getSponsorPhrase(telegramId);
-
-    return (
-      `${
-        totalMeritCount === -1 ? '⭐️ ' : `⭐️ (Merits: <b>${totalMeritCount}</b>) `
-      }You received <b>${amount}</b> ${pluralize('merit', amount)} `
-      + `from <b>${escape(sender)}</b> `
-      + `for <a href="${postUrl}">${escape(scrapedPostTitle || title)}</a>${sponsor}`
-    );
+    return buildMeritNotificationMessage(telegramId, merit, totalMeritCount, scrapedPostTitle);
   }
 
-  public async execute({ bot, telegramId, merit, scrapedPostTitle }: MeritNoficationData): Promise<boolean> {
+  public async execute({
+    bot,
+    telegramId,
+    merit,
+    scrapedPostTitle,
+  }: MeritNoficationData): Promise<boolean> {
     const setMeritNotified = container.resolve(SetMeritNotifiedService);
     let message: string;
 
@@ -87,25 +92,21 @@ export default class SendMeritNotificationService {
 
       const totalMeritCount = await this.getTotalMeritCount(telegramId, receiver_uid, amount);
 
-      message = await this.buildNotificationMessage(telegramId, merit, totalMeritCount, scrapedPostTitle);
+      message = await this.buildNotificationMessage(
+        telegramId,
+        merit,
+        totalMeritCount,
+        scrapedPostTitle,
+      );
 
-      const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
-        parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true },
-      });
+      await sendRichTelegramMessage(bot, telegramId, message);
 
-      if (messageSent) {
-        logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Merit notification was sent');
-        await setMeritNotified.execute(merit, telegramId);
-        await this.createNotification(telegramId, { post_id, merit_id });
-      }
-      else {
-        logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get Merit notification data');
-      }
+      logger.info({ telegram_id: telegramId, post_id, message }, 'Merit notification was sent');
+      await setMeritNotified.execute(merit, telegramId);
+      await this.createNotification(telegramId, { post_id, merit_id });
 
       return true;
-    }
-    catch (error) {
+    } catch (error) {
       await checkBotNotificationError(error, telegramId, {
         post_id: merit.post_id,
         id: merit.id,

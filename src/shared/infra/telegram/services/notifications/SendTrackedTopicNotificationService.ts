@@ -1,15 +1,11 @@
-import type {
-  TrackedTopicNotification,
-} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type { TrackedTopicNotification } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import type TelegramBot from '##/shared/infra/telegram/bot';
 
-import {
-  NotificationType,
-} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
-import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
+import { buildTrackedTopicNotificationMessage } from '##/shared/infra/telegram/messages/notificationMessages';
+import sendRichTelegramMessage from '##/shared/infra/telegram/services/send-rich-telegram-message';
 import { load } from 'cheerio';
-import escape from 'escape-html';
 import { container, inject, injectable } from 'tsyringe';
 
 import type Post from '../../../../../modules/posts/infra/typeorm/entities/Post';
@@ -41,10 +37,16 @@ export default class SendTrackedTopicNotificationService {
     const data = $('body');
     data.children('div.quote, div.quoteheader').remove();
     data.find('br').replaceWith('&nbsp;');
-    return data.text().replace(/\s{2,}/g, ' ').trim();
+    return data
+      .text()
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
 
-  private async createNotification(telegramId: string, metadata: TrackedTopicNotification['metadata']) {
+  private async createNotification(
+    telegramId: string,
+    metadata: TrackedTopicNotification['metadata'],
+  ) {
     const notificationService = new NotificationService();
     await notificationService.createNotification<TrackedTopicNotification>({
       type: NotificationType.TRACKED_TOPIC,
@@ -53,22 +55,14 @@ export default class SendTrackedTopicNotificationService {
     });
   }
 
-  private async buildNotificationMessage(post: Post, postLength: number, telegramId: string): Promise<string> {
-    const { author, title, content, post_id, topic_id } = post;
-
-    const escapedAuthor = escape(author);
-    const escapedTitle = escape(title);
+  private async buildNotificationMessage(
+    post: Post,
+    postLength: number,
+    telegramId: string,
+  ): Promise<string> {
+    const { content } = post;
     const contentFiltered = this.filterPostContent(content);
-    const truncatedContent
-      = escape(contentFiltered.substring(0, postLength)) + (contentFiltered.length > postLength ? '...' : '');
-    const sponsor = getSponsorPhrase(telegramId);
-
-    return (
-      `📄 There is a new reply by <b>${escapedAuthor}</b> `
-      + `in the tracked topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`
-      + `${escapedTitle}</a>\n`
-      + `<pre>${truncatedContent}</pre>${sponsor}`
-    );
+    return buildTrackedTopicNotificationMessage(post, contentFiltered, postLength, telegramId);
   }
 
   public async execute({ bot, telegramId, post }: TrackedTopicNotificationData): Promise<boolean> {
@@ -80,23 +74,17 @@ export default class SendTrackedTopicNotificationService {
     const message = await this.buildNotificationMessage(post, postLength, telegramId);
 
     try {
-      const messageSent = await bot.instance.api.sendMessage(telegramId, message, {
-        parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true },
-      });
+      await sendRichTelegramMessage(bot, telegramId, message);
 
-      if (messageSent) {
-        logger.info({ telegram_id: telegramId, post_id, message, messageSent }, 'Tracked Topic notification was sent');
-        await setPostNotified.execute(post.post_id, telegramId);
-        await this.createNotification(telegramId, { post_id });
-      }
-      else {
-        logger.warn({ telegram_id: telegramId, post_id, message }, 'Could not get Tracked Topic notification data');
-      }
+      logger.info(
+        { telegram_id: telegramId, post_id, message },
+        'Tracked Topic notification was sent',
+      );
+      await setPostNotified.execute(post.post_id, telegramId);
+      await this.createNotification(telegramId, { post_id });
 
       return true;
-    }
-    catch (error) {
+    } catch (error) {
       await checkBotNotificationError(error, telegramId, { post_id, message });
       return false;
     }

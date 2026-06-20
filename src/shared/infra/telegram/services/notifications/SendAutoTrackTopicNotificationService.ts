@@ -1,19 +1,16 @@
-import type {
-  AutoTrackTopicRequestNotification,
-} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type { AutoTrackTopicRequestNotification } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import type Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import type TelegramBot from '##/shared/infra/telegram/bot';
 import type { Bot } from 'grammy';
 
-import {
-  NotificationType,
-} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import AddTrackedTopicService from '##/modules/posts/services/AddTrackedTopicService';
 import { NotificationService } from '##/modules/posts/services/notification-service';
+import { buildAutoTrackTopicNotificationMessage } from '##/shared/infra/telegram/messages/notificationMessages';
+import sendRichTelegramMessage from '##/shared/infra/telegram/services/send-rich-telegram-message';
 import logger from '##/shared/services/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
-import escape from 'escape-html';
 import { InlineKeyboard } from 'grammy';
 import { container, injectable } from 'tsyringe';
 
@@ -33,7 +30,10 @@ export default class SendAutoTrackTopicNotificationService {
     this.redis = container.resolve<RedisProvider>('CacheRepository');
   }
 
-  private async createNotification(telegramId: string, metadata: AutoTrackTopicRequestNotification['metadata']) {
+  private async createNotification(
+    telegramId: string,
+    metadata: AutoTrackTopicRequestNotification['metadata'],
+  ) {
     const notificationService = new NotificationService();
     await notificationService.createNotification<AutoTrackTopicRequestNotification>({
       type: NotificationType.AUTO_TRACK_TOPIC_REQUEST,
@@ -43,39 +43,51 @@ export default class SendAutoTrackTopicNotificationService {
   }
 
   private async buildNotificationMessage(topic: Topic): Promise<string> {
-    const { title, topic_id, post_id } = topic.post;
-    return (
-      `📖 You created a new topic <a href="https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}">`
-      + `${escape(title)}</a>\n\n`
-      + `Do you want to track replies on this topic?`
-    );
+    return buildAutoTrackTopicNotificationMessage(topic);
   }
 
-  private async saveAutoTrackTopicData(messageId: number, telegramId: string, topicId: number): Promise<void> {
-    await this.redis.save(`autoTrackTopic:${messageId}`, { telegram_id: telegramId, topic_id: topicId });
+  private async saveAutoTrackTopicData(
+    messageId: number,
+    telegramId: string,
+    topicId: number,
+  ): Promise<void> {
+    await this.redis.save(`autoTrackTopic:${messageId}`, {
+      telegram_id: telegramId,
+      topic_id: topicId,
+    });
   }
 
-  public async execute({ bot, telegramId, topic }: AutoTrackTopicRequestNotificationData): Promise<boolean> {
+  public async execute({
+    bot,
+    telegramId,
+    topic,
+  }: AutoTrackTopicRequestNotificationData): Promise<boolean> {
     let message: string;
 
     try {
       message = await this.buildNotificationMessage(topic);
 
-      const sentMessage = await bot.instance.api.sendMessage(telegramId, message, {
-        parse_mode: 'HTML',
-        reply_markup: trackTopicRepliesMenu,
-      });
+      const sentMessage = await sendRichTelegramMessage<{ message_id: number }>(
+        bot,
+        telegramId,
+        message,
+        {
+          reply_markup: trackTopicRepliesMenu,
+        },
+      );
 
       await this.saveAutoTrackTopicData(sentMessage.message_id, telegramId, topic.topic_id);
-      await this.createNotification(telegramId, { topic_id: topic.topic_id, post_id: topic.post_id });
+      await this.createNotification(telegramId, {
+        topic_id: topic.topic_id,
+        post_id: topic.post_id,
+      });
 
       logger.info(
         { telegram_id: telegramId, topic_id: topic.topic_id, post_id: topic.post_id, message },
         'Auto Track Topics notification was sent',
       );
       return true;
-    }
-    catch (error) {
+    } catch (error) {
       await checkBotNotificationError(error, telegramId, { topic_id: topic.topic_id, message });
       return false;
     }
@@ -97,13 +109,15 @@ export function handleTrackTopicRepliesMenu(_bot: Bot) {
 
     if (data) {
       try {
-        const trackedTopic = await addTrackedTopicService.execute(data.topic_id, String(ctx.chat.id));
+        const trackedTopic = await addTrackedTopicService.execute(
+          data.topic_id,
+          String(ctx.chat.id),
+        );
         await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id);
 
         const message = `You are now tracking the topic: <b><a href="https://bitcointalk.org/index.php?topic=${trackedTopic.post.topic_id}">${trackedTopic.post.title}</a></b>`;
         await ctx.reply(message, { parse_mode: 'HTML' });
-      }
-      catch (error) {
+      } catch (error) {
         await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id);
         await ctx.reply(error.message, { parse_mode: 'HTML' });
       }

@@ -1,24 +1,19 @@
-import type {
-  PostMentionNotification,
-} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type { PostMentionNotification } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import type Post from '##/modules/posts/infra/typeorm/entities/Post';
 import type User from '##/modules/users/infra/typeorm/entities/User';
 import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
 import type { MentionType, RecipeMetadata } from '##/shared/infra/bull/types/telegram';
 import type TelegramBot from '##/shared/infra/telegram/bot';
 
-import {
-  NotificationType,
-} from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
 import SetPostHistoryNotifiedService from '##/modules/posts/services/SetPostHistoryNotifiedService';
 import SetPostNotifiedService from '##/modules/posts/services/SetPostNotifiedService';
-import getSponsorPhrase from '##/shared/infra/telegram/services/get-sponsor-phrase';
-import { sarcasticAprilFoolsMessage } from '##/shared/services/ai';
+import { buildMentionNotificationMessage } from '##/shared/infra/telegram/messages/notificationMessages';
+import sendRichTelegramMessage from '##/shared/infra/telegram/services/send-rich-telegram-message';
 import logger from '##/shared/services/logger';
-import { checkBotNotificationError, escapeUsername, isAprilFools } from '##/shared/services/utils';
+import { checkBotNotificationError, escapeUsername } from '##/shared/services/utils';
 import { load } from 'cheerio';
-import escape from 'escape-html';
 import { container, inject, injectable } from 'tsyringe';
 
 type MentionNotificationData = RecipeMetadata['sendMentionNotification'] & {
@@ -48,8 +43,7 @@ export default class SendMentionNotificationService {
         const quoteHeader = $(element);
 
         const isRegularQuote = quoteHeader.children('a:not(.ul)').length === 0;
-        if (isRegularQuote)
-          return;
+        if (isRegularQuote) return;
 
         const authorMatch = quoteHeader
           .text()
@@ -66,10 +60,8 @@ export default class SendMentionNotificationService {
         let currentNode = quote.next;
         while (currentNode) {
           currentNode = currentNode.next;
-          if (quotes.includes(currentNode))
-            break;
-          if ($(currentNode).hasClass('quoteheader'))
-            continue;
+          if (quotes.includes(currentNode)) break;
+          if ($(currentNode).hasClass('quoteheader')) continue;
 
           const nodeText = $(currentNode).text();
           if (nodeText) {
@@ -85,22 +77,31 @@ export default class SendMentionNotificationService {
 
     body.children('div.quote, div.quoteheader').remove();
     body.find('br').replaceWith('&nbsp;');
-    return body.text().replace(/\s{2,}/g, ' ').trim();
+    return body
+      .text()
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
 
-  private async markPostAsNotified(post: Post, telegramId: string, history: boolean): Promise<void> {
+  private async markPostAsNotified(
+    post: Post,
+    telegramId: string,
+    history: boolean,
+  ): Promise<void> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
     const setPostHistoryNotified = container.resolve(SetPostHistoryNotifiedService);
 
     if (history) {
       await setPostHistoryNotified.execute(post.post_id, telegramId);
-    }
-    else {
+    } else {
       await setPostNotified.execute(post.post_id, telegramId);
     }
   }
 
-  private async createNotification(telegramId: string, metadata: PostMentionNotification['metadata']) {
+  private async createNotification(
+    telegramId: string,
+    metadata: PostMentionNotification['metadata'],
+  ) {
     const notificationService = new NotificationService();
     await notificationService.createNotification<PostMentionNotification>({
       type: NotificationType.POST_MENTION,
@@ -115,76 +116,38 @@ export default class SendMentionNotificationService {
     user: User,
     mentionType: MentionType,
   ): Promise<string> {
-    const { topic_id, post_id, title, content, author } = post;
-    const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
+    const { content } = post;
     const contentFiltered = this.filterPostContent(content, user, mentionType);
-    const sponsor = getSponsorPhrase(user.telegram_id);
-
-    return (
-      `💬 You have been mentioned by <b>${escape(author)}</b> `
-      + `in <a href="${postUrl}">${escape(title)}</a>\n`
-      + `<pre>${escape(contentFiltered.substring(0, postLength))}`
-      + `${contentFiltered.length > postLength ? '...' : ''}</pre>${sponsor}`
-    );
+    return buildMentionNotificationMessage(post, contentFiltered, postLength, user.telegram_id);
   }
 
-  private async buildNotificationMessageAprilFools(post: Post, user: User, mentionType: MentionType): Promise<string> {
-    const { topic_id, post_id, title, content, author } = post;
-    const postUrl = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
-    const contentFiltered = this.filterPostContent(content, user, mentionType);
-    const sponsor = getSponsorPhrase(user.telegram_id);
-
-    const jokeMessage = await sarcasticAprilFoolsMessage(
-      `💬 You have been mentioned by ${author} in ${title}: ${contentFiltered}`,
-    );
-
-    return (
-      `💬 You have been mentioned by <b>${escape(author)}</b> `
-      + `in <a href="${postUrl}">${escape(title)}</a>\n\n`
-      + `<a href="https://bitcointalk.org/index.php?topic=5248878.msg65230609#msg65230609">SuperNotifier Ninja-AI:</a> ${jokeMessage}`
-      + `${sponsor}`
-    );
-  }
-
-  public async execute({ bot, post, user, history, mentionType }: MentionNotificationData): Promise<boolean> {
+  public async execute({
+    bot,
+    post,
+    user,
+    history,
+    mentionType,
+  }: MentionNotificationData): Promise<boolean> {
     let message: string;
 
     try {
-      const postLength = (await this.cacheRepository.recover<number>(`${user.telegram_id}:postLength`)) ?? 150;
+      const postLength =
+        (await this.cacheRepository.recover<number>(`${user.telegram_id}:postLength`)) ?? 150;
 
-      const aprilFools = isAprilFools();
+      message = await this.buildNotificationMessage(post, postLength, user, mentionType);
 
-      if (aprilFools) {
-        message = await this.buildNotificationMessageAprilFools(post, user, mentionType);
-      }
-      else {
-        message = await this.buildNotificationMessage(post, postLength, user, mentionType);
-      }
+      await sendRichTelegramMessage(bot, user.telegram_id, message);
 
-      const messageSent = await bot.instance.api.sendMessage(user.telegram_id, message, {
-        parse_mode: 'HTML',
-        link_preview_options: { is_disabled: true },
-      });
+      logger.info(
+        { telegram_id: user.telegram_id, post_id: post.post_id, history, message },
+        'Mention notification was sent',
+      );
 
-      if (messageSent) {
-        logger.info(
-          { telegram_id: user.telegram_id, post_id: post.post_id, history, message, messageSent },
-          'Mention notification was sent',
-        );
-
-        await this.markPostAsNotified(post, user.telegram_id, history);
-        await this.createNotification(user.telegram_id, { post_id: post.post_id, history });
-      }
-      else {
-        logger.info(
-          { telegram_id: user.telegram_id, post_id: post.post_id, history, message },
-          'Could not get Mention notification data',
-        );
-      }
+      await this.markPostAsNotified(post, user.telegram_id, history);
+      await this.createNotification(user.telegram_id, { post_id: post.post_id, history });
 
       return true;
-    }
-    catch (error) {
+    } catch (error) {
       await checkBotNotificationError(error, user.telegram_id, {
         post_id: post.post_id,
         message,

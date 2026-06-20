@@ -24,6 +24,7 @@
     "dev:simplex": "cross-env NODE_ENV=development tsx --watch src/shared/infra/simplex/index.ts | pino-pretty",
     "dev:es:upload:posts": "cross-env NODE_ENV=development tsx src/shared/tools/elasticsearch/upload-posts.ts",
     "dev:loyce:archive": "cross-env NODE_ENV=development tsx src/shared/tools/loyce/scraper-archive.ts",
+    "preview:telegram-notifications": "cross-env NODE_ENV=development tsx src/shared/tools/send-rich-notification-preview.ts",
     "dev:typeorm": "cross-env NODE_ENV=development tsx ./node_modules/typeorm/cli.js",
     "dev:migrate": "cross-env NODE_ENV=development tsx ./node_modules/typeorm/cli.js migration:run",
     "cli": "cross-env NODE_ENV=production tsx dist/shared/tools/cli.js",
