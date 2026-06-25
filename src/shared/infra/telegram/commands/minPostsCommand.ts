@@ -10,12 +10,11 @@ async function minPostsCommand(ctx: HearsContext<IMenuContext>): Promise<void> {
   const saveCache = container.resolve(SaveCacheService);
 
   const value = Number(ctx.match[1]);
-  const telegram_id = ctx.message.from.id;
+  const telegram_id = ctx.msg.from.id;
 
   if (Number.isNaN(value)) {
     await ctx.reply('Are you sure you chose a valid number?');
-  }
-  else {
+  } else {
     await saveCache.execute(`${telegram_id}:minTrackedBoardAuthorPostCount`, value);
 
     await ctx.reply(

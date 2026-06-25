@@ -30,12 +30,14 @@ async function requestBoardsUrl() {
   });
 }
 
-async function getExistentBoardsInDatabase(boards: Array<{
-  id: number;
-  url: string;
-}>) {
+async function getExistentBoardsInDatabase(
+  boards: Array<{
+    id: number;
+    url: string;
+  }>,
+) {
   spinner.text = 'Getting boards in database';
-  const ids = boards.map(board => board.id);
+  const ids = boards.map((board) => board.id);
 
   const results = await createQueryBuilder()
     .select('board_id')
@@ -48,10 +50,12 @@ async function getExistentBoardsInDatabase(boards: Array<{
   return results;
 }
 
-async function scrapeBoards(boards: Array<{
-  id: number;
-  url: string;
-}>) {
+async function scrapeBoards(
+  boards: Array<{
+    id: number;
+    url: string;
+  }>,
+) {
   for await (const board of boards) {
     spinner.text = `Scraping missing boards (${boards.length}) - ID ${board.id}`;
     const response = await api.get(board.url);
@@ -81,14 +85,14 @@ async function scrapeBoards(boards: Array<{
     const finalBoardsArray = [];
 
     if (boardsArray.length >= 2) {
-      const baordsWithRelation = boardsArray.reverse().map((originalBoard, index) => ({
+      const boardsReversed = boardsArray.toReversed();
+      const baordsWithRelation = boardsReversed.map((originalBoard, index) => ({
         id: () => 'uuid_generate_v4()',
         ...originalBoard,
-        parent_id: boardsArray.reverse()[index + 1] ? boardsArray.reverse()[index + 1].board_id : null,
+        parent_id: boardsReversed[index + 1] ? boardsReversed[index + 1].board_id : null,
       }));
       finalBoardsArray.push(...baordsWithRelation);
-    }
-    else {
+    } else {
       finalBoardsArray.push(...boardsArray);
     }
 
@@ -112,14 +116,15 @@ export async function syncBoards(): Promise<void> {
 
   const existent = await getExistentBoardsInDatabase(boards);
 
-  const missingBoards = boards.filter(board => !existent.find(existentBoard => existentBoard.board_id === board.id));
+  const missingBoards = boards.filter(
+    (board) => !existent.find((existentBoard) => existentBoard.board_id === board.id),
+  );
 
   if (missingBoards.length) {
     await scrapeBoards(missingBoards);
     await cacheRepository.invalidateByPrefix('boards:*');
     spinner.succeed('Synced!');
-  }
-  else {
+  } else {
     spinner.succeed('Boards are already synced');
   }
 }

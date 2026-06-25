@@ -6,6 +6,7 @@ import { container } from 'tsyringe';
 import type IMeritsRepository from '../../modules/merits/repositories/IMeritsRepository';
 import type IModLogRepository from '../../modules/modlog/repositories/IModLogRepository';
 import type IAddressesRepository from '../../modules/posts/repositories/IAddressesRepository';
+import type IAdvancedMatchesRepository from '../../modules/posts/repositories/IAdvancedMatchesRepository';
 import type IIgnoredTopicsRepository from '../../modules/posts/repositories/IIgnoredTopicsRepository';
 import type IPostsAddressesRepository from '../../modules/posts/repositories/IPostsAddressesRepository';
 import type IPostsHistoryRepository from '../../modules/posts/repositories/IPostsHistoryRepository';
@@ -20,6 +21,7 @@ import type ICacheRepository from './providers/models/ICacheProvider';
 import MeritsRepository from '../../modules/merits/infra/typeorm/repositories/MeritsRepository';
 import ModLogRepository from '../../modules/modlog/infra/typeorm/repositories/ModLogRepository';
 import AddressesRepository from '../../modules/posts/infra/typeorm/repositories/AddressesRepository';
+import AdvancedMatchesRepository from '../../modules/posts/infra/typeorm/repositories/AdvancedMatchesRepository';
 import IgnoredTopicsRepository from '../../modules/posts/infra/typeorm/repositories/IgnoredTopicsRepository';
 import PostsAddressesRepository from '../../modules/posts/infra/typeorm/repositories/PostsAddressesRepository';
 import PostsHistoryRepository from '../../modules/posts/infra/typeorm/repositories/PostsHistoryRepository';
@@ -37,13 +39,30 @@ container.registerSingleton<IIgnoredUserRepository>('IgnoredUserRepository', Ign
 
 container.registerSingleton<IPostsRepository>('PostsRepository', PostsRepository);
 
-container.registerSingleton<ITrackedTopicsRepository>('TrackedTopicsRepository', TrackedTopicsRepository);
+container.registerSingleton<ITrackedTopicsRepository>(
+  'TrackedTopicsRepository',
+  TrackedTopicsRepository,
+);
 
-container.registerSingleton<ITrackedTopicUsersRepository>('TrackedTopicUsersRepository', TrackedTopicUsersRepository);
+container.registerSingleton<ITrackedTopicUsersRepository>(
+  'TrackedTopicUsersRepository',
+  TrackedTopicUsersRepository,
+);
 
-container.registerSingleton<ITrackedPhrasesRepository>('TrackedPhrasesRepository', TrackedPhrasesRepository);
+container.registerSingleton<ITrackedPhrasesRepository>(
+  'TrackedPhrasesRepository',
+  TrackedPhrasesRepository,
+);
 
-container.registerSingleton<IIgnoredTopicsRepository>('IgnoredTopicsRepository', IgnoredTopicsRepository);
+container.registerSingleton<IAdvancedMatchesRepository>(
+  'AdvancedMatchesRepository',
+  AdvancedMatchesRepository,
+);
+
+container.registerSingleton<IIgnoredTopicsRepository>(
+  'IgnoredTopicsRepository',
+  IgnoredTopicsRepository,
+);
 
 container.registerSingleton<IMeritsRepository>('MeritsRepository', MeritsRepository);
 
@@ -51,9 +70,15 @@ container.registerSingleton<IModLogRepository>('ModLogRepository', ModLogReposit
 
 container.registerSingleton<IAddressesRepository>('AddressesRepository', AddressesRepository);
 
-container.registerSingleton<IPostsAddressesRepository>('PostsAddressesRepository', PostsAddressesRepository);
+container.registerSingleton<IPostsAddressesRepository>(
+  'PostsAddressesRepository',
+  PostsAddressesRepository,
+);
 
-container.registerSingleton<IPostsHistoryRepository>('PostsHistoryRepository', PostsHistoryRepository);
+container.registerSingleton<IPostsHistoryRepository>(
+  'PostsHistoryRepository',
+  PostsHistoryRepository,
+);
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);
 

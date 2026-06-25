@@ -7,7 +7,7 @@ import { initialSession } from '../bot';
 async function resetCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
   if (ctx.chat.type === 'private') {
     ctx.session = initialSession();
-    ctx.conversation.exit();
+    await ctx.conversation.exitAll();
     await ctx.reply('Reset...');
   }
 }

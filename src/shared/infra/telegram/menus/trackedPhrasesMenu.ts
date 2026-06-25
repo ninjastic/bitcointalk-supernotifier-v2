@@ -1,5 +1,5 @@
+import { Menu } from '@grammyjs/menu';
 import { StatelessQuestion } from '@grammyjs/stateless-question';
-import { MenuTemplate, replyMenuToContext } from 'grammy-inline-menu';
 import { container } from 'tsyringe';
 
 import type IMenuContext from '../@types/IMenuContext';
@@ -9,134 +9,112 @@ import CreateTrackedPhraseService from '../services/CreateTrackedPhraseService';
 import FindTrackedPhrasesByIdService from '../services/FindTrackedPhrasesByIdService';
 import FindTrackedPhrasesByTelegramIdService from '../services/FindTrackedPhrasesByTelegramIdService';
 import RemoveTrackedPhraseService from '../services/RemoveTrackedPhraseService';
+import { editHtml, editHtmlMenu, replyHtmlMenu } from './menu-utils';
 
-const trackedPhrasesMenu = new MenuTemplate<IMenuContext>(() => ({
-  text: '<b>Tracked Phrases</b>\n\nAdd or remove phrases so you get notified when they are mentioned.',
-  parse_mode: 'HTML',
-}));
+export const TRACKED_PHRASES_MENU_HTML =
+  '<b>Tracked Phrases</b>\n\nAdd or remove phrases so you get notified when they are mentioned.';
 
-const trackedPhraseInfoMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
-  const phraseId = ctx.match[1];
-
+async function getPhrase(phraseId: string) {
   const findTrackedPhrasesById = container.resolve(FindTrackedPhrasesByIdService);
-
-  const { phrase } = await findTrackedPhrasesById.execute(phraseId);
-
-  let message = '';
-  message += '<b>Selected Phrase:</b>\n\n';
-  message += phrase;
-
-  return {
-    text: message,
-    parse_mode: 'HTML',
-  };
-});
-
-const confirmRemoveTrackedPhraseMenu = new MenuTemplate<IMenuContext>(async (ctx) => {
-  const phraseId = ctx.match[1];
-  const findTrackedPhrasesById = container.resolve(FindTrackedPhrasesByIdService);
-  const { phrase } = await findTrackedPhrasesById.execute(phraseId);
-
-  return {
-    text: `Are you sure you want to remove the tracked phrase: <b>${phrase}</b>?`,
-    parse_mode: 'HTML',
-  };
-});
-
-confirmRemoveTrackedPhraseMenu.interact('Yes, do it!', 'yes', {
-  do: async (ctx) => {
-    const removeTrackedPhrase = container.resolve(RemoveTrackedPhraseService);
-    await removeTrackedPhrase.execute(ctx.match[1], String(ctx.chat.id));
-    return '/tp/';
-  },
-});
-
-confirmRemoveTrackedPhraseMenu.interact('No, go back!', 'no', {
-  do: async () => `..`,
-});
-
-trackedPhraseInfoMenu.submenu('🗑️ Remove Phrase', 'remove', confirmRemoveTrackedPhraseMenu);
-
-trackedPhraseInfoMenu.interact('↩ Go Back', 'back', {
-  do: () => '..',
-});
-
-const addTrackedPhraseLinkQuestion = new StatelessQuestion('addPhrase', async (ctx: IMenuContext) => {
-  const text = ctx.message.text.trim();
-
-  const createTrackedPhrase = container.resolve(CreateTrackedPhraseService);
-
-  try {
-    const trackedPhrase = await createTrackedPhrase.execute({
-      telegram_id: String(ctx.chat.id),
-      phrase: text,
-    });
-
-    let message = '';
-    message += 'You are now tracking the phrase:\n\n';
-    message += `<b>${trackedPhrase.phrase}</b>`;
-
-    await ctx.reply(message, {
-      parse_mode: 'HTML',
-      reply_markup: { remove_keyboard: true },
-    });
-
-    await replyMenuToContext(trackedPhrasesMenu, ctx, '/tp/');
-  }
-  catch (error) {
-    if (error.message === 'Tracked phrase already exists') {
-      await ctx.reply('You are already tracking this phrase.', {
-        reply_markup: { remove_keyboard: true },
-      });
-
-      return;
-    }
-
-    logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Tracked Phrase.');
-
-    await ctx.reply('Something went wrong...', {
-      reply_markup: { remove_keyboard: true },
-    });
-  }
-});
-
-async function getTrackedPhrasesList(ctx: IMenuContext) {
-  const findTrackedPhrasesByTelegramId = container.resolve(FindTrackedPhrasesByTelegramIdService);
-
-  const choices = await findTrackedPhrasesByTelegramId.execute(String(ctx.chat.id));
-
-  const formatted = {};
-
-  choices.forEach((choice) => {
-    formatted[choice.id] = choice.phrase;
-  });
-
-  return formatted;
+  return findTrackedPhrasesById.execute(phraseId);
 }
 
-trackedPhrasesMenu.chooseIntoSubmenu('tp', getTrackedPhrasesList, trackedPhraseInfoMenu, {
-  maxRows: 10,
-  columns: 1,
-  getCurrentPage: ctx => ctx.session.page,
-  setPage: (ctx, page) => {
-    ctx.session.page = page;
+async function trackedPhraseInfoHtml(ctx: IMenuContext) {
+  const { phrase } = await getPhrase(ctx.session.selectedTrackedPhraseId);
+  return `<b>Selected Phrase:</b>\n\n${phrase}`;
+}
+
+const confirmRemoveTrackedPhraseMenu = new Menu<IMenuContext>('tpr')
+  .text('Yes, do it!', async (ctx) => {
+    const removeTrackedPhrase = container.resolve(RemoveTrackedPhraseService);
+    await removeTrackedPhrase.execute(ctx.session.selectedTrackedPhraseId, String(ctx.chat.id));
+    ctx.session.selectedTrackedPhraseId = null;
+    await editHtmlMenu(ctx, TRACKED_PHRASES_MENU_HTML, trackedPhrasesMenu);
+  })
+  .row()
+  .back('No, go back!', async (ctx) => {
+    await editHtml(ctx, await trackedPhraseInfoHtml(ctx));
+  });
+
+const trackedPhraseInfoMenu = new Menu<IMenuContext>('tpi')
+  .submenu('🗑️ Remove Phrase', 'tpr', async (ctx) => {
+    const { phrase } = await getPhrase(ctx.session.selectedTrackedPhraseId);
+    await editHtml(ctx, `Are you sure you want to remove the tracked phrase: <b>${phrase}</b>?`);
+  })
+  .row()
+  .back('↩ Go Back', async (ctx) => {
+    ctx.session.selectedTrackedPhraseId = null;
+    await editHtml(ctx, TRACKED_PHRASES_MENU_HTML);
+  });
+
+const trackedPhrasesMenu = new Menu<IMenuContext>('tpm')
+  .dynamic(async (ctx, range) => {
+    const findTrackedPhrasesByTelegramId = container.resolve(FindTrackedPhrasesByTelegramIdService);
+    const choices = await findTrackedPhrasesByTelegramId.execute(String(ctx.chat.id));
+    const page = ctx.session.page ?? 0;
+    const totalPages = Math.max(1, Math.ceil(choices.length / 10));
+
+    for (const choice of choices.slice(page * 10, (page + 1) * 10)) {
+      range
+        .submenu({ text: choice.phrase, payload: choice.id }, 'tpi', async (menuCtx) => {
+          menuCtx.session.selectedTrackedPhraseId = menuCtx.match;
+          await editHtml(menuCtx, await trackedPhraseInfoHtml(menuCtx));
+        })
+        .row();
+    }
+
+    if (totalPages > 1) {
+      if (page > 0)
+        range.text('◀️ Prev', (menuCtx) => {
+          menuCtx.session.page = page - 1;
+          menuCtx.menu.update();
+        });
+      range.text(`${page + 1}/${totalPages}`, (menuCtx) =>
+        menuCtx.answerCallbackQuery(`Page ${page + 1} of ${totalPages}`),
+      );
+      if (page < totalPages - 1)
+        range.text('Next ▶️', (menuCtx) => {
+          menuCtx.session.page = page + 1;
+          menuCtx.menu.update();
+        });
+      range.row();
+    }
+  })
+  .text('✨ Add new', async (ctx) => {
+    await addTrackedPhraseLinkQuestion.replyWithHTML(
+      ctx,
+      'What is the phrase that you want to track?',
+    );
+  })
+  .back('↩ Go Back', async (ctx) => {
+    await editHtml(ctx, '<b>Notify me about...</b>\n\nChoose what should trigger notifications.');
+  });
+
+trackedPhrasesMenu.register(trackedPhraseInfoMenu);
+trackedPhraseInfoMenu.register(confirmRemoveTrackedPhraseMenu);
+
+const addTrackedPhraseLinkQuestion = new StatelessQuestion(
+  'addPhrase',
+  async (ctx: IMenuContext) => {
+    const text = ctx.message.text.trim();
+    const createTrackedPhrase = container.resolve(CreateTrackedPhraseService);
+
+    try {
+      await createTrackedPhrase.execute({ telegram_id: String(ctx.chat.id), phrase: text });
+      await replyHtmlMenu(ctx, TRACKED_PHRASES_MENU_HTML, trackedPhrasesMenu);
+    } catch (error) {
+      if (error.message === 'Tracked phrase already exists') {
+        await ctx.reply('You are already tracking this phrase.', {
+          reply_markup: { remove_keyboard: true },
+        });
+        return;
+      }
+
+      logger.error({ telegram_id: ctx.chat.id, error }, 'Error while adding Tracked Phrase.');
+      await ctx.reply('Something went wrong...', { reply_markup: { remove_keyboard: true } });
+    }
   },
-  disableChoiceExistsCheck: true,
-});
-
-trackedPhrasesMenu.interact('✨ Add new', 'add', {
-  do: async (ctx) => {
-    const message = 'What is the phrase that you want to track?';
-
-    await addTrackedPhraseLinkQuestion.replyWithHTML(ctx, message);
-    return true;
-  },
-});
-
-trackedPhrasesMenu.interact('↩ Go Back', 'back', {
-  do: () => '..',
-  joinLastRow: true,
-});
+);
 
 export { addTrackedPhraseLinkQuestion };
 export default trackedPhrasesMenu;

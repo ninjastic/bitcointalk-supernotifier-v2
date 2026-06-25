@@ -2,7 +2,7 @@
 .vscode/
 node_modules/
 build/
-dist
+dist/
 tmp/
 temp/
 .env
@@ -22,6 +22,4 @@ user-posts-deleted-ids.*.json
 *.db-shm
 *.db-wal
 *.db.bak
-simplex-cli
-simplex
 docs/

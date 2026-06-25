@@ -17,19 +17,13 @@ import {
   buildTrackedTopicNotificationMessage,
   buildTrackedUserNotificationMessage,
 } from '##/shared/infra/telegram/messages/notificationMessages';
-import axios from 'axios';
+import { Api } from 'grammy';
 
-interface TelegramApiResponse<T> {
-  ok: boolean;
-  result?: T;
-  description?: string;
-}
+type SendRichMessageOptions = NonNullable<Parameters<Api['sendRichMessage']>[2]>;
 
 interface PreviewMessage {
   html: string;
-  options?: {
-    reply_markup?: unknown;
-  };
+  options?: SendRichMessageOptions;
 }
 
 const previewPost = {
@@ -148,18 +142,8 @@ async function sendRichMessage({ html, options = {} }: PreviewMessage): Promise<
     throw new Error('TELEGRAM_BOT_TOKEN is not configured');
   }
 
-  const { data } = await axios.post<TelegramApiResponse<unknown>>(
-    `https://api.telegram.org/bot${token}/sendRichMessage`,
-    {
-      chat_id: ADMIN_TELEGRAM_ID,
-      rich_message: { html },
-      ...options,
-    },
-  );
-
-  if (!data.ok) {
-    throw new Error(data.description || 'Telegram sendRichMessage failed');
-  }
+  const api = new Api(token);
+  await api.sendRichMessage(ADMIN_TELEGRAM_ID, { html }, options);
 }
 
 async function main(): Promise<void> {

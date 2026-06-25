@@ -43,8 +43,7 @@ export class SyncTopicsPipeline {
       await this.setupElasticsearchTemplate();
       await this.createOrUpdateIndex();
       await this.syncTopics();
-    }
-    catch (error) {
+    } catch (error) {
       this.logger.error({ error }, 'Error during synchronization');
     }
   }
@@ -121,9 +120,10 @@ export class SyncTopicsPipeline {
           },
         },
       });
-      this.logger.debug(`Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`);
-    }
-    catch (error) {
+      this.logger.debug(
+        `Elasticsearch template '${this.INDEX_TEMPLATE_NAME}' created or updated successfully.`,
+      );
+    } catch (error) {
       this.logger.error({ error }, 'Error creating Elasticsearch template');
       throw error;
     }
@@ -138,12 +138,10 @@ export class SyncTopicsPipeline {
           index: this.INDEX_NAME,
         });
         this.logger.debug(`Index '${this.INDEX_NAME}' created successfully.`);
-      }
-      else {
+      } else {
         this.logger.debug(`Index '${this.INDEX_NAME}' already exists.`);
       }
-    }
-    catch (error) {
+    } catch (error) {
       this.logger.error({ error }, 'Error creating or checking index');
       throw error;
     }
@@ -180,7 +178,9 @@ export class SyncTopicsPipeline {
     bulkOperations = [];
 
     for (const topic of topics) {
-      const operationInfo = { update: { _index: this.POSTS_INDEX_NAME, _id: topic.post_id.toString() } };
+      const operationInfo = {
+        update: { _index: this.POSTS_INDEX_NAME, _id: topic.post_id.toString() },
+      };
       const operationContent = {
         doc: { is_topic_starter: true },
       };
@@ -191,17 +191,22 @@ export class SyncTopicsPipeline {
     const updatePostsWithTopicStarterFieldBulkChunks = [];
     for (let i = 0; i < bulkOperations.length; i += this.INDEX_BATCH_SIZE * 2) {
       const operations = bulkOperations.slice(i, i + this.INDEX_BATCH_SIZE * 2);
-      updatePostsWithTopicStarterFieldBulkChunks.push(this.esClient.bulk({ operations, refresh: false }));
+      updatePostsWithTopicStarterFieldBulkChunks.push(
+        this.esClient.bulk({ operations, refresh: false }),
+      );
     }
 
-    const results = await Promise.all([...indexTopicsBulkChunks, ...updatePostsWithTopicStarterFieldBulkChunks]);
+    const results = await Promise.all([
+      ...indexTopicsBulkChunks,
+      ...updatePostsWithTopicStarterFieldBulkChunks,
+    ]);
 
-    if (results.some(result => result.errors)) {
+    if (results.some((result) => result.errors)) {
       const erroredItems = results
-        .flatMap(result => result.items)
-        .filter(item => item.index?.error || item.update?.error)
-        .map(item => ({
-          id: item.index?._id || item.index?._id,
+        .flatMap((result) => result.items)
+        .filter((item) => item.index?.error || item.update?.error)
+        .map((item) => ({
+          id: item.index?._id || item.update?._id,
           error: item.index?.error || item.update?.error,
           status: item.index?.status || item.update?.status,
         }));
@@ -214,7 +219,9 @@ export class SyncTopicsPipeline {
   private async syncTopics(): Promise<void> {
     const topicsRepository = this.connection.getRepository(Topic);
 
-    let { lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>('topics-sync-state')) ?? {
+    let { lastUpdatedAt } = (await this.cacheRepository.recover<LastSyncState>(
+      'topics-sync-state',
+    )) ?? {
       lastUpdatedAt: new Date(0).toISOString(),
     };
 

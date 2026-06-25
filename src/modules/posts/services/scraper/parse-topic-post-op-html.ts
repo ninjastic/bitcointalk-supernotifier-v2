@@ -17,10 +17,16 @@ function parseTopicPostOpHtml(html: string): ParsedTopicPost {
   const $ = load(html, { decodeEntities: true });
   const posts = $('#quickModForm > table.bordercolor');
 
-  const postElements = [...$(posts).find('tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*=\'subject\'])')];
+  const postElements = [
+    ...$(posts).find(
+      "tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*='subject'])",
+    ),
+  ];
 
-  const postElement = postElements.find((postElement) => {
-    const postHeader = $(postElement).find('td.td_headerandpost td > div[id*=\'subject\'] > a');
+  const postElement = postElements.find((candidatePostElement) => {
+    const postHeader = $(candidatePostElement).find(
+      "td.td_headerandpost td > div[id*='subject'] > a",
+    );
     return postHeader && postHeader.attr('href');
   });
 
@@ -28,7 +34,7 @@ function parseTopicPostOpHtml(html: string): ParsedTopicPost {
     return { success: false, post: null, failedReason: 'No topic found' };
   }
 
-  const postHeader = $(postElement).find('td.td_headerandpost td > div[id*=\'subject\'] > a');
+  const postHeader = $(postElement).find("td.td_headerandpost td > div[id*='subject'] > a");
 
   const postId = Number(
     $(postHeader)
@@ -62,8 +68,7 @@ function parseTopicPostOpHtml(html: string): ParsedTopicPost {
     const boardIdRegEx = /board=(\d+)/;
     const boardUrl = $(board).find('a').attr('href');
 
-    if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board='))
-      return;
+    if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) return;
 
     if (boardIndex < length - 1 && boardIndex !== 0) {
       const boardId = boardUrl.match(boardIdRegEx)[1];

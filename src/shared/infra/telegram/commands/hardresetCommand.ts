@@ -9,12 +9,12 @@ import type IMenuContext from '../@types/IMenuContext';
 
 import logger from '../../../services/logger';
 
-export const hardResetConfirmInlineMenu = new Menu('hardreset')
+export const hardResetConfirmInlineMenu = new Menu('hr')
   .text('Yes, I want to delete everything', async (ctx) => {
     const telegramId = ctx.chat.id;
 
-    if (ctx.message.chat.type === 'group') {
-      const user = await ctx.api.getChatMember(ctx.chat.id, ctx.from.id);
+    if (ctx.msg.chat.type === 'group') {
+      const user = await ctx.api.getChatMember(ctx.chat.id, ctx.from!.id);
       if (user.status !== 'creator' && user.status !== 'administrator') {
         return;
       }
@@ -91,8 +91,8 @@ export const hardResetConfirmInlineMenu = new Menu('hardreset')
   .text("No, I don't want", (ctx) => ctx.deleteMessage());
 
 async function hardresetCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
-  if (ctx.message.chat.type === 'group') {
-    const user = await ctx.api.getChatMember(ctx.chat.id, ctx.from.id);
+  if (ctx.msg.chat.type === 'group') {
+    const user = await ctx.api.getChatMember(ctx.chat.id, ctx.from!.id);
     if (user.status !== 'creator' && user.status !== 'administrator') {
       return;
     }

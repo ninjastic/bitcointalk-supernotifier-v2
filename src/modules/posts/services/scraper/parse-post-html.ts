@@ -14,35 +14,27 @@ export interface ParsedPost {
   pagePosts: Post[];
 }
 
-async function parsePostHtml(
-  html: string,
-  postId: number,
-): Promise<ParsedPost> {
+async function parsePostHtml(html: string, postId: number): Promise<ParsedPost> {
   const postsRepository = getRepository(Post);
   const topicsRepository = getRepository(Topic);
 
   const $ = load(html, { decodeEntities: true });
 
-  const topicNotFound
-    = $('#bodyarea > div:nth-child(1) > table > tbody > tr.windowbg > td')
+  const topicNotFound =
+    $('#bodyarea > div:nth-child(1) > table > tbody > tr.windowbg > td')?.text()?.trim() ===
+    'The topic or board you are looking for appears to be either missing or off limits to you.';
+
+  const topicOffLimit =
+    $('#frmLogin > table > tbody > tr.catbg > td')?.text()?.trim() === 'Warning!' &&
+    $('form table tr td.windowbg')
       ?.text()
       ?.trim()
-      === 'The topic or board you are looking for appears to be either missing or off limits to you.';
-
-  const topicOffLimit
-    = $('#frmLogin > table > tbody > tr.catbg > td')?.text()?.trim()
-      === 'Warning!'
-      && $('form table tr td.windowbg')
-        ?.text()
-        ?.trim()
-        .includes(
-          'The topic or board you are looking for appears to be either missing or off limits to you.',
-        );
+      .includes(
+        'The topic or board you are looking for appears to be either missing or off limits to you.',
+      );
 
   if (topicNotFound || topicOffLimit) {
-    logger.info(
-      `[ParsePostElementService] Topic of post ${postId} was not found or is off limit`,
-    );
+    logger.info(`[ParsePostElementService] Topic of post ${postId} was not found or is off limit`);
     return {
       success: false,
       post: null,
@@ -70,8 +62,7 @@ async function parsePostHtml(
     const boardIdRegEx = /board=(\d+)/;
     const boardUrl = $(board).find('a').attr('href');
 
-    if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board='))
-      return;
+    if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) return;
 
     if (boardIndex < length - 1 && boardIndex !== 0) {
       const boardId = boardUrl.match(boardIdRegEx)[1];
@@ -80,8 +71,8 @@ async function parsePostHtml(
     }
   });
 
-  const isTopicFirstPage
-    = $('#bodyarea > table:not(.tborder)')
+  const isTopicFirstPage =
+    $('#bodyarea > table:not(.tborder)')
       .filter((_, el) => $(el).text().includes('Pages'))
       .first()
       .find('tbody > tr > td.middletext > b')
@@ -92,16 +83,14 @@ async function parsePostHtml(
 
   const postsElements = $(postsContainer)
     .find(
-      'tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*=\'subject\'])',
+      "tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*='subject'])",
     )
     .toArray();
 
   const pagePosts = postsElements.map((postElement) => {
-    const postHeader = $(postElement).find(
-      'td.td_headerandpost td > div[id*=\'subject\'] > a',
-    );
+    const postHeader = $(postElement).find("td.td_headerandpost td > div[id*='subject'] > a");
     const title = postHeader.text().trim();
-    const postId = Number(
+    const pagePostId = Number(
       postHeader
         .attr('href')
         .match(/msg(\d+)/)
@@ -118,34 +107,23 @@ async function parsePostHtml(
     const author = authorElement.html() ?? 'Guest';
     const authorUrl = author && authorElement.attr('href');
     const authorUid = authorUrl
-      ? Number(
-          authorUrl.replace(
-            'https://bitcointalk.org/index.php?action=profile;u=',
-            '',
-          ),
-        )
+      ? Number(authorUrl.replace('https://bitcointalk.org/index.php?action=profile;u=', ''))
       : -1;
 
-    const content = $(postElement)
-      .find('td.td_headerandpost div.post')
-      .html();
+    const content = $(postElement).find('td.td_headerandpost div.post').html();
 
     const d = new Date();
     const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 
     const date = new Date(
       $(postElement)
-        .find(
-          'td.td_headerandpost > table:nth-child(1) div:nth-child(2)',
-        )
+        .find('td.td_headerandpost > table:nth-child(1) div:nth-child(2)')
         .text()
         .replace('Today at', today)
         .replace(/Last edit:.*/, ''),
     );
 
-    const editedDateTitle = $(postElement)
-      .find('span.edited')
-      .attr('title');
+    const editedDateTitle = $(postElement).find('span.edited').attr('title');
 
     const editedDate = editedDateTitle
       ? new Date(
@@ -157,7 +135,7 @@ async function parsePostHtml(
       : null;
 
     const post = postsRepository.create({
-      post_id: postId,
+      post_id: pagePostId,
       topic_id: topicId,
       title,
       author,
@@ -185,7 +163,7 @@ async function parsePostHtml(
     });
   }
 
-  const targetPost = pagePosts.find(post => post.post_id === postId);
+  const targetPost = pagePosts.find((post) => post.post_id === postId);
 
   return {
     success: true,

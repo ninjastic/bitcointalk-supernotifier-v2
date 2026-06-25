@@ -40,7 +40,10 @@ class Checker {
     this.lastPostId = 0;
     this.lastMeritDate = sub(new Date(), { hours: 24 });
 
-    logger.info({ lastPostId: this.lastPostId, lastMeritDate: this.lastMeritDate }, 'Checker initialized');
+    logger.info(
+      { lastPostId: this.lastPostId, lastMeritDate: this.lastMeritDate },
+      'Checker initialized',
+    );
   }
 
   private filterPostContent(content: string): string {
@@ -48,7 +51,10 @@ class Checker {
     const data = $('body');
     data.children('div.quote, div.quoteheader').remove();
     data.find('br').replaceWith('&nbsp;');
-    return data.text().replace(/\s{2,}/g, ' ').trim();
+    return data
+      .text()
+      .replace(/\s{2,}/g, ' ')
+      .trim();
   }
 
   async run() {
@@ -58,7 +64,9 @@ class Checker {
       this.lastPostId = Number(lastCheckedPost.key);
     }
 
-    const lastCheckedMerit = await this.simpleX.db.getLastChecked({ type: LastCheckedType.MERIT_DATE });
+    const lastCheckedMerit = await this.simpleX.db.getLastChecked({
+      type: LastCheckedType.MERIT_DATE,
+    });
 
     if (lastCheckedMerit) {
       this.lastMeritDate = new Date(lastCheckedMerit.key);
@@ -86,35 +94,39 @@ class Checker {
     const ignoredUsers = await this.simpleX.db.getIgnoredUsers();
     const ignoredTopics = await this.simpleX.db.getIgnoredTopics();
 
-    let users = await this.simpleX.db.getUsers({ enable_mentions: true });
+    let users = (await this.simpleX.db.getUsers({ enable_mentions: true })).filter(
+      (user) => !user.deleted_at,
+    );
 
     const notifiedSet = new Set<string>();
 
     for (const post of posts) {
       logger.debug(`Checking post ${post.post_id}`);
-      const ignoringPostAuthor = ignoredUsers.filter(ignoredUser => ignoredUser.username.toLowerCase() === post.author);
-      const ignoringPostTopic = ignoredTopics.filter(ignoredTopic => ignoredTopic.topic_id === post.topic_id);
+      const ignoringPostAuthor = ignoredUsers.filter(
+        (ignoredUser) => ignoredUser.username.toLowerCase() === post.author,
+      );
+      const ignoringPostTopic = ignoredTopics.filter(
+        (ignoredTopic) => ignoredTopic.topic_id === post.topic_id,
+      );
 
       for (const user of users) {
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
-        if (!isUserMentionedInPost(post.content, { username: user.forum_username }, user.only_direct).isMentioned)
+        if (
+          !isUserMentionedInPost(post.content, { username: user.forum_username }, user.only_direct)
+            .isMentioned
+        )
           continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase())
+        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (ignoringPostAuthor.find((ignoring) => ignoring.contact_id === user.contact_id))
           continue;
-        if (ignoringPostAuthor.find(ignoring => ignoring.contact_id === user.contact_id))
-          continue;
-        if (ignoringPostTopic.find(ignoring => ignoring.contact_id === user.contact_id))
-          continue;
-        if (await redis.get(key))
-          continue;
+        if (ignoringPostTopic.find((ignoring) => ignoring.contact_id === user.contact_id)) continue;
+        if (await redis.get(key)) continue;
         const notificationExists = await this.simpleX.db.getNotifications({
           contact_id: user.contact_id,
           key,
         });
-        if (notificationExists.length > 0)
-          continue;
-        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`))
-          continue;
+        if (notificationExists.length > 0) continue;
+        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
 
         logger.info({ contactId: user.contact_id, post }, 'Sending mention notification');
 
@@ -134,8 +146,7 @@ class Checker {
             message: messageText,
             sent: true,
           });
-        }
-        else if (!msg.deleted) {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.MENTION,
@@ -148,27 +159,20 @@ class Checker {
       }
 
       for (const trackedUser of trackedUsers) {
-        if (post.author.toLowerCase() !== trackedUser.username.toLowerCase())
-          continue;
+        if (post.author.toLowerCase() !== trackedUser.username.toLowerCase()) continue;
         const user = await this.simpleX.db.getUser(trackedUser.contact_id);
-        if (!user)
-          continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase())
-          continue;
-        if (ignoringPostTopic.find(ignoring => ignoring.contact_id === user.contact_id))
-          continue;
-        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`))
-          continue;
+        if (!user || user.deleted_at) continue;
+        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (ignoringPostTopic.find((ignoring) => ignoring.contact_id === user.contact_id)) continue;
+        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
 
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
-        if (await redis.get(key))
-          continue;
+        if (await redis.get(key)) continue;
         const notificationExists = await this.simpleX.db.getNotifications({
           contact_id: user.contact_id,
           key,
         });
-        if (notificationExists.length > 0)
-          continue;
+        if (notificationExists.length > 0) continue;
 
         logger.info({ contactId: user.contact_id, post }, 'Sending tracked user notification');
 
@@ -188,8 +192,7 @@ class Checker {
             message: messageText,
             sent: true,
           });
-        }
-        else if (!msg.deleted) {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_USER,
@@ -202,26 +205,20 @@ class Checker {
       }
 
       for (const trackedTopic of trackedTopics) {
-        if (post.topic_id !== trackedTopic.topic_id)
-          continue;
+        if (post.topic_id !== trackedTopic.topic_id) continue;
         const user = await this.simpleX.db.getUser(trackedTopic.contact_id);
-        if (!user)
+        if (!user || user.deleted_at) continue;
+        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (ignoringPostAuthor.find((ignoring) => ignoring.contact_id === user.contact_id))
           continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase())
-          continue;
-        if (ignoringPostAuthor.find(ignoring => ignoring.contact_id === user.contact_id))
-          continue;
-        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`))
-          continue;
+        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
-        if (await redis.get(key))
-          continue;
+        if (await redis.get(key)) continue;
         const notificationExists = await this.simpleX.db.getNotifications({
           contact_id: user.contact_id,
           key,
         });
-        if (notificationExists.length > 0)
-          continue;
+        if (notificationExists.length > 0) continue;
 
         logger.info({ contactId: user.contact_id, post }, 'Sending tracked topic notification');
 
@@ -241,8 +238,7 @@ class Checker {
             message: messageText,
             sent: true,
           });
-        }
-        else if (!msg.deleted) {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_TOPIC,
@@ -256,28 +252,21 @@ class Checker {
 
       for (const trackedPhrase of trackedPhrases) {
         const phraseRegex = createMentionRegex(trackedPhrase.phrase);
-        if (post.content.match(phraseRegex) === null)
-          continue;
+        if (post.content.match(phraseRegex) === null) continue;
         const user = await this.simpleX.db.getUser(trackedPhrase.contact_id);
-        if (!user)
+        if (!user || user.deleted_at) continue;
+        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (ignoringPostAuthor.find((ignoring) => ignoring.contact_id === user.contact_id))
           continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase())
-          continue;
-        if (ignoringPostAuthor.find(ignoring => ignoring.contact_id === user.contact_id))
-          continue;
-        if (ignoringPostTopic.find(ignoring => ignoring.contact_id === user.contact_id))
-          continue;
-        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`))
-          continue;
+        if (ignoringPostTopic.find((ignoring) => ignoring.contact_id === user.contact_id)) continue;
+        if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
-        if (await redis.get(key))
-          continue;
+        if (await redis.get(key)) continue;
         const notificationExists = await this.simpleX.db.getNotifications({
           contact_id: user.contact_id,
           key,
         });
-        if (notificationExists.length > 0)
-          continue;
+        if (notificationExists.length > 0) continue;
 
         logger.info({ contactId: user.contact_id, post }, 'Sending tracked phrase notification');
 
@@ -297,8 +286,7 @@ class Checker {
             message: messageText,
             sent: true,
           });
-        }
-        else if (!msg.deleted) {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.TRACKED_PHRASE,
@@ -319,22 +307,21 @@ class Checker {
       });
     }
 
-    users = await this.simpleX.db.getUsers({ enable_merits: true });
+    users = (await this.simpleX.db.getUsers({ enable_merits: true })).filter(
+      (user) => !user.deleted_at,
+    );
 
     for (const merit of merits) {
       logger.debug(`Checking merit ${merit.id}`);
       for (const user of users) {
         const key = `meritNotification:${user.contact_id}:${merit.id}`;
-        if (merit.receiver_uid !== user.forum_user_uid)
-          continue;
-        if (await redis.get(key))
-          continue;
+        if (merit.receiver_uid !== user.forum_user_uid) continue;
+        if (await redis.get(key)) continue;
         const notificationExists = await this.simpleX.db.getNotifications({
           contact_id: user.contact_id,
           key,
         });
-        if (notificationExists.length > 0)
-          continue;
+        if (notificationExists.length > 0) continue;
         logger.info({ contactId: user.contact_id, merit }, 'Sending merit notification');
 
         const postUrl = `https://bitcointalk.org/index.php?topic=${merit.topic_id}.msg${merit.post_id}#msg${merit.post_id}`;
@@ -351,8 +338,7 @@ class Checker {
             message: messageText,
             sent: true,
           });
-        }
-        else if (!msg.deleted) {
+        } else if (!msg.deleted) {
           await this.simpleX.db.createNotification({
             contact_id: user.contact_id,
             type: NotificationType.MERIT,

@@ -10,12 +10,11 @@ async function altCommand(ctx: HearsContext<IMenuContext>): Promise<void> {
   const setUserAlternativeUsername = container.resolve(SetUserAlternativeUsernameService);
 
   const value = ctx.match[1];
-  const telegram_id = ctx.message.from.id;
+  const telegram_id = ctx.msg.chat.id;
 
   if (!value) {
     await ctx.reply('Are you sure you chose a valid username?');
-  }
-  else {
+  } else {
     await setUserAlternativeUsername.execute(String(telegram_id), value);
 
     await ctx.reply(`Done! Your alternative username is now: <b>${value}</b>`, {

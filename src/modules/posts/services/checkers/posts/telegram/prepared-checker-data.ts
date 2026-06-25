@@ -3,6 +3,7 @@ import type {
   PreparedPostMentionContent,
 } from '../../../../../../shared/services/utils';
 import type User from '../../../../../users/infra/typeorm/entities/User';
+import type AdvancedMatch from '../../../../infra/typeorm/entities/AdvancedMatch';
 import type Post from '../../../../infra/typeorm/entities/Post';
 import type TrackedBoard from '../../../../infra/typeorm/entities/TrackedBoard';
 import type TrackedPhrase from '../../../../infra/typeorm/entities/TrackedPhrase';
@@ -18,6 +19,12 @@ export interface PreparedCheckerPost {
 export interface PreparedTrackedPhrase {
   trackedPhrase: TrackedPhrase;
   expression: RegExp;
+}
+
+export interface PreparedAdvancedMatch {
+  advancedMatch: AdvancedMatch;
+  titleExpression: RegExp | null;
+  contentExpression: RegExp | null;
 }
 
 export interface PreparedTrackedTopicContext {

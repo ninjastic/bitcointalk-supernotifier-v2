@@ -1,19 +1,35 @@
 import 'reflect-metadata';
 import 'module-alias/register';
 import 'dotenv/config';
-import type { ChatEvent } from '@simplex-chat/types';
+import type { ChatEvent, T } from '@simplex-chat/types';
 
 import logger from '##/shared/services/logger';
-import { ChatClient } from 'simplex-chat';
+import { api, bot, util } from 'simplex-chat';
 import { createConnection } from 'typeorm';
 
 import Checker from './checker';
 import Db from './db';
-import { handlers } from './handlers';
+import { handleChatMessage, handlers } from './handlers';
+
+interface SimpleXChatErrorLike {
+  chatError?: T.ChatError;
+}
+
+function getChatError(error: unknown): T.ChatError | undefined {
+  if (error instanceof api.ChatCommandError && error.response.type === 'chatCmdError') {
+    return error.response.chatError;
+  }
+
+  if (error && typeof error === 'object' && 'chatError' in error) {
+    return (error as SimpleXChatErrorLike).chatError;
+  }
+
+  return undefined;
+}
 
 export class SimpleX {
-  chat: ChatClient;
-  address: string;
+  chat: api.ChatApi;
+  address: string | undefined;
   db: Db;
   checker: Checker;
   connectedUsers: Set<number>;
@@ -25,39 +41,58 @@ export class SimpleX {
   }
 
   async start() {
-    this.chat = await ChatClient.create(process.env.SIMPLEX_WS);
-    const user = await this.chat.apiGetActiveUser();
+    const pendingEvents: ChatEvent[] = [];
+    const pendingMessages: Array<{ chatItem: T.AChatItem; content: T.MsgContent }> = [];
 
-    if (!user) {
-      throw new Error('No user profile');
-    }
+    const [chat, , address] = await bot.run({
+      profile: {
+        displayName: 'BitcoinTalk SuperNotifier',
+        fullName: 'BitcoinTalk SuperNotifier',
+      },
+      dbOpts: { type: 'sqlite', filePrefix: 'simplexdb' },
+      options: {
+        addressSettings: { autoAccept: false },
+        logContacts: false,
+      },
+      onMessage: async (chatItem, content) => {
+        if (!this.chat) {
+          pendingMessages.push({ chatItem, content });
+          return;
+        }
 
-    const { profileId } = user.profile;
-
-    this.address = await this.chat.apiGetUserAddress(profileId);
-
-    if (this.address && this.address.startsWith('simplex:/contact#/?v=2')) {
-      this.chat.apiDeleteUserAddress(profileId);
-      this.address = undefined;
-    }
-
-    if (!this.address) {
-      this.address = await this.chat.apiCreateUserAddress(profileId);
-    }
-
-    await this.chat.disableAddressAutoAccept(profileId);
-    await this.chat.apiUpdateProfile(profileId, {
-      displayName: 'BitcoinTalk SuperNotifier',
-      fullName: 'BitcoinTalk SuperNotifier',
+        await handleChatMessage(chatItem, content, this);
+      },
+      events: {
+        receivedContactRequest: async (event) => this.queueOrHandleEvent(event, pendingEvents),
+        contactConnected: async (event) => this.queueOrHandleEvent(event, pendingEvents),
+        chatError: async (event) => this.queueOrHandleEvent(event, pendingEvents),
+        contactDeletedByContact: async (event) => this.queueOrHandleEvent(event, pendingEvents),
+      },
     });
+
+    this.chat = chat;
+    this.address = address ? util.contactAddressStr(address.connLinkContact) : undefined;
+
+    for (const event of pendingEvents) {
+      await this.handleMsg(event);
+    }
+
+    for (const message of pendingMessages) {
+      await handleChatMessage(message.chatItem, message.content, this);
+    }
 
     logger.info({ address: this.address }, 'Bot is ready');
 
     await this.checker.start();
+  }
 
-    for await (const r of this.chat.msgQ) {
-      await this.handleMsg(r);
+  private async queueOrHandleEvent(event: ChatEvent, pendingEvents: ChatEvent[]): Promise<void> {
+    if (!this.chat) {
+      pendingEvents.push(event);
+      return;
     }
+
+    await this.handleMsg(event);
   }
 
   async isContactActive(contactId: number) {
@@ -95,28 +130,35 @@ export class SimpleX {
     ];
 
     try {
-      const sent = await this.chat.sendChatCmd(`/_send @${contactId} json ${JSON.stringify(message)}`);
+      const sent = await this.chat.apiSendMessages(
+        ['direct' as T.ChatType, contactId],
+        message as T.ComposedMessage[],
+      );
 
-      if (sent.type === 'chatCmdError') {
-        if (sent.chatError.type === 'error' && sent.chatError.errorType.type === 'contactNotReady') {
-          if (['deleted', 'deletedByUser'].includes(sent.chatError.errorType.contact.contactStatus)) {
-            logger.warn({ contactId }, 'Contact has deleted the chat, deleting contact');
-            this.deleteContact(contactId);
-            return { sent: false, deleted: true };
-          }
-          else {
-            logger.warn({ contactId }, 'Contact not ready to receive messages');
-            return { sent: false, deleted: false };
-          }
+      return { sent: Boolean(sent.length), deleted: false };
+    } catch (error) {
+      const chatError = getChatError(error);
+      if (chatError?.type === 'error' && chatError.errorType.type === 'contactNotReady') {
+        if (['deleted', 'deletedByUser'].includes(chatError.errorType.contact.contactStatus)) {
+          logger.warn({ contactId }, 'Contact has deleted the chat, deleting contact');
+          await this.deleteContact(contactId);
+          return { sent: false, deleted: true };
         }
 
-        logger.error({ contactId, sent }, 'Failed to send message');
+        logger.warn({ contactId }, 'Contact not ready to receive messages');
         return { sent: false, deleted: false };
       }
 
-      return { sent: true, deleted: false };
-    }
-    catch (error) {
+      if (
+        chatError?.type === 'errorStore' &&
+        chatError.storeError.type === 'contactNotFound' &&
+        chatError.storeError.contactId === contactId
+      ) {
+        logger.warn({ contactId }, 'Contact was not found in SimpleX, deleting contact');
+        await this.deleteContact(contactId);
+        return { sent: false, deleted: true };
+      }
+
       logger.error({ contactId, error }, 'Failed to send message due to unknown error');
       return { sent: false, deleted: false };
     }
@@ -124,32 +166,38 @@ export class SimpleX {
 
   async processUnsentNotifications(contactId: number) {
     const unsentNotifications = await this.db.getNotifications(
-      qb => qb.where({ sent: false, contact_id: contactId }).andWhereRaw('created_at >= datetime(\'now\', \'-48 hours\')'),
+      (qb) =>
+        qb
+          .where({ sent: false, contact_id: contactId })
+          .andWhereRaw("created_at >= datetime('now', '-48 hours')"),
       'asc',
     );
 
     for (const unsentNotification of unsentNotifications) {
-      const contactId = unsentNotification.contact_id;
-      logger.info({ contactId, unsentNotification }, 'Checking unsent notification');
+      const notificationContactId = unsentNotification.contact_id;
+      logger.info(
+        { contactId: notificationContactId, unsentNotification },
+        'Checking unsent notification',
+      );
 
-      const msg = await this.sendMessage(contactId, unsentNotification.message);
+      const msg = await this.sendMessage(notificationContactId, unsentNotification.message);
       if (msg.sent) {
         await this.db.updateNotification(unsentNotification.id, { sent: true });
-      }
-      else if (!msg.deleted) {
-        logger.warn({ contactId, unsentNotification }, 'Failed to send unsent notification');
-      }
-      else {
+      } else if (!msg.deleted) {
+        logger.warn(
+          { contactId: notificationContactId, unsentNotification },
+          'Failed to send unsent notification',
+        );
+      } else {
         break;
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 
   async addConnectedUser(contactId: number) {
-    if (this.connectedUsers.has(contactId) && !contactId)
-      return;
+    if (this.connectedUsers.has(contactId) && !contactId) return;
     this.connectedUsers.add(contactId);
     logger.info({ contactId }, `Contact ${contactId} connected`);
 

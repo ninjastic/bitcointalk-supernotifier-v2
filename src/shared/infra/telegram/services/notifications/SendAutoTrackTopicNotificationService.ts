@@ -2,6 +2,7 @@ import type { AutoTrackTopicRequestNotification } from '##/modules/notifications
 import type Topic from '##/modules/posts/infra/typeorm/entities/Topic';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import type TelegramBot from '##/shared/infra/telegram/bot';
+import type IMenuContext from '##/shared/infra/telegram/@types/IMenuContext';
 import type { Bot } from 'grammy';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
@@ -94,7 +95,7 @@ export default class SendAutoTrackTopicNotificationService {
   }
 }
 
-export function handleTrackTopicRepliesMenu(_bot: Bot) {
+export function handleTrackTopicRepliesMenu(_bot: Bot<IMenuContext>) {
   return _bot.callbackQuery('add-tt', async (ctx) => {
     const statusMessage = await ctx.reply(
       'We have added your request to the queue.\n\nThis will take a few seconds...',

@@ -1,7 +1,8 @@
 import type { RunnerHandle } from '@grammyjs/runner';
-import type { Api, Context, RawApi, SessionFlavor } from 'grammy';
+import type { Api, Context, RawApi } from 'grammy';
 
 import { conversations, createConversation } from '@grammyjs/conversations';
+import { hydrate } from '@grammyjs/hydrate';
 import { run } from '@grammyjs/runner';
 import { RedisAdapter } from '@grammyjs/storage-redis';
 import hardresetCommand, {
@@ -12,6 +13,7 @@ import IORedis from 'ioredis';
 import { container } from 'tsyringe';
 
 import type ISession from './@types/ISession';
+import type IMenuContext from './@types/IMenuContext';
 
 import cache from '../../../config/cache';
 import logger from '../../services/logger';
@@ -22,7 +24,6 @@ import apiCommand from './commands/apiCommand';
 import authCommand from './commands/authCommand';
 import devCommand from './commands/dev';
 import helpCommand from './commands/helpCommand';
-import imageCommand from './commands/imageCommand';
 import infoCommand from './commands/infoCommand';
 import lengthCommand from './commands/lengthCommand';
 import menuCommand from './commands/menuCommand';
@@ -34,6 +35,7 @@ import addIgnoredBoardConversation, {
   cancelAddIgnoredBoardPromptInlineMenu,
   confirmAddIgnoredBoardInlineMenu,
 } from './conversations/addIgnoredBoardConversation';
+import addAdvancedMatchConversation from './conversations/addAdvancedMatchConversation';
 import addTrackedBoardConversation, {
   cancelAddTrackedBoardPromptInlineMenu,
   confirmAddTrackedBoardInlineMenu,
@@ -44,7 +46,7 @@ import addTrackedUserConversation, {
 } from './conversations/addTrackedUserConversation';
 import { setupConversation, uidHelpInlineMenu } from './conversations/setupConversation';
 import { setupQuestionMiddlewares } from './menus';
-import { mainMenuMiddleware } from './menus/mainMenu';
+import { mainMenu } from './menus/mainMenu';
 import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
 import { handleTrackTopicRepliesMenu } from './services/notifications/SendAutoTrackTopicNotificationService';
 
@@ -58,23 +60,31 @@ export function initialSession(): ISession {
     merits: false,
     modlogs: false,
     track_topics: false,
-  } as ISession;
+    advancedMatchDraft: null,
+    advancedMatchDraftField: null,
+  };
 }
 
 class TelegramBot {
-  public instance: Bot<Context & SessionFlavor<ISession>, Api<RawApi>>;
+  public instance: Bot<IMenuContext, Api<RawApi>>;
 
   public runner: RunnerHandle;
 
   constructor() {
-    this.instance = new Bot(process.env.TELEGRAM_BOT_TOKEN, {
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    if (!token) {
+      throw new Error('TELEGRAM_BOT_TOKEN is required');
+    }
+
+    this.instance = new Bot(token, {
       // client: { environment: process.env.NODE_ENV === 'development' ? 'test' : 'prod' }
     });
 
     this.middlewares();
-    this.inlineMenus();
     this.conversations();
+    this.inlineMenus();
     this.menus();
+    this.questions();
     this.commands();
     this.errorHandler();
 
@@ -103,11 +113,15 @@ class TelegramBot {
       }),
     );
 
+    this.instance.use(hydrate());
+
     this.instance.use(async (ctx, next): Promise<void> => {
       if (ctx.chat.type === 'private') {
         await next();
         return;
       }
+
+      if (!ctx.from) return;
 
       const chatMember = await ctx.getChatMember(ctx.from.id);
       if (['creator', 'administrator'].includes(chatMember.status)) {
@@ -120,8 +134,6 @@ class TelegramBot {
       }
     });
 
-    this.instance.use(conversations());
-    this.instance.command('reset', resetCommand);
     this.instance.use(async (ctx, next) => {
       if (!ctx.session.username || !ctx.session.userId) {
         const findUserByTelegramId = container.resolve(FindUserByTelegramIdService);
@@ -140,7 +152,6 @@ class TelegramBot {
       }
       await next();
     });
-    setupQuestionMiddlewares(this.instance);
   }
 
   async commands(): Promise<void> {
@@ -153,9 +164,9 @@ class TelegramBot {
     this.instance.hears(/\/?info/i, infoCommand);
     this.instance.hears(/\/?api/i, apiCommand);
     this.instance.hears(/\/?length (.*)/i, lengthCommand);
-    this.instance.hears(/\/?image/i, imageCommand);
     this.instance.hears(/\/?auth/i, authCommand);
     this.instance.hears(/\/?minposts? (.*)/i, minPostsCommand);
+    this.instance.command('reset', resetCommand);
     this.instance.command('hardreset', hardresetCommand);
 
     this.instance.command('dev', devCommand);
@@ -173,7 +184,11 @@ class TelegramBot {
   }
 
   menus(): void {
-    this.instance.use(mainMenuMiddleware);
+    this.instance.use(mainMenu);
+  }
+
+  questions(): void {
+    setupQuestionMiddlewares(this.instance);
   }
 
   inlineMenus(): void {
@@ -191,11 +206,52 @@ class TelegramBot {
   }
 
   conversations(): void {
+    const {
+      config: { redis },
+    } = cache;
+
     this.instance.use(
-      createConversation(setupConversation, 'setup'),
-      createConversation(addTrackedBoardConversation, 'addTrackedBoard'),
-      createConversation(addTrackedUserConversation, 'addTrackedUser'),
-      createConversation(addIgnoredBoardConversation, 'addIgnoredBoard'),
+      conversations({
+        storage: new RedisAdapter({
+          instance: new IORedis({
+            host: redis.host,
+            port: redis.port,
+            password: redis.password,
+            db: 2,
+            keyPrefix: 'convo:',
+          }),
+        }),
+      }),
+    );
+    this.instance.use(
+      createConversation(setupConversation, {
+        id: 'setup',
+        plugins: [hydrate(), uidHelpInlineMenu],
+      }),
+      createConversation(addTrackedBoardConversation, {
+        id: 'addTrackedBoard',
+        plugins: [
+          hydrate(),
+          cancelAddTrackedBoardPromptInlineMenu,
+          confirmAddTrackedBoardInlineMenu,
+        ],
+      }),
+      createConversation(addTrackedUserConversation, {
+        id: 'addTrackedUser',
+        plugins: [hydrate(), cancelAddTrackedUserPromptInlineMenu, confirmAddTrackedUserInlineMenu],
+      }),
+      createConversation(addIgnoredBoardConversation, {
+        id: 'addIgnoredBoard',
+        plugins: [
+          hydrate(),
+          cancelAddIgnoredBoardPromptInlineMenu,
+          confirmAddIgnoredBoardInlineMenu,
+        ],
+      }),
+      createConversation(addAdvancedMatchConversation, {
+        id: 'addAdvancedMatch',
+        plugins: [hydrate()],
+      }),
     );
   }
 

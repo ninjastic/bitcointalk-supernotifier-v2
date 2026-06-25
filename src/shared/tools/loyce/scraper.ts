@@ -41,8 +41,7 @@ function scrapePostFromBuffer(buffer) {
   const topic_id = Number(post_url.match(/topic=(\d+)\./i)[1]);
   const author = $('body > b > a:nth-child(2)').text();
 
-  if (!author)
-    return null;
+  if (!author) return null;
 
   const author_url = $('body > b > a:nth-child(2)').attr('href');
   const author_uid = Number(author_url.match(/u=(\d+)/i)[1]);
@@ -62,8 +61,7 @@ function scrapePostFromBuffer(buffer) {
     return null;
   }
 
-  if (author_uid && author_uid >= 999999999)
-    return null;
+  if (author_uid && author_uid >= 999999999) return null;
 
   const boards = [];
   const checked = false;
@@ -94,7 +92,7 @@ createConnection().then(async () => {
   const createPost = container.resolve(CreatePostService);
 
   const folders = await readDir(path.resolve(filesBasePath));
-  const foldersSorted = folders.sort((a, b) => Number(a) - Number(b));
+  const foldersSorted = folders.toSorted((a, b) => Number(a) - Number(b));
 
   for await (const folder of foldersSorted) {
     console.time(folder);
@@ -141,15 +139,16 @@ createConnection().then(async () => {
     }
 
     fs.appendFile(path.resolve(filesBasePath, 'done.txt'), `${folder},`, (err) => {
-      if (err)
-        throw err;
+      if (err) throw err;
     });
 
     await del(folderFullDir, { force: true });
     await del(extractedFullPath, { force: true });
     console.log(`${new Date()}`);
     console.timeEnd(folder);
-    console.log(`${Number(folder)} / ${foldersSorted.length} (${(Number(folder) * 100) / foldersSorted.length}%)`);
+    console.log(
+      `${Number(folder)} / ${foldersSorted.length} (${(Number(folder) * 100) / foldersSorted.length}%)`,
+    );
     console.log('------------------------------');
   }
 

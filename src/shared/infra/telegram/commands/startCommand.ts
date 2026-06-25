@@ -1,23 +1,22 @@
-import type { ConversationFlavor } from '@grammyjs/conversations';
 import type { CommandContext } from 'grammy';
 
-import { replyMenuToContext } from 'grammy-inline-menu';
 import { container } from 'tsyringe';
 
 import type IMenuContext from '../@types/IMenuContext';
 
 import UsersRepository from '../../../../modules/users/infra/typeorm/repositories/UsersRepository';
 import { mainMenu } from '../menus/mainMenu';
+import { mainMenuHtml, replyHtmlMenu } from '../menus/menu-utils';
 
-async function startCommand(ctx: ConversationFlavor & CommandContext<IMenuContext>): Promise<void> {
-  if (ctx.message.chat.type === 'private') {
+async function startCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
+  if (ctx.msg.chat.type === 'private') {
     ctx.session.isGroup = false;
     await ctx.reply('Hello! Welcome to the BitcoinTalk SuperNotifier V2!');
     await ctx.conversation.enter('setup', { overwrite: true });
   }
 
-  if (ctx.message.chat.type === 'group') {
-    const user = await ctx.api.getChatMember(ctx.chat.id, ctx.from.id);
+  if (ctx.msg.chat.type === 'group') {
+    const user = await ctx.api.getChatMember(ctx.chat.id, ctx.from!.id);
     if (user.status !== 'creator' && user.status !== 'administrator') {
       return;
     }
@@ -46,7 +45,7 @@ async function startCommand(ctx: ConversationFlavor & CommandContext<IMenuContex
       await ctx.reply('Group initiated!');
     }
 
-    await replyMenuToContext(mainMenu, ctx, '/');
+    await replyHtmlMenu(ctx, mainMenuHtml(ctx), mainMenu);
   }
 }
 

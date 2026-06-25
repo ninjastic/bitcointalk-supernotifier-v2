@@ -1,8 +1,7 @@
-import type { Conversation, ConversationFlavor } from '@grammyjs/conversations';
+import type { Conversation } from '@grammyjs/conversations';
 
 import { Menu } from '@grammyjs/menu';
 import IgnoredBoard from '##/modules/posts/infra/typeorm/entities/IgnoredBoard';
-import { replyMenuToContext } from 'grammy-inline-menu';
 import { container } from 'tsyringe';
 import { getRepository } from 'typeorm';
 
@@ -12,18 +11,23 @@ import type IMenuContext from '../@types/IMenuContext';
 import GetBoardChildrensFromIdService from '../../../../modules/posts/services/GetBoardChildrensFromIdService';
 import GetBoardsListService from '../../../../modules/posts/services/GetBoardsListService';
 import ignoredBoardsMenu from '../menus/ignoredBoardsMenu';
+import { IGNORED_BOARDS_MENU_HTML } from '../menus/ignoredBoardsMenu';
 import { mainMenu } from '../menus/mainMenu';
+import { mainMenuHtml, replyHtmlMenuFromConversation } from '../menus/menu-utils';
 
-export const confirmAddIgnoredBoardInlineMenu = new Menu('addIgnoredBoardConfirm')
+export const confirmAddIgnoredBoardInlineMenu = new Menu('ibc')
   .text({ text: 'Yes', payload: 'yes' })
   .row()
   .text({ text: 'Include children boards', payload: 'yes-childs' })
   .row()
   .text({ text: 'No', payload: 'no' });
 
-export const cancelAddIgnoredBoardPromptInlineMenu = new Menu('cancelAddIgnoredBoard').text({ text: 'Cancel' });
+export const cancelAddIgnoredBoardPromptInlineMenu = new Menu('ibx').text({ text: 'Cancel' });
 
-async function askForPrompt(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext): Promise<Board[] | null> {
+async function askForPrompt(
+  conversation: Conversation<IMenuContext, IMenuContext>,
+  ctx: IMenuContext,
+): Promise<Board[] | null> {
   const getBoardsListService = new GetBoardsListService();
   const getBoardChildrensFromIdService = container.resolve(GetBoardChildrensFromIdService);
 
@@ -33,9 +37,14 @@ async function askForPrompt(conversation: Conversation<IMenuContext & Conversati
 
   const { message, callbackQuery } = await conversation.wait();
 
-  if (callbackQuery?.data.includes('cancelAddIgnoredBoard')) {
+  if (callbackQuery?.data.includes('ibx')) {
     await ctx.api.deleteMessage(ctx.chat.id, promptMessage.message_id);
-    await replyMenuToContext(ignoredBoardsMenu, ctx, '/ib/');
+    await replyHtmlMenuFromConversation(
+      conversation,
+      ctx,
+      IGNORED_BOARDS_MENU_HTML,
+      ignoredBoardsMenu,
+    );
     return null;
   }
 
@@ -48,22 +57,21 @@ async function askForPrompt(conversation: Conversation<IMenuContext & Conversati
   let boardId: number;
 
   if (text === '/cancel' || text === '/menu') {
-    await replyMenuToContext(mainMenu, ctx, '/');
+    await replyHtmlMenuFromConversation(conversation, ctx, mainMenuHtml, mainMenu);
     return null;
   }
 
   if (text.startsWith('https://bitcointalk.org/index.php?board=')) {
     boardId = Number(text.match(/board=(\d+)/)[1]);
-  }
-  else if (!Number.isNaN(Number(text))) {
+  } else if (!Number.isNaN(Number(text))) {
     boardId = Number(text);
   }
 
   const boards = await getBoardsListService.execute(true);
-  const inputBoard = boards.find(_board => _board.board_id === boardId);
+  const inputBoard = boards.find((_board) => _board.board_id === boardId);
 
   if (!inputBoard) {
-    await ctx.reply('I couldn\'t find a board with this ID. Let\'s try again?');
+    await ctx.reply("I couldn't find a board with this ID. Let's try again?");
     await conversation.skip();
   }
 
@@ -75,7 +83,7 @@ async function askForPrompt(conversation: Conversation<IMenuContext & Conversati
     confirmMessage += `\n\nIf you include its childrens, you will also ignore:\n`;
     confirmMessage += boardWithChilds
       .slice(1)
-      .map(board => `<b>${board.board_id} - ${board.name}</b>`)
+      .map((board) => `<b>${board.board_id} - ${board.name}</b>`)
       .join('\n');
   }
 
@@ -84,7 +92,7 @@ async function askForPrompt(conversation: Conversation<IMenuContext & Conversati
     reply_markup: confirmAddIgnoredBoardInlineMenu,
   });
 
-  const answerCb = await conversation.waitForCallbackQuery(/addIgnoredBoardConfirm/);
+  const answerCb = await conversation.waitForCallbackQuery(/ibc/);
 
   if (answerCb.callbackQuery.data.match(/\/yes\//)) {
     await ctx.api.deleteMessage(ctx.chat.id, answerCb.callbackQuery.message.message_id);
@@ -99,7 +107,10 @@ async function askForPrompt(conversation: Conversation<IMenuContext & Conversati
   return askForPrompt(conversation, ctx);
 }
 
-async function addIgnoredBoardConversation(conversation: Conversation<IMenuContext & ConversationFlavor>, ctx: IMenuContext): Promise<void> {
+async function addIgnoredBoardConversation(
+  conversation: Conversation<IMenuContext, IMenuContext>,
+  ctx: IMenuContext,
+): Promise<void> {
   const ignoredBoardsRepository = getRepository(IgnoredBoard);
   const newBoards = await askForPrompt(conversation, ctx);
 
@@ -113,34 +124,33 @@ async function addIgnoredBoardConversation(conversation: Conversation<IMenuConte
   });
 
   const ignoredBoardsToAdd = newBoards
-    .map(board =>
+    .map((board) =>
       ignoredBoardsRepository.create({
         board_id: board.board_id,
         telegram_id: String(ctx.chat.id),
       }),
     )
     .filter(
-      boardToAdd => !userIgnoredBoards.find(userIgnoredBoard => userIgnoredBoard.board_id === boardToAdd.board_id),
+      (boardToAdd) =>
+        !userIgnoredBoards.find(
+          (userIgnoredBoard) => userIgnoredBoard.board_id === boardToAdd.board_id,
+        ),
     );
 
   const insertedIgnoredBoards = await conversation.external(async () =>
     ignoredBoardsRepository.save(ignoredBoardsToAdd),
   );
 
-  if (insertedIgnoredBoards.length) {
-    const insertedBoardsText = insertedIgnoredBoards
-      .map(
-        insertedIgnoredBoard =>
-          `<b>${newBoards.find(board => insertedIgnoredBoard.board_id === board.board_id).name}</b>`,
-      )
-      .join('\n');
-    await ctx.reply(`You are now ignoring the boards:\n\n${insertedBoardsText}`, { parse_mode: 'HTML' });
-  }
-  else {
+  if (!insertedIgnoredBoards.length) {
     await ctx.reply('You were already ignoring these boards.');
   }
 
-  await replyMenuToContext(ignoredBoardsMenu, ctx, '/ib/');
+  await replyHtmlMenuFromConversation(
+    conversation,
+    ctx,
+    IGNORED_BOARDS_MENU_HTML,
+    ignoredBoardsMenu,
+  );
 }
 
 export default addIgnoredBoardConversation;

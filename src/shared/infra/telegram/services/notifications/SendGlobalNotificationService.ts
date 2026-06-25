@@ -1,8 +1,10 @@
 import type IUsersRepository from '##/modules/users/repositories/IUsersRepository';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import type TelegramBot from '##/shared/infra/telegram/bot';
+import type { Message } from 'grammy/types';
 
 import { ADMIN_TELEGRAM_ID } from '##/config/admin';
+import sendRichTelegramMessage from '##/shared/infra/telegram/services/send-rich-telegram-message';
 import logger from '##/shared/services/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
 import { container, inject, injectable } from 'tsyringe';
@@ -23,9 +25,7 @@ export default class SendGlobalNotificationService {
   ) {}
 
   private async sendMessageToUser(userTelegramId: string, message: string): Promise<MessageSent> {
-    const messageSent = await this.bot.instance.api.sendMessage(userTelegramId, message, {
-      parse_mode: 'HTML',
-      link_preview_options: { is_disabled: true },
+    const messageSent = await sendRichTelegramMessage<Message>(this.bot, userTelegramId, message, {
       reply_markup: { remove_keyboard: true },
     });
 
@@ -40,7 +40,12 @@ export default class SendGlobalNotificationService {
     return id;
   }
 
-  private async sendStatusMessage(successed: number, errored: number, totalUsers: number, id: string): Promise<void> {
+  private async sendStatusMessage(
+    successed: number,
+    errored: number,
+    totalUsers: number,
+    id: string,
+  ): Promise<void> {
     await this.bot.instance.api.sendMessage(
       608520255,
       `The messages were sent!\n\nID: ${id}\n\n<b>${successed}/${totalUsers} successed (${errored} failed)</b>`,
@@ -64,12 +69,10 @@ export default class SendGlobalNotificationService {
               const messageSent = await this.sendMessageToUser(user.telegram_id, message);
               messageIds.push(messageSent);
               successed += 1;
-            }
-            catch (error) {
+            } catch (error) {
               errored += 1;
               await checkBotNotificationError(error, user.telegram_id, { message });
-            }
-            finally {
+            } finally {
               resolve();
             }
           }, 150 * index);

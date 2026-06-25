@@ -14,6 +14,7 @@ import type { JobRecipe } from '../types/telegram';
 import cacheConfig from '../../../../config/cache';
 import logger from '../../../services/logger';
 import SendApiNotificationService from '../../telegram/services/notifications/SendApiNotificationService';
+import SendAdvancedMatchNotificationService from '../../telegram/services/notifications/SendAdvancedMatchNotificationService';
 import SendAutoTrackTopicNotificationService from '../../telegram/services/notifications/SendAutoTrackTopicNotificationService';
 import SendMentionNotificationService from '../../telegram/services/notifications/SendMentionNotificationService';
 import SendMeritNotificationService from '../../telegram/services/notifications/SendMeritNotificationService';
@@ -36,7 +37,12 @@ const jobRecipes: JobRecipe = {
   sendMeritNotification: async (job) => {
     const { merit, user, scrapedPostTitle = null } = job.data;
     const sendMeritNotification = container.resolve(SendMeritNotificationService);
-    await sendMeritNotification.execute({ bot, telegramId: user.telegram_id, merit, scrapedPostTitle });
+    await sendMeritNotification.execute({
+      bot,
+      telegramId: user.telegram_id,
+      merit,
+      scrapedPostTitle,
+    });
   },
   sendTopicTrackingNotification: async (job) => {
     const { post, user } = job.data;
@@ -46,7 +52,12 @@ const jobRecipes: JobRecipe = {
   sendRemovedTopicNotification: async (job) => {
     const { postsDeleted, user, modLog } = job.data;
     const sendRemovedTopicNotification = container.resolve(SendRemovedTopicNotificationService);
-    await sendRemovedTopicNotification.execute({ bot, telegramId: user.telegram_id, posts: postsDeleted, modLog });
+    await sendRemovedTopicNotification.execute({
+      bot,
+      telegramId: user.telegram_id,
+      posts: postsDeleted,
+      modLog,
+    });
   },
   sendPhraseTrackingNotification: async (job) => {
     const { post, user, trackedPhrase } = job.data;
@@ -61,12 +72,27 @@ const jobRecipes: JobRecipe = {
   sendTrackedBoardNotification: async (job) => {
     const { post, user, trackedBoard } = job.data;
     const sendTrackedBoardNotification = container.resolve(SendTrackedBoardNotificationService);
-    await sendTrackedBoardNotification.execute({ bot, telegramId: user.telegram_id, post, trackedBoard });
+    await sendTrackedBoardNotification.execute({
+      bot,
+      telegramId: user.telegram_id,
+      post,
+      trackedBoard,
+    });
   },
   sendTrackedUserNotification: async (job) => {
     const { post, user } = job.data;
     const sendTrackedBoardNotification = container.resolve(SendTrackedUserNotificationService);
     await sendTrackedBoardNotification.execute({ bot, telegramId: user.telegram_id, post });
+  },
+  sendAdvancedMatchNotification: async (job) => {
+    const { post, user, advancedMatch } = job.data;
+    const sendAdvancedMatchNotification = container.resolve(SendAdvancedMatchNotificationService);
+    await sendAdvancedMatchNotification.execute({
+      bot,
+      telegramId: user.telegram_id,
+      post,
+      advancedMatch,
+    });
   },
   sendApiNotification: async (job) => {
     const { telegram_id, message } = job.data;
@@ -75,8 +101,14 @@ const jobRecipes: JobRecipe = {
   },
   sendAutoTrackTopicRequestNotification: async (job) => {
     const { topic, user } = job.data;
-    const sendAutoTrackTopicRequestNotification = container.resolve(SendAutoTrackTopicNotificationService);
-    await sendAutoTrackTopicRequestNotification.execute({ bot, telegramId: user.telegram_id, topic });
+    const sendAutoTrackTopicRequestNotification = container.resolve(
+      SendAutoTrackTopicNotificationService,
+    );
+    await sendAutoTrackTopicRequestNotification.execute({
+      bot,
+      telegramId: user.telegram_id,
+      topic,
+    });
   },
 };
 
@@ -86,13 +118,13 @@ async function telegram() {
   const worker = new Worker(
     telegramQueue.name,
     async (job: Job) => {
-      const jobRecipe = jobRecipes[job.name];
+      const jobRecipe = jobRecipes[job.name as keyof JobRecipe];
 
       if (!jobRecipe) {
         throw new Error(`No job recipe for ${job.name}`);
       }
 
-      await jobRecipe(job);
+      await (jobRecipe as (job: Job) => Promise<void>)(job);
     },
     {
       connection: { ...cacheConfig.config.redis, connectionName: 'TelegramQueue' },
@@ -114,8 +146,11 @@ async function telegram() {
     );
   });
 
-  worker.on('failed', async ({ failedReason, id, name }, error) => {
-    logger.warn({ jobName: name, jobId: id, error }, `[${worker.name}][Worker][${id}] Failed for ${failedReason}`);
+  worker.on('failed', async (job, error) => {
+    logger.warn(
+      { jobName: job?.name, jobId: job?.id, error },
+      `[${worker.name}][Worker][${job?.id ?? 'unknown'}] Failed for ${job?.failedReason ?? error.message}`,
+    );
   });
 
   worker.on('error', async (error) => {

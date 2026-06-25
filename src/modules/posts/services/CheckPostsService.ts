@@ -16,6 +16,7 @@ import type IUsersRepository from '../../users/repositories/IUsersRepository';
 import type IPostsRepository from '../repositories/IPostsRepository';
 import type {
   PreparedCheckerPost,
+  PreparedAdvancedMatch,
   PreparedTrackedBoardContext,
   PreparedTrackedPhrase,
   PreparedTrackedTopicContext,
@@ -34,6 +35,7 @@ import TopicRepository from '../infra/typeorm/repositories/TopicRepository';
 import TrackedBoardsRepository from '../infra/typeorm/repositories/TrackedBoardsRepository';
 import TrackedTopicUsersRepository from '../infra/typeorm/repositories/TrackedTopicUsersRepository';
 import TrackedUsersRepository from '../infra/typeorm/repositories/TrackedUsersRepository';
+import { telegramAdvancedMatchesChecker } from './checkers/posts/telegram/advancedMatches';
 import { telegramAutoTrackTopicsChecker } from './checkers/posts/telegram/autoTrackTopics';
 import { telegramMentionsChecker } from './checkers/posts/telegram/mentions';
 import { telegramTrackedBoardTopicsChecker } from './checkers/posts/telegram/trackedBoardTopics';
@@ -42,6 +44,7 @@ import { telegramTrackedTopicsChecker } from './checkers/posts/telegram/trackedT
 import { telegramTrackedUsersChecker } from './checkers/posts/telegram/trackedUsers';
 import { telegramTrackedUserTopicsChecker } from './checkers/posts/telegram/trackedUserTopics';
 import GetIgnoredTopicsService from './GetIgnoredTopicsService';
+import GetAdvancedMatchesService from './GetAdvancedMatchesService';
 import GetTrackedPhrasesService from './GetTrackedPhrasesService';
 import GetTrackedTopicsService from './GetTrackedTopicsService';
 
@@ -71,9 +74,10 @@ const notificationTypePriority: Record<NotificationType, number> = {
   [NotificationType.TRACKED_USER]: 2,
   [NotificationType.TRACKED_BOARD]: 3,
   [NotificationType.TRACKED_PHRASE]: 4,
-  [NotificationType.AUTO_TRACK_TOPIC_REQUEST]: 5,
-  [NotificationType.MERIT]: 6,
-  [NotificationType.REMOVE_TOPIC]: 7,
+  [NotificationType.ADVANCED_MATCH]: 5,
+  [NotificationType.AUTO_TRACK_TOPIC_REQUEST]: 6,
+  [NotificationType.MERIT]: 7,
+  [NotificationType.REMOVE_TOPIC]: 8,
 };
 
 function groupByNumberKey<T>(
@@ -173,6 +177,7 @@ export default class CheckPostsService {
       trackedBoards,
       trackedUsers,
       trackedPhrases,
+      advancedMatches,
       trackedTopics,
       ignoredUsers,
       ignoredTopics,
@@ -183,6 +188,7 @@ export default class CheckPostsService {
       container.resolve(TrackedBoardsRepository).find(),
       container.resolve(TrackedUsersRepository).find(),
       container.resolve(GetTrackedPhrasesService).execute(),
+      container.resolve(GetAdvancedMatchesService).execute(),
       container.resolve(GetTrackedTopicsService).execute(),
       container.resolve(GetIgnoredUsersService).execute(),
       container.resolve(GetIgnoredTopicsService).execute(),
@@ -200,6 +206,7 @@ export default class CheckPostsService {
       trackedBoards,
       trackedUsers,
       trackedPhrases,
+      advancedMatches,
       trackedTopics,
       ignoredUsers,
       ignoredTopics,
@@ -279,6 +286,38 @@ export default class CheckPostsService {
     }));
   }
 
+  private prepareAdvancedMatches(
+    advancedMatches: Awaited<ReturnType<GetAdvancedMatchesService['execute']>>,
+  ): PreparedAdvancedMatch[] {
+    return advancedMatches.flatMap((advancedMatch) => {
+      if (
+        !advancedMatch.title_regex &&
+        !advancedMatch.content_regex &&
+        !advancedMatch.authors?.length &&
+        !advancedMatch.boards?.length &&
+        !advancedMatch.topics?.length
+      )
+        return [];
+
+      try {
+        return [
+          {
+            advancedMatch,
+            titleExpression: advancedMatch.title_regex
+              ? new RegExp(advancedMatch.title_regex, 'i')
+              : null,
+            contentExpression: advancedMatch.content_regex
+              ? new RegExp(advancedMatch.content_regex, 'i')
+              : null,
+          },
+        ];
+      } catch (error) {
+        logger.error({ error, advancedMatchId: advancedMatch.id }, 'Invalid advanced match regex');
+        return [];
+      }
+    });
+  }
+
   private getResultMetadata(result: ProcessorResult): { post: Post | null; user: User | null } {
     let post: Post | null = null;
     let user: User | null = null;
@@ -311,6 +350,13 @@ export default class CheckPostsService {
       return {
         post_id: post.post_id,
         phrase: result.metadata.trackedPhrase.phrase,
+      };
+    }
+
+    if (result.type === NotificationType.ADVANCED_MATCH) {
+      return {
+        post_id: post.post_id,
+        advanced_match_id: result.metadata.advancedMatch.id,
       };
     }
 
@@ -509,6 +555,7 @@ export default class CheckPostsService {
         trackedBoards,
         trackedUsers,
         trackedPhrases,
+        advancedMatches,
         trackedTopics,
         ignoredUsers,
         ignoredTopics,
@@ -530,6 +577,13 @@ export default class CheckPostsService {
       const preparedPosts = this.preparePosts(posts);
       const preparedPostVersions = this.preparePostVersions(postsVersions);
       const preparedTrackedPhrases = this.prepareTrackedPhrases(trackedPhrases);
+      const preparedAdvancedMatches = this.prepareAdvancedMatches(advancedMatches);
+      const regularAdvancedMatches = preparedAdvancedMatches.filter(
+        (prepared) => !prepared.advancedMatch.only_topics,
+      );
+      const topicAdvancedMatches = preparedAdvancedMatches.filter(
+        (prepared) => prepared.advancedMatch.only_topics,
+      );
       const trackedUserContext = this.prepareTrackedUserContext(trackedUsers);
       const trackedBoardContext = this.prepareTrackedBoardContext(trackedBoards, ignoredUsers);
       const trackedTopicContext = this.prepareTrackedTopicContext(
@@ -564,6 +618,30 @@ export default class CheckPostsService {
             ignoredBoards,
           },
         } as Processor<typeof telegramTrackedPhrasesChecker>,
+
+        {
+          checkerPromise: telegramAdvancedMatchesChecker,
+          jobName: 'sendAdvancedMatchNotification',
+          data: {
+            posts,
+            advancedMatches: regularAdvancedMatches,
+            ignoredUsers,
+            ignoredTopics,
+            ignoredBoards,
+          },
+        } as Processor<typeof telegramAdvancedMatchesChecker>,
+
+        {
+          checkerPromise: telegramAdvancedMatchesChecker,
+          jobName: 'sendAdvancedMatchNotification',
+          data: {
+            posts: uncheckedTopics.map((topic) => topic.post),
+            advancedMatches: topicAdvancedMatches,
+            ignoredUsers,
+            ignoredTopics,
+            ignoredBoards,
+          },
+        } as Processor<typeof telegramAdvancedMatchesChecker>,
 
         {
           checkerPromise: telegramTrackedTopicsChecker,

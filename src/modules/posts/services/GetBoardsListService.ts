@@ -2,6 +2,43 @@ import { getManager } from 'typeorm';
 
 import type Board from '../infra/typeorm/entities/Board';
 
+const findAndInsertIntoChildren = (boardsArr, boardToInsert) => {
+  let parentIndex = boardsArr.findIndex((organized) => organized.value === boardToInsert.parent_id);
+
+  if (parentIndex !== -1) {
+    boardsArr[parentIndex].children.push({
+      title: boardToInsert.name,
+      value: boardToInsert.board_id,
+      parent: boardToInsert.parent_id,
+      children: [],
+    });
+    return;
+  }
+
+  parentIndex = boardsArr.findIndex((organized) => {
+    if (!organized.children.length) {
+      return false;
+    }
+
+    return organized.children.find((child) => child.parent_id === boardToInsert.board_id);
+  });
+
+  if (parentIndex !== -1) {
+    boardsArr[parentIndex].children.push({
+      title: boardToInsert.name,
+      value: boardToInsert.board_id,
+      parent: boardToInsert.parent_id,
+      children: [],
+    });
+  }
+
+  boardsArr.forEach((board) => {
+    board.children.forEach((child) => {
+      findAndInsertIntoChildren([child], boardToInsert);
+    });
+  });
+};
+
 export default class GetBoardsListService {
   public async execute(raw = false): Promise<Board[]> {
     const boards = await getManager().query('select board_id, name, parent_id from boards;');
@@ -11,43 +48,6 @@ export default class GetBoardsListService {
     }
 
     const organizedBoards = [];
-
-    const findAndInsertIntoChildren = (boardsArr, boardToInsert) => {
-      let parentIndex = boardsArr.findIndex(organized => organized.value === boardToInsert.parent_id);
-
-      if (parentIndex !== -1) {
-        boardsArr[parentIndex].children.push({
-          title: boardToInsert.name,
-          value: boardToInsert.board_id,
-          parent: boardToInsert.parent_id,
-          children: [],
-        });
-        return;
-      }
-
-      parentIndex = boardsArr.findIndex((organized) => {
-        if (!organized.children.length) {
-          return false;
-        }
-
-        return organized.children.find(child => child.parent_id === boardToInsert.board_id);
-      });
-
-      if (parentIndex !== -1) {
-        boardsArr[parentIndex].children.push({
-          title: boardToInsert.name,
-          value: boardToInsert.board_id,
-          parent: boardToInsert.parent_id,
-          children: [],
-        });
-      }
-
-      boardsArr.forEach((board) => {
-        board.children.forEach((child) => {
-          findAndInsertIntoChildren([child], boardToInsert);
-        });
-      });
-    };
 
     boards.forEach((board) => {
       if (!board.parent_id) {

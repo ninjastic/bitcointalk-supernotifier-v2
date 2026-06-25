@@ -2,6 +2,7 @@ import type Notification from '##/modules/notifications/infra/typeorm/entities/N
 import type { DeepPartial, Repository } from 'typeorm';
 
 import NotificationEntity, {
+  AdvancedMatchNotification,
   AutoTrackTopicRequestNotification,
   MeritNotification,
   NotificationType,
@@ -28,6 +29,7 @@ export class NotificationService {
     [NotificationType.TRACKED_BOARD]: TrackedBoardNotification,
     [NotificationType.TRACKED_USER]: TrackedUserNotification,
     [NotificationType.TRACKED_PHRASE]: TrackedPhraseNotification,
+    [NotificationType.ADVANCED_MATCH]: AdvancedMatchNotification,
     [NotificationType.AUTO_TRACK_TOPIC_REQUEST]: AutoTrackTopicRequestNotification,
     [NotificationType.REMOVE_TOPIC]: RemoveTopicNotification,
   };

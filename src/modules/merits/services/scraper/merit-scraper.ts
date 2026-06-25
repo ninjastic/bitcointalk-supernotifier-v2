@@ -7,7 +7,9 @@ import ForumLoginService from '##/modules/merits/services/ForumLoginService';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import forumScraperQueue, { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
+import forumScraperQueue, {
+  addForumScraperJob,
+} from '##/shared/infra/bull/queues/forumScraperQueue';
 import api from '##/shared/services/api';
 import logger from '##/shared/services/logger';
 import { load } from 'cheerio';
@@ -89,9 +91,13 @@ export class MeritScraper {
       }
 
       if (result.topic) {
-        const topicExists = await this.topicsRepository.findOne({ where: { topic_id: result.topic.topic_id } });
+        const topicExists = await this.topicsRepository.findOne({
+          where: { topic_id: result.topic.topic_id },
+        });
         if (!topicExists && result.pagePosts.length > 0) {
-          const topicPostExists = await this.postsRepository.findOne({ where: { post_id: result.topic.post_id } });
+          const topicPostExists = await this.postsRepository.findOne({
+            where: { post_id: result.topic.post_id },
+          });
           if (!topicPostExists) {
             await this.postsRepository.save(result.pagePosts[0]);
           }
@@ -138,8 +144,15 @@ export class MeritScraper {
         });
       }
 
-      logger.debug(`[MeritScraper] Saved different merit scraped post title ${merit.id}: ${meritPostTitle}`);
-      await this.redisProvider.save(`meritScrapedPostTitle:${merit.id}`, meritPostTitle, 'EX', 60 * 60);
+      logger.debug(
+        `[MeritScraper] Saved different merit scraped post title ${merit.id}: ${meritPostTitle}`,
+      );
+      await this.redisProvider.save(
+        `meritScrapedPostTitle:${merit.id}`,
+        meritPostTitle,
+        'EX',
+        60 * 60,
+      );
     }
 
     return merit;
@@ -150,8 +163,7 @@ export class MeritScraper {
 
     try {
       const existingMeritOnRedis = await this.redisProvider.recover<string>(meritKey);
-      if (existingMeritOnRedis)
-        return;
+      if (existingMeritOnRedis) return;
 
       const existingMeritOnDb = await this.meritsRepository.findOne({
         where: {
@@ -171,8 +183,7 @@ export class MeritScraper {
 
       logger.debug(`[MeritScraper] Merit ${meritKey} already exists.`);
       await this.redisProvider.save(meritKey, true, 'EX', 3600); // 1 hour
-    }
-    catch (error) {
+    } catch (error) {
       logger.error({ error, meritKey }, `[MeritScraper] Error processing merit ${meritKey}`);
     }
   }
@@ -184,7 +195,7 @@ export class MeritScraper {
       const $ = await this.ensureLoggedIn();
       this.currentDate = this.extractCurrentDate($);
 
-      const meritElements = [...$('ul > li')].reverse();
+      const meritElements = [...$('ul > li')].toReversed();
 
       for await (const meritElement of meritElements) {
         const merit = await this.parseRecentMeritElement(meritElement);
@@ -195,8 +206,7 @@ export class MeritScraper {
       }
 
       return scrapedMerits;
-    }
-    catch (error) {
+    } catch (error) {
       logger.error({ error }, '[MeritScraper] Error scraping recent merits');
       return [];
     }

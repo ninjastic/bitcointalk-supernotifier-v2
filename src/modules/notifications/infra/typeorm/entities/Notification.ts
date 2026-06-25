@@ -15,6 +15,7 @@ export enum NotificationType {
   TRACKED_BOARD = 'tracked_board',
   TRACKED_USER = 'tracked_user',
   TRACKED_PHRASE = 'tracked_phrase',
+  ADVANCED_MATCH = 'advanced_match',
   AUTO_TRACK_TOPIC_REQUEST = 'auto_track_topic_request',
   REMOVE_TOPIC = 'remove_topic',
 }
@@ -46,6 +47,11 @@ interface TrackedUserData {
 interface TrackedPhraseData {
   post_id: number;
   phrase: string;
+}
+
+interface AdvancedMatchData {
+  post_id: number;
+  advanced_match_id: string;
 }
 
 interface AutoTrackTopicRequestData {
@@ -133,6 +139,15 @@ export class TrackedPhraseNotification extends Notification<TrackedPhraseData> {
 
   @Column('jsonb')
   declare metadata: TrackedPhraseData;
+}
+
+@ChildEntity(NotificationType.ADVANCED_MATCH)
+export class AdvancedMatchNotification extends Notification<AdvancedMatchData> {
+  @Column({ type: 'enum', enum: NotificationType })
+  type: NotificationType.ADVANCED_MATCH = NotificationType.ADVANCED_MATCH;
+
+  @Column('jsonb')
+  declare metadata: AdvancedMatchData;
 }
 
 @ChildEntity(NotificationType.AUTO_TRACK_TOPIC_REQUEST)

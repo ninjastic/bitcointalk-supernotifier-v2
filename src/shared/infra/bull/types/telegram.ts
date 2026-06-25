@@ -7,30 +7,70 @@ import type Post from '../../../../modules/posts/infra/typeorm/entities/Post';
 import type Topic from '../../../../modules/posts/infra/typeorm/entities/Topic';
 import type TrackedBoard from '../../../../modules/posts/infra/typeorm/entities/TrackedBoard';
 import type TrackedPhrase from '../../../../modules/posts/infra/typeorm/entities/TrackedPhrase';
+import type AdvancedMatch from '../../../../modules/posts/infra/typeorm/entities/AdvancedMatch';
 import type User from '../../../../modules/users/infra/typeorm/entities/User';
 
-export type RecipeNames
-  = | 'sendMentionNotification'
-    | 'sendMeritNotification'
-    | 'sendTopicTrackingNotification'
-    | 'sendRemovedTopicNotification'
-    | 'sendPhraseTrackingNotification'
-    | 'sendTrackedBoardNotification'
-    | 'sendTrackedUserNotification'
-    | 'sendApiNotification'
-    | 'sendAutoTrackTopicRequestNotification';
+export type RecipeNames =
+  | 'sendMentionNotification'
+  | 'sendMeritNotification'
+  | 'sendTopicTrackingNotification'
+  | 'sendRemovedTopicNotification'
+  | 'sendPhraseTrackingNotification'
+  | 'sendTrackedBoardNotification'
+  | 'sendTrackedUserNotification'
+  | 'sendAdvancedMatchNotification'
+  | 'sendApiNotification'
+  | 'sendAutoTrackTopicRequestNotification';
 
 export type MentionType = 'username' | 'alternative_username' | 'direct_mention' | 'quoted_mention';
 
-interface SendMeritNotificationMetadata { merit: Merit; user: User; scrapedPostTitle: string | null }
-interface SendMentionNotificationMetadata { post: Post; user: User; history: boolean; mentionType: MentionType }
-interface SendTopicTrackingNotificationMetadata { post: Post; user: User }
-interface SendPhraseTrackingNotificationMetadata { post: Post; user: User; trackedPhrase: TrackedPhrase }
-interface SendTrackedBoardNotificationMetadata { post: Post; user: User; trackedBoard: TrackedBoard }
-interface SendTrackedUserNotificationMetadata { post: Post; user: User }
-interface SendRemovedTopicNotificationMetadata { postsDeleted: Post[]; user: User; modLog: ModLog }
-interface SendAutoTrackTopicRequestNotificationMetadata { topic: Topic; user: User }
-interface SendApiNotificationMetadata { telegram_id: string; message: string }
+interface SendMeritNotificationMetadata {
+  merit: Merit;
+  user: User;
+  scrapedPostTitle: string | null;
+}
+interface SendMentionNotificationMetadata {
+  post: Post;
+  user: User;
+  history: boolean;
+  mentionType: MentionType;
+}
+interface SendTopicTrackingNotificationMetadata {
+  post: Post;
+  user: User;
+}
+interface SendPhraseTrackingNotificationMetadata {
+  post: Post;
+  user: User;
+  trackedPhrase: TrackedPhrase;
+}
+interface SendTrackedBoardNotificationMetadata {
+  post: Post;
+  user: User;
+  trackedBoard: TrackedBoard;
+}
+interface SendTrackedUserNotificationMetadata {
+  post: Post;
+  user: User;
+}
+interface SendAdvancedMatchNotificationMetadata {
+  post: Post;
+  user: User;
+  advancedMatch: AdvancedMatch;
+}
+interface SendRemovedTopicNotificationMetadata {
+  postsDeleted: Post[];
+  user: User;
+  modLog: ModLog;
+}
+interface SendAutoTrackTopicRequestNotificationMetadata {
+  topic: Topic;
+  user: User;
+}
+interface SendApiNotificationMetadata {
+  telegram_id: string;
+  message: string;
+}
 
 export interface RecipeMetadata {
   sendMeritNotification: SendMeritNotificationMetadata;
@@ -39,6 +79,7 @@ export interface RecipeMetadata {
   sendPhraseTrackingNotification: SendPhraseTrackingNotificationMetadata;
   sendTrackedBoardNotification: SendTrackedBoardNotificationMetadata;
   sendTrackedUserNotification: SendTrackedUserNotificationMetadata;
+  sendAdvancedMatchNotification: SendAdvancedMatchNotificationMetadata;
   sendRemovedTopicNotification: SendRemovedTopicNotificationMetadata;
   sendAutoTrackTopicRequestNotification: SendAutoTrackTopicRequestNotificationMetadata;
   sendApiNotification: SendApiNotificationMetadata;

@@ -44,7 +44,10 @@ export class PostScraper {
     config: AxiosRequestConfig<any> = {},
   ): Promise<{ $: typeof Cheerio; html: string }> {
     const response = await api.get(url, config);
-    return { $: load(response.data, { decodeEntities: true }) as typeof Cheerio, html: response.data };
+    return {
+      $: load(response.data, { decodeEntities: true }) as typeof Cheerio,
+      html: response.data,
+    };
   }
 
   private async ensureLoggedIn(
@@ -83,8 +86,7 @@ export class PostScraper {
 
       if (isPostContent) {
         acc[recentPostIndex] = { ...acc[recentPostIndex], postElement: element };
-      }
-      else {
+      } else {
         acc[recentPostIndex] = { ...acc[recentPostIndex], footerElement: element };
       }
 
@@ -116,13 +118,22 @@ export class PostScraper {
     );
 
     const title = fullTitleWithBoards.find('b > a').text().trim();
-    const author = postCreatorDetails.find('td.catbg > span.middletext > a:last-child').first().text();
-    const topicAuthor = postCreatorDetails.find('td.catbg > span.middletext > a:nth-child(1)').first().text();
+    const author = postCreatorDetails
+      .find('td.catbg > span.middletext > a:last-child')
+      .first()
+      .text();
+    const topicAuthor = postCreatorDetails
+      .find('td.catbg > span.middletext > a:nth-child(1)')
+      .first()
+      .text();
 
     if (!topicAuthor) {
       logger.error(
         {
-          elementHtml: postCreatorDetails.find('td.catbg > span.middletext > a:nth-child(1)').first().html(),
+          elementHtml: postCreatorDetails
+            .find('td.catbg > span.middletext > a:nth-child(1)')
+            .first()
+            .html(),
           author,
           postId,
           topicId,
@@ -143,7 +154,11 @@ export class PostScraper {
 
     const today = `${currentDate.getUTCFullYear()}/${currentDate.getUTCMonth() + 1}/${currentDate.getUTCDate()}`;
     const date = new Date(
-      $(postElement).find('td.middletext > div:nth-child(3)').text().replace('on: Today at', today).trim(),
+      $(postElement)
+        .find('td.middletext > div:nth-child(3)')
+        .text()
+        .replace('on: Today at', today)
+        .trim(),
     );
 
     const boards = $(fullTitleWithBoards).find('a');
@@ -197,10 +212,11 @@ export class PostScraper {
 
     try {
       const existingPostOnRedis = await this.redisProvider.recover<string>(scrapedPostKey);
-      if (existingPostOnRedis)
-        return;
+      if (existingPostOnRedis) return;
 
-      const existingPostOnDb = await this.postsRepository.findOne({ where: { post_id: post.post_id } });
+      const existingPostOnDb = await this.postsRepository.findOne({
+        where: { post_id: post.post_id },
+      });
 
       if (!existingPostOnDb) {
         await this.postsRepository.save(post);
@@ -212,27 +228,34 @@ export class PostScraper {
         await this.schedulePostRescrape(post.post_id, 60 * 24 * 7); // 1 week
 
         if (post.topicAuthor === post.author && post.topicReplies === 0) {
-          const existingTopic = await this.topicsRepository.findOne({ where: { topic_id: post.topic_id } });
+          const existingTopic = await this.topicsRepository.findOne({
+            where: { topic_id: post.topic_id },
+          });
           if (!existingTopic) {
-            const topic = this.topicsRepository.create({ post_id: post.post_id, topic_id: post.topic_id });
+            const topic = this.topicsRepository.create({
+              post_id: post.post_id,
+              topic_id: post.topic_id,
+            });
             await this.topicsRepository.save(topic);
             logger.debug(`[PostScraper] Created topic ${topic.topic_id}`);
           }
-        }
-        else {
-          const existingTopic = await this.topicsRepository.findOne({ where: { topic_id: post.topic_id } });
+        } else {
+          const existingTopic = await this.topicsRepository.findOne({
+            where: { topic_id: post.topic_id },
+          });
           if (!existingTopic) {
             await addForumScraperJob('scrapeTopic', { topic_id: post.topic_id }, false);
           }
         }
-      }
-      else {
+      } else {
         await this.redisProvider.save(scrapedPostKey, true, 'EX', 1800); // 30 minutes
         logger.debug(`[PostScraper] Post ${post.post_id} already exists.`);
       }
-    }
-    catch (error) {
-      logger.error({ error, postId: post.post_id }, `[PostScraper] Error processing post ${post.post_id}`);
+    } catch (error) {
+      logger.error(
+        { error, postId: post.post_id },
+        `[PostScraper] Error processing post ${post.post_id}`,
+      );
     }
   }
 
@@ -253,8 +276,7 @@ export class PostScraper {
       }
 
       return scrapedPosts;
-    }
-    catch (error) {
+    } catch (error) {
       logger.error({ error }, '[PostScraper] Error scraping recent posts');
       return [];
     }
@@ -262,7 +284,7 @@ export class PostScraper {
 
   async scrapePost(postId: number): Promise<ParsedPost> {
     const { html } = await this.ensureLoggedIn(`index.php?topic=*.msg${postId}`, {
-      validateStatus: status => (status >= 200 && status < 300) || status === 404,
+      validateStatus: (status) => (status >= 200 && status < 300) || status === 404,
     });
 
     return parsePostHtml(html, postId);
@@ -273,7 +295,9 @@ export class PostScraper {
   }
 
   async getLastPostScrapeDate(postId: number): Promise<Date | null> {
-    const lastDateString = await this.redisProvider.recover<string>(`lastPostRescrapedDate:${postId}`);
+    const lastDateString = await this.redisProvider.recover<string>(
+      `lastPostRescrapedDate:${postId}`,
+    );
 
     if (!lastDateString) {
       return null;
@@ -284,7 +308,7 @@ export class PostScraper {
 
   async scrapeTopicOp(topicId: number): Promise<ParsedTopicPost> {
     const { html } = await this.ensureLoggedIn(`index.php?topic=${topicId}`, {
-      validateStatus: status => (status >= 200 && status < 300) || status === 404,
+      validateStatus: (status) => (status >= 200 && status < 300) || status === 404,
     });
     const topicPost = parseTopicPostOpHtml(html);
 
@@ -315,8 +339,9 @@ export class PostScraper {
   }
 
   async getScheduledPostRescrapes(): Promise<RescrapeSchedule[]> {
-    const rescrapeSchedules = await this.redisProvider.recoverByPrefix<RescrapeSchedule>('rescrapePost:*');
-    return rescrapeSchedules.sort((a, b) => a.time - b.time);
+    const rescrapeSchedules =
+      await this.redisProvider.recoverByPrefix<RescrapeSchedule>('rescrapePost:*');
+    return rescrapeSchedules.toSorted((a, b) => a.time - b.time);
   }
 
   async deleteScheduledPostRescrape(schedule: RescrapeSchedule): Promise<void> {
