@@ -27,7 +27,7 @@ function sponsorFooter(telegramId: string): string {
 }
 
 function authorLine(author: string, url: string, title: string): string {
-  return `👤 <b>${escape(author)}</b> · ${htmlLink(url, title)}`;
+  return `<b>${escape(author)}</b> · ${htmlLink(url, title)}`;
 }
 
 export function buildMentionNotificationMessage(
@@ -37,8 +37,9 @@ export function buildMentionNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<b>💬 Mention</b>` +
-    `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
+    `<b>💬 Mention</b><br><br>` +
+    `${authorLine(post.author, postUrl(post), post.title)}<br>
+<blockquote>${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
 }
@@ -50,8 +51,9 @@ export function buildTrackedTopicNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<b>📄 Tracked topic reply</b>` +
-    `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
+    `<b>📄 Tracked topic reply</b><br><br>` +
+    `${authorLine(post.author, postUrl(post), post.title)}<br>
+<blockquote>${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
 }
@@ -65,8 +67,9 @@ export function buildTrackedBoardNotificationMessage(
 ): string {
   return (
     `<b>📝 New board topic</b>` +
-    `<p>${escape(trackedBoard.board.name)}</p>` +
-    `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
+    `<p><u>${escape(trackedBoard.board.name)}</u></p><br>` +
+    `${authorLine(post.author, postUrl(post), post.title)}<br>
+<blockquote>${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
 }
@@ -78,8 +81,9 @@ export function buildTrackedUserNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<b>👤 Tracked user post</b>` +
-    `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
+    `<b>👤 Tracked user post</b><br><br>` +
+    `${authorLine(post.author, postUrl(post), post.title)}<br>
+<blockquote>${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
 }
@@ -93,8 +97,9 @@ export function buildTrackedPhraseNotificationMessage(
 ): string {
   return (
     `<b>🔠 Phrase match</b>` +
-    `<p>${escape(phrase)}</p>` +
-    `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
+    `<p><u>${escape(phrase)}</u></p><br>` +
+    `${authorLine(post.author, postUrl(post), post.title)}<br>
+<blockquote>${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
 }
@@ -131,8 +136,9 @@ export function buildAdvancedMatchNotificationMessage(
 ): string {
   return (
     `<b>🔎 Advanced match</b>` +
-    `<p><mark>${escape(advancedMatch.name || advancedMatchSummary(advancedMatch))}</mark></p>` +
-    `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
+    `<p><u>${escape(advancedMatch.name || advancedMatchSummary(advancedMatch))}</u></p>` +
+    `${authorLine(post.author, postUrl(post), post.title)}<br>
+<blockquote>${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
 }
@@ -144,10 +150,10 @@ export function buildMeritNotificationMessage(
   scrapedPostTitle: string | null,
 ): string {
   const { amount, sender, post } = merit;
-  const total = totalMeritCount === -1 ? '' : `  ·  Total: ${totalMeritCount}`;
+  const total = totalMeritCount === -1 ? '' : `  ·  (Total: ${totalMeritCount})`;
 
   return (
-    `<b>⭐️ +<b>${amount}</b> from <b>${escape(sender)}</b>${total}</b>` +
+    `<b>⭐️ +<b>${amount}</b> from <b>${escape(sender)}</b>${total}</b><br>` +
     `<p>${htmlLink(postUrl(merit), scrapedPostTitle || post.title)}</p>` +
     sponsorFooter(telegramId)
   );

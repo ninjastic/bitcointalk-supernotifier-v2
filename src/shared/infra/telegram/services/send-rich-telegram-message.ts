@@ -10,5 +10,9 @@ export default async function sendRichTelegramMessage<T = unknown>(
   html: string,
   options: SendRichTelegramMessageOptions = {},
 ): Promise<T> {
-  return bot.instance.api.sendRichMessage(chatId, { html }, options) as Promise<T>;
+  return bot.instance.api.sendRichMessage(
+    chatId,
+    { html, skip_entity_detection: true },
+    options,
+  ) as Promise<T>;
 }
