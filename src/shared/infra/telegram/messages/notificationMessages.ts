@@ -37,7 +37,7 @@ export function buildMentionNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<h3>💬 Mention</h3>` +
+    `<b>💬 Mention</b>` +
     `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
@@ -50,7 +50,7 @@ export function buildTrackedTopicNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<h3>📄 Tracked topic reply</h3>` +
+    `<b>📄 Tracked topic reply</b>` +
     `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
@@ -64,7 +64,7 @@ export function buildTrackedBoardNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<h3>📝 New board topic</h3>` +
+    `<b>📝 New board topic</b>` +
     `<p>${escape(trackedBoard.board.name)}</p>` +
     `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
@@ -78,7 +78,7 @@ export function buildTrackedUserNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<h3>👤 Tracked user post</h3>` +
+    `<b>👤 Tracked user post</b>` +
     `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
@@ -92,8 +92,8 @@ export function buildTrackedPhraseNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<h3>🔠 Phrase match</h3>` +
-    `<p><mark>${escape(phrase)}</mark></p>` +
+    `<b>🔠 Phrase match</b>` +
+    `<p>${escape(phrase)}</p>` +
     `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
   );
@@ -130,7 +130,7 @@ export function buildAdvancedMatchNotificationMessage(
   telegramId: string,
 ): string {
   return (
-    `<h3>🔎 Advanced match</h3>` +
+    `<b>🔎 Advanced match</b>` +
     `<p><mark>${escape(advancedMatch.name || advancedMatchSummary(advancedMatch))}</mark></p>` +
     `<blockquote>${authorLine(post.author, postUrl(post), post.title)}<br><br>\n${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
@@ -147,7 +147,7 @@ export function buildMeritNotificationMessage(
   const total = totalMeritCount === -1 ? '' : `  ·  Total: ${totalMeritCount}`;
 
   return (
-    `<h4>⭐️ +<b>${amount}</b> from <b>${escape(sender)}</b>${total}</h4>` +
+    `<b>⭐️ +<b>${amount}</b> from <b>${escape(sender)}</b>${total}</b>` +
     `<p>${htmlLink(postUrl(merit), scrapedPostTitle || post.title)}</p>` +
     sponsorFooter(telegramId)
   );
@@ -161,7 +161,7 @@ export function buildRemovedTopicNotificationMessage(
   const postCount = posts.length;
 
   return (
-    `<h3>🗑 <b>${postCount} ${pluralize('post', postCount)} nuked</b></h3>` +
+    `<b>🗑 <b>${postCount} ${pluralize('post', postCount)} nuked</b></b>` +
     `<p>Archived: ${htmlLink(`https://ninjastic.space/topic/${modLog.topic_id}`, modLog.title)}</p>` +
     sponsorFooter(telegramId)
   );
@@ -172,7 +172,7 @@ export function buildAutoTrackTopicNotificationMessage(topic: Topic): string {
   const url = `https://bitcointalk.org/index.php?topic=${topic_id}.msg${post_id}#msg${post_id}`;
 
   return (
-    `<h3>📖 Track your new topic?</h3>` +
+    `<b>📖 Track your new topic?</b>` +
     `<p>${htmlLink(url, title)}</p>` +
     `<p>Start tracking replies?</p>`
   );
