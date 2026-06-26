@@ -16,8 +16,7 @@ export function extractImageUrl(url: string) {
     const urlObj = new URL(url);
     const imageUrl = urlObj.searchParams.get('u');
     return imageUrl ? decodeURIComponent(imageUrl) : url;
-  }
-  catch (error) {
+  } catch (error) {
     return url;
   }
 }
@@ -44,8 +43,7 @@ function normalizePostContent(content: string, date: Date): string {
       const proxyBaseUrl = '/api/img?url=';
       if (fixedSrc.startsWith('https://talkimg.com/images/')) {
         $(el).attr('src', fixedSrc);
-      }
-      else {
+      } else {
         $(el).attr('src', proxyBaseUrl + fixedSrc);
       }
     }
@@ -54,7 +52,9 @@ function normalizePostContent(content: string, date: Date): string {
   return $('body').html();
 }
 
-export async function getLatestPostVersion(postId: number): Promise<{ lastTitle: string | null; lastContent: string | null; deleted: boolean }> {
+export async function getLatestPostVersion(
+  postId: number,
+): Promise<{ lastTitle: string | null; lastContent: string | null; deleted: boolean }> {
   const postsVersionsRepository = getRepository(PostVersion);
 
   const lastTitle = await postsVersionsRepository.findOne({
@@ -79,12 +79,17 @@ export async function getLatestPostVersion(postId: number): Promise<{ lastTitle:
   };
 }
 
-export async function generatePostNewEditedVersion(postId: number, currentLivePost: Post): Promise<PostVersion | null> {
+export async function generatePostNewEditedVersion(
+  postId: number,
+  currentLivePost: Post,
+): Promise<PostVersion | null> {
   const postsVersionsRepository = getRepository(PostVersion);
   const latestPostVersionChanges = await getLatestPostVersion(postId);
 
   if (latestPostVersionChanges.deleted) {
-    logger.debug(`Skipping scrape post version id ${postId} because post was previously detected as deleted`);
+    logger.debug(
+      `Skipping scrape post version id ${postId} because post was previously detected as deleted`,
+    );
     return null;
   }
 
@@ -104,14 +109,16 @@ export async function generatePostNewEditedVersion(postId: number, currentLivePo
     previousPostToCompare.content = latestPostVersionChanges.lastContent;
   }
 
-  const fixedPreviousPostContent = normalizePostContent(previousPostToCompare.content, savedPost.date);
+  const fixedPreviousPostContent = normalizePostContent(
+    previousPostToCompare.content,
+    savedPost.date,
+  );
   const fixedCurrentLivePostContent = normalizePostContent(currentLivePost.content, savedPost.date);
 
   const hasTitleChanged = previousPostToCompare.title !== currentLivePost.title;
   const hasContentChanged = fixedPreviousPostContent !== fixedCurrentLivePostContent;
 
   if (!hasTitleChanged && !hasContentChanged) {
-    logger.debug(`Post version check id ${postId} - title and content have not changed`);
     return null;
   }
 
@@ -138,7 +145,11 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion[]> 
 
   const newPostVersions = [];
 
-  const { post: currentPostLiveVersion, pagePosts, scrapedForumDate } = await postScraper.scrapePost(postId);
+  const {
+    post: currentPostLiveVersion,
+    pagePosts,
+    scrapedForumDate,
+  } = await postScraper.scrapePost(postId);
 
   if (currentPostLiveVersion) {
     const newVersion = await generatePostNewEditedVersion(postId, currentPostLiveVersion);
@@ -148,8 +159,7 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion[]> 
       newPostVersions.push(savedNewVersion);
     }
     await redisProvider.save(`lastPostRescrapedDate:${postId}`, scrapedForumDate.toISOString());
-  }
-  else {
+  } else {
     const deletedPostVersionExists = await postsVersionsRepository.findOne({
       where: { post_id: postId, deleted: true },
       order: { created_at: 'DESC' },
@@ -169,7 +179,7 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion[]> 
     newPostVersions.push(savedNewDeletedPostVersion);
   }
 
-  const otherLivePosts = pagePosts.filter(post => post.post_id !== postId);
+  const otherLivePosts = pagePosts.filter((post) => post.post_id !== postId);
 
   for (const post of otherLivePosts) {
     const newVersion = await generatePostNewEditedVersion(post.post_id, post);
@@ -178,7 +188,10 @@ export async function scrapePostVersion(postId: number): Promise<PostVersion[]> 
       const savedNewVersion = await postsVersionsRepository.save(newVersion);
       newPostVersions.push(savedNewVersion);
     }
-    await redisProvider.save(`lastPostRescrapedDate:${post.post_id}`, scrapedForumDate.toISOString());
+    await redisProvider.save(
+      `lastPostRescrapedDate:${post.post_id}`,
+      scrapedForumDate.toISOString(),
+    );
   }
 
   return newPostVersions;

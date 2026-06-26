@@ -17,6 +17,8 @@ import { sub } from 'date-fns';
 import { container } from 'tsyringe';
 import { getRepository, IsNull, Not } from 'typeorm';
 
+type MeritWithScrapedPostTitle = Merit & { scrapedPostTitle?: string };
+
 export class MeritScraper {
   RECENT_MERITS_URL = 'index.php?action=merit;stats=recent';
 
@@ -144,15 +146,7 @@ export class MeritScraper {
         });
       }
 
-      logger.debug(
-        `[MeritScraper] Saved different merit scraped post title ${merit.id}: ${meritPostTitle}`,
-      );
-      await this.redisProvider.save(
-        `meritScrapedPostTitle:${merit.id}`,
-        meritPostTitle,
-        'EX',
-        60 * 60,
-      );
+      (merit as MeritWithScrapedPostTitle).scrapedPostTitle = meritPostTitle;
     }
 
     return merit;
@@ -176,6 +170,20 @@ export class MeritScraper {
 
       if (!existingMeritOnDb) {
         const newMerit = await this.meritsRepository.save(merit);
+        const scrapedPostTitle = (merit as MeritWithScrapedPostTitle).scrapedPostTitle;
+
+        if (scrapedPostTitle) {
+          logger.debug(
+            `[MeritScraper] Saved different merit scraped post title ${newMerit.id}: ${scrapedPostTitle}`,
+          );
+          await this.redisProvider.save(
+            `meritScrapedPostTitle:${newMerit.id}`,
+            scrapedPostTitle,
+            'EX',
+            60 * 60,
+          );
+        }
+
         await this.redisProvider.save(meritKey, true, 'EX', 3600); // 1 hour
         logger.debug(`[MeritScraper] Saved merit ${meritKey}`);
         return newMerit;
