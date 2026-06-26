@@ -80,6 +80,15 @@ class Checker {
       order: { post_id: 'ASC' },
     });
 
+    const twentyFourHoursAgo = sub(new Date(), { hours: 24 });
+    if (this.lastMeritDate < twentyFourHoursAgo) {
+      this.lastMeritDate = twentyFourHoursAgo;
+      await this.simpleX.db.updateLastChecked({
+        type: LastCheckedType.MERIT_DATE,
+        key: this.lastMeritDate.toISOString(),
+      });
+    }
+
     const merits = await this.meritsRepository.find({
       where: {
         date: MoreThan(this.lastMeritDate),
