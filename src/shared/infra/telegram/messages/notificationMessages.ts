@@ -153,7 +153,7 @@ export function buildMeritNotificationMessage(
   const total = totalMeritCount === -1 ? '' : `  ·  (Total: ${totalMeritCount})`;
 
   return (
-    `<b>⭐️ +<b>${amount}</b> from <b>${escape(sender)}</b>${total}</b><br>` +
+    `⭐️ +<b>${amount}</b> merits from <b>${escape(sender)}</b>${total}</b>` +
     `<p>${htmlLink(postUrl(merit), scrapedPostTitle || post.title)}</p>` +
     sponsorFooter(telegramId)
   );
