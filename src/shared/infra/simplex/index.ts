@@ -95,16 +95,6 @@ export class SimpleX {
     await this.handleMsg(event);
   }
 
-  async isContactActive(contactId: number) {
-    const r = (await this.chat.sendChatCmd(`/_info @${contactId}`)) as unknown as {
-      type: 'contactInfo';
-      contact: { contactStatus: string; activeConn?: { connStatus: string } };
-    };
-    if (r.type === 'contactInfo') {
-      return r.contact.contactStatus === 'active' && r.contact.activeConn?.connStatus === 'ready';
-    }
-  }
-
   async handleMsg(r: ChatEvent) {
     if (!(r.type in handlers)) {
       logger.debug({ type: r.type, r }, 'Unknown message type');
@@ -197,7 +187,7 @@ export class SimpleX {
   }
 
   async addConnectedUser(contactId: number) {
-    if (this.connectedUsers.has(contactId) && !contactId) return;
+    if (this.connectedUsers.has(contactId)) return;
     this.connectedUsers.add(contactId);
     logger.info({ contactId }, `Contact ${contactId} connected`);
 

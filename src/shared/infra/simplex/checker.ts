@@ -121,11 +121,14 @@ class Checker {
       for (const user of users) {
         const key = `postNotification:${user.contact_id}:${post.post_id}`;
         if (
-          !isUserMentionedInPost(post.content, { username: user.forum_username }, user.only_direct)
-            .isMentioned
+          !isUserMentionedInPost(
+            post.content,
+            { username: user.forum_username ?? undefined },
+            user.only_direct,
+          ).isMentioned
         )
           continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (user.forum_username?.toLowerCase() === post.author.toLowerCase()) continue;
         if (ignoringPostAuthor.find((ignoring) => ignoring.contact_id === user.contact_id))
           continue;
         if (ignoringPostTopic.find((ignoring) => ignoring.contact_id === user.contact_id)) continue;
@@ -171,7 +174,7 @@ class Checker {
         if (post.author.toLowerCase() !== trackedUser.username.toLowerCase()) continue;
         const user = await this.simpleX.db.getUser(trackedUser.contact_id);
         if (!user || user.deleted_at) continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (user.forum_username?.toLowerCase() === post.author.toLowerCase()) continue;
         if (ignoringPostTopic.find((ignoring) => ignoring.contact_id === user.contact_id)) continue;
         if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
 
@@ -217,7 +220,7 @@ class Checker {
         if (post.topic_id !== trackedTopic.topic_id) continue;
         const user = await this.simpleX.db.getUser(trackedTopic.contact_id);
         if (!user || user.deleted_at) continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (user.forum_username?.toLowerCase() === post.author.toLowerCase()) continue;
         if (ignoringPostAuthor.find((ignoring) => ignoring.contact_id === user.contact_id))
           continue;
         if (notifiedSet.has(`${user.contact_id}:${post.post_id}`)) continue;
@@ -264,7 +267,7 @@ class Checker {
         if (post.content.match(phraseRegex) === null) continue;
         const user = await this.simpleX.db.getUser(trackedPhrase.contact_id);
         if (!user || user.deleted_at) continue;
-        if (user.forum_username.toLowerCase() === post.author.toLowerCase()) continue;
+        if (user.forum_username?.toLowerCase() === post.author.toLowerCase()) continue;
         if (ignoringPostAuthor.find((ignoring) => ignoring.contact_id === user.contact_id))
           continue;
         if (ignoringPostTopic.find((ignoring) => ignoring.contact_id === user.contact_id)) continue;

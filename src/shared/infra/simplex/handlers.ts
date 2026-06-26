@@ -1,10 +1,10 @@
-import type { CEvt, ChatEvent, T } from '@simplex-chat/types';
+import type { CEvt, T } from '@simplex-chat/types';
 
 import logger from '##/shared/services/logger';
 
 import type { SimpleX } from './index';
 
-type Handlers = Record<string, (r: ChatEvent, simpleX: SimpleX) => Promise<void>>;
+type Handlers = Record<string, (r: any, simpleX: SimpleX) => Promise<void>>;
 
 export async function handleChatMessage(
   chatItem: T.AChatItem,
@@ -422,11 +422,19 @@ export const handlers: Handlers = {
       r.contactRequest.contactRequestId,
     );
 
-    while (!(await simpleX.isContactActive(contactId))) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
+    await simpleX.chat.wait(
+      'contactConnected',
+      (evt) => evt.contact.contactId === contactId,
+      30_000,
+    );
 
     await simpleX.addConnectedUser(contactId);
+
+    const user = await simpleX.db.getUser(contactId);
+    if (user) {
+      logger.info({ contactId }, 'User already exists, skipping creation');
+      return;
+    }
 
     await simpleX.db.createUser({
       contact_id: contactId,
@@ -437,11 +445,6 @@ export const handlers: Handlers = {
       only_direct: false,
     });
 
-    await simpleX.sendMessage(
-      contactId,
-      'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?',
-    );
-
     await simpleX.db.createConversation({
       contact_id: contactId,
       data: { step: 'waiting-for-username', forum_username: null, forum_user_uid: null },
@@ -450,6 +453,56 @@ export const handlers: Handlers = {
   contactConnected: async (r: CEvt.ContactConnected, simpleX) => {
     const { contactId } = r.contact;
     await simpleX.addConnectedUser(contactId);
+
+    let user = await simpleX.db.getUser(contactId);
+    if (!user) {
+      await simpleX.db.createUser({
+        contact_id: contactId,
+        forum_username: null,
+        forum_user_uid: null,
+        enable_mentions: false,
+        enable_merits: false,
+        only_direct: false,
+      });
+
+      await simpleX.db.createConversation({
+        contact_id: contactId,
+        data: { step: 'waiting-for-username', forum_username: null, forum_user_uid: null },
+      });
+
+      await simpleX.sendMessage(
+        contactId,
+        'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?',
+      );
+      return;
+    }
+
+    const conversation = await simpleX.db.getConversation(contactId);
+    if (!conversation?.data.step) return;
+
+    switch (conversation.data.step) {
+      case 'waiting-for-username': {
+        await simpleX.sendMessage(
+          contactId,
+          'Hello, Welcome to the BitcoinTalk SuperNotifier!\n\nWhat is your BitcoinTalk username?',
+        );
+        break;
+      }
+      case 'waiting-for-forum-uid': {
+        await simpleX.sendMessage(
+          contactId,
+          `Hi, *${conversation.data.forum_username}*! And what's your forum UID?`,
+        );
+        break;
+      }
+      case 'confirm-setup': {
+        await simpleX.sendMessage(
+          contactId,
+          `Great!\n\nUsername is *${conversation.data.forum_username}*\nForum UID is *${conversation.data.forum_user_uid}*\n\n*OK* to confirm\n*RESET* to start again`,
+        );
+        break;
+      }
+    }
   },
   pendingSubSummary: async () => {},
   acceptingContactRequest: async () => {},
