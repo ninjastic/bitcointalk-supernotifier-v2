@@ -9,7 +9,8 @@ type NotificationType =
   | 'modlogs'
   | 'track_topics'
   | 'onlyDirectMentions'
-  | 'ignoreNestedQuotes';
+  | 'ignoreNestedQuotes'
+  | 'newNotifications';
 
 @injectable()
 export default class UpdateUserNotificationService {
@@ -20,6 +21,10 @@ export default class UpdateUserNotificationService {
 
   public async execute(telegram_id: string, type: NotificationType, value: boolean): Promise<User> {
     const user = await this.usersRepository.findByTelegramId(telegram_id);
+
+    if (!user) {
+      throw Error(`User ${telegram_id} not found while updating`);
+    }
 
     if (type === 'mentions') {
       user.enable_mentions = value;
@@ -33,6 +38,8 @@ export default class UpdateUserNotificationService {
       user.enable_only_direct_mentions = value;
     } else if (type === 'ignoreNestedQuotes') {
       user.enable_ignore_nested_quotes = value;
+    } else if (type === 'newNotifications') {
+      user.enable_new_notifications = value;
     }
 
     await this.usersRepository.save(user);

@@ -9,13 +9,17 @@ import { editHtml } from './menu-utils';
 export const NOTIFICATIONS_MENU_HTML =
   '<b>Notifications</b>\n\nEnable or disable specific notifications.';
 
+export const NOTIFICATION_STYLE_MENU_HTML =
+  '<b>Notification style</b>\n\nNew notifications use rich Telegram formatting. They are disabled by default for compatibility.';
+
 type NotificationField =
   | 'mentions'
   | 'merits'
   | 'modlogs'
   | 'track_topics'
   | 'onlyDirectMentions'
-  | 'ignoreNestedQuotes';
+  | 'ignoreNestedQuotes'
+  | 'newNotifications';
 
 async function toggleNotification(ctx: IMenuContext, field: NotificationField) {
   const updateUserNotification = container.resolve(UpdateUserNotificationService);
@@ -63,6 +67,19 @@ const notificationsMenu = new Menu<IMenuContext>('ntm')
         ? '✅ Ignore Nested Quotes Enabled '
         : '🚫 Ignore Nested Quotes Disabled',
     (ctx) => toggleNotification(ctx, 'ignoreNestedQuotes'),
+  )
+  .row()
+  .back('↩ Go Back', async (ctx) => {
+    await editHtml(ctx, '<b>Notification settings</b>\n\nManage global notification preferences.');
+  });
+
+export const notificationStyleMenu = new Menu<IMenuContext>('nsm')
+  .text(
+    (ctx) =>
+      ctx.session.newNotifications
+        ? '✅ New notifications Enabled'
+        : '🚫 New notifications Disabled',
+    (ctx) => toggleNotification(ctx, 'newNotifications'),
   )
   .row()
   .back('↩ Go Back', async (ctx) => {

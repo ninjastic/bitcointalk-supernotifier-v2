@@ -6,6 +6,7 @@ export default interface CreateUserDTO {
   telegram_id: string;
   enable_mentions: boolean;
   enable_ignore_nested_quotes?: boolean;
+  enable_new_notifications?: boolean;
   enable_merits: boolean;
   blocked: boolean;
   is_group: boolean;

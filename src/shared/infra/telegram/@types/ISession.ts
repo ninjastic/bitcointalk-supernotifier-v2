@@ -37,6 +37,7 @@ export default interface ISession {
   mentions: boolean;
   onlyDirectMentions: boolean;
   ignoreNestedQuotes: boolean;
+  newNotifications: boolean;
   merits: boolean;
   modlogs: boolean;
   track_topics: boolean;

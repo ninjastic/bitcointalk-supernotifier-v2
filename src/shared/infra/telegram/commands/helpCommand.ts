@@ -30,12 +30,17 @@ async function helpCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
       description: 'Sets the maximum number of characters for the post preview on notifications.',
     },
     {
+      command: '/newnotifications [on|off]',
+      description: 'Toggles the new rich notification format.',
+    },
+    {
       command: '/reset',
       description: 'Resets your account conversation state. Useful if the bot is stuck.',
     },
     {
       command: '/hardreset',
-      description: 'Hard resets the bot state and deletes all your account information <b>(!DANGER!)</b>',
+      description:
+        'Hard resets the bot state and deletes all your account information <b>(!DANGER!)</b>',
     },
     {
       command: '/info',

@@ -18,13 +18,14 @@ import type IMenuContext from './@types/IMenuContext';
 import cache from '../../../config/cache';
 import logger from '../../services/logger';
 import { checkBotNotificationError } from '../../services/utils';
-import alertCommand from './commands/alertCommand';
+import alertCommand, { setupAlertConfirmationHandlers } from './commands/alertCommand';
 import altCommand from './commands/altCommand';
 import apiCommand from './commands/apiCommand';
 import authCommand from './commands/authCommand';
 import devCommand from './commands/dev';
 import helpCommand from './commands/helpCommand';
 import infoCommand from './commands/infoCommand';
+import newNotificationsCommand from './commands/newNotificationsCommand';
 import lengthCommand from './commands/lengthCommand';
 import menuCommand from './commands/menuCommand';
 import minPostsCommand from './commands/minPostsCommand';
@@ -57,6 +58,7 @@ export function initialSession(): ISession {
     mentions: false,
     onlyDirectMentions: false,
     ignoreNestedQuotes: false,
+    newNotifications: false,
     merits: false,
     modlogs: false,
     track_topics: false,
@@ -147,17 +149,21 @@ class TelegramBot {
           ctx.session.track_topics = user.enable_auto_track_topics;
           ctx.session.onlyDirectMentions = user.enable_only_direct_mentions;
           ctx.session.ignoreNestedQuotes = user.enable_ignore_nested_quotes;
+          ctx.session.newNotifications = user.enable_new_notifications;
           ctx.session.isGroup = ctx.chat.type !== 'private';
         }
       }
       await next();
     });
+
+    setupAlertConfirmationHandlers(this.instance);
   }
 
   async commands(): Promise<void> {
     this.instance.command('start', startCommand);
     this.instance.command('help', helpCommand);
     this.instance.command('menu', menuCommand);
+    this.instance.command('newnotifications', newNotificationsCommand);
     this.instance.command('alert', alertCommand);
     this.instance.hears(/\/?setmerit (.*)/i, setMeritCommand);
     this.instance.hears(/\/?alt (.*)/i, altCommand);
@@ -179,6 +185,10 @@ class TelegramBot {
       {
         command: '/help',
         description: 'Sends the help message',
+      },
+      {
+        command: '/newnotifications',
+        description: 'Toggles new notification formatting',
       },
     ]);
   }

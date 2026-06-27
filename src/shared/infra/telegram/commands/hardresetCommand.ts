@@ -65,7 +65,8 @@ export const hardResetConfirmInlineMenu = new Menu('hr')
         enable_modlogs = FALSE,
         enable_auto_track_topics = FALSE,
         enable_only_direct_mentions = FALSE,
-        enable_ignore_nested_quotes = FALSE
+        enable_ignore_nested_quotes = FALSE,
+        enable_new_notifications = FALSE
       WHERE telegram_id = $1;`,
       [telegramId],
     );

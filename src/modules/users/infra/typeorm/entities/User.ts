@@ -38,6 +38,9 @@ class User {
   @Column({ type: 'boolean', default: false })
   enable_ignore_nested_quotes: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  enable_new_notifications: boolean;
+
   @Column('boolean')
   enable_merits: boolean;
 

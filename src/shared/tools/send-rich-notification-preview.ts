@@ -17,9 +17,11 @@ import {
   buildTrackedTopicNotificationMessage,
   buildTrackedUserNotificationMessage,
 } from '##/shared/infra/telegram/messages/notificationMessages';
+import toLegacyTelegramHtml from '##/shared/infra/telegram/services/legacy-telegram-html';
 import { Api } from 'grammy';
 
 type SendRichMessageOptions = NonNullable<Parameters<Api['sendRichMessage']>[2]>;
+type SendMessageOptions = NonNullable<Parameters<Api['sendMessage']>[2]>;
 
 interface PreviewMessage {
   html: string;
@@ -131,6 +133,8 @@ const messages: PreviewMessage[] = [
   },
 ];
 
+const useLegacyNotifications = process.argv.includes('--legacy');
+
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -143,6 +147,15 @@ async function sendRichMessage({ html, options = {} }: PreviewMessage): Promise<
   }
 
   const api = new Api(token);
+
+  if (useLegacyNotifications) {
+    await api.sendMessage(ADMIN_TELEGRAM_ID, toLegacyTelegramHtml(html), {
+      ...(options as SendMessageOptions),
+      parse_mode: 'HTML',
+    });
+    return;
+  }
+
   await api.sendRichMessage(ADMIN_TELEGRAM_ID, { html }, options);
 }
 

@@ -32,6 +32,7 @@ async function startCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
       group = userRepository.create({
         enable_mentions: false,
         enable_ignore_nested_quotes: false,
+        enable_new_notifications: false,
         enable_merits: false,
         blocked: false,
         telegram_id: String(ctx.chat.id),

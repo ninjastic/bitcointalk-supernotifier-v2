@@ -1,17 +1,31 @@
 import type IUsersRepository from '##/modules/users/repositories/IUsersRepository';
 import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
 import type TelegramBot from '##/shared/infra/telegram/bot';
-import type { Message } from 'grammy/types';
 
 import { ADMIN_TELEGRAM_ID } from '##/config/admin';
-import sendRichTelegramMessage from '##/shared/infra/telegram/services/send-rich-telegram-message';
 import logger from '##/shared/services/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
+import { randomUUID } from 'node:crypto';
 import { container, inject, injectable } from 'tsyringe';
 
 interface MessageSent {
   telegramId: string;
   messageId: number;
+}
+
+interface GlobalNotificationResult {
+  id: string;
+  total: number;
+  succeeded: number;
+  failed: number;
+}
+
+const SEND_DELAY_MS = 150;
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 @injectable()
@@ -25,7 +39,8 @@ export default class SendGlobalNotificationService {
   ) {}
 
   private async sendMessageToUser(userTelegramId: string, message: string): Promise<MessageSent> {
-    const messageSent = await sendRichTelegramMessage<Message>(this.bot, userTelegramId, message, {
+    const messageSent = await this.bot.instance.api.sendMessage(userTelegramId, message, {
+      parse_mode: 'HTML',
       reply_markup: { remove_keyboard: true },
     });
 
@@ -35,55 +50,56 @@ export default class SendGlobalNotificationService {
 
   private async saveMessageIdsToRedis(messageIds: MessageSent[]): Promise<string> {
     const redisProvider = container.resolve<RedisProvider>('CacheRepository');
-    const id = Math.floor(new Date().getTime() * Math.random()).toString();
+    const id = randomUUID();
     await redisProvider.save(`globalNotificationMessages:${id}`, messageIds, 'EX', 300);
     return id;
   }
 
   private async sendStatusMessage(
-    successed: number,
-    errored: number,
+    succeeded: number,
+    failed: number,
     totalUsers: number,
     id: string,
   ): Promise<void> {
     await this.bot.instance.api.sendMessage(
-      608520255,
-      `The messages were sent!\n\nID: ${id}\n\n<b>${successed}/${totalUsers} successed (${errored} failed)</b>`,
+      ADMIN_TELEGRAM_ID,
+      `The messages were sent!\n\nID: ${id}\n\n<b>${succeeded}/${totalUsers} succeeded (${failed} failed)</b>`,
       { parse_mode: 'HTML' },
     );
   }
 
-  public async execute(message: string): Promise<boolean> {
+  public async execute(message: string): Promise<GlobalNotificationResult> {
     const unblockedUsers = await this.usersRepository.findAll(true);
     const messageIds: MessageSent[] = [];
-    let successed = 0;
-    let errored = 0;
+    let failed = 0;
 
-    await this.bot.instance.api.sendMessage(ADMIN_TELEGRAM_ID, `Starting to send the messages...`);
-
-    const promises = unblockedUsers.map(
-      async (user, index) =>
-        new Promise<void>((resolve) => {
-          setTimeout(async () => {
-            try {
-              const messageSent = await this.sendMessageToUser(user.telegram_id, message);
-              messageIds.push(messageSent);
-              successed += 1;
-            } catch (error) {
-              errored += 1;
-              await checkBotNotificationError(error, user.telegram_id, { message });
-            } finally {
-              resolve();
-            }
-          }, 150 * index);
-        }),
+    await this.bot.instance.api.sendMessage(
+      ADMIN_TELEGRAM_ID,
+      `Starting to send the messages to ${unblockedUsers.length} users...`,
     );
 
-    await Promise.allSettled(promises);
+    for (const [index, user] of unblockedUsers.entries()) {
+      if (index > 0) {
+        await delay(SEND_DELAY_MS);
+      }
+
+      try {
+        const messageSent = await this.sendMessageToUser(user.telegram_id, message);
+        messageIds.push(messageSent);
+      } catch (error) {
+        failed += 1;
+        await checkBotNotificationError(error, user.telegram_id, { message });
+      }
+    }
 
     const id = await this.saveMessageIdsToRedis(messageIds);
-    await this.sendStatusMessage(successed, errored, unblockedUsers.length, id);
+    await this.sendStatusMessage(messageIds.length, failed, unblockedUsers.length, id);
 
-    return true;
+    return {
+      id,
+      total: unblockedUsers.length,
+      succeeded: messageIds.length,
+      failed,
+    };
   }
 }

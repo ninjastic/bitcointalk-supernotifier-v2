@@ -8,7 +8,11 @@ import ignoredBoardsMenu, { IGNORED_BOARDS_MENU_HTML } from './ignoredBoardsMenu
 import ignoredTopicsMenu, { IGNORED_TOPICS_MENU_HTML } from './ignoredTopicsMenu';
 import ignoredUsersMenu, { IGNORED_USERS_MENU_HTML } from './ignoredUsersMenu';
 import { editHtml, editRich, mainMenuHtml } from './menu-utils';
-import notificationsMenu, { NOTIFICATIONS_MENU_HTML } from './notificationsMenu';
+import notificationsMenu, {
+  NOTIFICATIONS_MENU_HTML,
+  NOTIFICATION_STYLE_MENU_HTML,
+  notificationStyleMenu,
+} from './notificationsMenu';
 import trackedBoardsMenu, { TRACKED_BOARDS_MENU_HTML } from './trackedBoardsMenu';
 import trackedPhrasesMenu, { TRACKED_PHRASES_MENU_HTML } from './trackedPhrasesMenu';
 import trackedTopicsMenu, { TRACKED_TOPICS_MENU_HTML } from './trackedTopicsMenu';
@@ -68,6 +72,10 @@ const settingsMenu = new Menu<IMenuContext>('sm')
     await editHtml(ctx, NOTIFICATIONS_MENU_HTML);
   })
   .row()
+  .submenu('🎨 Notification style', 'nsm', async (ctx) => {
+    await editHtml(ctx, NOTIFICATION_STYLE_MENU_HTML);
+  })
+  .row()
   .back('↩ Go Back', async (ctx) => {
     await editHtml(ctx, mainMenuHtml(ctx));
   });
@@ -98,6 +106,6 @@ notifyMeMenu.register([
   trackedUsersMenu,
 ]);
 dontNotifyMeMenu.register([ignoredTopicsMenu, ignoredBoardsMenu, ignoredUsersMenu]);
-settingsMenu.register(notificationsMenu);
+settingsMenu.register([notificationsMenu, notificationStyleMenu]);
 
 export { mainMenu };
