@@ -30,6 +30,7 @@ const notifyMeMenu = new Menu<IMenuContext>('nm')
   .row()
   .submenu('📗 Topic replies', 'ttm', async (ctx) => {
     ctx.session.page = 0;
+    ctx.session.trackedTopicsSearch = null;
     await editHtml(ctx, TRACKED_TOPICS_MENU_HTML);
   })
   .row()

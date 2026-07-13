@@ -44,6 +44,7 @@ export default interface ISession {
   alternative_usernames?: Array<string>;
   isGroup?: boolean;
   addTrackedTopicUserTopicId?: number;
+  trackedTopicsSearch?: string | null;
   page?: number;
   advancedMatchDraft?: AdvancedMatchDraft | null;
   advancedMatchDraftField?: AdvancedMatchDraftField | null;

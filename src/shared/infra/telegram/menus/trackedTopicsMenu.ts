@@ -189,13 +189,31 @@ const trackedTopicsMenu = new Menu<IMenuContext>('ttm')
     const trackedTopicUsers = await findTrackedTopicUsers.execute({
       telegram_id: String(ctx.chat.id),
     });
+    const search = ctx.session.trackedTopicsSearch?.trim().toLowerCase() ?? '';
+    const visibleTopics = search
+      ? trackedTopics.filter(
+          (topic) =>
+            topic.post.title.toLowerCase().includes(search) ||
+            String(topic.topic_id).includes(search),
+        )
+      : trackedTopics;
     const userTopicsWithWhitelist = trackedTopicUsers.map(
       (trackedUser) => trackedUser.tracked_topic_id,
     );
     const page = ctx.session.page ?? 0;
-    const totalPages = Math.max(1, Math.ceil(trackedTopics.length / 10));
+    const totalPages = Math.max(1, Math.ceil(visibleTopics.length / 10));
+    const hasPagination = totalPages > 1;
 
-    for (const choice of trackedTopics.slice(page * 10, (page + 1) * 10)) {
+    if (!visibleTopics.length) {
+      range.text(search ? 'No results' : 'No topics', (menuCtx) =>
+        menuCtx.answerCallbackQuery(
+          search ? `No topics match "${search}"` : 'No tracked topics yet',
+        ),
+      );
+      range.row();
+    }
+
+    for (const choice of visibleTopics.slice(page * 10, (page + 1) * 10)) {
       let title = userTopicsWithWhitelist.includes(choice.topic_id) ? '* ' : '';
       title += choice.post.title.substring(0, 35);
       title += choice.post.title.length >= 35 ? '...' : '';
@@ -207,7 +225,7 @@ const trackedTopicsMenu = new Menu<IMenuContext>('ttm')
         .row();
     }
 
-    if (totalPages > 1) {
+    if (hasPagination) {
       if (page > 0)
         range.text('◀️ Prev', (menuCtx) => {
           menuCtx.session.page = page - 1;
@@ -221,8 +239,28 @@ const trackedTopicsMenu = new Menu<IMenuContext>('ttm')
           menuCtx.session.page = page + 1;
           menuCtx.menu.update();
         });
-      range.row();
     }
+
+    if (hasPagination) range.row();
+  })
+  .dynamic(async (ctx, range) => {
+    const findTrackedTopicsByTelegramId = container.resolve(FindTrackedTopicsByTelegramIdService);
+    const trackedTopics = await findTrackedTopicsByTelegramId.execute(String(ctx.chat.id));
+
+    if (!trackedTopics.length) return;
+
+    if (ctx.session.trackedTopicsSearch?.trim()) {
+      range.text('❌ Clear search', (menuCtx) => {
+        menuCtx.session.trackedTopicsSearch = null;
+        menuCtx.session.page = 0;
+        menuCtx.menu.update();
+      });
+      return;
+    }
+
+    range.text('🔎 Search', async (menuCtx) => {
+      await searchTrackedTopicsQuestion.replyWithHTML(menuCtx, 'Search by topic title or ID:');
+    });
   })
   .text('✨ Add new', async (ctx) => {
     await addTrackedTopicLinkQuestion.replyWithHTML(
@@ -319,5 +357,15 @@ const addTrackedTopicLinkQuestion = new StatelessQuestion('addTopic', async (ctx
   }
 });
 
-export { addTrackedTopicLinkQuestion, addTrackedTopicUserQuestion };
+const searchTrackedTopicsQuestion = new StatelessQuestion(
+  'searchTrackedTopics',
+  async (ctx: IMenuContext) => {
+    const search = ctx.msg!.text!.trim();
+    ctx.session.trackedTopicsSearch = search || null;
+    ctx.session.page = 0;
+    await replyHtmlMenu(ctx, TRACKED_TOPICS_MENU_HTML, trackedTopicsMenu);
+  },
+);
+
+export { addTrackedTopicLinkQuestion, addTrackedTopicUserQuestion, searchTrackedTopicsQuestion };
 export default trackedTopicsMenu;
