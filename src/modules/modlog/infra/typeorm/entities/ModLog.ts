@@ -2,11 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('modlog')
+@Index(['type', 'user_id'])
+@Index(['type', 'created_at'])
 class ModLog {
   @PrimaryGeneratedColumn('uuid')
   id: string;
