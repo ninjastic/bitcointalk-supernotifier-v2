@@ -11,10 +11,10 @@ import logger from '../../../services/logger';
 
 export const hardResetConfirmInlineMenu = new Menu('hr')
   .text('Yes, I want to delete everything', async (ctx) => {
-    const telegramId = ctx.chat.id;
+    const telegramId = ctx.chat!.id;
 
-    if (ctx.msg.chat.type === 'group') {
-      const user = await ctx.api.getChatMember(ctx.chat.id, ctx.from!.id);
+    if (ctx.msg!.chat.type === 'group') {
+      const user = await ctx.api.getChatMember(ctx.chat!.id, ctx.from!.id);
       if (user.status !== 'creator' && user.status !== 'administrator') {
         return;
       }
@@ -62,7 +62,7 @@ export const hardResetConfirmInlineMenu = new Menu('hr')
         user_id = NULL,
         enable_mentions = FALSE,
         enable_merits = FALSE,
-        enable_modlogs = FALSE,
+        enable_modlogs = TRUE,
         enable_auto_track_topics = FALSE,
         enable_only_direct_mentions = FALSE,
         enable_ignore_nested_quotes = FALSE,

@@ -41,7 +41,7 @@ const notificationsMenu = new Menu<IMenuContext>('ntm')
   )
   .row()
   .text(
-    (ctx) => (ctx.session.modlogs ? '✅ Deleted Posts Enabled ' : '🚫 Deleted Posts Disabled'),
+    (ctx) => (ctx.session.modlogs ? '✅ ModLogs Enabled ' : '🚫 ModLogs Disabled'),
     (ctx) => toggleNotification(ctx, 'modlogs'),
   )
   .row()

@@ -44,7 +44,7 @@ class User {
   @Column('boolean')
   enable_merits: boolean;
 
-  @Column('boolean')
+  @Column({ type: 'boolean', default: true })
   enable_modlogs: boolean;
 
   @Column('boolean')
