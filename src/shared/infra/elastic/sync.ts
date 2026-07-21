@@ -11,6 +11,7 @@ import yargs from 'yargs';
 
 import { SyncBoardsPipeline } from './pipelines/sync-boards';
 import { SyncMeritsPipeline } from './pipelines/sync-merits';
+import { SyncModlogPipeline } from './pipelines/sync-modlog';
 import { SyncPostsPipeline } from './pipelines/sync-posts';
 import { SyncPostsAddressesPipeline } from './pipelines/sync-posts-addresses';
 import { SyncPostsHistoryPipeline } from './pipelines/sync-posts-history';
@@ -22,11 +23,24 @@ async function syncAll() {
   const cacheRepository = container.resolve<RedisProvider>('CacheRepository');
 
   const syncPostsPipeline = new SyncPostsPipeline(connection, esClient, cacheRepository);
-  const syncPostsVersionsPipeline = new SyncPostsVersionsPipeline(connection, esClient, cacheRepository);
+  const syncPostsVersionsPipeline = new SyncPostsVersionsPipeline(
+    connection,
+    esClient,
+    cacheRepository,
+  );
   const syncMeritsPipeline = new SyncMeritsPipeline(connection, esClient, cacheRepository);
+  const syncModlogPipeline = new SyncModlogPipeline(connection, esClient, cacheRepository);
   const syncTopicsPipeline = new SyncTopicsPipeline(connection, esClient, cacheRepository);
-  const syncPostsHistoryPipeline = new SyncPostsHistoryPipeline(connection, esClient, cacheRepository);
-  const syncPostsAddressesPipeline = new SyncPostsAddressesPipeline(connection, esClient, cacheRepository);
+  const syncPostsHistoryPipeline = new SyncPostsHistoryPipeline(
+    connection,
+    esClient,
+    cacheRepository,
+  );
+  const syncPostsAddressesPipeline = new SyncPostsAddressesPipeline(
+    connection,
+    esClient,
+    cacheRepository,
+  );
   const syncBoardsPipeline = new SyncBoardsPipeline(connection, esClient, cacheRepository);
 
   const argv = yargs
@@ -74,12 +88,13 @@ async function syncAll() {
     await syncPostsPipeline.execute();
     await syncPostsVersionsPipeline.execute();
     await syncMeritsPipeline.execute();
+    await syncModlogPipeline.execute();
     await syncTopicsPipeline.execute();
     await syncPostsHistoryPipeline.execute();
     await syncPostsAddressesPipeline.execute();
     await syncBoardsPipeline.execute();
 
-    await new Promise(resolve => setTimeout(resolve, 1000 * 60 * 1));
+    await new Promise((resolve) => setTimeout(resolve, 1000 * 60 * 1));
   }
 }
 
