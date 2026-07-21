@@ -85,7 +85,7 @@ export default class SendMeritNotificationService {
     scrapedPostTitle,
   }: MeritNoficationData): Promise<boolean> {
     const setMeritNotified = container.resolve(SetMeritNotifiedService);
-    let message: string;
+    let message: string = '';
 
     try {
       const { id: merit_id, amount, post_id, receiver_uid } = merit;

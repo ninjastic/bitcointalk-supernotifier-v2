@@ -75,7 +75,7 @@ export default class SendTrackedBoardNotificationService {
     trackedBoard,
   }: TrackedBoardNotificationData): Promise<boolean> {
     const setPostNotified = container.resolve(SetPostNotifiedService);
-    let message: string;
+    let message: string = '';
 
     try {
       const postLength =

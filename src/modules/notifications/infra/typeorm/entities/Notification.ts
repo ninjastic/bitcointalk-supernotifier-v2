@@ -18,6 +18,7 @@ export enum NotificationType {
   ADVANCED_MATCH = 'advanced_match',
   AUTO_TRACK_TOPIC_REQUEST = 'auto_track_topic_request',
   REMOVE_TOPIC = 'remove_topic',
+  SIG_BAN = 'sig_ban',
 }
 
 interface PostMentionData {
@@ -57,6 +58,10 @@ interface AdvancedMatchData {
 interface AutoTrackTopicRequestData {
   topic_id: number;
   post_id: number;
+}
+
+interface SigBanData {
+  user_id: number;
 }
 
 interface RemoveTopicData {
@@ -157,6 +162,15 @@ export class AutoTrackTopicRequestNotification extends Notification<AutoTrackTop
 
   @Column('jsonb')
   declare metadata: AutoTrackTopicRequestData;
+}
+
+@ChildEntity(NotificationType.SIG_BAN)
+export class SigBanNotification extends Notification<SigBanData> {
+  @Column({ type: 'enum', enum: NotificationType })
+  type: NotificationType.SIG_BAN = NotificationType.SIG_BAN;
+
+  @Column('jsonb')
+  declare metadata: SigBanData;
 }
 
 @ChildEntity(NotificationType.REMOVE_TOPIC)

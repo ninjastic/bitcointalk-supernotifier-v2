@@ -54,13 +54,17 @@ export default class CheckModLogsService {
     const setModLogChecked = container.resolve(SetModLogCheckedService);
 
     for (const removedTopicModlog of removedTopicModlogs) {
-      const topicPosts = await this.postsRepository.findPosts({ topic_id: removedTopicModlog.topic_id });
+      const topicPosts = await this.postsRepository.findPosts({
+        topic_id: removedTopicModlog.topic_id,
+      });
 
-      const authorUids = new Set(topicPosts.map(p => p.author_uid));
-      const relevantUsers = users.filter(u => authorUids.has(u.user_id));
+      const authorUids = new Set(topicPosts.map((p) => p.author_uid));
+      const relevantUsers = users.filter((u) => authorUids.has(u.user_id));
 
       for (const user of relevantUsers) {
-        const postsDeleted = topicPosts.filter(topicPost => topicPost.author_uid === user.user_id);
+        const postsDeleted = topicPosts.filter(
+          (topicPost) => topicPost.author_uid === user.user_id,
+        );
 
         await addTelegramJob('sendRemovedTopicNotification', {
           user,
@@ -93,7 +97,9 @@ export default class CheckModLogsService {
     const nukedUserModlogs = await this.modLogRepository.findUnchecked('nuke_user');
 
     for (const nukedUserModlog of nukedUserModlogs) {
-      const userPosts = await this.postsRepository.findPosts({ author_uid: nukedUserModlog.user_id });
+      const userPosts = await this.postsRepository.findPosts({
+        author_uid: nukedUserModlog.user_id,
+      });
 
       if (!userPosts.length) {
         await setModLogChecked.execute(nukedUserModlog);
@@ -105,6 +111,21 @@ export default class CheckModLogsService {
       }
 
       await setModLogChecked.execute(nukedUserModlog);
+    }
+
+    const sigBanModlogs = await this.modLogRepository.findUnchecked('sig_ban');
+
+    for (const sigBanModlog of sigBanModlogs) {
+      const bannedUser = await this.usersRepository.findByUserId(sigBanModlog.user_id);
+
+      if (bannedUser?.enable_modlogs) {
+        await addTelegramJob('sendSigBanNotification', {
+          user: bannedUser,
+          modLog: sigBanModlog,
+        });
+      }
+
+      await setModLogChecked.execute(sigBanModlog);
     }
   }
 }

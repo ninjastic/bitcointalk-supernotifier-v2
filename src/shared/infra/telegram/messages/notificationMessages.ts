@@ -159,6 +159,16 @@ export function buildMeritNotificationMessage(
   );
 }
 
+export function buildSigBanNotificationMessage(modLog: ModLog, telegramId: string): string {
+  const appealUrl = 'https://bitcointalk.org/index.php?topic=5588886.0';
+  return (
+    `<b>🚫 Sigban detected</b><br><br>` +
+    `Your account has been detected as signature banned.<br>` +
+    `You can appeal ${htmlLink(appealUrl, 'here')}` +
+    sponsorFooter(telegramId)
+  );
+}
+
 export function buildRemovedTopicNotificationMessage(
   posts: Post[],
   modLog: ModLog,

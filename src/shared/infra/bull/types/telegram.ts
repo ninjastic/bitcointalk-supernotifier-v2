@@ -20,7 +20,8 @@ export type RecipeNames =
   | 'sendTrackedUserNotification'
   | 'sendAdvancedMatchNotification'
   | 'sendApiNotification'
-  | 'sendAutoTrackTopicRequestNotification';
+  | 'sendAutoTrackTopicRequestNotification'
+  | 'sendSigBanNotification';
 
 export type MentionType = 'username' | 'alternative_username' | 'direct_mention' | 'quoted_mention';
 
@@ -67,6 +68,10 @@ interface SendAutoTrackTopicRequestNotificationMetadata {
   topic: Topic;
   user: User;
 }
+interface SendSigBanNotificationMetadata {
+  user: User;
+  modLog: ModLog;
+}
 interface SendApiNotificationMetadata {
   telegram_id: string;
   message: string;
@@ -82,6 +87,7 @@ export interface RecipeMetadata {
   sendAdvancedMatchNotification: SendAdvancedMatchNotificationMetadata;
   sendRemovedTopicNotification: SendRemovedTopicNotificationMetadata;
   sendAutoTrackTopicRequestNotification: SendAutoTrackTopicRequestNotificationMetadata;
+  sendSigBanNotification: SendSigBanNotificationMetadata;
   sendApiNotification: SendApiNotificationMetadata;
 }
 

@@ -62,7 +62,7 @@ export default class SendAdvancedMatchNotificationService {
     post,
     advancedMatch,
   }: AdvancedMatchNotificationData): Promise<boolean> {
-    let message: string;
+    let message: string = '';
 
     try {
       const postLength =

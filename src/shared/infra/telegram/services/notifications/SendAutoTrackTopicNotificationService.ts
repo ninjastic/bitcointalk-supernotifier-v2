@@ -63,7 +63,7 @@ export default class SendAutoTrackTopicNotificationService {
     telegramId,
     topic,
   }: AutoTrackTopicRequestNotificationData): Promise<boolean> {
-    let message: string;
+    let message: string = '';
 
     try {
       message = await this.buildNotificationMessage(topic);

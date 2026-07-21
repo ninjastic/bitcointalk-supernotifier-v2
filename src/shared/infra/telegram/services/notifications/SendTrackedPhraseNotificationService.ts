@@ -78,7 +78,7 @@ export default class SendTrackedPhraseNotificationService {
     post,
     phrase,
   }: TrackedPhraseNotificationData): Promise<boolean> {
-    let message: string;
+    let message: string = '';
 
     try {
       const postLength =

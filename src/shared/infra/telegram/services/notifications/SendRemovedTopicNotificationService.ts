@@ -52,7 +52,7 @@ export default class SendRemovedTopicNotificationService {
     modLog,
     posts,
   }: RemovedTopicNotificationData): Promise<boolean> {
-    let message: string;
+    let message: string = '';
 
     try {
       message = await this.buildNotificationMessage(posts, modLog, telegramId);

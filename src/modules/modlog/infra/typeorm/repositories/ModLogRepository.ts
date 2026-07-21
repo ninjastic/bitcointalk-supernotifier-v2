@@ -35,7 +35,10 @@ export default class ModLogRepository implements IModLogRepository {
     });
   }
 
-  public async findUnchecked(type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user', minutes?: number): Promise<ModLog[]> {
+  public async findUnchecked(
+    type?: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user' | 'sig_ban',
+    minutes?: number | false,
+  ): Promise<ModLog[]> {
     const where = {
       checked: false,
     } as FindUncheckedTypeDTO;

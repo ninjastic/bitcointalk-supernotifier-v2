@@ -19,6 +19,7 @@ import SendAutoTrackTopicNotificationService from '../../telegram/services/notif
 import SendMentionNotificationService from '../../telegram/services/notifications/SendMentionNotificationService';
 import SendMeritNotificationService from '../../telegram/services/notifications/SendMeritNotificationService';
 import SendRemovedTopicNotificationService from '../../telegram/services/notifications/SendRemovedTopicNotificationService';
+import SendSigBanNotificationService from '../../telegram/services/notifications/SendSigBanNotificationService';
 import SendTrackedBoardNotificationService from '../../telegram/services/notifications/SendTrackedBoardNotificationService';
 import SendTrackedPhraseNotificationService from '../../telegram/services/notifications/SendTrackedPhraseNotificationService';
 import SendTrackedTopicNotificationService from '../../telegram/services/notifications/SendTrackedTopicNotificationService';
@@ -108,6 +109,15 @@ const jobRecipes: JobRecipe = {
       bot,
       telegramId: user.telegram_id,
       topic,
+    });
+  },
+  sendSigBanNotification: async (job) => {
+    const { user, modLog } = job.data;
+    const sendSigBanNotification = container.resolve(SendSigBanNotificationService);
+    await sendSigBanNotification.execute({
+      bot,
+      telegramId: user.telegram_id,
+      modLog,
     });
   },
 };

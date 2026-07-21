@@ -12,6 +12,7 @@ import {
   buildMentionNotificationMessage,
   buildMeritNotificationMessage,
   buildRemovedTopicNotificationMessage,
+  buildSigBanNotificationMessage,
   buildTrackedBoardNotificationMessage,
   buildTrackedPhraseNotificationMessage,
   buildTrackedTopicNotificationMessage,
@@ -122,6 +123,9 @@ const messages: PreviewMessage[] = [
       previewModLog,
       String(ADMIN_TELEGRAM_ID),
     ),
+  },
+  {
+    html: buildSigBanNotificationMessage(previewModLog, String(ADMIN_TELEGRAM_ID)),
   },
   {
     html: buildAutoTrackTopicNotificationMessage(previewTopic),

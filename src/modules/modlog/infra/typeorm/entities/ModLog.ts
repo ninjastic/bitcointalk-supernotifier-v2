@@ -1,4 +1,10 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('modlog')
 class ModLog {
@@ -6,7 +12,7 @@ class ModLog {
   id: string;
 
   @Column('varchar')
-  type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user';
+  type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user' | 'sig_ban';
 
   @Column({ type: 'integer', nullable: true })
   post_id: number;

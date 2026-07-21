@@ -65,7 +65,7 @@ export default class SendTrackedUserNotificationService {
   }
 
   public async execute({ bot, telegramId, post }: TrackedUserNotificationData): Promise<boolean> {
-    let message: string;
+    let message: string = '';
 
     try {
       const postLength =

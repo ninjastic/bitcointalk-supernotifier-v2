@@ -128,7 +128,7 @@ export default class SendMentionNotificationService {
     history,
     mentionType,
   }: MentionNotificationData): Promise<boolean> {
-    let message: string;
+    let message: string = '';
 
     try {
       const postLength =
