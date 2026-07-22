@@ -15,9 +15,7 @@ export default class ScrapeModLogService {
 
     const $ = load(response.data, { decodeEntities: true });
 
-    const logs = $('#helpmain > ul > li')
-      .toArray()
-      .slice(0, 100);
+    const logs = $('#helpmain > ul > li').toArray();
 
     const parseModLog = container.resolve(ParseModLogService);
 
@@ -27,12 +25,14 @@ export default class ScrapeModLogService {
       try {
         const parsedModLog = parseModLog.execute(log);
 
-        const foundModLog = await modLogRepository.findOne({ where: {
-          type: parsedModLog.type,
-          user_id: parsedModLog.user_id,
-          topic_id: parsedModLog.topic_id,
-          post_id: parsedModLog.post_id,
-        } });
+        const foundModLog = await modLogRepository.findOne({
+          where: {
+            type: parsedModLog.type,
+            user_id: parsedModLog.user_id,
+            topic_id: parsedModLog.topic_id,
+            post_id: parsedModLog.post_id,
+          },
+        });
 
         if (foundModLog) {
           continue;
@@ -42,8 +42,7 @@ export default class ScrapeModLogService {
         if (savedLog) {
           savedLogsCount++;
         }
-      }
-      catch (error) {
+      } catch (error) {
         logger.error('Failed to parse/save modlog entry:', error);
       }
     }
