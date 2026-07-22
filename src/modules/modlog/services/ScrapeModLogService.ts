@@ -43,7 +43,7 @@ export default class ScrapeModLogService {
           savedLogsCount++;
         }
       } catch (error) {
-        logger.error('Failed to parse/save modlog entry:', error);
+        logger.error({ error }, 'Failed to parse/save modlog entry');
       }
     }
 
