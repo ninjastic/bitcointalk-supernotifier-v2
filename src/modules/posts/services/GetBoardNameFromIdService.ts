@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe';
 import { getManager } from 'typeorm';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 
 @injectable()
 export default class GetBoardNameFromIdService {
@@ -19,7 +19,7 @@ export default class GetBoardNameFromIdService {
 
     const data = await getManager()
       .query('SELECT name FROM boards WHERE board_id = $1', [board_id])
-      .then(boards => (boards.length ? boards[0].name : null));
+      .then((boards) => (boards.length ? boards[0].name : null));
 
     await this.cacheRepository.save(`boardName:${board_id}`, data);
 

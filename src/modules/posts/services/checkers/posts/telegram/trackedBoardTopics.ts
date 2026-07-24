@@ -6,16 +6,13 @@ import { subDays } from 'date-fns';
 import { container } from 'tsyringe';
 import { getRepository } from 'typeorm';
 
-import type ICacheProvider from '../../../../../../shared/container/providers/models/ICacheProvider';
-import type {
-  NotificationResult,
-  RecipeMetadata,
-} from '../../../../../../shared/infra/bull/types/telegram';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
+import type { NotificationResult, RecipeMetadata } from '##/platform/queues/types/telegram';
 import type User from '../../../../../users/infra/typeorm/entities/User';
 import type PostsRepository from '../../../../infra/typeorm/repositories/PostsRepository';
 import type { PreparedTrackedBoardContext } from './prepared-checker-data';
 
-import logger from '../../../../../../shared/services/logger';
+import logger from '##/platform/logging/logger';
 import Topic from '../../../../infra/typeorm/entities/Topic';
 
 type TelegramTrackedBoardTopicsCheckerNotificationResult = NotificationResult<

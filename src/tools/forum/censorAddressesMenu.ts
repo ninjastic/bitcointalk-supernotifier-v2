@@ -1,0 +1,80 @@
+import 'dotenv/config';
+import 'reflect-metadata';
+import chalk from 'chalk';
+import inquirer from 'inquirer';
+
+import esClient from '##/platform/elasticsearch/client';
+import logger from '##/platform/logging/logger';
+
+interface PromptResponse {
+  newContent: string;
+}
+
+export async function censorAddressesMenu(): Promise<void> {
+  const matches = [];
+
+  await inquirer
+    .prompt<PromptResponse>([
+      {
+        type: 'input',
+        name: 'post_id',
+        message: 'Address to remove',
+        validate: async (value) => {
+          const search = await esClient.search({
+            index: 'posts_addresses',
+            query: {
+              match: {
+                address: value,
+              },
+            },
+          });
+
+          if (!search.hits.hits.length) {
+            return false;
+          }
+
+          for (const match of search.hits.hits) {
+            matches.push(match._source);
+          }
+
+          return search.hits.hits.length > 0;
+        },
+      },
+    ])
+    .catch((error) => {
+      logger.error({ error });
+      process.exit();
+    });
+
+  for (const match of matches) {
+    Object.entries(match).forEach(([key, value]) => {
+      console.info(chalk.green(`${key}: `), value);
+    });
+
+    console.log('\n');
+  }
+
+  console.log('Matches:', matches.length);
+
+  const confirm = (await inquirer
+    .prompt({
+      type: 'confirm',
+      name: 'choice',
+      message: 'Remove from database?',
+      default: false,
+    })
+    .catch(() => process.exit())) as { choice: boolean };
+
+  if (confirm.choice) {
+    for await (const match of matches) {
+      await esClient.delete({
+        index: 'posts_addresses',
+        id: `${match.address}_${match.post_id}`,
+      });
+    }
+  } else {
+    console.log('Canceled!');
+  }
+
+  process.exit();
+}

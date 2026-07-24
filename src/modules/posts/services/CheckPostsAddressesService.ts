@@ -1,7 +1,7 @@
 import { inject, injectable } from 'tsyringe';
 import { getManager } from 'typeorm';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type IPostsAddressesRepository from '../repositories/IPostsAddressesRepository';
 import type IPostsRepository from '../repositories/IPostsRepository';
 
@@ -9,7 +9,7 @@ import PostAddress from '../infra/typeorm/entities/PostAddress';
 import ParsePostAddressesService from './ParsePostAddressesService';
 
 @injectable()
-export default class CheckPostsService {
+export default class CheckPostsAddressesService {
   constructor(
     @inject('PostsRepository')
     private postsRepository: IPostsRepository,
@@ -40,12 +40,12 @@ export default class CheckPostsService {
     });
 
     const addressesGroup = await Promise.all(
-      posts.map(post => parsePostAddresses.execute(post)).filter(response => response.length),
+      posts.map((post) => parsePostAddresses.execute(post)).filter((response) => response.length),
     );
 
     const operations = [];
 
-    addressesGroup.forEach(addressGroup =>
+    addressesGroup.forEach((addressGroup) =>
       addressGroup.forEach((address) => {
         operations.push(address);
       }),

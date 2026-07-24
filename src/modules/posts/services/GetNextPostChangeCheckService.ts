@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 
 @injectable()
 export default class GetNextPostChangeCheckService {
@@ -10,7 +10,9 @@ export default class GetNextPostChangeCheckService {
   ) {}
 
   public async execute({ post_id }: { post_id: number }): Promise<number | undefined> {
-    const data = await this.cacheRepository.recoverByPrefix<{ time: number }>(`RescrapeForChanges:*:${post_id}`);
+    const data = await this.cacheRepository.recoverByPrefix<{ time: number }>(
+      `RescrapeForChanges:*:${post_id}`,
+    );
 
     const nextCheck = data && data.length ? data[0].time : undefined;
 

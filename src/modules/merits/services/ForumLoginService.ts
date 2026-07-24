@@ -2,7 +2,7 @@ import FormData from 'form-data';
 import fetch from 'node-fetch';
 
 import api from '../../../shared/services/api';
-import logger from '../../../shared/services/logger';
+import logger from '##/platform/logging/logger';
 
 export default class LoginService {
   public async execute(): Promise<void> {

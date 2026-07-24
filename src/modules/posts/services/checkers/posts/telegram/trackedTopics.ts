@@ -1,14 +1,11 @@
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { shouldNotifyUserWithIndex } from '##/shared/services/utils';
 
-import type {
-  NotificationResult,
-  RecipeMetadata,
-} from '../../../../../../shared/infra/bull/types/telegram';
+import type { NotificationResult, RecipeMetadata } from '##/platform/queues/types/telegram';
 import type Post from '../../../../infra/typeorm/entities/Post';
 import type { PreparedTrackedTopicContext } from './prepared-checker-data';
 
-import logger from '../../../../../../shared/services/logger';
+import logger from '##/platform/logging/logger';
 
 type TelegramTrackedTopicsCheckerNotificationResult = NotificationResult<
   RecipeMetadata['sendTopicTrackingNotification']

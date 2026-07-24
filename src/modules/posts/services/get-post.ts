@@ -1,8 +1,8 @@
-import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/platform/cache/providers/implementations/RedisProvider';
 
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
+import { addForumScraperJob } from '##/platform/queues/forumScraperQueue';
 import { container } from 'tsyringe';
 import { getRepository } from 'typeorm';
 

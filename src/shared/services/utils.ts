@@ -3,7 +3,7 @@ import type IgnoredTopic from '##/modules/posts/infra/typeorm/entities/IgnoredTo
 import type Post from '##/modules/posts/infra/typeorm/entities/Post';
 import type IgnoredUser from '##/modules/users/infra/typeorm/entities/IgnoredUser';
 import type User from '##/modules/users/infra/typeorm/entities/User';
-import type { MentionType } from '##/shared/infra/bull/types/telegram';
+import type { MentionType } from '##/platform/queues/types/telegram';
 
 import bs58 from 'bs58';
 import { load } from 'cheerio';
@@ -12,8 +12,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { container } from 'tsyringe';
 
-import SetUserBlockedService from '../infra/telegram/services/SetUserBlockedService';
-import logger from './logger';
+import SetUserBlockedService from '##/apps/telegram/services/SetUserBlockedService';
+import logger from '##/platform/logging/logger';
 
 function sha256(str: string) {
   const inst = new JSsha('SHA-256', 'HEX');

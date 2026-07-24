@@ -1,0 +1,41 @@
+import 'reflect-metadata';
+import 'dotenv/config';
+import type { Express } from 'express';
+
+import bodyParser from 'body-parser';
+import cors from 'cors';
+import express from 'express';
+import helmet from 'helmet';
+import { createConnection } from 'typeorm';
+
+import '##/platform/container';
+import loggerHttp from './middlewares/loggerHttp';
+import rateLimiter from './middlewares/rateLimiter';
+import routes from './routes';
+
+class Server {
+  app: Express;
+
+  constructor() {
+    this.app = express();
+    this.middlewares();
+    this.app.use(routes);
+
+    createConnection().then(() => {
+      this.app.listen(3333);
+    });
+  }
+
+  middlewares() {
+    this.app.use(helmet());
+    this.app.use(bodyParser.json());
+    this.app.use(cors());
+    this.app.use(rateLimiter);
+
+    if (process.env.NODE_ENV !== 'development') {
+      this.app.use(loggerHttp);
+    }
+  }
+}
+
+export default new Server();

@@ -1,9 +1,9 @@
 import { container } from 'tsyringe';
 import { getManager } from 'typeorm';
 
-import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
-import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
-import esClient from '../../../shared/services/elastic';
+import GetCacheService from '##/platform/cache/providers/services/GetCacheService';
+import SaveCacheService from '##/platform/cache/providers/services/SaveCacheService';
+import esClient from '##/platform/elasticsearch/client';
 
 interface Params {
   from?: string;
@@ -65,7 +65,9 @@ export default class GetPostsBoardsPeriodTotalService {
 
     const boards = await Promise.all(
       boardsData.map(async (board) => {
-        const cachedBoardsData = await getCache.execute(`boardsRecursive:${board.key}:${from}:${to}`);
+        const cachedBoardsData = await getCache.execute(
+          `boardsRecursive:${board.key}:${from}:${to}`,
+        );
 
         if (cachedBoardsData) {
           return cachedBoardsData;

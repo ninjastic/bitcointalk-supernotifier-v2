@@ -1,7 +1,7 @@
-import { addForumScraperJob } from '##/shared/infra/bull/queues/forumScraperQueue';
+import { addForumScraperJob } from '##/platform/queues/forumScraperQueue';
 import { inject, injectable } from 'tsyringe';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type TrackedTopic from '../infra/typeorm/entities/TrackedTopic';
 import type ITrackedTopicsRepository from '../repositories/ITrackedTopicsRepository';
 
@@ -37,7 +37,9 @@ export default class AddTrackedTopicService {
       return topicExists;
     }
 
-    const { post: topicPost } = await addForumScraperJob('scrapeTopic', { topic_id }, true, { priority: 1 });
+    const { post: topicPost } = await addForumScraperJob('scrapeTopic', { topic_id }, true, {
+      priority: 1,
+    });
 
     const trackedTopic = this.trackedTopicsRepository.create({
       post_id: topicPost.post_id,

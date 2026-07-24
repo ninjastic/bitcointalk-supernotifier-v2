@@ -10,8 +10,8 @@ import { sub } from 'date-fns';
 import { container, inject, injectable } from 'tsyringe';
 import { getRepository, IsNull, MoreThanOrEqual, Not } from 'typeorm';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
-import type { NotificationResult, RecipeNames } from '../../../shared/infra/bull/types/telegram';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
+import type { NotificationResult, RecipeNames } from '##/platform/queues/types/telegram';
 import type IUsersRepository from '../../users/repositories/IUsersRepository';
 import type IPostsRepository from '../repositories/IPostsRepository';
 import type {
@@ -23,8 +23,8 @@ import type {
   PreparedTrackedUserContext,
 } from './checkers/posts/telegram/prepared-checker-data';
 
-import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
-import logger from '../../../shared/services/logger';
+import { addTelegramJob } from '##/platform/queues/telegramQueue';
+import logger from '##/platform/logging/logger';
 import {
   createMentionRegex,
   createNotificationIgnoreIndex,

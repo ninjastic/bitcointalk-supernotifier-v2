@@ -1,0 +1,26 @@
+import type { HearsContext } from 'grammy';
+
+import { container } from 'tsyringe';
+
+import type IMenuContext from '../types/IMenuContext';
+
+import SetUserAlternativeUsernameService from '../services/SetUserAlternativeUsernameService';
+
+async function altCommand(ctx: HearsContext<IMenuContext>): Promise<void> {
+  const setUserAlternativeUsername = container.resolve(SetUserAlternativeUsernameService);
+
+  const value = ctx.match[1];
+  const telegram_id = ctx.msg.chat.id;
+
+  if (!value) {
+    await ctx.reply('Are you sure you chose a valid username?');
+  } else {
+    await setUserAlternativeUsername.execute(String(telegram_id), value);
+
+    await ctx.reply(`Done! Your alternative username is now: <b>${value}</b>`, {
+      parse_mode: 'HTML',
+    });
+  }
+}
+
+export default altCommand;

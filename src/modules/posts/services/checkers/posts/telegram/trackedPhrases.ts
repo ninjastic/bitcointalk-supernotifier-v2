@@ -1,17 +1,14 @@
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { createNotificationIgnoreIndex, shouldNotifyUserWithIndex } from '##/shared/services/utils';
 
-import type {
-  NotificationResult,
-  RecipeMetadata,
-} from '../../../../../../shared/infra/bull/types/telegram';
+import type { NotificationResult, RecipeMetadata } from '##/platform/queues/types/telegram';
 import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
 import type IgnoredBoard from '../../../../infra/typeorm/entities/IgnoredBoard';
 import type IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
 import type Post from '../../../../infra/typeorm/entities/Post';
 import type { PreparedTrackedPhrase } from './prepared-checker-data';
 
-import logger from '../../../../../../shared/services/logger';
+import logger from '##/platform/logging/logger';
 
 type TelegramTrackedPhrasesCheckerNotificationResult = NotificationResult<
   RecipeMetadata['sendPhraseTrackingNotification']

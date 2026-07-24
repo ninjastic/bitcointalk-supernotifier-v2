@@ -1,6 +1,6 @@
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import logger from '##/shared/services/logger';
+import logger from '##/platform/logging/logger';
 import { load } from 'cheerio';
 import { isValid, sub } from 'date-fns';
 import { getRepository } from 'typeorm';

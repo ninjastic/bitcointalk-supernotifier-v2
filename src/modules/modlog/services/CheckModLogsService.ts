@@ -1,4 +1,4 @@
-import type ICacheProvider from '##/shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import { container, inject, injectable } from 'tsyringe';
@@ -8,7 +8,7 @@ import type IPostsRepository from '../../posts/repositories/IPostsRepository';
 import type IUsersRepository from '../../users/repositories/IUsersRepository';
 import type IModLogRepository from '../repositories/IModLogRepository';
 
-import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
+import { addTelegramJob } from '##/platform/queues/telegramQueue';
 import SetModLogCheckedService from './SetModLogCheckedService';
 
 @injectable()

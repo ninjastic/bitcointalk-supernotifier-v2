@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type AdvancedMatch from '../infra/typeorm/entities/AdvancedMatch';
 import type IAdvancedMatchesRepository from '../repositories/IAdvancedMatchesRepository';
 

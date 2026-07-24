@@ -1,0 +1,92 @@
+import type { TrackedTopicNotification } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type TelegramBot from '##/apps/telegram/bot';
+
+import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import { NotificationService } from '##/modules/posts/services/notification-service';
+import { buildTrackedTopicNotificationMessage } from '##/apps/telegram/messages/notificationMessages';
+import sendRichTelegramMessage from '##/apps/telegram/services/send-rich-telegram-message';
+import { load } from 'cheerio';
+import { container, inject, injectable } from 'tsyringe';
+
+import type Post from '##/modules/posts/infra/typeorm/entities/Post';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
+
+import SetPostNotifiedService from '##/modules/posts/services/SetPostNotifiedService';
+import logger from '##/platform/logging/logger';
+import { checkBotNotificationError } from '##/shared/services/utils';
+
+interface TrackedTopicNotificationData {
+  bot: TelegramBot;
+  telegramId: string;
+  post: Post;
+}
+
+@injectable()
+export default class SendTrackedTopicNotificationService {
+  constructor(
+    @inject('CacheRepository')
+    private cacheRepository: ICacheProvider,
+  ) {}
+
+  private async getPostLength(telegramId: string): Promise<number> {
+    return (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
+  }
+
+  private filterPostContent(content: string): string {
+    const $ = load(content);
+    const data = $('body');
+    data.children('div.quote, div.quoteheader').remove();
+    data.find('br').replaceWith('&nbsp;');
+    return data
+      .text()
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  private async createNotification(
+    telegramId: string,
+    metadata: TrackedTopicNotification['metadata'],
+  ) {
+    const notificationService = new NotificationService();
+    await notificationService.createNotification<TrackedTopicNotification>({
+      type: NotificationType.TRACKED_TOPIC,
+      telegram_id: telegramId,
+      metadata,
+    });
+  }
+
+  private async buildNotificationMessage(
+    post: Post,
+    postLength: number,
+    telegramId: string,
+  ): Promise<string> {
+    const { content } = post;
+    const contentFiltered = this.filterPostContent(content);
+    return buildTrackedTopicNotificationMessage(post, contentFiltered, postLength, telegramId);
+  }
+
+  public async execute({ bot, telegramId, post }: TrackedTopicNotificationData): Promise<boolean> {
+    const setPostNotified = container.resolve(SetPostNotifiedService);
+
+    const { post_id } = post;
+    const postLength = await this.getPostLength(telegramId);
+
+    const message = await this.buildNotificationMessage(post, postLength, telegramId);
+
+    try {
+      await sendRichTelegramMessage(bot, telegramId, message);
+
+      logger.info(
+        { telegram_id: telegramId, post_id, message },
+        'Tracked Topic notification was sent',
+      );
+      await setPostNotified.execute(post.post_id, telegramId);
+      await this.createNotification(telegramId, { post_id });
+
+      return true;
+    } catch (error) {
+      await checkBotNotificationError(error, telegramId, { post_id, message });
+      return false;
+    }
+  }
+}

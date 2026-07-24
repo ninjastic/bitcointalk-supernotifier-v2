@@ -1,6 +1,6 @@
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import logger from '##/shared/services/logger';
+import logger from '##/platform/logging/logger';
 import { load } from 'cheerio';
 import { isValid, sub } from 'date-fns';
 import { getRepository } from 'typeorm';
@@ -13,34 +13,27 @@ export interface ParsedTopicPagePosts {
   topic?: Topic;
 }
 
-async function parseTopicPagePosts(
-  html: string,
-): Promise<ParsedTopicPagePosts> {
+async function parseTopicPagePosts(html: string): Promise<ParsedTopicPagePosts> {
   const postsRepository = getRepository(Post);
   const topicsRepository = getRepository(Topic);
 
   const $ = load(html, { decodeEntities: true });
 
-  const topicNotFound
-    = $('#bodyarea > div:nth-child(1) > table > tbody > tr.windowbg > td')
+  const topicNotFound =
+    $('#bodyarea > div:nth-child(1) > table > tbody > tr.windowbg > td')?.text()?.trim() ===
+    'The topic or board you are looking for appears to be either missing or off limits to you.';
+
+  const topicOffLimit =
+    $('#frmLogin > table > tbody > tr.catbg > td')?.text()?.trim() === 'Warning!' &&
+    $('form table tr td.windowbg')
       ?.text()
       ?.trim()
-      === 'The topic or board you are looking for appears to be either missing or off limits to you.';
-
-  const topicOffLimit
-    = $('#frmLogin > table > tbody > tr.catbg > td')?.text()?.trim()
-      === 'Warning!'
-      && $('form table tr td.windowbg')
-        ?.text()
-        ?.trim()
-        .includes(
-          'The topic or board you are looking for appears to be either missing or off limits to you.',
-        );
+      .includes(
+        'The topic or board you are looking for appears to be either missing or off limits to you.',
+      );
 
   if (topicNotFound || topicOffLimit) {
-    logger.info(
-      `[ParsePostElementService] Topic was not found or is off limit`,
-    );
+    logger.info(`[ParsePostElementService] Topic was not found or is off limit`);
     return { success: false, posts: [], failedReason: 'Topic not found' };
   }
 
@@ -62,8 +55,7 @@ async function parseTopicPagePosts(
     const boardIdRegEx = /board=(\d+)/;
     const boardUrl = $(board).find('a').attr('href');
 
-    if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board='))
-      return;
+    if (!boardUrl.startsWith('https://bitcointalk.org/index.php?board=')) return;
 
     if (boardIndex < length - 1 && boardIndex !== 0) {
       const boardId = boardUrl.match(boardIdRegEx)[1];
@@ -72,8 +64,8 @@ async function parseTopicPagePosts(
     }
   });
 
-  const isTopicFirstPage
-    = $('#bodyarea > table:not(.tborder)')
+  const isTopicFirstPage =
+    $('#bodyarea > table:not(.tborder)')
       .filter((_, el) => $(el).text().includes('Pages'))
       .first()
       .find('tbody > tr > td.middletext > b')
@@ -84,14 +76,12 @@ async function parseTopicPagePosts(
 
   const postsElements = $(postsContainer)
     .find(
-      'tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*=\'subject\'])',
+      "tbody > tr > td > table > tbody > tr > td > table > tbody > tr:has(td.td_headerandpost td > div[id*='subject'])",
     )
     .toArray();
 
   const posts = postsElements.map((postElement) => {
-    const postHeader = $(postElement).find(
-      'td.td_headerandpost td > div[id*=\'subject\'] > a',
-    );
+    const postHeader = $(postElement).find("td.td_headerandpost td > div[id*='subject'] > a");
     const title = postHeader.text().trim();
     const postId = Number(
       postHeader
@@ -110,34 +100,23 @@ async function parseTopicPagePosts(
     const author = authorElement.html() ?? 'Guest';
     const authorUrl = author && authorElement.attr('href');
     const authorUid = authorUrl
-      ? Number(
-          authorUrl.replace(
-            'https://bitcointalk.org/index.php?action=profile;u=',
-            '',
-          ),
-        )
+      ? Number(authorUrl.replace('https://bitcointalk.org/index.php?action=profile;u=', ''))
       : -1;
 
-    const content = $(postElement)
-      .find('td.td_headerandpost div.post')
-      .html();
+    const content = $(postElement).find('td.td_headerandpost div.post').html();
 
     const d = new Date();
     const today = `${d.getUTCFullYear()}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 
     const date = new Date(
       $(postElement)
-        .find(
-          'td.td_headerandpost > table:nth-child(1) div:nth-child(2)',
-        )
+        .find('td.td_headerandpost > table:nth-child(1) div:nth-child(2)')
         .text()
         .replace('Today at', today)
         .replace(/Last edit:.*/, ''),
     );
 
-    const editedDateTitle = $(postElement)
-      .find('span.edited')
-      .attr('title');
+    const editedDateTitle = $(postElement).find('span.edited').attr('title');
 
     const editedDate = editedDateTitle
       ? new Date(

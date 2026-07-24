@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import logger from '##/shared/services/logger';
+import logger from '##/platform/logging/logger';
 import { load } from 'cheerio';
 import { container } from 'tsyringe';
 import { getManager } from 'typeorm';

@@ -5,16 +5,13 @@ import {
   shouldNotifyUserWithIndex,
 } from '##/shared/services/utils';
 
-import type {
-  NotificationResult,
-  RecipeMetadata,
-} from '../../../../../../shared/infra/bull/types/telegram';
+import type { NotificationResult, RecipeMetadata } from '##/platform/queues/types/telegram';
 import type IgnoredUser from '../../../../../users/infra/typeorm/entities/IgnoredUser';
 import type User from '../../../../../users/infra/typeorm/entities/User';
 import type IgnoredTopic from '../../../../infra/typeorm/entities/IgnoredTopic';
 import type { PreparedCheckerPost } from './prepared-checker-data';
 
-import logger from '../../../../../../shared/services/logger';
+import logger from '##/platform/logging/logger';
 import { createNotificationIgnoreIndex } from '../../../../../../shared/services/utils';
 import { NotificationType } from '../../../../../notifications/infra/typeorm/entities/Notification';
 

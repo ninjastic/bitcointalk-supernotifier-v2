@@ -8,7 +8,7 @@ import type IFindAllPostsHistoryDTO from '../../../dtos/IFindAllPostsHistoryDTO'
 import type IFindOnePostHistoryDTO from '../../../dtos/IFindOnePostHistoryDTO';
 import type IPostsHistoryRepository from '../../../repositories/IPostsHistoryRepository';
 
-import esClient from '../../../../../shared/services/elastic';
+import esClient from '##/platform/elasticsearch/client';
 import GetBoardChildrensFromIdService from '../../../services/GetBoardChildrensFromIdService';
 import PostHistory from '../entities/PostHistory';
 
@@ -27,7 +27,10 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     return this.ormRepository.save(post);
   }
 
-  public async findOne({ post_id, version }: IFindOnePostHistoryDTO): Promise<PostHistory | undefined> {
+  public async findOne({
+    post_id,
+    version,
+  }: IFindOnePostHistoryDTO): Promise<PostHistory | undefined> {
     return this.ormRepository.findOne({ post_id, version });
   }
 
@@ -81,7 +84,7 @@ export default class PostsHistoryRepository implements IPostsHistoryRepository {
     if (board) {
       const getBoardChildrensFromId = new GetBoardChildrensFromIdService();
       const boards = await getBoardChildrensFromId.execute(board);
-      const boardsIdList = boards.map(_board => _board.board_id);
+      const boardsIdList = boards.map((_board) => _board.board_id);
 
       must.push({ terms: { board_id: boardsIdList } });
     }

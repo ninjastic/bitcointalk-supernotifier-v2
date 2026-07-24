@@ -1,10 +1,10 @@
 import { inject, injectable } from 'tsyringe';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type IgnoredTopic from '../infra/typeorm/entities/IgnoredTopic';
 import type IIgnoredTopicsRepository from '../repositories/IIgnoredTopicsRepository';
 
-import { addForumScraperJob } from '../../../shared/infra/bull/queues/forumScraperQueue';
+import { addForumScraperJob } from '##/platform/queues/forumScraperQueue';
 
 @injectable()
 export default class AddIgnoredTopicService {
@@ -38,7 +38,9 @@ export default class AddIgnoredTopicService {
       return ignoredTopicExists;
     }
 
-    const { post: topicPost } = await addForumScraperJob('scrapeTopic', { topic_id }, true, { priority: 1 });
+    const { post: topicPost } = await addForumScraperJob('scrapeTopic', { topic_id }, true, {
+      priority: 1,
+    });
 
     const ignoredTopic = this.ignoredTopicsRepository.create({
       post_id: topicPost.post_id,

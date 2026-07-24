@@ -1,9 +1,9 @@
 import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
-import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/platform/cache/providers/implementations/RedisProvider';
 
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import getPost from '##/modules/posts/services/get-post';
-import logger from '##/shared/services/logger';
+import logger from '##/platform/logging/logger';
 import { load } from 'cheerio';
 import { format } from 'date-fns';
 import { container } from 'tsyringe';

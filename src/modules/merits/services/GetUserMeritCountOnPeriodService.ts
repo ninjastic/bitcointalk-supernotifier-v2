@@ -2,9 +2,9 @@ import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/ap
 
 import { container } from 'tsyringe';
 
-import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
-import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
-import esClient from '../../../shared/services/elastic';
+import GetCacheService from '##/platform/cache/providers/services/GetCacheService';
+import SaveCacheService from '##/platform/cache/providers/services/SaveCacheService';
+import esClient from '##/platform/elasticsearch/client';
 
 interface Params {
   author_uid: number;
@@ -95,14 +95,19 @@ export default class GetUserMeritCountOnPeriodService {
     const data = {
       total_transactions: (results.aggregations.merits as { value: number }).value,
       total_sum_merits: (results.aggregations.total_sum_merits as { value: number }).value,
-      dates: (results.aggregations.date as any).buckets.map(b => ({
+      dates: (results.aggregations.date as any).buckets.map((b) => ({
         key: b.key,
         transactions: b.doc_count,
         total_sum: b.count.value,
       })),
     };
 
-    await saveCache.execute(`meritsCountPeriod:${author_uid}:${from}-${to}-${type}-${interval}`, data, 'EX', 180);
+    await saveCache.execute(
+      `meritsCountPeriod:${author_uid}:${from}-${to}-${type}-${interval}`,
+      data,
+      'EX',
+      180,
+    );
 
     return data;
   }

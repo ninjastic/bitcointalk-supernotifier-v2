@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type TrackedPhrase from '../infra/typeorm/entities/TrackedPhrase';
 import type ITrackedPhrasesRepository from '../repositories/ITrackedPhrasesRepository';
 
@@ -15,7 +15,8 @@ export default class GetTrackedPhrasesService {
   ) {}
 
   public async execute(): Promise<TrackedPhrase[]> {
-    const cachedTrackedPhrases = await this.cacheRepository.recover<TrackedPhrase[]>('trackedPhrases');
+    const cachedTrackedPhrases =
+      await this.cacheRepository.recover<TrackedPhrase[]>('trackedPhrases');
 
     if (cachedTrackedPhrases) {
       return cachedTrackedPhrases;

@@ -12,7 +12,7 @@ interface Params {
 }
 
 @injectable()
-export default class GetPostsService {
+export default class GetPostsFromListService {
   constructor(
     @inject('PostsRepository')
     private postsRepository: IPostsRepository,
@@ -25,7 +25,7 @@ export default class GetPostsService {
     const boards = await getBoardsList.execute(true);
 
     const data = results.map((post) => {
-      const boardName = boards.find(board => board.board_id === post.board_id)?.name || null;
+      const boardName = boards.find((board) => board.board_id === post.board_id)?.name || null;
 
       const postData = { ...post, board_name: boardName };
 

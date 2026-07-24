@@ -4,7 +4,7 @@ import type CreateUserDTO from '../dtos/CreateUserDTO';
 import type User from '../infra/typeorm/entities/User';
 import type IUsersRepository from '../repositories/IUsersRepository';
 
-import logger from '../../../shared/services/logger';
+import logger from '##/platform/logging/logger';
 
 @injectable()
 export default class CreateUserService {

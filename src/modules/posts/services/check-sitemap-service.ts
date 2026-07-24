@@ -1,5 +1,5 @@
 import api from '##/shared/services/api';
-import redis from '##/shared/services/redis';
+import redis from '##/platform/cache/redis';
 import * as cheerio from 'cheerio';
 import { parseISO, subHours } from 'date-fns';
 

@@ -3,9 +3,12 @@ import type { PostScraper } from '##/modules/posts/services/scraper/post-scraper
 import { isBefore } from 'date-fns';
 import { container } from 'tsyringe';
 
-import { addForumScraperJob } from '../../../shared/infra/bull/queues/forumScraperQueue';
+import { addForumScraperJob } from '##/platform/queues/forumScraperQueue';
 
-export interface RescrapeSchedule { time: number; post_id: number }
+export interface RescrapeSchedule {
+  time: number;
+  post_id: number;
+}
 
 async function checkPostRescrapeSchedules() {
   const postScraper = container.resolve<PostScraper>('PostScraper');

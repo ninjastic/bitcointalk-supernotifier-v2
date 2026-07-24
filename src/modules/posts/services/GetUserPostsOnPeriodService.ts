@@ -2,9 +2,9 @@ import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/ap
 
 import { container } from 'tsyringe';
 
-import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
-import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
-import esClient from '../../../shared/services/elastic';
+import GetCacheService from '##/platform/cache/providers/services/GetCacheService';
+import SaveCacheService from '##/platform/cache/providers/services/SaveCacheService';
+import esClient from '##/platform/elasticsearch/client';
 
 interface Params {
   author_uid: number;
@@ -24,7 +24,9 @@ export default class GetUserPostsOnPeriodService {
     const getCache = container.resolve(GetCacheService);
     const saveCache = container.resolve(SaveCacheService);
 
-    const cachedData = await getCache.execute<Data>(`userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`);
+    const cachedData = await getCache.execute<Data>(
+      `userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`,
+    );
 
     if (cachedData) {
       return cachedData;
@@ -75,7 +77,12 @@ export default class GetUserPostsOnPeriodService {
 
     const data = (results.aggregations.date as any).buckets;
 
-    await saveCache.execute(`userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`, data, 'EX', 180);
+    await saveCache.execute(
+      `userPostsOnPeriod:${author_uid}:${from}-${to}-${interval}`,
+      data,
+      'EX',
+      180,
+    );
 
     return data;
   }

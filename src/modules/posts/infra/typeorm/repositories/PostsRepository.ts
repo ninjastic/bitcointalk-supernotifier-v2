@@ -9,7 +9,7 @@ import type IFindPostsConditionsDTO from '../../../dtos/IFindPostsConditionsDTO'
 import type { PostFromES } from '../../../repositories/IPostsRepository';
 import type IPostsRepository from '../../../repositories/IPostsRepository';
 
-import esClient from '../../../../../shared/services/elastic';
+import esClient from '##/platform/elasticsearch/client';
 import { getCensorJSON } from '../../../../../shared/services/utils';
 import GetBoardChildrensFromIdService from '../../../services/GetBoardChildrensFromIdService';
 import Post from '../entities/Post';

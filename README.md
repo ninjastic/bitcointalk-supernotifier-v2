@@ -10,8 +10,8 @@
 
 `docker compose up -d`
 
-* Copy the `.ormconfig.js.example` to `.ormconfig.js`
+* Copy `ormconfig.js.example` to `ormconfig.js`
 
 * Run the database migrations
 
-`yarn migrate`
+`yarn dev:migrate`

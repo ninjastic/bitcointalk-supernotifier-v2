@@ -1,0 +1,46 @@
+import type { NextFunction, Request, Response } from 'express';
+
+import { Router } from 'express';
+import Joi from 'joi';
+
+import NotificationApiKeyRepository from '../../../modules/users/infra/typeorm/repositories/NotificationApiKeyRepository';
+import { addTelegramJob } from '##/platform/queues/telegramQueue';
+
+const notificationRouter = Router();
+
+notificationRouter.post('/', (request: Request, response: Response, next: NextFunction) => {
+  void (async () => {
+    const { body: requestBody } = request;
+
+    const validationSchema = Joi.object().keys({
+      api_key: Joi.string().required(),
+      message: Joi.string().required(),
+    });
+
+    const { error, value: body } = validationSchema.validate(requestBody);
+
+    if (error) {
+      return response
+        .status(400)
+        .json({ error: true, message: error.details.map((detail) => detail.message).join(', ') });
+    }
+
+    const notificationApiKeyRepository = new NotificationApiKeyRepository();
+    const notificationApiKey = await notificationApiKeyRepository.findOne({
+      api_key: body.api_key,
+    });
+
+    if (!notificationApiKey) {
+      return response.status(404).json({ error: true, message: 'api_key is invalid' });
+    }
+
+    await addTelegramJob('sendApiNotification', {
+      telegram_id: notificationApiKey.telegram_id,
+      message: body.message,
+    });
+
+    return response.json({ error: false, message: 'Notification dispatched' });
+  })().catch(next);
+});
+
+export default notificationRouter;

@@ -1,6 +1,6 @@
 import { inject, injectable } from 'tsyringe';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type IgnoredUser from '../infra/typeorm/entities/IgnoredUser';
 import type IIgnoredUserRepository from '../repositories/IIgnoredUserRepository';
 

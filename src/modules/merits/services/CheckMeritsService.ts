@@ -1,13 +1,16 @@
 import { inject, injectable } from 'tsyringe';
 import { getRepository } from 'typeorm';
 
-import type ICacheProvider from '../../../shared/container/providers/models/ICacheProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type IUsersRepository from '../../users/repositories/IUsersRepository';
 import type IMeritsRepository from '../repositories/IMeritsRepository';
 
-import { addTelegramJob } from '../../../shared/infra/bull/queues/telegramQueue';
-import logger from '../../../shared/services/logger';
-import { MeritNotification, NotificationType } from '../../notifications/infra/typeorm/entities/Notification';
+import { addTelegramJob } from '##/platform/queues/telegramQueue';
+import logger from '##/platform/logging/logger';
+import {
+  MeritNotification,
+  NotificationType,
+} from '../../notifications/infra/typeorm/entities/Notification';
 
 @injectable()
 export default class CheckMeritsService {
@@ -29,7 +32,7 @@ export default class CheckMeritsService {
     const notificationRepository = getRepository(MeritNotification);
 
     for await (const merit of merits) {
-      const receiverUsers = users.filter(user => user.user_id === merit.receiver_uid);
+      const receiverUsers = users.filter((user) => user.user_id === merit.receiver_uid);
 
       if (!receiverUsers.length) {
         continue;
@@ -46,26 +49,34 @@ export default class CheckMeritsService {
           },
         };
 
-        const isAlreadyNotified
-          = merit.notified_to.includes(receiverUser.telegram_id)
-            || (await notificationRepository.findOne({ where: notificationData }));
+        const isAlreadyNotified =
+          merit.notified_to.includes(receiverUser.telegram_id) ||
+          (await notificationRepository.findOne({ where: notificationData }));
 
         if (isAlreadyNotified) {
           continue;
         }
 
         const isJobAlreadyInQueue = await this.cacheRepository.recover(meritUserKey);
-        if (isJobAlreadyInQueue)
-          continue;
+        if (isJobAlreadyInQueue) continue;
 
         const redisAnswer = await this.cacheRepository.save(meritUserKey, true, 'EX', 1800);
         if (redisAnswer !== 'OK') {
-          logger.error({ meritUserKey, redisAnswer }, 'CheckMeritsService Job lock did not return OK');
+          logger.error(
+            { meritUserKey, redisAnswer },
+            'CheckMeritsService Job lock did not return OK',
+          );
           continue;
         }
 
-        const scrapedPostTitle = await this.cacheRepository.recover<string>(`meritScrapedPostTitle:${merit.id}`);
-        await addTelegramJob('sendMeritNotification', { merit, scrapedPostTitle, user: receiverUser });
+        const scrapedPostTitle = await this.cacheRepository.recover<string>(
+          `meritScrapedPostTitle:${merit.id}`,
+        );
+        await addTelegramJob('sendMeritNotification', {
+          merit,
+          scrapedPostTitle,
+          user: receiverUser,
+        });
       }
     }
 

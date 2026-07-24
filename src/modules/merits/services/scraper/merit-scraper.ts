@@ -1,4 +1,4 @@
-import type RedisProvider from '##/shared/container/providers/implementations/RedisProvider';
+import type RedisProvider from '##/platform/cache/providers/implementations/RedisProvider';
 import type Cheerio from 'cheerio';
 import type { Repository } from 'typeorm';
 
@@ -7,11 +7,9 @@ import ForumLoginService from '##/modules/merits/services/ForumLoginService';
 import Post from '##/modules/posts/infra/typeorm/entities/Post';
 import PostVersion from '##/modules/posts/infra/typeorm/entities/PostVersion';
 import Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import forumScraperQueue, {
-  addForumScraperJob,
-} from '##/shared/infra/bull/queues/forumScraperQueue';
+import forumScraperQueue, { addForumScraperJob } from '##/platform/queues/forumScraperQueue';
 import api from '##/shared/services/api';
-import logger from '##/shared/services/logger';
+import logger from '##/platform/logging/logger';
 import { load } from 'cheerio';
 import { sub } from 'date-fns';
 import { container } from 'tsyringe';

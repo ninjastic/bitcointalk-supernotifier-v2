@@ -1,9 +1,9 @@
 import { container } from 'tsyringe';
 import { getManager } from 'typeorm';
 
-import GetCacheService from '../../../shared/container/providers/services/GetCacheService';
-import SaveCacheService from '../../../shared/container/providers/services/SaveCacheService';
-import esClient from '../../../shared/services/elastic';
+import GetCacheService from '##/platform/cache/providers/services/GetCacheService';
+import SaveCacheService from '##/platform/cache/providers/services/SaveCacheService';
+import esClient from '##/platform/elasticsearch/client';
 
 interface Params {
   author_uid: number;
@@ -76,7 +76,9 @@ export default class GetUserPostsDataService {
 
     const boards = await Promise.all(
       boardsData.map(async (board) => {
-        const cachedBoardsData = await getCache.execute(`boardsRecursive:${board.key}:${author_uid}:${from}:${to}`);
+        const cachedBoardsData = await getCache.execute(
+          `boardsRecursive:${board.key}:${author_uid}:${from}:${to}`,
+        );
 
         if (cachedBoardsData) {
           return cachedBoardsData;
@@ -90,7 +92,12 @@ export default class GetUserPostsDataService {
         const { name } = query[0];
         const data = { name, key: board.key, count: board.doc_count };
 
-        await saveCache.execute(`boardsRecursive:${board.key}:${author_uid}:${from}:${to}`, data, 'EX', 604800);
+        await saveCache.execute(
+          `boardsRecursive:${board.key}:${author_uid}:${from}:${to}`,
+          data,
+          'EX',
+          604800,
+        );
 
         return data;
       }),
@@ -113,7 +120,8 @@ export default class GetUserPostsDataService {
 
     const data = {
       total_results: (organized.hits.total as { value: number }).value,
-      total_results_with_board: posts_count_with_boards + organized.aggregations.boards.sum_other_doc_count,
+      total_results_with_board:
+        posts_count_with_boards + organized.aggregations.boards.sum_other_doc_count,
       boards: organized.aggregations.boards.buckets,
     } as unknown as Data;
 
