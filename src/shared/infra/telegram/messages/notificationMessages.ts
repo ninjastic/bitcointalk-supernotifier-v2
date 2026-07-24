@@ -179,10 +179,12 @@ export function buildRemovedTopicNotificationMessage(
   telegramId: string,
 ): string {
   const postCount = posts.length;
+  const title = modLog.title || posts[0]?.title || `Topic #${modLog.topic_id}`;
 
   return (
-    `<b>🗑 <b>${postCount} ${pluralize('post', postCount)} nuked</b></b>` +
-    `<p>Archived: ${htmlLink(`https://ninjastic.space/topic/${modLog.topic_id}`, modLog.title)}</p>` +
+    `<b>🗑 A topic you posted in was deleted</b>` +
+    `<p>${postCount} ${pluralize('post', postCount)} removed</p>` +
+    `<p>Archived: ${htmlLink(`https://ninjastic.space/topic/${modLog.topic_id}`, title)}</p>` +
     sponsorFooter(telegramId)
   );
 }
