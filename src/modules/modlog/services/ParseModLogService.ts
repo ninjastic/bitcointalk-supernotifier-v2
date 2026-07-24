@@ -34,7 +34,7 @@ export default class ParseModLogService {
     const user_url = user.attr('href') ?? '';
 
     const topic_id = Number(topic_url.match(/\?topic=(\d+)/i)?.[1]) || null;
-    const user_id = Number(user_url.match(/;u=(\d+)/i)?.[1]) || null;
+    const user_id = Number(user_url.match(/;u=(\d+)/i)?.[1]) || 0;
 
     const message = $(element).text();
     const post_id = Number(message.match(/.*\(message #(\d+)\)/)?.[1]) || null;
