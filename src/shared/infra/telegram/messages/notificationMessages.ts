@@ -169,6 +169,10 @@ export function buildSigBanNotificationMessage(modLog: ModLog, telegramId: strin
   );
 }
 
+export function buildSigBanRemovedNotificationMessage(telegramId: string): string {
+  return `<b>✅ Signature ban removed</b><br><br>The signature ban on your account has been removed.${sponsorFooter(telegramId)}`;
+}
+
 export function buildRemovedTopicNotificationMessage(
   posts: Post[],
   modLog: ModLog,

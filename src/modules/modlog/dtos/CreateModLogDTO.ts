@@ -1,5 +1,11 @@
 export default interface CreateModLogDTO {
-  type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user' | 'sig_ban';
+  type:
+    | 'remove_topic'
+    | 'delete_reply'
+    | 'nuke_user'
+    | 'autoban_user'
+    | 'sig_ban'
+    | 'sig_ban_removed';
   post_id?: number;
   topic_id?: number;
   user_id: number;

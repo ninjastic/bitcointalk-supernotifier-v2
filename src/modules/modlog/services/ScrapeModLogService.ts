@@ -2,15 +2,26 @@ import 'dotenv/config';
 import logger from '##/shared/services/logger';
 import { load } from 'cheerio';
 import { container } from 'tsyringe';
-import { getRepository } from 'typeorm';
+import { getManager } from 'typeorm';
 
 import api from '../../../shared/services/api';
 import ModLog from '../infra/typeorm/entities/ModLog';
+import ModLogScrapeState from '../infra/typeorm/entities/ModLogScrapeState';
+import getNewModlogPrefixLength from './getNewModlogPrefixLength';
 import ParseModLogService from './ParseModLogService';
+
+function fingerprintModlog(modlog: ModLog): string {
+  return JSON.stringify([
+    modlog.type,
+    modlog.user_id,
+    modlog.topic_id,
+    modlog.post_id,
+    modlog.title,
+  ]);
+}
 
 export default class ScrapeModLogService {
   public async execute(): Promise<number> {
-    const modLogRepository = getRepository(ModLog);
     const response = await api.get('modlog.php');
 
     const $ = load(response.data, { decodeEntities: true });
@@ -19,34 +30,67 @@ export default class ScrapeModLogService {
 
     const parseModLog = container.resolve(ParseModLogService);
 
-    let savedLogsCount = 0;
+    const parsedLogs: Array<{ fingerprint: string; modlog: ModLog }> = [];
+
+    let parseFailed = false;
 
     for (const log of logs) {
       try {
         const parsedModLog = parseModLog.execute(log);
-
-        const foundModLog = await modLogRepository.findOne({
-          where: {
-            type: parsedModLog.type,
-            user_id: parsedModLog.user_id,
-            topic_id: parsedModLog.topic_id,
-            post_id: parsedModLog.post_id,
-          },
+        parsedLogs.push({
+          fingerprint: fingerprintModlog(parsedModLog),
+          modlog: parsedModLog,
         });
-
-        if (foundModLog) {
-          continue;
-        }
-
-        const savedLog = await modLogRepository.save(parsedModLog);
-        if (savedLog) {
-          savedLogsCount++;
-        }
       } catch (error) {
-        logger.error({ error }, 'Failed to parse/save modlog entry');
+        parseFailed = true;
+        logger.error({ error }, 'Failed to parse modlog entry');
       }
     }
 
-    return savedLogsCount;
+    if (parseFailed) {
+      return 0;
+    }
+
+    const currentFingerprints = parsedLogs.map(({ fingerprint }) => fingerprint);
+    return getManager().transaction(async (transactionManager) => {
+      const modLogRepository = transactionManager.getRepository(ModLog);
+      const stateRepository = transactionManager.getRepository(ModLogScrapeState);
+      const state = await stateRepository.findOne({ where: { id: 1 } });
+
+      let newLogs = parsedLogs;
+
+      if (state) {
+        const newPrefixLength = getNewModlogPrefixLength(state.fingerprints, currentFingerprints);
+        newLogs = parsedLogs.slice(0, newPrefixLength);
+      } else {
+        const existingModlogs = await modLogRepository.find();
+        const existingCounts = new Map<string, number>();
+
+        for (const modlog of existingModlogs) {
+          const fingerprint = fingerprintModlog(modlog);
+          existingCounts.set(fingerprint, (existingCounts.get(fingerprint) ?? 0) + 1);
+        }
+
+        const seenCounts = new Map<string, number>();
+        newLogs = parsedLogs.filter(({ fingerprint }) => {
+          const seenCount = (seenCounts.get(fingerprint) ?? 0) + 1;
+          seenCounts.set(fingerprint, seenCount);
+          return seenCount > (existingCounts.get(fingerprint) ?? 0);
+        });
+      }
+
+      if (newLogs.length) {
+        await modLogRepository.save(newLogs.map(({ modlog }) => modlog));
+      }
+
+      await stateRepository.save(
+        stateRepository.create({
+          id: 1,
+          fingerprints: currentFingerprints,
+        }),
+      );
+
+      return newLogs.length;
+    });
   }
 }

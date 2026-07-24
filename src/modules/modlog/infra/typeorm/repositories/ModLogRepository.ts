@@ -36,7 +36,13 @@ export default class ModLogRepository implements IModLogRepository {
   }
 
   public async findUnchecked(
-    type?: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user' | 'sig_ban',
+    type?:
+      | 'remove_topic'
+      | 'delete_reply'
+      | 'nuke_user'
+      | 'autoban_user'
+      | 'sig_ban'
+      | 'sig_ban_removed',
     minutes?: number | false,
   ): Promise<ModLog[]> {
     const where = {

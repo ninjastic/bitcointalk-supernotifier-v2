@@ -113,19 +113,21 @@ export default class CheckModLogsService {
       await setModLogChecked.execute(nukedUserModlog);
     }
 
-    const sigBanModlogs = await this.modLogRepository.findUnchecked('sig_ban');
+    for (const sigBanType of ['sig_ban', 'sig_ban_removed'] as const) {
+      const sigBanModlogs = await this.modLogRepository.findUnchecked(sigBanType);
 
-    for (const sigBanModlog of sigBanModlogs) {
-      const bannedUser = await this.usersRepository.findByUserId(sigBanModlog.user_id);
+      for (const sigBanModlog of sigBanModlogs) {
+        const bannedUser = await this.usersRepository.findByUserId(sigBanModlog.user_id);
 
-      if (bannedUser?.enable_modlogs) {
-        await addTelegramJob('sendSigBanNotification', {
-          user: bannedUser,
-          modLog: sigBanModlog,
-        });
+        if (bannedUser?.enable_modlogs) {
+          await addTelegramJob('sendSigBanNotification', {
+            user: bannedUser,
+            modLog: sigBanModlog,
+          });
+        }
+
+        await setModLogChecked.execute(sigBanModlog);
       }
-
-      await setModLogChecked.execute(sigBanModlog);
     }
   }
 }

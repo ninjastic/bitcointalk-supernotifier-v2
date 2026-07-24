@@ -79,6 +79,7 @@ const notificationTypePriority: Record<NotificationType, number> = {
   [NotificationType.MERIT]: 7,
   [NotificationType.REMOVE_TOPIC]: 8,
   [NotificationType.SIG_BAN]: 9,
+  [NotificationType.SIG_BAN_REMOVED]: 10,
 };
 
 function groupByNumberKey<T>(

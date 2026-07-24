@@ -15,7 +15,13 @@ class ModLog {
   id: string;
 
   @Column('varchar')
-  type: 'remove_topic' | 'delete_reply' | 'nuke_user' | 'autoban_user' | 'sig_ban';
+  type:
+    | 'remove_topic'
+    | 'delete_reply'
+    | 'nuke_user'
+    | 'autoban_user'
+    | 'sig_ban'
+    | 'sig_ban_removed';
 
   @Column({ type: 'integer', nullable: true })
   post_id: number;

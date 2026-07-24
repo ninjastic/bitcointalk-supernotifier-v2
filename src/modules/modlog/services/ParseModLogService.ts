@@ -14,6 +14,7 @@ const MESSAGE_TYPE_MAP: Record<string, ModLogType> = {
   'Nuke user:': 'nuke_user',
   'Autoban user:': 'autoban_user',
   'Sigban applied:': 'sig_ban',
+  'Sigban removed:': 'sig_ban_removed',
 };
 
 @injectable()

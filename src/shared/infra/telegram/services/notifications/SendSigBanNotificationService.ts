@@ -1,11 +1,17 @@
 import type ModLog from '##/modules/modlog/infra/typeorm/entities/ModLog';
-import type { SigBanNotification } from '##/modules/notifications/infra/typeorm/entities/Notification';
+import type {
+  SigBanNotification,
+  SigBanRemovedNotification,
+} from '##/modules/notifications/infra/typeorm/entities/Notification';
 import type TelegramBot from '##/shared/infra/telegram/bot';
 
 import SetModLogNotifiedService from '##/modules/modlog/services/SetModLogNotifiedService';
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
-import { buildSigBanNotificationMessage } from '##/shared/infra/telegram/messages/notificationMessages';
+import {
+  buildSigBanNotificationMessage,
+  buildSigBanRemovedNotificationMessage,
+} from '##/shared/infra/telegram/messages/notificationMessages';
 import sendRichTelegramMessage from '##/shared/infra/telegram/services/send-rich-telegram-message';
 import logger from '##/shared/services/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
@@ -19,20 +25,29 @@ interface SigBanNotificationData {
 
 @injectable()
 export default class SendSigBanNotificationService {
-  private async createNotification(
-    telegram_id: string,
-    metadata: SigBanNotification['metadata'],
-  ): Promise<void> {
+  private async createNotification(telegram_id: string, modLog: ModLog): Promise<void> {
     const notificationService = new NotificationService();
+
+    if (modLog.type === 'sig_ban_removed') {
+      await notificationService.createNotification<SigBanRemovedNotification>({
+        type: NotificationType.SIG_BAN_REMOVED,
+        telegram_id,
+        metadata: { user_id: modLog.user_id },
+      });
+      return;
+    }
+
     await notificationService.createNotification<SigBanNotification>({
       type: NotificationType.SIG_BAN,
       telegram_id,
-      metadata,
+      metadata: { user_id: modLog.user_id },
     });
   }
 
   private async buildNotificationMessage(modLog: ModLog, telegramId: string): Promise<string> {
-    return buildSigBanNotificationMessage(modLog, telegramId);
+    return modLog.type === 'sig_ban_removed'
+      ? buildSigBanRemovedNotificationMessage(telegramId)
+      : buildSigBanNotificationMessage(modLog, telegramId);
   }
 
   private async markModLogAsNotified(modLog: ModLog, telegramId: string): Promise<void> {
@@ -53,9 +68,7 @@ export default class SendSigBanNotificationService {
         'SigBan notification was sent',
       );
       await this.markModLogAsNotified(modLog, telegramId);
-      await this.createNotification(telegramId, {
-        user_id: modLog.user_id,
-      });
+      await this.createNotification(telegramId, modLog);
 
       return true;
     } catch (error) {

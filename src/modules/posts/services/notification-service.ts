@@ -9,6 +9,7 @@ import NotificationEntity, {
   PostMentionNotification,
   RemoveTopicNotification,
   SigBanNotification,
+  SigBanRemovedNotification,
   TrackedBoardNotification,
   TrackedPhraseNotification,
   TrackedTopicNotification,
@@ -34,6 +35,7 @@ export class NotificationService {
     [NotificationType.AUTO_TRACK_TOPIC_REQUEST]: AutoTrackTopicRequestNotification,
     [NotificationType.REMOVE_TOPIC]: RemoveTopicNotification,
     [NotificationType.SIG_BAN]: SigBanNotification,
+    [NotificationType.SIG_BAN_REMOVED]: SigBanRemovedNotification,
   };
 
   private getTypeRepository(type: NotificationType) {

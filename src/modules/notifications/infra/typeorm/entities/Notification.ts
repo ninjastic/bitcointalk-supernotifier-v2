@@ -19,6 +19,7 @@ export enum NotificationType {
   AUTO_TRACK_TOPIC_REQUEST = 'auto_track_topic_request',
   REMOVE_TOPIC = 'remove_topic',
   SIG_BAN = 'sig_ban',
+  SIG_BAN_REMOVED = 'sig_ban_removed',
 }
 
 interface PostMentionData {
@@ -168,6 +169,15 @@ export class AutoTrackTopicRequestNotification extends Notification<AutoTrackTop
 export class SigBanNotification extends Notification<SigBanData> {
   @Column({ type: 'enum', enum: NotificationType })
   type: NotificationType.SIG_BAN = NotificationType.SIG_BAN;
+
+  @Column('jsonb')
+  declare metadata: SigBanData;
+}
+
+@ChildEntity(NotificationType.SIG_BAN_REMOVED)
+export class SigBanRemovedNotification extends Notification<SigBanData> {
+  @Column({ type: 'enum', enum: NotificationType })
+  type: NotificationType.SIG_BAN_REMOVED = NotificationType.SIG_BAN_REMOVED;
 
   @Column('jsonb')
   declare metadata: SigBanData;
