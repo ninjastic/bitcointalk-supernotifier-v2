@@ -4,6 +4,7 @@ import type User from '##/modules/users/infra/typeorm/entities/User';
 import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type { MentionType, RecipeMetadata } from '##/platform/queues/types/telegram';
 import type TelegramBot from '##/apps/telegram/bot';
+import type { Element } from 'domhandler';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import { NotificationService } from '##/modules/posts/services/notification-service';
@@ -30,13 +31,14 @@ export default class SendMentionNotificationService {
   private filterPostContent(content: string, user: User, mentionType: MentionType): string {
     const $ = load(content);
     const body = $('body');
-    const relevantQuotesElements: cheerio.Element[] = [];
+    const relevantQuotesElements: Element[] = [];
+    const username = user.username;
 
     body.find('img.userimg').each((_, element) => {
       $(element).replaceWith('[IMAGE]');
     });
 
-    if (mentionType === 'quoted_mention') {
+    if (mentionType === 'quoted_mention' && username) {
       const quotes = body.find('div.quoteheader:has(a:not(.ul)):not(.quote *)').toArray();
 
       quotes.forEach((element) => {
@@ -47,7 +49,7 @@ export default class SendMentionNotificationService {
 
         const authorMatch = quoteHeader
           .text()
-          .match(new RegExp(`Quote from: ${escapeUsername(user.username)} on`, 'gi'));
+          .match(new RegExp(`Quote from: ${escapeUsername(username)} on`, 'gi'));
 
         if (authorMatch) {
           relevantQuotesElements.push(element);
@@ -60,7 +62,8 @@ export default class SendMentionNotificationService {
         let currentNode = quote.next;
         while (currentNode) {
           currentNode = currentNode.next;
-          if (quotes.includes(currentNode)) break;
+          if (!currentNode) break;
+          if (quotes.some((quoteElement) => quoteElement === currentNode)) break;
           if ($(currentNode).hasClass('quoteheader')) continue;
 
           const nodeText = $(currentNode).text();

@@ -1,5 +1,6 @@
 import type RedisProvider from '##/platform/cache/providers/implementations/RedisProvider';
-import type Cheerio from 'cheerio';
+import type { CheerioAPI } from 'cheerio';
+import type { Element } from 'domhandler';
 import type { Repository } from 'typeorm';
 
 import Merit from '##/modules/merits/infra/typeorm/entities/Merit';
@@ -36,12 +37,12 @@ export class MeritScraper {
     this.meritsRepository = getRepository(Merit);
   }
 
-  private async getPageContent(): Promise<typeof Cheerio> {
+  private async getPageContent(): Promise<CheerioAPI> {
     const response = await api.get(this.RECENT_MERITS_URL);
-    return load(response.data, { decodeEntities: true }) as typeof Cheerio;
+    return load(response.data);
   }
 
-  private async ensureLoggedIn(): Promise<typeof Cheerio> {
+  private async ensureLoggedIn(): Promise<CheerioAPI> {
     let $ = await this.getPageContent();
     const isLoggedIn = !!$('#hellomember').length;
 
@@ -54,15 +55,15 @@ export class MeritScraper {
     return $;
   }
 
-  private extractCurrentDate($: typeof Cheerio): Date {
+  private extractCurrentDate($: CheerioAPI): Date {
     const dateString = $(
       'body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span',
     ).text();
     return sub(new Date(dateString), { minutes: new Date().getTimezoneOffset() });
   }
 
-  async parseRecentMeritElement(recentMeritElement: cheerio.Element): Promise<Merit> {
-    const $ = load(recentMeritElement, { decodeEntities: true });
+  async parseRecentMeritElement(recentMeritElement: Element): Promise<Merit> {
+    const $ = load(recentMeritElement);
 
     const amount = Number($.html().match(/: (\d*) from/)[1]);
     const sender = $.html().match(/">(.*)<\/a> for/)[1];

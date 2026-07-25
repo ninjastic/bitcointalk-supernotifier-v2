@@ -1,4 +1,4 @@
-import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { estypes } from '@elastic/elasticsearch';
 
 import type CreatePostDTO from '../dtos/CreatePostDTO';
 import type IFindPostsConditionsDTO from '../dtos/IFindPostsConditionsDTO';
@@ -25,10 +25,10 @@ export default interface IPostsRepository {
   markChecked: (postIds: number[]) => Promise<void>;
   findOneByPostId: (post_id: number) => Promise<Post | undefined>;
   findLatestUncheckedPosts: (limit?: number) => Promise<Post[]>;
-  findPostsByTopicId: (topic_id: number) => Promise<SearchResponse<PostFromES>>;
-  findPostsByAuthor: (author: string, limit: number) => Promise<SearchResponse<PostFromES>>;
+  findPostsByTopicId: (topic_id: number) => Promise<estypes.SearchResponse<PostFromES>>;
+  findPostsByAuthor: (author: string, limit: number) => Promise<estypes.SearchResponse<PostFromES>>;
   findPosts: (conditions: IFindPostsConditionsDTO) => Promise<Post[]>;
-  findPostsES: (conditions: IFindPostsConditionsDTO) => Promise<SearchResponse<PostFromES>>;
+  findPostsES: (conditions: IFindPostsConditionsDTO) => Promise<estypes.SearchResponse<PostFromES>>;
   findPostsFromList: (posts_id: number[]) => Promise<Post[]>;
   findPostsFromListES: (posts_id: number[]) => Promise<any>;
 }

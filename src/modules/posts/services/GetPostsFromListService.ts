@@ -1,4 +1,4 @@
-import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { estypes } from '@elastic/elasticsearch';
 
 import { inject, injectable } from 'tsyringe';
 
@@ -18,7 +18,7 @@ export default class GetPostsFromListService {
     private postsRepository: IPostsRepository,
   ) {}
 
-  public async execute({ id_list }: Params): Promise<SearchResponse<PostFromES>> {
+  public async execute({ id_list }: Params): Promise<estypes.SearchResponse<PostFromES>> {
     const getBoardsList = new GetBoardsListService();
 
     const results = await this.postsRepository.findPostsFromListES(id_list);

@@ -70,6 +70,7 @@
     "decompress-tarbz2": "^4.1.1",
     "del": "^5.1.0",
     "diff": "^7.0.0",
+    "domhandler": "^5.0.3",
     "dotenv": "^16.0.3",
     "escape-html": "^1.0.3",
     "express": "^4.17.1",
@@ -125,7 +126,6 @@
     "@types/better-sqlite3": "^7.6.12",
     "@types/body-parser": "^1.19.0",
     "@types/bull": "^4.10.0",
-    "@types/cheerio": "^0.22.31",
     "@types/cors": "^2.8.7",
     "@types/crypto-js": "^4.0.2",
     "@types/decompress": "^4.2.3",
@@ -165,6 +165,9 @@
     "ts-jest": "^29.1.0",
     "tsx": "^4.16.0",
     "typescript": "^5.6.0"
+  },
+  "resolutions": {
+    "@types/express": "4.17.25"
   },
   "lint-staged": {
     "*.ts": [

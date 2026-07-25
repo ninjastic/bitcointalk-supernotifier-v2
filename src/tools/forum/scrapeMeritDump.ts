@@ -22,7 +22,7 @@ type MeritPartial = Pick<Merit, MeritPartialKeys>;
 
 async function scrapeUserProfile(userId: number): Promise<string> {
   const res = await api.get(`index.php?action=profile;u=${userId}`);
-  const $ = load(res.data, { decodeEntities: true });
+  const $ = load(res.data);
 
   const username = $(
     '#bodyarea  tr:nth-child(2) > td:nth-child(1) > table > tbody > tr:nth-child(1) > td:nth-child(2)',

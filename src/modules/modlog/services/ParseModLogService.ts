@@ -24,8 +24,8 @@ export default class ParseModLogService {
     private modLogRepository: IModLogRepository,
   ) {}
 
-  public execute(element: cheerio.Element): ModLog {
-    const $ = load(element, { decodeEntities: true });
+  public execute(element: Element): ModLog {
+    const $ = load(element);
 
     const topic = $('a:nth-child(2)');
     const user = $('a:nth-child(3)');
@@ -69,3 +69,4 @@ export default class ParseModLogService {
     return undefined;
   }
 }
+import type { Element } from 'domhandler';

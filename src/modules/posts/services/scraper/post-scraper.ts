@@ -4,7 +4,8 @@ import type { ParsedPost } from '##/modules/posts/services/scraper/parse-post-ht
 import type { ParsedTopicPost } from '##/modules/posts/services/scraper/parse-topic-post-op-html';
 import type RedisProvider from '##/platform/cache/providers/implementations/RedisProvider';
 import type { AxiosRequestConfig } from 'axios';
-import type Cheerio from 'cheerio';
+import type { CheerioAPI } from 'cheerio';
+import type { Element } from 'domhandler';
 import type { Repository } from 'typeorm';
 
 import ForumLoginService from '##/modules/merits/services/ForumLoginService';
@@ -22,8 +23,8 @@ import { container } from 'tsyringe';
 import { getRepository } from 'typeorm';
 
 export interface RecentPostWithFooter {
-  postElement: cheerio.Element;
-  footerElement: cheerio.Element;
+  postElement: Element;
+  footerElement: Element;
 }
 
 export class PostScraper {
@@ -42,10 +43,10 @@ export class PostScraper {
   private async getPageContent(
     url: string,
     config: AxiosRequestConfig<any> = {},
-  ): Promise<{ $: typeof Cheerio; html: string }> {
+  ): Promise<{ $: CheerioAPI; html: string }> {
     const response = await api.get(url, config);
     return {
-      $: load(response.data, { decodeEntities: true }) as typeof Cheerio,
+      $: load(response.data),
       html: response.data,
     };
   }
@@ -53,7 +54,7 @@ export class PostScraper {
   private async ensureLoggedIn(
     url: string,
     config: AxiosRequestConfig<any> = {},
-  ): Promise<{ $: typeof Cheerio; html: string }> {
+  ): Promise<{ $: CheerioAPI; html: string }> {
     let { $, html } = await this.getPageContent(url, config);
     const isLoggedIn = !!$('#hellomember').length;
 
@@ -66,14 +67,14 @@ export class PostScraper {
     return { $, html };
   }
 
-  private extractCurrentDate($: typeof Cheerio): Date {
+  private extractCurrentDate($: CheerioAPI): Date {
     const dateString = $(
       'body > div.tborder > table:nth-child(2) > tbody > tr:nth-child(1) > td:nth-child(2) > span',
     ).text();
     return sub(new Date(dateString), { minutes: new Date().getTimezoneOffset() });
   }
 
-  private extractPostsWithFooters($: typeof Cheerio): RecentPostWithFooter[] {
+  private extractPostsWithFooters($: CheerioAPI): RecentPostWithFooter[] {
     const tableBodies = Array.from($('div#bodyarea > table > tbody'));
 
     return tableBodies.reduce<RecentPostWithFooter[]>((acc, element, index) => {
@@ -96,7 +97,7 @@ export class PostScraper {
 
   private parseRecentPostElement(recentPost: RecentPostWithFooter, currentDate: Date): Post {
     const { postElement, footerElement } = recentPost;
-    let $ = load(postElement, { decodeEntities: true });
+    let $ = load(postElement);
 
     const postTableBody = $('tbody').first();
     const postCreatorDetails = postTableBody.children('tr:nth-child(2)').first();

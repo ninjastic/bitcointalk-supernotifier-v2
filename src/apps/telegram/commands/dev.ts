@@ -3,6 +3,7 @@ import type { CommandContext } from 'grammy';
 import { container } from 'tsyringe';
 
 import type IMenuContext from '../types/IMenuContext';
+import type TelegramBot from '../bot';
 
 import MeritsRepository from '##/modules/merits/infra/typeorm/repositories/MeritsRepository';
 import SendMeritNotificationService from '../notifications/SendMeritNotificationService';
@@ -15,6 +16,7 @@ async function devCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
 
   const meritsRepository = container.resolve(MeritsRepository);
   const sendMeritNotification = container.resolve(SendMeritNotificationService);
+  const bot = container.resolve<TelegramBot>('TelegramBot');
 
   const merit = meritsRepository.create({
     amount: Math.ceil(Math.random() * 10),
@@ -30,7 +32,12 @@ async function devCommand(ctx: CommandContext<IMenuContext>): Promise<void> {
     notified_to: [],
   });
 
-  await sendMeritNotification.execute({ telegramId: String(ctx.chat.id), merit });
+  await sendMeritNotification.execute({
+    bot,
+    telegramId: String(ctx.chat.id),
+    merit,
+    scrapedPostTitle: null,
+  });
 }
 
 export default devCommand;

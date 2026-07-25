@@ -17,7 +17,7 @@ async function parseTopicPagePosts(html: string): Promise<ParsedTopicPagePosts> 
   const postsRepository = getRepository(Post);
   const topicsRepository = getRepository(Topic);
 
-  const $ = load(html, { decodeEntities: true });
+  const $ = load(html);
 
   const topicNotFound =
     $('#bodyarea > div:nth-child(1) > table > tbody > tr.windowbg > td')?.text()?.trim() ===
@@ -49,7 +49,7 @@ async function parseTopicPagePosts(html: string): Promise<ParsedTopicPagePosts> 
 
   const boards = $(titleBoard).find('b');
   const boardsArray = [];
-  $(boards).each(async (boardIndex, board) => {
+  $(boards).each((boardIndex, board) => {
     const { length } = boards;
 
     const boardIdRegEx = /board=(\d+)/;

@@ -1,4 +1,4 @@
-import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
+import type { estypes } from '@elastic/elasticsearch';
 import type { Request as ExpressRequest, Response } from 'express';
 
 import { addMinutes, endOfDay, startOfDay, sub } from 'date-fns';
@@ -42,7 +42,7 @@ export default class UserMeritsCountController {
       from: request.query.from || defaultFrom,
       to: request.query.to || defaultTo,
       type: request.query.type || 'receiver',
-      interval: (request.query.interval || '1d') as AggregationsCalendarInterval,
+      interval: (request.query.interval || '1d') as estypes.AggregationsCalendarInterval,
     };
 
     try {

@@ -24,7 +24,7 @@ export default class ScrapeModLogService {
   public async execute(): Promise<number> {
     const response = await api.get('modlog.php');
 
-    const $ = load(response.data, { decodeEntities: true });
+    const $ = load(response.data);
 
     const logs = $('#helpmain > ul > li').toArray();
 

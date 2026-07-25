@@ -1,4 +1,4 @@
-import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
+import type { estypes } from '@elastic/elasticsearch';
 
 import { container } from 'tsyringe';
 
@@ -10,7 +10,7 @@ interface Params {
   author_uid: number;
   from: string;
   to: string;
-  interval: AggregationsCalendarInterval;
+  interval: estypes.AggregationsCalendarInterval;
 }
 
 interface Data {

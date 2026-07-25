@@ -25,7 +25,7 @@ export async function scrapeLoyceArchivePost(postId: number): Promise<CreatePost
   }
 
   const decodedResponse = iconv.decode(response.data, 'WINDOWS-1252');
-  const $ = load(decodedResponse, { decodeEntities: true });
+  const $ = load(decodedResponse);
 
   const post_id = Number($('body > b > a:nth-child(1)').text());
   const post_url = $('body > b > a:nth-child(1)').attr('href');

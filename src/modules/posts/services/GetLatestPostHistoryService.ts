@@ -1,4 +1,4 @@
-import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { estypes } from '@elastic/elasticsearch';
 
 import { inject, injectable } from 'tsyringe';
 
@@ -12,7 +12,7 @@ export default class GetLatestPostHistoryService {
     private postsHistoryRepository: IPostsHistoryRepository,
   ) {}
 
-  public async execute(query: IFindAllPostsHistoryDTO): Promise<SearchResponse> {
+  public async execute(query: IFindAllPostsHistoryDTO): Promise<estypes.SearchResponse> {
     const limit = Math.min(query.limit || 20, 200);
 
     return this.postsHistoryRepository.findAll({

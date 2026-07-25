@@ -1,4 +1,4 @@
-import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { estypes } from '@elastic/elasticsearch';
 import type { Repository } from 'typeorm';
 
 import { sub } from 'date-fns';
@@ -58,7 +58,7 @@ export default class PostsRepository implements IPostsRepository {
     });
   }
 
-  public async findPostsByTopicId(topic_id: number): Promise<SearchResponse<PostFromES>> {
+  public async findPostsByTopicId(topic_id: number): Promise<estypes.SearchResponse<PostFromES>> {
     const results = await esClient.search<PostFromES>({
       index: 'posts',
       track_total_hits: true,
@@ -76,7 +76,7 @@ export default class PostsRepository implements IPostsRepository {
   public async findPostsByAuthor(
     author: string,
     limit: number,
-  ): Promise<SearchResponse<PostFromES>> {
+  ): Promise<estypes.SearchResponse<PostFromES>> {
     const actual_limit = Math.min(limit || 20, 200);
     const censor = getCensorJSON();
 
@@ -115,7 +115,7 @@ export default class PostsRepository implements IPostsRepository {
 
   public async findPostsES(
     conditions: IFindPostsConditionsDTO,
-  ): Promise<SearchResponse<PostFromES>> {
+  ): Promise<estypes.SearchResponse<PostFromES>> {
     const {
       author,
       author_uid,

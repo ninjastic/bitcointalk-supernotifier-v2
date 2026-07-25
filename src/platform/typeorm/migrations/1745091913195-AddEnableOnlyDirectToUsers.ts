@@ -1,12 +1,16 @@
+import { TableColumn } from 'typeorm';
 import type { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class AddEnableOnlyDirectToUsers1745091913195 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.addColumn('users', {
-      name: 'enable_only_direct_mentions',
-      type: 'boolean',
-      default: false,
-    });
+    await queryRunner.addColumn(
+      'users',
+      new TableColumn({
+        name: 'enable_only_direct_mentions',
+        type: 'boolean',
+        default: false,
+      }),
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

@@ -60,14 +60,14 @@ async function scrapeBoards(
     spinner.text = `Scraping missing boards (${boards.length}) - ID ${board.id}`;
     const response = await api.get(board.url);
 
-    const $ = load(response.data, { decodeEntities: true });
+    const $ = load(response.data);
 
     const titleBoard = $('#bodyarea > div:nth-child(1) > div');
     const boardsList = $(titleBoard).find('b');
 
     const boardsArray = [];
 
-    $(boardsList).each(async (boardIndex, boardElement) => {
+    $(boardsList).each((boardIndex, boardElement) => {
       const boardName = $(boardElement).text();
       const boardLink = $(boardElement).find('a').attr('href');
 

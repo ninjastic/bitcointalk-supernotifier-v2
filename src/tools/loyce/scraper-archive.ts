@@ -23,7 +23,7 @@ function sleep(ms) {
 function scrapePostFromBuffer(buffer) {
   const utf8String = iconv.decode(buffer, 'ISO-8859-1');
 
-  const $ = load(utf8String, { decodeEntities: true });
+  const $ = load(utf8String);
 
   const notFound = $('body > h3:nth-child(2) > strong').text();
 

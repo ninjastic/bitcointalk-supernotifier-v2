@@ -1,4 +1,4 @@
-import type { SearchResponse } from '@elastic/elasticsearch/lib/api/types';
+import type { estypes } from '@elastic/elasticsearch';
 
 import type ICreatePostHistoryDTO from '../dtos/ICreatePostHistoryDTO';
 import type IFindAllPostsHistoryDTO from '../dtos/IFindAllPostsHistoryDTO';
@@ -10,5 +10,5 @@ export default interface IPostsHistoryRepository {
   save: (post: PostHistory) => Promise<PostHistory>;
   findOne: (conditions: IFindOnePostHistoryDTO) => Promise<PostHistory | undefined>;
   findLatestUncheckedPosts: (limit?: number) => Promise<PostHistory[]>;
-  findAll: (conditions?: IFindAllPostsHistoryDTO) => Promise<SearchResponse<PostHistory>>;
+  findAll: (conditions?: IFindAllPostsHistoryDTO) => Promise<estypes.SearchResponse<PostHistory>>;
 }

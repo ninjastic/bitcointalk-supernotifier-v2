@@ -14,7 +14,7 @@ function parseTopicPostOpHtml(html: string): ParsedTopicPost {
   const postsRepository = getRepository(Post);
   const topicsRepository = getRepository(Topic);
 
-  const $ = load(html, { decodeEntities: true });
+  const $ = load(html);
   const posts = $('#quickModForm > table.bordercolor');
 
   const postElements = [
@@ -62,7 +62,7 @@ function parseTopicPostOpHtml(html: string): ParsedTopicPost {
   const boards = $(titleBoard).find('b');
   const boardsArray = [];
 
-  $(boards).each(async (boardIndex, board) => {
+  $(boards).each((boardIndex, board) => {
     const { length } = boards;
 
     const boardIdRegEx = /board=(\d+)/;

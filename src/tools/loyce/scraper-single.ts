@@ -34,7 +34,7 @@ async function readDir(dir) {
 function scrapePostFromBuffer(buffer) {
   const utf8String = iconv.decode(buffer, 'ISO-8859-1');
 
-  const $ = load(utf8String, { decodeEntities: true });
+  const $ = load(utf8String);
 
   const post_id = Number($('body > b > a:nth-child(1)').text());
   const post_url = $('body > b > a:nth-child(1)').attr('href');

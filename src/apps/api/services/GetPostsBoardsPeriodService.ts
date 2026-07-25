@@ -1,11 +1,11 @@
-import type { AggregationsCalendarInterval } from '@elastic/elasticsearch/lib/api/types';
+import type { estypes } from '@elastic/elasticsearch';
 
 import esClient from '##/platform/elasticsearch/client';
 
 export interface GetPostsBoardsPeriodParams {
   from?: string;
   to?: string;
-  interval?: AggregationsCalendarInterval;
+  interval?: estypes.AggregationsCalendarInterval;
   limit?: number;
 }
 
