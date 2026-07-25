@@ -1,12 +1,12 @@
 import type IUsersRepository from '##/modules/users/repositories/IUsersRepository';
-import type RedisProvider from '##/platform/cache/providers/implementations/RedisProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type TelegramBot from '##/apps/telegram/bot';
 
 import { ADMIN_TELEGRAM_ID } from '##/config/admin';
 import logger from '##/platform/logging/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
 import { randomUUID } from 'node:crypto';
-import { container, inject, injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
 interface MessageSent {
   telegramId: string;
@@ -36,6 +36,9 @@ export default class SendGlobalNotificationService {
 
     @inject('TelegramBot')
     private bot: TelegramBot,
+
+    @inject('CacheRepository')
+    private readonly cache: ICacheProvider,
   ) {}
 
   private async sendMessageToUser(userTelegramId: string, message: string): Promise<MessageSent> {
@@ -49,9 +52,8 @@ export default class SendGlobalNotificationService {
   }
 
   private async saveMessageIdsToRedis(messageIds: MessageSent[]): Promise<string> {
-    const redisProvider = container.resolve<RedisProvider>('CacheRepository');
     const id = randomUUID();
-    await redisProvider.save(`globalNotificationMessages:${id}`, messageIds, 'EX', 300);
+    await this.cache.save(`globalNotificationMessages:${id}`, messageIds, 'EX', 300);
     return id;
   }
 

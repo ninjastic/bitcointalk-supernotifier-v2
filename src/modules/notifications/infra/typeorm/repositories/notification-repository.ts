@@ -23,7 +23,7 @@ interface FindOneNotificationConditions<T extends Notification> {
   metadata: Record<string, any>;
 }
 
-export class NotificationService {
+export class NotificationRepository {
   private notificationRepositoryClassMap = {
     [NotificationType.POST_MENTION]: PostMentionNotification,
     [NotificationType.MERIT]: MeritNotification,

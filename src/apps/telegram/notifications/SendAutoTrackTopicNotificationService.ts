@@ -1,19 +1,16 @@
 import type { AutoTrackTopicRequestNotification } from '##/modules/notifications/infra/typeorm/entities/Notification';
 import type Topic from '##/modules/posts/infra/typeorm/entities/Topic';
-import type RedisProvider from '##/platform/cache/providers/implementations/RedisProvider';
+import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvider';
 import type TelegramBot from '##/apps/telegram/bot';
-import type IMenuContext from '##/apps/telegram/types/IMenuContext';
-import type { Bot } from 'grammy';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import AddTrackedTopicService from '##/modules/posts/services/AddTrackedTopicService';
-import { NotificationService } from '##/modules/posts/services/notification-service';
+import { NotificationRepository } from '##/modules/notifications/infra/typeorm/repositories/notification-repository';
 import { buildAutoTrackTopicNotificationMessage } from '##/apps/telegram/messages/notificationMessages';
 import sendRichTelegramMessage from '##/apps/telegram/services/send-rich-telegram-message';
 import logger from '##/platform/logging/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
 import { InlineKeyboard } from 'grammy';
-import { container, injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
 interface AutoTrackTopicRequestNotificationData {
   bot: TelegramBot;
@@ -25,34 +22,20 @@ const trackTopicRepliesMenu = new InlineKeyboard().text('Yes, add to tracked top
 
 @injectable()
 export default class SendAutoTrackTopicNotificationService {
-  private redis: RedisProvider;
+  constructor(
+    @inject(NotificationRepository)
+    private readonly notificationRepository: NotificationRepository,
 
-  constructor() {
-    this.redis = container.resolve<RedisProvider>('CacheRepository');
-  }
-
-  private async createNotification(
-    telegramId: string,
-    metadata: AutoTrackTopicRequestNotification['metadata'],
-  ) {
-    const notificationService = new NotificationService();
-    await notificationService.createNotification<AutoTrackTopicRequestNotification>({
-      type: NotificationType.AUTO_TRACK_TOPIC_REQUEST,
-      telegram_id: telegramId,
-      metadata,
-    });
-  }
-
-  private async buildNotificationMessage(topic: Topic): Promise<string> {
-    return buildAutoTrackTopicNotificationMessage(topic);
-  }
+    @inject('CacheRepository')
+    private readonly cache: ICacheProvider,
+  ) {}
 
   private async saveAutoTrackTopicData(
     messageId: number,
     telegramId: string,
     topicId: number,
   ): Promise<void> {
-    await this.redis.save(`autoTrackTopic:${messageId}`, {
+    await this.cache.save(`autoTrackTopic:${messageId}`, {
       telegram_id: telegramId,
       topic_id: topicId,
     });
@@ -66,7 +49,7 @@ export default class SendAutoTrackTopicNotificationService {
     let message: string = '';
 
     try {
-      message = await this.buildNotificationMessage(topic);
+      message = buildAutoTrackTopicNotificationMessage(topic);
 
       const sentMessage = await sendRichTelegramMessage<{ message_id: number }>(
         bot,
@@ -78,9 +61,13 @@ export default class SendAutoTrackTopicNotificationService {
       );
 
       await this.saveAutoTrackTopicData(sentMessage.message_id, telegramId, topic.topic_id);
-      await this.createNotification(telegramId, {
-        topic_id: topic.topic_id,
-        post_id: topic.post_id,
+      await this.notificationRepository.createNotification<AutoTrackTopicRequestNotification>({
+        type: NotificationType.AUTO_TRACK_TOPIC_REQUEST,
+        telegram_id: telegramId,
+        metadata: {
+          topic_id: topic.topic_id,
+          post_id: topic.post_id,
+        },
       });
 
       logger.info(
@@ -93,37 +80,4 @@ export default class SendAutoTrackTopicNotificationService {
       return false;
     }
   }
-}
-
-export function handleTrackTopicRepliesMenu(_bot: Bot<IMenuContext>) {
-  return _bot.callbackQuery('add-tt', async (ctx) => {
-    const statusMessage = await ctx.reply(
-      'We have added your request to the queue.\n\nThis will take a few seconds...',
-    );
-
-    const redis = container.resolve<RedisProvider>('CacheRepository');
-    const addTrackedTopicService = container.resolve(AddTrackedTopicService);
-
-    const data: { topic_id: number } = await redis.recover(
-      `autoTrackTopic:${ctx.update.callback_query.message.message_id}`,
-    );
-
-    if (data) {
-      try {
-        const trackedTopic = await addTrackedTopicService.execute(
-          data.topic_id,
-          String(ctx.chat.id),
-        );
-        await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id);
-
-        const message = `You are now tracking the topic: <b><a href="https://bitcointalk.org/index.php?topic=${trackedTopic.post.topic_id}">${trackedTopic.post.title}</a></b>`;
-        await ctx.reply(message, { parse_mode: 'HTML' });
-      } catch (error) {
-        await ctx.api.deleteMessage(statusMessage.chat.id, statusMessage.message_id);
-        await ctx.reply(error.message, { parse_mode: 'HTML' });
-      }
-    }
-
-    await ctx.answerCallbackQuery();
-  });
 }

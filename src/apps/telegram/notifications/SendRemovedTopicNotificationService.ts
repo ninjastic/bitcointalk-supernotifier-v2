@@ -5,12 +5,12 @@ import type TelegramBot from '##/apps/telegram/bot';
 
 import SetModLogNotifiedService from '##/modules/modlog/services/SetModLogNotifiedService';
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import { NotificationService } from '##/modules/posts/services/notification-service';
+import { NotificationRepository } from '##/modules/notifications/infra/typeorm/repositories/notification-repository';
 import { buildRemovedTopicNotificationMessage } from '##/apps/telegram/messages/notificationMessages';
 import sendRichTelegramMessage from '##/apps/telegram/services/send-rich-telegram-message';
 import logger from '##/platform/logging/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
-import { container, injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
 
 interface RemovedTopicNotificationData {
   bot: TelegramBot;
@@ -21,29 +21,16 @@ interface RemovedTopicNotificationData {
 
 @injectable()
 export default class SendRemovedTopicNotificationService {
-  private async createNotification(
-    telegram_id: string,
-    metadata: RemoveTopicNotification['metadata'],
-  ): Promise<void> {
-    const notificationService = new NotificationService();
-    await notificationService.createNotification<RemoveTopicNotification>({
-      type: NotificationType.REMOVE_TOPIC,
-      telegram_id,
-      metadata,
-    });
-  }
+  constructor(
+    @inject(NotificationRepository)
+    private readonly notificationRepository: NotificationRepository,
 
-  private async buildNotificationMessage(
-    posts: Post[],
-    modLog: ModLog,
-    telegramId: string,
-  ): Promise<string> {
-    return buildRemovedTopicNotificationMessage(posts, modLog, telegramId);
-  }
+    @inject(SetModLogNotifiedService)
+    private readonly setModLogNotified: SetModLogNotifiedService,
+  ) {}
 
   private async markModLogAsNotified(modLog: ModLog, telegramId: string): Promise<void> {
-    const setModLogNotified = container.resolve(SetModLogNotifiedService);
-    await setModLogNotified.execute(modLog, telegramId);
+    await this.setModLogNotified.execute(modLog, telegramId);
   }
 
   public async execute({
@@ -55,7 +42,7 @@ export default class SendRemovedTopicNotificationService {
     let message: string = '';
 
     try {
-      message = await this.buildNotificationMessage(posts, modLog, telegramId);
+      message = buildRemovedTopicNotificationMessage(posts, modLog, telegramId);
 
       await sendRichTelegramMessage(bot, telegramId, message);
 
@@ -64,10 +51,14 @@ export default class SendRemovedTopicNotificationService {
         'Removed Topic notification was sent',
       );
       await this.markModLogAsNotified(modLog, telegramId);
-      await this.createNotification(telegramId, {
-        user_id: modLog.user_id,
-        topic_id: modLog.topic_id,
-        posts_removed_count: posts.length,
+      await this.notificationRepository.createNotification<RemoveTopicNotification>({
+        type: NotificationType.REMOVE_TOPIC,
+        telegram_id: telegramId,
+        metadata: {
+          user_id: modLog.user_id,
+          topic_id: modLog.topic_id,
+          posts_removed_count: posts.length,
+        },
       });
 
       return true;

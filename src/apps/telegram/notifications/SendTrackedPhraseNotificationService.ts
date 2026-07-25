@@ -4,14 +4,15 @@ import type ICacheProvider from '##/platform/cache/providers/models/ICacheProvid
 import type TelegramBot from '##/apps/telegram/bot';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
-import { NotificationService } from '##/modules/posts/services/notification-service';
+import { NotificationRepository } from '##/modules/notifications/infra/typeorm/repositories/notification-repository';
 import SetPostNotifiedService from '##/modules/posts/services/SetPostNotifiedService';
 import { buildTrackedPhraseNotificationMessage } from '##/apps/telegram/messages/notificationMessages';
 import sendRichTelegramMessage from '##/apps/telegram/services/send-rich-telegram-message';
 import logger from '##/platform/logging/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
-import { load } from 'cheerio';
-import { container, inject, injectable } from 'tsyringe';
+import { inject, injectable } from 'tsyringe';
+
+import { filterPostContent } from './filter-post-content';
 
 interface TrackedPhraseNotificationData {
   bot: TelegramBot;
@@ -25,51 +26,16 @@ export default class SendTrackedPhraseNotificationService {
   constructor(
     @inject('CacheRepository')
     private cacheRepository: ICacheProvider,
+
+    @inject(NotificationRepository)
+    private readonly notificationRepository: NotificationRepository,
+
+    @inject(SetPostNotifiedService)
+    private readonly setPostNotified: SetPostNotifiedService,
   ) {}
 
-  private filterPostContent(content: string): string {
-    const $ = load(content);
-    const data = $('body');
-    data.children('div.quote, div.quoteheader').remove();
-    data.find('br').replaceWith('&nbsp;');
-    return data
-      .text()
-      .replace(/\s{2,}/g, ' ')
-      .trim();
-  }
-
   private async markPostAsNotified(post: Post, telegramId: string): Promise<void> {
-    const setPostNotified = container.resolve(SetPostNotifiedService);
-    await setPostNotified.execute(post.post_id, telegramId);
-  }
-
-  private async createNotification(
-    telegramId: string,
-    metadata: TrackedPhraseNotification['metadata'],
-  ) {
-    const notificationService = new NotificationService();
-    await notificationService.createNotification<TrackedPhraseNotification>({
-      type: NotificationType.TRACKED_PHRASE,
-      telegram_id: telegramId,
-      metadata,
-    });
-  }
-
-  private async buildNotificationMessage(
-    post: Post,
-    phrase: string,
-    postLength: number,
-    telegramId: string,
-  ): Promise<string> {
-    const { content } = post;
-    const contentFiltered = this.filterPostContent(content);
-    return buildTrackedPhraseNotificationMessage(
-      post,
-      phrase,
-      contentFiltered,
-      postLength,
-      telegramId,
-    );
+    await this.setPostNotified.execute(post.post_id, telegramId);
   }
 
   public async execute({
@@ -84,7 +50,13 @@ export default class SendTrackedPhraseNotificationService {
       const postLength =
         (await this.cacheRepository.recover<number>(`${telegramId}:postLength`)) ?? 150;
 
-      message = await this.buildNotificationMessage(post, phrase, postLength, telegramId);
+      message = buildTrackedPhraseNotificationMessage(
+        post,
+        phrase,
+        filterPostContent(post.content),
+        postLength,
+        telegramId,
+      );
 
       await sendRichTelegramMessage(bot, telegramId, message);
 
@@ -93,9 +65,13 @@ export default class SendTrackedPhraseNotificationService {
         'Tracked Phrase notification was sent',
       );
       await this.markPostAsNotified(post, telegramId);
-      await this.createNotification(telegramId, {
-        post_id: post.post_id,
-        phrase,
+      await this.notificationRepository.createNotification<TrackedPhraseNotification>({
+        type: NotificationType.TRACKED_PHRASE,
+        telegram_id: telegramId,
+        metadata: {
+          post_id: post.post_id,
+          phrase,
+        },
       });
 
       return true;

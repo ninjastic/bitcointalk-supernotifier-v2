@@ -1,5 +1,4 @@
 import { MeritScraper } from '##/modules/merits/services/scraper/merit-scraper';
-import { NotificationService } from '##/modules/posts/services/notification-service';
 import { PostScraper } from '##/modules/posts/services/scraper/post-scraper';
 import { container } from 'tsyringe';
 
@@ -81,8 +80,6 @@ container.registerSingleton<IPostsHistoryRepository>(
 );
 
 container.registerSingleton<ICacheRepository>('CacheRepository', RedisProvider);
-
-container.registerSingleton<NotificationService>('NotificationService', NotificationService);
 
 container.registerSingleton<PostScraper>('PostScraper', PostScraper);
 

@@ -18,7 +18,7 @@ import type IMenuContext from './types/IMenuContext';
 import cache from '##/config/cache';
 import logger from '##/platform/logging/logger';
 import { checkBotNotificationError } from '##/shared/services/utils';
-import alertCommand, { setupAlertConfirmationHandlers } from './commands/alertCommand';
+import alertCommand from './commands/alertCommand';
 import altCommand from './commands/altCommand';
 import apiCommand from './commands/apiCommand';
 import authCommand from './commands/authCommand';
@@ -49,7 +49,8 @@ import { setupConversation, uidHelpInlineMenu } from './conversations/setupConve
 import { setupQuestionMiddlewares } from './menus';
 import { mainMenu } from './menus/mainMenu';
 import FindUserByTelegramIdService from './services/FindUserByTelegramIdService';
-import { handleTrackTopicRepliesMenu } from './notifications/SendAutoTrackTopicNotificationService';
+import { handleAlertConfirmation } from './callbacks/handle-alert-confirmation';
+import { handleTrackTopicRepliesMenu } from './callbacks/handle-track-topic-replies';
 
 export function initialSession(): ISession {
   return {
@@ -156,7 +157,7 @@ class TelegramBot {
       await next();
     });
 
-    setupAlertConfirmationHandlers(this.instance);
+    handleAlertConfirmation(this.instance);
   }
 
   async commands(): Promise<void> {

@@ -16,7 +16,7 @@ import logger from '##/platform/logging/logger';
 import SendApiNotificationService from '##/apps/telegram/notifications/SendApiNotificationService';
 import SendAdvancedMatchNotificationService from '##/apps/telegram/notifications/SendAdvancedMatchNotificationService';
 import SendAutoTrackTopicNotificationService from '##/apps/telegram/notifications/SendAutoTrackTopicNotificationService';
-import SendMentionNotificationService from '##/apps/telegram/notifications/SendMentionNotificationService';
+import SendMentionNotification from '##/apps/telegram/notifications/send-mention-notification';
 import SendMeritNotificationService from '##/apps/telegram/notifications/SendMeritNotificationService';
 import SendRemovedTopicNotificationService from '##/apps/telegram/notifications/SendRemovedTopicNotificationService';
 import SendSigBanNotificationService from '##/apps/telegram/notifications/SendSigBanNotificationService';
@@ -31,7 +31,7 @@ async function main() {
 
   container.registerSingleton('TelegramBot', TelegramBot);
   const bot = container.resolve<TelegramBot>('TelegramBot');
-  const sendMentionNotification = container.resolve(SendMentionNotificationService);
+  const sendMentionNotification = container.resolve(SendMentionNotification);
   const sendMeritNotification = container.resolve(SendMeritNotificationService);
   const sendTrackedTopicNotification = container.resolve(SendTrackedTopicNotificationService);
   const sendRemovedTopicNotification = container.resolve(SendRemovedTopicNotificationService);

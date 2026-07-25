@@ -1,6 +1,6 @@
 import type Post from '##/modules/posts/infra/typeorm/entities/Post';
 import type TrackedTopicUser from '##/modules/posts/infra/typeorm/entities/TrackedTopicUser';
-import type { NotificationService } from '##/modules/posts/services/notification-service';
+import { NotificationRepository } from '##/modules/notifications/infra/typeorm/repositories/notification-repository';
 import type User from '##/modules/users/infra/typeorm/entities/User';
 
 import { NotificationType } from '##/modules/notifications/infra/typeorm/entities/Notification';
@@ -146,8 +146,8 @@ export default class CheckPostsService {
     @inject('CacheRepository')
     private cacheRepository: ICacheProvider,
 
-    @inject('NotificationService')
-    private notificationService: NotificationService,
+    @inject(NotificationRepository)
+    private notificationRepository: NotificationRepository,
   ) {}
 
   private async fetchCandidateData() {
@@ -445,7 +445,7 @@ export default class CheckPostsService {
 
     for (const conditionChunk of conditionChunks) {
       const existingNotifications =
-        await this.notificationService.findManyByTelegramAndPostId(conditionChunk);
+        await this.notificationRepository.findManyByTelegramAndPostId(conditionChunk);
 
       existingNotifications.forEach((notification) => {
         const metadata = notification.metadata as { post_id?: number };
