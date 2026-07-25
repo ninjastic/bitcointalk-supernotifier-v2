@@ -26,104 +26,102 @@ import SendTrackedTopicNotificationService from '##/apps/telegram/notifications/
 import SendTrackedUserNotificationService from '##/apps/telegram/notifications/SendTrackedUserNotificationService';
 import telegramQueue from '##/platform/queues/telegramQueue';
 
-container.registerSingleton('TelegramBot', TelegramBot);
-const bot = container.resolve<TelegramBot>('TelegramBot');
-
-const jobRecipes: JobRecipe = {
-  sendMentionNotification: async (job) => {
-    const { user, post, history, mentionType } = job.data;
-    const sendMentionNotification = container.resolve(SendMentionNotificationService);
-    await sendMentionNotification.execute({ bot, user, post, history, mentionType });
-  },
-  sendMeritNotification: async (job) => {
-    const { merit, user, scrapedPostTitle = null } = job.data;
-    const sendMeritNotification = container.resolve(SendMeritNotificationService);
-    await sendMeritNotification.execute({
-      bot,
-      telegramId: user.telegram_id,
-      merit,
-      scrapedPostTitle,
-    });
-  },
-  sendTopicTrackingNotification: async (job) => {
-    const { post, user } = job.data;
-    const sendTrackedTopicNotification = container.resolve(SendTrackedTopicNotificationService);
-    await sendTrackedTopicNotification.execute({ bot, telegramId: user.telegram_id, post });
-  },
-  sendRemovedTopicNotification: async (job) => {
-    const { postsDeleted, user, modLog } = job.data;
-    const sendRemovedTopicNotification = container.resolve(SendRemovedTopicNotificationService);
-    await sendRemovedTopicNotification.execute({
-      bot,
-      telegramId: user.telegram_id,
-      posts: postsDeleted,
-      modLog,
-    });
-  },
-  sendPhraseTrackingNotification: async (job) => {
-    const { post, user, trackedPhrase } = job.data;
-    const sendTrackedPhraseNotification = container.resolve(SendTrackedPhraseNotificationService);
-    await sendTrackedPhraseNotification.execute({
-      bot,
-      telegramId: user.telegram_id,
-      post,
-      phrase: trackedPhrase.phrase,
-    });
-  },
-  sendTrackedBoardNotification: async (job) => {
-    const { post, user, trackedBoard } = job.data;
-    const sendTrackedBoardNotification = container.resolve(SendTrackedBoardNotificationService);
-    await sendTrackedBoardNotification.execute({
-      bot,
-      telegramId: user.telegram_id,
-      post,
-      trackedBoard,
-    });
-  },
-  sendTrackedUserNotification: async (job) => {
-    const { post, user } = job.data;
-    const sendTrackedBoardNotification = container.resolve(SendTrackedUserNotificationService);
-    await sendTrackedBoardNotification.execute({ bot, telegramId: user.telegram_id, post });
-  },
-  sendAdvancedMatchNotification: async (job) => {
-    const { post, user, advancedMatch } = job.data;
-    const sendAdvancedMatchNotification = container.resolve(SendAdvancedMatchNotificationService);
-    await sendAdvancedMatchNotification.execute({
-      bot,
-      telegramId: user.telegram_id,
-      post,
-      advancedMatch,
-    });
-  },
-  sendApiNotification: async (job) => {
-    const { telegram_id, message } = job.data;
-    const sendApiNotification = container.resolve(SendApiNotificationService);
-    await sendApiNotification.execute({ bot, telegramId: telegram_id, message });
-  },
-  sendAutoTrackTopicRequestNotification: async (job) => {
-    const { topic, user } = job.data;
-    const sendAutoTrackTopicRequestNotification = container.resolve(
-      SendAutoTrackTopicNotificationService,
-    );
-    await sendAutoTrackTopicRequestNotification.execute({
-      bot,
-      telegramId: user.telegram_id,
-      topic,
-    });
-  },
-  sendSigBanNotification: async (job) => {
-    const { user, modLog } = job.data;
-    const sendSigBanNotification = container.resolve(SendSigBanNotificationService);
-    await sendSigBanNotification.execute({
-      bot,
-      telegramId: user.telegram_id,
-      modLog,
-    });
-  },
-};
-
-async function telegram() {
+async function main() {
   await createConnection();
+
+  container.registerSingleton('TelegramBot', TelegramBot);
+  const bot = container.resolve<TelegramBot>('TelegramBot');
+  const sendMentionNotification = container.resolve(SendMentionNotificationService);
+  const sendMeritNotification = container.resolve(SendMeritNotificationService);
+  const sendTrackedTopicNotification = container.resolve(SendTrackedTopicNotificationService);
+  const sendRemovedTopicNotification = container.resolve(SendRemovedTopicNotificationService);
+  const sendTrackedPhraseNotification = container.resolve(SendTrackedPhraseNotificationService);
+  const sendTrackedBoardNotification = container.resolve(SendTrackedBoardNotificationService);
+  const sendTrackedUserNotification = container.resolve(SendTrackedUserNotificationService);
+  const sendAdvancedMatchNotification = container.resolve(SendAdvancedMatchNotificationService);
+  const sendApiNotification = container.resolve(SendApiNotificationService);
+  const sendAutoTrackTopicNotification = container.resolve(SendAutoTrackTopicNotificationService);
+  const sendSigBanNotification = container.resolve(SendSigBanNotificationService);
+
+  const jobRecipes: JobRecipe = {
+    sendMentionNotification: async (job) => {
+      const { user, post, history, mentionType } = job.data;
+      await sendMentionNotification.execute({ bot, user, post, history, mentionType });
+    },
+    sendMeritNotification: async (job) => {
+      const { merit, user, scrapedPostTitle = null } = job.data;
+      await sendMeritNotification.execute({
+        bot,
+        telegramId: user.telegram_id,
+        merit,
+        scrapedPostTitle,
+      });
+    },
+    sendTopicTrackingNotification: async (job) => {
+      const { post, user } = job.data;
+      await sendTrackedTopicNotification.execute({ bot, telegramId: user.telegram_id, post });
+    },
+    sendRemovedTopicNotification: async (job) => {
+      const { postsDeleted, user, modLog } = job.data;
+      await sendRemovedTopicNotification.execute({
+        bot,
+        telegramId: user.telegram_id,
+        posts: postsDeleted,
+        modLog,
+      });
+    },
+    sendPhraseTrackingNotification: async (job) => {
+      const { post, user, trackedPhrase } = job.data;
+      await sendTrackedPhraseNotification.execute({
+        bot,
+        telegramId: user.telegram_id,
+        post,
+        phrase: trackedPhrase.phrase,
+      });
+    },
+    sendTrackedBoardNotification: async (job) => {
+      const { post, user, trackedBoard } = job.data;
+      await sendTrackedBoardNotification.execute({
+        bot,
+        telegramId: user.telegram_id,
+        post,
+        trackedBoard,
+      });
+    },
+    sendTrackedUserNotification: async (job) => {
+      const { post, user } = job.data;
+      await sendTrackedUserNotification.execute({ bot, telegramId: user.telegram_id, post });
+    },
+    sendAdvancedMatchNotification: async (job) => {
+      const { post, user, advancedMatch } = job.data;
+      await sendAdvancedMatchNotification.execute({
+        bot,
+        telegramId: user.telegram_id,
+        post,
+        advancedMatch,
+      });
+    },
+    sendApiNotification: async (job) => {
+      const { telegram_id, message } = job.data;
+      await sendApiNotification.execute({ bot, telegramId: telegram_id, message });
+    },
+    sendAutoTrackTopicRequestNotification: async (job) => {
+      const { topic, user } = job.data;
+      await sendAutoTrackTopicNotification.execute({
+        bot,
+        telegramId: user.telegram_id,
+        topic,
+      });
+    },
+    sendSigBanNotification: async (job) => {
+      const { user, modLog } = job.data;
+      await sendSigBanNotification.execute({
+        bot,
+        telegramId: user.telegram_id,
+        modLog,
+      });
+    },
+  };
 
   const worker = new Worker(
     telegramQueue.name,
@@ -176,4 +174,4 @@ async function telegram() {
   });
 }
 
-telegram();
+void main();
