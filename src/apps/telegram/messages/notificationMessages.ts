@@ -79,9 +79,10 @@ export function buildTrackedUserNotificationMessage(
   content: string,
   postLength: number,
   telegramId: string,
+  isTopic = false,
 ): string {
   return (
-    `<b>👤 Tracked user post</b><br><br>` +
+    `<b>👤 Tracked user ${isTopic ? 'topic' : 'post'}</b><br><br>` +
     `${authorLine(post.author, postUrl(post), post.title)}
 <blockquote>${preview(content, postLength)}</blockquote>` +
     sponsorFooter(telegramId)
@@ -184,7 +185,7 @@ export function buildRemovedTopicNotificationMessage(
   return (
     `<b>🗑 A topic you posted in was deleted</b>` +
     `<p>${postCount} ${pluralize('post', postCount)} removed</p>` +
-    `<p>Archived: ${htmlLink(`https://ninjastic.space/topic/${modLog.topic_id}`, title)}</p>` +
+    `<p>Archived: ${htmlLink(`https://bitlist.co/topic/${modLog.topic_id}`, title)}</p>` +
     sponsorFooter(telegramId)
   );
 }

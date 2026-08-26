@@ -18,6 +18,7 @@ interface TrackedUserNotificationData {
   bot: TelegramBot;
   telegramId: string;
   post: Post;
+  isTopic: boolean;
 }
 
 @injectable()
@@ -37,7 +38,12 @@ export default class SendTrackedUserNotificationService {
     await this.setPostNotified.execute(post.post_id, telegramId);
   }
 
-  public async execute({ bot, telegramId, post }: TrackedUserNotificationData): Promise<boolean> {
+  public async execute({
+    bot,
+    telegramId,
+    post,
+    isTopic,
+  }: TrackedUserNotificationData): Promise<boolean> {
     let message: string = '';
 
     try {
@@ -49,6 +55,7 @@ export default class SendTrackedUserNotificationService {
         filterPostContent(post.content),
         postLength,
         telegramId,
+        isTopic,
       );
 
       await sendRichTelegramMessage(bot, telegramId, message);

@@ -45,7 +45,7 @@ function processPost(
       data.push({
         userId: user.id,
         type: NotificationType.TRACKED_USER,
-        metadata: { post, user },
+        metadata: { post, user, isTopic: false },
       });
     } catch (error) {
       logger.error(

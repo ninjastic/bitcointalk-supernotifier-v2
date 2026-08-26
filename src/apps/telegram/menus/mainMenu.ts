@@ -39,7 +39,7 @@ const notifyMeMenu = new Menu<IMenuContext>('nm')
     await editHtml(ctx, TRACKED_BOARDS_MENU_HTML);
   })
   .row()
-  .submenu('✍️ Posts by users', 'tum', async (ctx) => {
+  .submenu('✍️ Posts/topics by users', 'tum', async (ctx) => {
     ctx.session.page = 0;
     await editHtml(ctx, TRACKED_USERS_MENU_HTML);
   })

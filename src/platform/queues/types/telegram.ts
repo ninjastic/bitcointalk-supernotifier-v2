@@ -53,6 +53,7 @@ interface SendTrackedBoardNotificationMetadata {
 interface SendTrackedUserNotificationMetadata {
   post: Post;
   user: User;
+  isTopic: boolean;
 }
 interface SendAdvancedMatchNotificationMetadata {
   post: Post;
