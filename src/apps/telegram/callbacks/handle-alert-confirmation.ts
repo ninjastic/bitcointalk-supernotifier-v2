@@ -16,7 +16,6 @@ function isAdmin(ctx: IMenuContext): boolean {
 
 export function handleAlertConfirmation(bot: Bot<IMenuContext, Api<RawApi>>): void {
   const cache = container.resolve<ICacheProvider>('CacheRepository');
-  const sendGlobalNotification = container.resolve(SendGlobalNotificationService);
 
   bot.callbackQuery(/^alert-confirm:(send|cancel):(.+)$/, async (ctx) => {
     if (!isAdmin(ctx)) {
@@ -46,6 +45,7 @@ export function handleAlertConfirmation(bot: Bot<IMenuContext, Api<RawApi>>): vo
     await ctx.answerCallbackQuery('Sending...');
     await ctx.editMessageText('Sending global notification...');
 
+    const sendGlobalNotification = container.resolve(SendGlobalNotificationService);
     await sendGlobalNotification.execute(message).catch(async () => {
       await ctx.reply('Something went wrong.');
     });
