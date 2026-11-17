@@ -4,8 +4,20 @@ import fetch from 'node-fetch';
 import api from '../../../shared/services/api';
 import logger from '##/platform/logging/logger';
 
+let loginPromise: Promise<void> | undefined;
+
 export default class LoginService {
-  public async execute(): Promise<void> {
+  public execute(): Promise<void> {
+    if (!loginPromise) {
+      loginPromise = this.login().finally(() => {
+        loginPromise = undefined;
+      });
+    }
+
+    return loginPromise;
+  }
+
+  private async login(): Promise<void> {
     logger.info('[ForumLoginService] Trying to log in for cookies.');
 
     const bodyFormData = new FormData();
